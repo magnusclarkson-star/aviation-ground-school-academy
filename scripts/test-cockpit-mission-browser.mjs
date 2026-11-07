@@ -10,6 +10,7 @@ try{
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
  await desktop.goto(file,{waitUntil:"load"});
  await desktop.locator("#missionPanel").waitFor({state:"visible"});
+ assert.equal(await desktop.locator("#missionMiniStatus").isVisible(),true,'mission stage stays beside PFD');
  assert.equal(await desktop.locator("#missionMode").getAttribute("aria-pressed"),"true");
  assert.equal(await desktop.locator("#digitalSection").isVisible(),true);
  assert.equal(await desktop.locator("#pfdSvg").isVisible(),true);
@@ -24,6 +25,7 @@ try{
  await desktop.locator(".mission-jump summary").click();
  await desktop.locator('[data-mission-stage="approach"]').click();
  assert.match(await desktop.locator("#missionPhase").textContent(),/Stabilized approach/);
+ assert.match(await desktop.locator("#missionMiniPhase").textContent(),/Stabilized approach/);
  assert.equal(await desktop.locator("#missionHeight").textContent(),"230 ft AGL");
  assert.equal(await desktop.locator("#missionGoAround").isVisible(),true);
  await desktop.locator("#flaps20").click();
@@ -40,6 +42,7 @@ try{
  assert.equal(await desktop.locator("#outThrottle").textContent(),"0%");
  await desktop.locator("#digitalMode").click();
  assert.equal(await desktop.locator("#missionPanel").isVisible(),false);
+ assert.equal(await desktop.locator("#missionMiniStatus").isVisible(),false);
  assert.equal(await desktop.locator("#digitalSection").isVisible(),true);
  await desktop.locator("#missionMode").click();
  assert.match(await desktop.locator("#missionPhase").textContent(),/Takeoff roll/);
@@ -56,6 +59,7 @@ try{
  await phone.locator("#throttle").fill("75");
  await phone.locator("#grip").scrollIntoViewIfNeeded();
  const rect=await phone.locator(".digital-screen-column").boundingBox();
+ assert.equal(await phone.locator("#missionMiniStatus").isVisible(),true,'mission stage is visible next to sticky mobile PFD');
  assert.ok(rect&&rect.y>-8&&rect.y<420,"live PFD stays visible on phone during mission controls");
  await phone.locator(".mission-jump summary").tap();
  await phone.locator('[data-mission-stage="landing"]').tap();
