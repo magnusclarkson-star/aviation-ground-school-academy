@@ -124,11 +124,23 @@ function dockMission(phase){
  $("digitalControlsHint").textContent="Operate the actual yoke, throttle, flaps or rudder below while watching the live touchscreen. The lesson instructions remain just above.";
  $("digitalFocusSelector").classList.add("hidden");
 }
+function dockSkills(taskId){
+ if(!initialized)return;
+ const skills=window.CockpitV3Skills;
+ if(!skills||!skills.tasks[taskId])throw new Error("Unknown skills practice task "+taskId);
+ const task=skills.tasks[taskId];
+ restore();
+ const target=$("digitalControlDock");
+ for(const key of task.keys)target.appendChild($("control-"+key));
+ $("digitalControlsTitle").textContent="Working controls — "+task.title;
+ $("digitalControlsHint").textContent="Operate the actual controls for this example task while watching the PFD. The scoring only observes instrument indications during the practice window.";
+ $("digitalFocusSelector").classList.add("hidden");
+}
 function update(){
  if(!initialized)return;
  const source=$("read-"+chosen);
  const target=$("focusValue");
  if(source&&target)target.textContent=source.textContent;
 }
-global.CockpitV3Focus={init,restore,dock,dockDigital,dockMission,highlight,update,spec};
+global.CockpitV3Focus={init,restore,dock,dockDigital,dockMission,dockSkills,highlight,update,spec};
 })(window);
