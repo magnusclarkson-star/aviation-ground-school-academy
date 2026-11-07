@@ -178,3 +178,39 @@ To prepare *fictional staging instructors only*:
 
 Staging tests exercise official RFC 6238 timing vectors, encrypted-secret tamper detection, replay prevention, multiple concurrent attempts, missing enrolment and password-only login denial. TOTP strengthens staging staff sign-in, but is **not phishing-resistant**, and there is no verification of instructor qualifications or email control. WebAuthn/passkeys, staff recovery, email verification and real identity checks remain future production work.
 
+
+
+## V0.3 — Invitation-only email ownership verification
+
+**New staging behavior:** All previously provisioned accounts start with `users.email_verified_at=NULL`. The API **refuses sign-in and denies any existing sessions** until an invitation is actually delivered to the mailbox and its owner explicitly confirms the link. New accounts remain unverified by default. Email verification does not establish a real-world identity, age, instructor qualification, or any official academic/aviation approval.
+
+The migration `sql/003_email_verification.sql` introduces hashed single-use invitation tokens, 30-minute expiry, and a tightly scoped PostgreSQL `SECURITY DEFINER` function that atomically consumes a valid token and marks the mailbox verified. The normal web DB role receives only function execution permission: it cannot directly update `users.email_verified_at` or edit invitation rows. Old sessions cannot revive after verification because sessions must be issued **after** the email verification timestamp. A replayed or expired invitation cannot activate an account.
+
+### Optional delivery provider and operator commands
+
+Email is **not configured or sent automatically**. For private fictional staging, the operator may configure one verified email-sending account using the **Resend HTTP email API**. No default API key, default destination, fake inbox verification, console-printed token, or public registration endpoint exists. Real sending requires a verified sender domain and working provider account, deliberately supplied outside this repository:
+
+```sh
+# Operator secrets/environment only; placeholders, not working credentials:
+AGSA_MAIL_PROVIDER=resend
+AGSA_RESEND_API_KEY=<operator-managed-provider-secret>
+AGSA_MAIL_FROM=noreply@your-verified-staging-domain.example
+AGSA_PUBLIC_ORIGIN=https://your-controlled-staging-domain.example
+```
+
+After migrations, least-privilege grants and an operator-provisioned **fictional staging** account:
+
+```sh
+# Execute only from a trusted operator terminal, never from public GitHub Pages.
+npm run invite -- agsa-pilot fictional.student@example.org
+```
+
+The CLI creates a 256-bit random single-use token, saves only its SHA-256 hash, revokes earlier unused challenges for that user, and sends a message to the configured email provider. **The CLI never prints the token or link.** Provider acceptance is only evidence that a delivery request was accepted; it does not prove that the email arrived. A delivery error leaves the account unverified; reissue from the trusted terminal after correcting configuration.
+
+The received link points to the *private* staging `/portal/` with the token in the **URL fragment**, which is not sent to the HTTP server on page load. The portal immediately clears the fragment from browser history. The recipient must click **Confirm my email address**; opening the message or link alone does not activate the account. The frontend sends the token to the same-origin `POST /api/v1/auth/verify-email` endpoint; success enables normal sign-in. There is no automatic session issuance or training record credit.
+
+Do not put provider keys, real student email lists, live invitation links, or protected data into GitHub, GitHub Actions logs, screenshots or ChatGPT messages. Invitations are intentionally disabled if `AGSA_MAIL_PROVIDER` or a valid secure `AGSA_PUBLIC_ORIGIN` is missing. No unverified account can bypass activation through the standard login API.
+
+**Security checks:** HTTP/browser tests cover pre-verification login denial, fragment removal, user-confirmed activation, token replay and malformed links; PostgreSQL integration tests cover expired and simultaneous tokens, audit trail, session invalidation, and prevention of arbitrary runtime email-approval updates. Unit tests cover fail-closed provider settings and sanitized delivery failures.
+
+**Not implemented:** real student signups, a trusted email-provider account, public staging hostname, delivery-webhook receipts, invitation support operations, verified real identities or instructors, password recovery, secure MFA recovery, passkeys, production data privacy controls or regulatory accreditation. All live onboarding remains disabled until those requirements are assessed.
