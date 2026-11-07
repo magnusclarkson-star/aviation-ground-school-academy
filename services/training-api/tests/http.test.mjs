@@ -5,6 +5,8 @@ import {randomUUID} from "node:crypto";
 import {createHandler} from "../src/http.mjs";
 import {hashPassword,hashSha256} from "../src/crypto.mjs";
 import {ClientError} from "../src/validation.mjs";
+import {totpAtStep} from "../src/mfa.mjs";
+const exampleMfaSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 
 const orgA=randomUUID(),orgB=randomUUID();
 const studentA=randomUUID(),studentB=randomUUID(),instructorA=randomUUID(),unassignedInstructor=randomUUID(),instructorB=randomUUID();
@@ -30,6 +32,7 @@ class FakeStore{
   this.feedback=[];
   this.assignments=new Set([orgA+"|"+instructorA+"|"+studentA]);
   this.allowLogin=true;
+  this.mfaSteps=new Map();
  }
  async ping(){return true}
  async lookupLogin(email,slug){
@@ -37,6 +40,11 @@ class FakeStore{
   return {userId:u.id,email:u.email,passwordHash:u.passwordHash,organizationId:u.org,role:u.role};
  }
  async recordLoginAttempt(){return this.allowLogin}
+ async consumeInstructorOtp({userId,code}){
+  const step=Math.floor(Date.now()/30000);
+  if(code!==totpAtStep(exampleMfaSecret,step)||step<=(this.mfaSteps.get(userId)??-1))return false;
+  this.mfaSteps.set(userId,step);return true;
+ }
  async createSession({tokenHash,csrfHash,userId,organizationId}){
   const row=[...this.byEmail.values()].find(u=>u.id===userId&&u.org===organizationId);
   this.sessions.set(tokenHash,{userId,organizationId,csrfHash,role:row.role,email:row.email});
@@ -72,7 +80,7 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
  const password="a-long-strong-test-passphrase-27";
  const store=new FakeStore(await hashPassword(password));
  const server=createServer(createHandler(store,{publicOrigin:"http://127.0.0.1:3100",
-  nodeEnv:"test",allowInsecureLocal:true,logError:e=>{throw e;}}));
+  nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,1),logError:e=>{throw e;}}));
  await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});
  t.after(()=>new Promise(resolve=>server.close(resolve)));
  const root="http://127.0.0.1:"+server.address().port;
@@ -86,7 +94,8 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   return {status:response.status,body:result,headers:response.headers};
  }
  async function login(email,organization="academy-one"){
-  const r=await ask("POST","/api/v1/auth/login",{email,password,organization});
+  const verificationCode=(email.startsWith("t")||email.includes("teacher"))?totpAtStep(exampleMfaSecret,Math.floor(Date.now()/30000)):"";
+  const r=await ask("POST","/api/v1/auth/login",{email,password,organization,verificationCode});
   assert.equal(r.status,200,JSON.stringify(r.body));
   const set=r.headers.getSetCookie();
   const cookies=set.map(x=>x.split(";")[0]).join("; ");
@@ -112,6 +121,15 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   store.allowLogin=false;
   assert.equal((await ask("POST","/api/v1/auth/login",{email:"s1@example.org",password,organization:"academy-one"})).status,429);
   store.allowLogin=true;
+ });
+ await t.test("instructor password alone or invalid OTP must not issue session",async()=>{
+  const base={email:"t1@example.org",password,organization:"academy-one"};
+  const noCode=await ask("POST","/api/v1/auth/login",base);
+  assert.equal(noCode.status,401);
+  assert.equal(noCode.headers.getSetCookie().length,0);
+  const bad=await ask("POST","/api/v1/auth/login",{...base,verificationCode:"000000"});
+  assert.equal(bad.status,401);
+  assert.equal(bad.headers.getSetCookie().length,0);
  });
  const s1=await login("s1@example.org");
  const s2=await login("s2@example.org");
