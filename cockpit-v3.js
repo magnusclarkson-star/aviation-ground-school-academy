@@ -454,7 +454,7 @@ wireControls();
 if(window.CockpitV3Focus)window.CockpitV3Focus.init(instruments,setFocus);
 setFocus(0);
 setPFD("pfd");
-setMode("focus");
+setMode(new URLSearchParams(window.location.search).get("mode")==="mission"?"mission":"focus");
 paint();
 requestAnimationFrame(frame);
 })();
