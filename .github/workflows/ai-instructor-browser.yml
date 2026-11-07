@@ -1,0 +1,39 @@
+name: AI Instructor Browser Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ai-instructor.html'
+      - 'ai-instructor.css'
+      - 'ai-instructor.js'
+      - 'ai-instructor-lessons.js'
+      - 'scripts/test-ai-instructor.mjs'
+      - 'scripts/test-ai-instructor-browser.mjs'
+      - '.github/workflows/ai-instructor-browser.yml'
+  pull_request:
+    paths:
+      - 'ai-instructor.html'
+      - 'ai-instructor.css'
+      - 'ai-instructor.js'
+      - 'ai-instructor-lessons.js'
+      - 'scripts/test-ai-instructor.mjs'
+      - 'scripts/test-ai-instructor-browser.mjs'
+      - '.github/workflows/ai-instructor-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  guided-voice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check ai-instructor-lessons.js
+      - run: node --check ai-instructor.js
+      - run: node scripts/test-ai-instructor.mjs
+      - run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
+      - run: npx playwright install chromium
+      - run: node scripts/test-ai-instructor-browser.mjs
