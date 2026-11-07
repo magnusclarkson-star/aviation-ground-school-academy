@@ -98,7 +98,7 @@ try{
   buffer:Buffer.from(JSON.stringify(exampleReport))
  });
  await desktop.locator("#submitButton").click();
- await desktop.locator("#submissionStatus").getByText(/Report submitted/).waitFor();
+ await desktop.waitForFunction(()=>document.querySelector("#submissionStatus").textContent.includes("Report submitted"));
  assert.equal(await desktop.locator("#studentList .list-item").count(),1);
  assert.equal(store.attempts.length,1);
  assert.equal(store.attempts[0].report.flightCredit,false);
@@ -123,7 +123,7 @@ try{
  await desktop.locator("#comments").fill("This is only a fictional discussion note.");
  await desktop.locator("#nextAction").fill("Repeat simulated flap practice.");
  await desktop.locator("#feedbackButton").click();
- await desktop.locator("#feedbackStatus").getByText(/Saved UNVERIFIED_DRAFT/).waitFor();
+ await desktop.waitForFunction(()=>document.querySelector("#feedbackStatus").textContent.includes("Saved UNVERIFIED_DRAFT"));
  await desktop.locator("#feedbackList .list-item").first().waitFor();
  assert.equal(store.drafts.length,1);
  assert.equal(store.drafts[0].instructorId,teacher);
