@@ -47,6 +47,17 @@ jobs:
           done
       - name: Install exact backend dependencies from reviewed lockfile
         run: npm ci --prefix services/training-api --ignore-scripts --no-audit --no-fund
+      - name: Build isolated staging API image from locked dependencies
+        run: docker build --tag agsa-training-api:ci services/training-api
+      - name: Validate HTTPS-only gateway and private service wiring
+        run: |
+          printf 'DATABASE_URL=postgresql://ci:ci@db.example.invalid:5432/agsa?sslmode=verify-full\n' > services/training-api/.env.staging
+          trap 'rm -f services/training-api/.env.staging' EXIT
+          AGSA_STAGE_HOST=staging.example.invalid AGSA_ACME_EMAIL=ci@example.invalid docker compose -f services/training-api/compose.staging.yml config --format json > /tmp/agsa-staging-compose.json
+          node services/training-api/scripts/test-staging-config.mjs /tmp/agsa-staging-compose.json
+          docker run --rm -v "$PWD/services/training-api/Caddyfile.staging:/etc/caddy/Caddyfile:ro" \
+            -e AGSA_STAGE_HOST=staging.example.invalid -e AGSA_ACME_EMAIL=ci@example.invalid \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Migrate isolated CI database
         run: node services/training-api/scripts/migrate.mjs
       - name: Test authentication isolation and real database behavior
