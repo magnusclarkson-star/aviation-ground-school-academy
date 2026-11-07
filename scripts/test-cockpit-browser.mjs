@@ -53,6 +53,13 @@ try {
  await page.waitForTimeout(600);
  const laterFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
  assert.ok(laterFlap>movingFlap,'flap continues extending toward its detent over time');
+ const liftIndex=Number((await page.locator('#flapLiftIndex').textContent()).replace('×',''));
+ const dragIndex=Number((await page.locator('#flapDragIndex').textContent()).replace('×',''));
+ assert.ok(liftIndex>1.1 && dragIndex>1.1,'flap indices rise after extension');
+ assert.ok(dragIndex>liftIndex,'high flap angle causes proportionally more drag');
+ assert.ok((await page.locator('#flapIAS').textContent()).includes('kt'),'airspeed live readout visible');
+ assert.ok((await page.locator('#flapVSI').textContent()).includes('ft/min'),'VSI live readout visible');
+ assert.ok((await page.locator('#flapContext').textContent()).includes('Larger flap deflections'),'flap lesson gives high drag explanation');
  // Keep the turn coordinator selected when switching modes to test continuity.
  await page.locator('#focusSelect-tc').click();
  await page.locator('#analogMode').click();
@@ -88,6 +95,8 @@ try {
  assert.equal(await page.locator('#engineView').isVisible(),true);
  assert.equal(await page.locator('#digitalControlDock #control-throttle').count(),1,'engine view includes throttle');
  assert.equal(await page.locator('#digitalControlDock #control-flaps').count(),1,'engine view includes flaps');
+ assert.ok((await page.locator('#engineData').textContent()).includes('RELATIVE DRAG'),'digital engine display reflects flap aerodynamic learning');
+ assert.ok((await page.locator('#engineData').textContent()).includes('VERTICAL SPEED'),'digital engine display explains VSI effect');
  assert.equal(await page.locator('#digitalControlDock #control-yoke').count(),0,'engine view hides unrelated yoke');
  await page.locator('#pfdTab').click();
  assert.equal(await page.locator('#pfdView').isVisible(),true);
@@ -147,6 +156,8 @@ try {
  assert.equal(await phone.locator('#flapWingSurface').count(),1,'phone wing flap graphic remains mounted');
  await phone.waitForTimeout(450);
  assert.ok(Number((await phone.locator('#flapIndicated').textContent()).replace('°',''))>0,'flap surface responds to phone detent press');
+ assert.ok(Number((await phone.locator('#flapLiftIndex').textContent()).replace('×',''))>1,'phone lift potential rises on extension');
+ assert.ok(Number((await phone.locator('#flapDragIndex').textContent()).replace('×',''))>1,'phone drag rises on extension');
  await phone.locator('#grip').scrollIntoViewIfNeeded();
  const digitalSticky=await phone.locator('.digital-screen-column').boundingBox();
  assert.ok(digitalSticky&&digitalSticky.y>=-2&&digitalSticky.y<390,'digital flight display remains within view while user operates yoke');
@@ -180,5 +191,5 @@ try {
  assert.equal(await phone.locator('#outFlaps').textContent(),'0°');
  await phone.close();
  assert.deepEqual(errors,[],'No runtime page errors');
- console.log('Browser smoke passed: desktop and phone-sized touch cockpit, linked wing flap animation, selected/indicated position, meter, controls, PFD/map/engine and resets.');
+ console.log('Browser smoke passed: desktop/phone touchscreen, animated flaps, coupled lift/drag speed/VSI gauges, moving indicators, PFD/map/engine and resets.');
 } finally {await browser.close();}
