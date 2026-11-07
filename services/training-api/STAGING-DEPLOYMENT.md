@@ -58,3 +58,11 @@ The public site deployment is separately constrained by `scripts/build-pages.mjs
 ## Remaining limitations
 
 The staging dashboard is intentionally not a certified LMS. Email verification, authenticated instructor credentials, multi-factor authentication, regulatory course mapping, signed assessments, tamper-evident evidence records and production data-governance controls are **not yet implemented**. There is no demonstrated live hostname, private database, certificate, monitoring or real user account in this repository.
+
+## Staging instructor MFA provisioning and activation
+
+Before enabling staff access, run both migrations and grant the updated `instructor_mfa` privileges. Set `AGSA_MFA_ENCRYPTION_KEY` to a persistent, securely generated 32-byte base64url key in the backend secret environment; this is mandatory on every restart. Provision each fictional staging instructor's TOTP seed from a trusted operator terminal using `npm run provision -- mfa <organisation-slug> <instructor-email>`. The terminal prints a one-time confidential `otpauth://` enrolment URI, which must not be logged to cloud build systems or sent in public channels. Store the key separately from the database backup and restrict access to authorised test operators. Never embed the seed in the browser bundle.
+
+For instructor sign-in, the API checks password then requires the authenticator code. It never issues an instructor session for a missing seed, wrong code or replayed time step. Students remain password-authenticated staging accounts, not identity-verified real learners.
+
+**Not done:** provider-backed email delivery and verification, instructor qualification verification, phishing-resistant staff WebAuthn, MFA recovery, real user data protection/governance and a deployed hostname. The addition of TOTP does **not** confer accreditation or make the staging API ready for real learner records.
