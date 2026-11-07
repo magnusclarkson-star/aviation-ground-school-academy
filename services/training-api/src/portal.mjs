@@ -20,7 +20,7 @@ export async function servePortal(path,res,{secure=false}={}){
   "X-Frame-Options":"DENY",
   "Referrer-Policy":"no-referrer",
   "Permissions-Policy":"camera=(), microphone=(), geolocation=()",
-  "Content-Security-Policy":"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'",
+  "Content-Security-Policy":"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'",
   ...(secure?{"Strict-Transport-Security":"max-age=31536000; includeSubDomains"}:{})
  });
  res.end(data);
