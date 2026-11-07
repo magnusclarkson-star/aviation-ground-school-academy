@@ -25,7 +25,7 @@ class FakeStore{
    ["pilot.unassigned@example.org",{userId:unassigned,organizationId:org,role:"instructor",passwordHash}]
   ]);
   this.sessions=new Map();this.attempts=[];this.drafts=[];this.mfaSteps=new Map();
-  this.verified=new Set([teacher,unassigned]);this.inviteHash=hashSha256(inviteToken);
+  this.verified=new Set([teacher,unassigned]);this.inviteHash=hashSha256(inviteToken);this.aiCalls=new Map();
  }
  async ping(){return true}
  async recordLoginAttempt(){return true}
@@ -51,6 +51,13 @@ class FakeStore{
   return actor&&this.verified.has(actor.userId)?actor:null;
  }
  async revokeSession(hash){this.sessions.delete(hash)}
+ async reserveAiUsage(actor,kind,maxCount){
+  const key=actor.organizationId+"|"+actor.userId+"|"+kind;
+  const used=this.aiCalls.get(key)||0;
+  if(used>=maxCount)return false;
+  this.aiCalls.set(key,used+1);
+  return true;
+ }
  async createAttempt(actor,key,digest,report){
   const prior=this.attempts.find(x=>x.studentId===actor.userId&&x.organizationId===actor.organizationId&&x.key===key);
   if(prior)return {created:false,conflict:prior.digest!==digest,id:prior.id,submittedAt:prior.submittedAt};
@@ -83,8 +90,22 @@ let handler=null;
 const server=createServer((req,res)=>handler(req,res));
 await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});
 const base="http://127.0.0.1:"+server.address().port;
+const aiEnv={
+ OPENAI_API_KEY:"fake-provider-credentials-for-tests-only",
+ AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
+ AGSA_AI_TEXT_MODEL:"gpt-6-luna"
+};
+let providerCalls=0;
+const aiRequest=async(url)=>{
+ providerCalls++;
+ if(url.endsWith("/v1/responses"))return new Response(JSON.stringify({
+  output:[{type:"message",content:[{type:"output_text",text:"Lift is an aerodynamic force that can be discussed in classroom lessons."}]}]
+ }),{status:200,headers:{"Content-Type":"application/json"}});
+ if(url.endsWith("/v1/audio/speech"))return new Response(Buffer.alloc(256,65),{status:200});
+ throw Error("Unexpected provider request");
+};
 handler=createHandler(store,{publicOrigin:base,nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,2),
- logError:e=>{throw e}});
+ aiEnv,aiRequest,logError:e=>{throw e}});
 const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const pageErrors=[];
 async function login(page,email){
