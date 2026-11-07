@@ -87,3 +87,16 @@ Use JSON over HTTPS; authenticate and authorise every request, with request iden
 - **Phase E — future:** validation against aircraft-specific AFM/POH and approved course standards; formal programme/qualification evidence and applications through competent organisations/authorities as applicable.
 
 This blueprint is not a statement that the academy qualifies as an approved training organisation, FAA Part 141 school, EASA ATO/DTO or qualified training device. Consult [accreditation readiness](ACCREDITATION-READINESS.md) for research and source references.
+
+
+## Engineering update — Separate Training API foundation (7 November 2026)
+
+**Implemented as source code, not hosted:** `services/training-api/` contains a standalone Node 22/PostgreSQL 16 API, migrations, CLI-only creation of fictional staging accounts, private login sessions, student-only practice submissions, assigned-instructor-only draft feedback, idempotency and database-scoped access queries.
+
+The initial CI pipeline `.github/workflows/training-api.yml` provisions a disposable PostgreSQL service and verifies migrations, password hashing, opaque cookies, CSRF, session revocation, database-backed sign-in rate limits, student/organisation isolation, revoked instructor assignments, conflict handling and audit events.
+
+**No secure public login is available yet.** The Academy's public GitHub Pages site remains unchanged for authentication, and no student training data has been migrated or hosted. This foundation deliberately requires manual fake-account provisioning; it does not provide verified email, MFA, private dashboard, production retention/security monitoring, tamper-evident audit records or formal assessments. The API writes only a strict allowlist of unsigned synthetic practice data and marks every record unverified.
+
+**Next deployment gate:** a separate restricted staging host, managed private database, reproducible lockfile, least-privilege migration/service DB roles, HTTPS same-origin private frontend, password recovery and staff MFA, and a targeted security/privacy review. For now this is a testing foundation, **not** a service suitable for real students or live enrolment. No regulatory approval is implied.
+
+See [training API setup and limitations](../services/training-api/README.md).
