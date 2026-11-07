@@ -71,6 +71,31 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.pfd-body{grid-template-columns:1fr}.pfd-side{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:730px){.hero,.lesson-bar{grid-template-columns:1fr}.dial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pfd-side{grid-template-columns:repeat(2,minmax(0,1fr))}.control-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:480px){main{padding:14px 9px}.hero{padding:15px}.dial-grid{gap:7px}.dial-tile{padding:5px 2px 8px;border-radius:10px}.dial-label{font-size:10px}.glass-panel{border-width:5px;min-height:0;padding:7px}.pfd-side{grid-template-columns:1fr 1fr}.pfd-tile{padding:8px}.pfd-tile strong{font-size:20px}.control-grid{grid-template-columns:1fr}.stat b{font-size:14px}.status{gap:5px}}
+
+/* Focused workstation: original live instruments and working hardware move into this view. */
+.focus-section-header{display:flex;align-items:flex-start;gap:14px;justify-content:space-between;flex-wrap:wrap}
+.focus-flag{font-size:10px;font-weight:800;letter-spacing:.08em;color:#ffe3a4;border:1px solid #937849;padding:8px;border-radius:20px}
+.focus-selector{display:flex;gap:7px;flex-wrap:wrap;padding:12px 0 16px}
+.focus-selector button{min-height:42px;padding:8px 11px;font-size:12px}
+.focus-grid{display:grid;grid-template-columns:minmax(205px,.72fr) minmax(0,1.28fr);align-items:start;gap:16px}
+.focus-gauge{min-width:0;position:sticky;top:8px;align-self:start;border:1px solid #44647d;border-radius:15px;background:#08192b;padding:10px;z-index:1;text-align:center}
+.focus-gauge .dial-tile{width:min(100%,310px);margin:0 auto;padding:7px 8px;background:none;border:none;outline:none!important}
+.focus-gauge .dial-tile svg{max-width:310px}
+.focus-value{font-variant-numeric:tabular-nums;color:#f8d28c;font-size:15px;font-weight:800;margin:5px 0}
+.focus-tip{color:#b8cbdb;font-size:12px;line-height:1.48;margin:7px 0}
+.focus-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;align-items:start}
+.focus-control-grid .hardware{min-width:0}
+.focus-control-grid .hardware h3{font-size:15px}
+.focus-control-grid .hardware p{font-size:12px;line-height:1.4}
+.focus-control-grid .control-pad{height:146px;margin:10px auto;max-width:240px}
+.focus-control-grid .grip{width:92px;height:78px;font-size:10px}
+.focus-control-grid .hardware .actions{gap:5px}
+.focus-control-grid .hardware .actions button{font-size:12px;padding:7px;min-height:38px}
+.focus-control-grid .pedal{min-width:65px;min-height:62px!important}
+.focus-workstation .dial-tile[aria-current=true]{outline:none}
+@media(max-width:1000px){.focus-grid{grid-template-columns:minmax(210px,.8fr) minmax(0,1.2fr)}.focus-control-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.focus-grid{display:block}.focus-gauge{position:sticky;top:4px;padding:6px;margin-bottom:11px;border-color:#6b9bb5;background:#091d2fed}.focus-gauge .dial-tile{max-width:188px;padding:0}.focus-gauge .dial-tile svg{max-width:168px}.focus-gauge .dial-label{font-size:10px}.focus-gauge .dial-caption{font-size:10px}.focus-gauge .focus-tip{font-size:10px;line-height:1.25;margin:3px}.focus-value{font-size:12px;margin:1px}.focus-control-grid{grid-template-columns:1fr}.focus-selector{gap:5px}.focus-selector button{padding:7px 9px;min-height:38px;font-size:11px}.focus-section-header h2{font-size:18px}}
+@media(min-width:651px) and (max-width:880px){.focus-gauge .dial-tile svg{max-width:230px}}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
@@ -84,14 +109,22 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  <div class="pill">EDUCATIONAL MODEL<br>NOT CERTIFIED</div>
 </section>
 <div class="toolbar">
- <div class="tabs" aria-label="Choose cockpit display"><button id="analogMode" aria-pressed="true">Analogue six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button></div>
+ <div class="tabs" aria-label="Choose cockpit display"><button id="focusMode" aria-pressed="true">Instrument + controls</button><button id="analogMode" aria-pressed="false">Full six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button></div>
  <div class="actions"><button id="pauseBtn" aria-pressed="false">Pause flight</button><button id="resetBtn">Reset flight</button></div>
 </div>
 <section class="card lesson-bar" aria-label="Guided instrument lesson">
  <div class="lesson-copy"><div class="lesson-sub" id="focusCount">INSTRUMENT 1 / 6</div><h2 id="focusTitle">Airspeed indicator</h2><p id="focusText">Airspeed represents indicated speed through the air in knots. Marked arcs here are illustrative rather than aircraft-specific.</p></div>
  <div class="actions"><button id="prevFocus" aria-label="Previous instrument">Previous</button><button id="nextFocus" class="active" aria-label="Next instrument">Next</button><button id="narrateFocus">Read aloud</button></div>
 </section>
-<section id="analogSection" class="card" aria-label="Conventional six-pack instruments">
+<section id="focusSection" class="card focus-workstation" aria-label="Selected instrument and related aircraft controls">
+  <div class="focus-section-header"><div><h2>Focused instrument workstation</h2><p class="note">Select an instrument. Its working aircraft controls appear alongside it, so you can watch the indication as you operate them.</p></div><span class="focus-flag">ONE INSTRUMENT AT A TIME</span></div>
+  <div id="focusSelector" class="focus-selector" role="group" aria-label="Select an instrument"></div>
+  <div class="focus-grid">
+    <div class="focus-gauge" id="focusGauge"><div id="focusDialDock" aria-label="Selected live analogue instrument"></div><p class="focus-value" id="focusValue">102 KT IAS</p><p class="focus-tip">Instrument face is read-only. Use the actual controls beside or below it.</p></div>
+    <div class="focus-right"><h3 id="focusControlsTitle">Controls that affect this instrument</h3><p class="focus-tip" id="focusControlsHint">Use throttle, yoke and flaps to explore airspeed.</p><div id="focusControlDock" class="focus-control-grid"></div></div>
+  </div>
+</section>
+<section id="analogSection" class="card hidden" aria-label="Conventional six-pack instruments">
  <h2>Conventional instrument panel</h2>
  <div class="dial-grid">
   <div class="dial-tile" id="tile-asi"><div class="dial-label">AIRSPEED</div><div id="dial-asi"></div><div class="dial-caption" id="read-asi">102 KT IAS</div></div>
@@ -125,23 +158,23 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  </div>
  <p class="section-help">The PFD, NAV MAP and ENGINE buttons are touchscreen functions. The display resembles the general layout of modern electronic flight displays but is not a copy of a Garmin product. *Heading is simulated, not connected to magnetic sensors.</p>
 </section>
-<div class="layout">
+<div class="layout" id="controlOverview">
  <section class="card"><h2>Aircraft controls — touch, drag or tap</h2>
- <div class="control-grid">
-  <div class="hardware"><h3>Yoke / control column</h3><p class="note">Move the grip left/right to bank and up/down to pitch. Release to center the command.</p>
+ <div class="control-grid" id="controlGrid">
+  <div class="hardware" id="control-yoke"><h3>Yoke / control column</h3><p class="note">Move the grip left/right to bank and up/down to pitch. Release to center the command.</p>
    <div class="control-pad" id="controlPad"><div class="pad-cross"></div><button type="button" id="grip" class="grip" aria-label="Drag yoke to bank or pitch. Arrow keys also work.">YOKE</button></div>
    <div class="actions"><button id="noseUp">Nose up</button><button id="noseDown">Nose down</button><button id="bankLeft">Bank left</button><button id="bankRight">Bank right</button></div>
   </div>
-  <div class="hardware"><h3>Engine throttle</h3><p class="note">Change engine power. The airspeed and vertical-speed indications respond over time.</p>
+  <div class="hardware" id="control-throttle"><h3>Engine throttle</h3><p class="note">Change engine power. The airspeed and vertical-speed indications respond over time.</p>
    <div class="meter"><label for="throttle">Throttle <output id="outThrottle">55%</output></label><input id="throttle" type="range" min="0" max="100" value="55" step="1"></div>
    <div class="meter"><label for="trim">Elevator trim <output id="outTrim">0%</output></label><input id="trim" type="range" min="-100" max="100" step="5" value="0"></div>
    <p class="note">Throttle and trim are the active controls; instrument faces cannot be adjusted.</p>
   </div>
-  <div class="hardware"><h3>Rudder pedals</h3><p class="note">Press and hold for yaw and slip/skid indication.</p>
+  <div class="hardware" id="control-rudder"><h3>Rudder pedals</h3><p class="note">Press and hold for yaw and slip/skid indication.</p>
    <div class="pedals"><button class="pedal" id="leftRudder" aria-label="Hold left rudder">LEFT</button><button class="pedal" id="rightRudder" aria-label="Hold right rudder">RIGHT</button></div>
    <p class="note">On a keyboard, use A and D for rudder.</p>
   </div>
-  <div class="hardware"><h3>Flap selector</h3><p class="note">Choose a simplified flap setting. It changes the model's speed response, not its certified limits.</p>
+  <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Choose a simplified flap setting. It changes the model's speed response, not its certified limits.</p>
     <div class="flap-row"><button id="flaps0" aria-pressed="true">0°</button><button id="flaps10" aria-pressed="false">10°</button><button id="flaps20" aria-pressed="false">20°</button><button id="flaps30" aria-pressed="false">30°</button></div>
     <div class="meter"><label>Selected flaps <output id="outFlaps">0°</output></label></div>
   </div>
