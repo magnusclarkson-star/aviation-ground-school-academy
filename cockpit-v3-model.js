@@ -19,12 +19,12 @@
   }
   function makeState() {
     return {pitch:0, roll:0, heading:270, altitude:3500, speed:102,
-      verticalSpeed:0, turnRate:0, slip:0, power:55, flaps:0,
+      verticalSpeed:0, turnRate:0, slip:0, rudderPosition:0, flapPitchBias:0, power:55, flaps:0,
       liftIndex:1, dragIndex:1,
       x:0, y:0, distance:0, elapsed:0};
   }
   function makeInput() {
-    return {yokeX:0, yokeY:0, rudder:0, throttle:55, trim:0, flaps:0};
+    return {yokeX:0, yokeY:0, rudder:0, throttle:55, trim:0, flaps:0, flapPitchMode:"noseUp"};
   }
   function step(state, input, delta) {
     const dt = clamp(Number(delta)||0,0,0.1);
@@ -35,8 +35,15 @@
     const y=clamp(Number(input.yokeY)||0,-1,1);
     const rudder=clamp(Number(input.rudder)||0,-1,1);
     const trim=clamp(Number(input.trim)||0,-1,1);
-    const targetPitch=clamp(-y*16 + trim*5, -25,25);
-    const targetRoll=clamp(x*40, -45,45);
+    // A type-dependent response selectable in the cockpit, NOT a universal
+    // flap pitching moment. Default "noseUp" is an openly fictional example.
+    const flapPitchSign=input.flapPitchMode==="noseDown"?-1:input.flapPitchMode==="neutral"?0:1;
+    state.flapPitchBias=flaps*.045*flapPitchSign;
+    const targetPitch=clamp(-y*16 + trim*5 + state.flapPitchBias, -25,25);
+    // Demonstrates small secondary yaw-to-roll coupling. The slip/turn
+    // indicators below remain the primary feedback for rudder input.
+    const targetRoll=clamp(x*40 + rudder*4.2, -45,45);
+    state.rudderPosition=approach(state.rudderPosition,rudder,4,dt);
     state.pitch=approach(state.pitch,targetPitch,1.8,dt);
     state.roll=approach(state.roll,targetRoll,1.9,dt);
     state.power=approach(state.power,throttle,3.2,dt);
