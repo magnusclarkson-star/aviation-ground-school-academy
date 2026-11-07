@@ -93,6 +93,10 @@ export class RealtimeCallRegistry{
   }
   return true;
  }
+ async stopForActor(actor){
+  const handle=this.byActor.get(this.actorKey(actor));
+  return handle?this.stop(handle,actor):false;
+ }
  async shutdown(){
   await Promise.allSettled([...this.active.keys()].map(h=>this.stop(h)));
  }
