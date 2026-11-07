@@ -1,8 +1,9 @@
 import {createPool} from "../src/postgres.mjs";
 import {hashPassword,normalizeEmail} from "../src/crypto.mjs";
+import {newTotpSecret,parseEncryptionKey,encryptTotpSecret,provisioningUri} from "../src/mfa.mjs";
 const [command,...args]=process.argv.slice(2);
-if(!["org","user","assign"].includes(command)){
- console.error("Usage: npm run provision -- org <slug> <organisation-name> <country-code> | user <slug> <email> <student|instructor> | assign <slug> <instructor-email> <student-email>");
+if(!["org","user","assign","mfa"].includes(command)){
+ console.error("Usage: npm run provision -- org <slug> <organisation-name> <country-code> | user <slug> <email> <student|instructor> | assign <slug> <instructor-email> <student-email> | mfa <slug> <instructor-email>");
  process.exit(2);
 }
 const pool=createPool(process.env);
@@ -41,6 +42,27 @@ try{
   await client.query(`INSERT INTO audit_events(actor_user_id,organization_id,action,target_type,target_id)
    VALUES(NULL,$1,'bootstrap.account.create','user',$2)`,[oid,uid]);
   console.info("Staging-only account provisioned:",role,email,"in",slug,"(no approval or licence implied)");
+ }else if(command==="mfa"){
+  const [slug,instructorEmail]=args;
+  const encryptionKey=parseEncryptionKey(process.env.AGSA_MFA_ENCRYPTION_KEY);
+  const teacher=await findMember(client,slug,instructorEmail,"instructor");
+  const secret=newTotpSecret();
+  const encrypted=encryptTotpSecret(secret,encryptionKey);
+  const inserted=await client.query(`
+    INSERT INTO instructor_mfa(organization_id,instructor_id,encrypted_secret)
+    VALUES($1,$2,$3) ON CONFLICT DO NOTHING RETURNING instructor_id`,
+    [teacher.org_id,teacher.id,encrypted]);
+  if(!inserted.rowCount)throw Error("MFA already enrolled; use a separate verified recovery process, never silently replace the existing secret");
+  await client.query(`
+   INSERT INTO audit_events(actor_user_id,organization_id,action,target_type,target_id)
+   VALUES(NULL,$1,'bootstrap.mfa.enroll','instructor_mfa',$2)`,[teacher.org_id,teacher.id]);
+  // Reveal the one-time setup URI only to this trusted interactive operator,
+  // never to application logs, GitHub, screenshots or unverified email.
+  await client.query("COMMIT");
+  console.info("IMPORTANT: show this one-time URI only to the intended fictional staging instructor in a trusted channel.");
+  console.info(provisioningUri(normalizeEmail(instructorEmail),secret));
+  console.info("MFA enrolment committed. Delete this terminal output and verify a working authenticator before relying on the staging account.");
+  process.exit(0);
  }else if(command==="assign"){
   const [slug,instructorEmail,studentEmail]=args;
   const teacher=await findMember(client,slug,instructorEmail,"instructor");
