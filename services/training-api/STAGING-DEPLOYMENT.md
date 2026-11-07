@@ -92,3 +92,10 @@ The private backend offers `/api/v1/ai/status`, `/api/v1/ai/ask` and `/api/v1/ai
 Before any provider activation, verify billing limits, data-processing permissions, student/parent consent where necessary, moderation, privacy/retention rules, account abuse controls and real staging host isolation. The service allows no public AI requests and no AI-generated grades or official training records.
 
 **Temporary voice adapter warning:** the existing optional Speech API model is deprecated and planned to shut down 6 January 2027. Plan a Realtime API replacement before considering long-lived natural-voice deployment. Full architecture: [AI Instructor and Voice Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
+
+
+## WebRTC speaking AI tutor: gated and unhosted
+
+After `005_realtime_voice.sql`, the private API may optionally be configured for voice-to-voice WebRTC calls. This is distinct from the legacy one-shot MP3 Speech API. It uses the current GA `/v1/realtime/calls` endpoint and the `gpt-realtime-2.1-mini` model, with a server-held provider key, same-origin SDP exchange, microphone consent, role-scoped login, CSRF and two daily reservations per staging account.
+
+Do not enable realtime voice until the account/provider has an approved budget and operational spending controls. A call is closed in the browser after two minutes and the server *attempts* provider-side hangup after 120 seconds, but its timer is in memory and is **not a durable billing guarantee**. Replace with a persistent call registry / retrying expiry scheduler before exposing paid voice to real learners. Restrict student eligibility, require safeguarding for minors, audit provider data handling and keep lessons framed as non-accredited education. The public Academy never needs the API key.
