@@ -5,7 +5,7 @@ import {randomUUID} from "node:crypto";
 import {createHandler} from "../src/http.mjs";
 import {hashPassword,hashSha256} from "../src/crypto.mjs";
 import {ClientError} from "../src/validation.mjs";
-import {totpAtStep} from "../src/mfa.mjs";
+import {totpAtStep,checkTotp} from "../src/mfa.mjs";
 const exampleMfaSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 
 const orgA=randomUUID(),orgB=randomUUID();
@@ -41,8 +41,8 @@ class FakeStore{
  }
  async recordLoginAttempt(){return this.allowLogin}
  async consumeInstructorOtp({userId,code}){
-  const step=Math.floor(Date.now()/30000);
-  if(code!==totpAtStep(exampleMfaSecret,step)||step<=(this.mfaSteps.get(userId)??-1))return false;
+  const step=checkTotp(exampleMfaSecret,code,Date.now(),this.mfaSteps.get(userId)??-1);
+  if(step===null)return false;
   this.mfaSteps.set(userId,step);return true;
  }
  async createSession({tokenHash,csrfHash,userId,organizationId}){
