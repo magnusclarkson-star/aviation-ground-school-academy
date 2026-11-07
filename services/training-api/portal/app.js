@@ -54,7 +54,7 @@ async function api(path,{method="GET",payload,key}={}){
 function resetSession(message){
  state.user=null;state.attempts=[];state.assigned=[];state.drafts=[];state.selectedId=null;
  state.pendingUpload=null;
- $("password").value="";
+ $("password").value="";$("verificationCode").value="";
  $("reportFile").value="";
  removeAll("studentList");
  removeAll("assignedList");removeAll("feedbackList");
@@ -210,11 +210,12 @@ async function signIn(event){
   await api("/api/v1/auth/login",{method:"POST",payload:{
    organization:$("organization").value,
    email:$("email").value,
-   password:$("password").value
+   password:$("password").value,
+   verificationCode:$("verificationCode").value
   }});
-  $("password").value="";
+  $("password").value="";$("verificationCode").value="";
   await loadUser();
- }catch(e){$("password").value="";status("globalStatus","Sign-in unsuccessful: "+e.message,"error");}
+ }catch(e){$("password").value="";$("verificationCode").value="";status("globalStatus","Sign-in unsuccessful: "+e.message,"error");}
  finally{button.disabled=false;}
 }
 async function signOut(){
