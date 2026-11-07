@@ -18,3 +18,6 @@ jobs:
       - run: node --check academy-brand.js
       - run: node --check flight-lab-v2.js
       - run: node scripts/test-flight-lab.mjs
+      - run: node --check cockpit-v3-model.js
+      - run: node --check cockpit-v3.js
+      - run: node scripts/test-cockpit-v3.mjs
