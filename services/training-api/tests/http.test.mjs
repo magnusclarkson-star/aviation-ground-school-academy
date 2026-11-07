@@ -296,6 +296,35 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   }
   assert.equal((await ask("POST","/api/v1/ai/voice",{text:"Aviation sample",voice:"coral"},s1)).status,429);
  });
+ await t.test("two-way voice sessions require consent, ownership and per-account quotas",async()=>{
+  const sample=["v=0","o=- 1 2 IN IP4 127.0.0.1","s=AGSA","t=0 0",
+   "m=audio 9 UDP/TLS/RTP/SAVPF 111","a=sendrecv","a=rtpmap:111 opus/48000/2"].join("\r\n")+"\r\n";
+  const opts={consent:true,topic:"instruments",style:"mentor",voice:"cedar",sdp:sample};
+  const status=await ask("GET","/api/v1/ai/status",undefined,s1);
+  assert.equal(status.body.realtimeEnabled,true);
+  assert.equal(status.body.limits.realtime,2);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts)).status,401);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,{cookies:s1.cookies})).status,403);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",{...opts,consent:false},s1)).status,400);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",{...opts,model:"injected"},s1)).status,400);
+  const first=await ask("POST","/api/v1/ai/realtime-connect",opts,s1);
+  assert.equal(first.status,200,JSON.stringify(first.body));
+  assert.equal(first.body.mode,"REALTIME_AI_VOICE");
+  assert.equal(first.body.maxSeconds,120);
+  assert.match(first.body.handle,/^[A-Za-z0-9_-]{32}$/);
+  assert.equal(JSON.stringify(first.body).includes(aiEnv.OPENAI_API_KEY),false);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,s1)).status,409);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:first.body.handle},s2)).status,403);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:first.body.handle},s1)).body.status,"ended");
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:first.body.handle},s1)).body.status,"already_ended");
+  const second=await ask("POST","/api/v1/ai/realtime-connect",opts,s1);
+  assert.equal(second.status,200);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:second.body.handle},s1)).status,200);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,s1)).status,429);
+  const separate=await ask("POST","/api/v1/ai/realtime-connect",opts,s2);
+  assert.equal(separate.status,200);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:separate.body.handle},s2)).status,200);
+ });
  await t.test("logout revokes session and clears cookies",async()=>{
   assert.equal((await ask("POST","/api/v1/auth/logout",{},s1)).status,200);
   assert.equal((await ask("GET","/api/v1/me",undefined,s1)).status,401);
