@@ -165,9 +165,21 @@ function renderMap(){
 }
 function renderEngine(){
  let p=round(state.power);
- $("engineData").innerHTML='<div class="pfd-tile"><small>POWER COMMAND</small><strong>'+p+'%</strong><p>Derived from the throttle. Not a real engine RPM or manifold pressure reading.</p></div><div class="pfd-tile"><small>FLAP SELECTOR</small><strong>'+round(state.flaps)+'°</strong></div><div class="pfd-tile"><small>TRAINING AIRSPEED</small><strong>'+round(state.speed)+' KT</strong></div>';
+ $("engineData").innerHTML='<div class="pfd-tile"><small>POWER COMMAND</small><strong>'+p+'%</strong><p>Derived from the throttle. Not a real engine RPM or manifold pressure reading.</p></div><div class="pfd-tile"><small>FLAPS SELECTED</small><strong>'+round(input.flaps)+'°</strong></div><div class="pfd-tile"><small>FLAPS INDICATED</small><strong>'+state.flaps.toFixed(1)+'°</strong></div><div class="pfd-tile"><small>TRAINING AIRSPEED</small><strong>'+round(state.speed)+' KT</strong></div>';
+}
+function updateFlapIllustration(){
+ // Move only the hinged trailing-edge flap, not the fixed wing. Animation is
+ // driven by the model's actual flap value, which approaches the selected detent.
+ const selected=clamp(input.flaps,0,30);
+ const indicated=clamp(state.flaps,0,30);
+ $("flapWingSurface").setAttribute("transform","rotate("+indicated.toFixed(2)+" 207 93)");
+ $("flapSvgAngle").textContent=indicated.toFixed(1)+"°";
+ $("flapCommanded").textContent=round(selected)+"°";
+ $("flapIndicated").textContent=indicated.toFixed(1)+"°";
+ $("flapTravelMeter").value=indicated;
 }
 function paint(){
+ updateFlapIllustration();
  renderAnalogue();renderPFD();if(pfdPage==="map")renderMap();if(pfdPage==="engine")renderEngine();
  if(window.CockpitV3Focus)window.CockpitV3Focus.update();
  $("distance").textContent=state.distance.toFixed(2)+" NM";
@@ -232,6 +244,7 @@ function setFlaps(n){
  $("outFlaps").textContent=n+"°";
  $("focusFlapsState").textContent=n+"°";
  $("digitalFlapsState").textContent=n+"°";
+ updateFlapIllustration();
 }
 function applyPreset(type){
  presetUntil=performance.now()+4300;
