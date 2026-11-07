@@ -36,6 +36,9 @@ try{
  assert.equal(await desktop.locator("#skillsStart").isDisabled(),false);
  assert.equal(await desktop.locator("#skillsExport").isDisabled(),false);
  assert.match(await desktop.locator("#skillsOutcome").textContent(),/PRACTICE TARGET MET/);
+ assert.match(await desktop.locator("#coachHeadline").textContent(),/fictional practice target/i);
+ assert.ok((await desktop.locator("#coachCriteria .coach-criterion").count())>=4,"criteria breakdown available");
+ assert.match(await desktop.locator("#coachNextSteps").textContent(),/Repeat/);
  const downloadPromise=desktop.waitForEvent("download");
  await desktop.locator("#skillsExport").click();
  const download=await downloadPromise;
@@ -47,6 +50,8 @@ try{
  assert.equal(report.task.id,"flap");
  assert.equal(report.observation.outcome,"PRACTICE_TARGET_MET");
  assert.match(report.disclaimer,/NOT A CERTIFICATE/);
+ assert.equal(report.automatedPracticeFeedback.criterionScores.length,4);
+ assert.match(report.automatedPracticeFeedback.label,/Automated practice coach/);
  assert.ok(!("learner" in report)&&!("studentId" in report));
  await desktop.locator("#skillsSelect").selectOption("turn");
  assert.equal(await desktop.locator("#digitalControlDock #control-rudder").count(),1);
