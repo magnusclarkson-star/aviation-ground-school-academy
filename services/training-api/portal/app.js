@@ -6,6 +6,7 @@
 const $=id=>document.getElementById(id);
 const state={user:null,attempts:[],assigned:[],drafts:[],selectedId:null,pendingUpload:null};
 const csrfNames=["__Host-AGSA-CSRF","agsa_local_csrf"];
+let connectedAiEnabled=false,connectedVoiceEnabled=false,lastAiText="",activeAudio=null,activeAudioUrl=null;
 // A fragment token is not sent to the server by navigation. Remove it from
 // history immediately, hold it only in memory, and wait for a deliberate click.
 const invitation=new URLSearchParams(location.hash.slice(1)).get("verify-email");
@@ -60,6 +61,11 @@ async function api(path,{method="GET",payload,key}={}){
 function resetSession(message){
  state.user=null;state.attempts=[];state.assigned=[];state.drafts=[];state.selectedId=null;
  state.pendingUpload=null;
+ stopNarration();
+ lastAiText="";connectedAiEnabled=false;connectedVoiceEnabled=false;
+ $("aiQuestion").value="";$("aiConsent").checked=false;
+ $("aiAskButton").disabled=true;$("aiSpeak").disabled=true;
+ show("aiAnswerPanel",false);
  $("password").value="";$("verificationCode").value="";
  $("reportFile").value="";
  removeAll("studentList");
@@ -82,6 +88,7 @@ async function loadUser(){
   show("instructorPanel",state.user.role==="instructor");
   if(state.user.role==="student")await refreshStudent();
   else await refreshInstructor();
+  await refreshAiStatus();
  }catch(err){
   if(err.status===401){resetSession();return;}
   resetSession(err.message);
@@ -251,6 +258,104 @@ if(pendingVerifyToken){
  $("verifyButton").disabled=true;
  status("verifyStatus","Invalid verification invitation. Request a new email from your staging operator.","error");
 }
+async function refreshAiStatus(){
+ try{
+  const data=await api("/api/v1/ai/status");
+  connectedAiEnabled=data.enabled===true;
+  connectedVoiceEnabled=data.voiceEnabled===true;
+  $("aiAskButton").disabled=!connectedAiEnabled;
+  status("aiAvailability",connectedAiEnabled?
+   "Connected text AI is enabled for fictional staging accounts. Text quota: "+data.limits.text+
+   " questions/day; natural voice quota: "+data.limits.voice+" clips/day (if enabled).":
+   "Connected AI is not enabled on this private staging server. The public guided lessons and device narration are available without it.");
+  const ttsOption=$("aiVoiceChoice").querySelectorAll("option");
+  ttsOption.forEach((option,i)=>{if(i>0)option.disabled=!connectedVoiceEnabled});
+  $("aiVoiceChoice").value="device";
+ }catch(e){
+  connectedAiEnabled=false;connectedVoiceEnabled=false;
+  $("aiAskButton").disabled=true;
+  status("aiAvailability","Connected AI availability could not be checked: "+e.message,"error");
+ }
+}
+async function askAiQuestion(event){
+ event.preventDefault();
+ if(!connectedAiEnabled){
+  status("aiTutorStatus","AI answers are not configured. Use the free curated spoken lessons instead.","error");return;
+ }
+ if(!$("aiConsent").checked){
+  status("aiTutorStatus","Please acknowledge that your question will be sent to the external AI provider.","error");return;
+ }
+ const question=$("aiQuestion").value.trim();
+ if(question.length<3||question.length>500){
+  status("aiTutorStatus","Please type a study question of 3–500 characters.","error");return;
+ }
+ $("aiAskButton").disabled=true;
+ stopNarration();
+ try{
+  const result=await api("/api/v1/ai/ask",{method:"POST",payload:{
+   question,topic:$("aiTopic").value,style:$("aiStyle").value
+  }});
+  if(result.mode!=="GENERATIVE_AI"||typeof result.answer!=="string")throw Error("AI response format was invalid");
+  lastAiText=result.answer;
+  $("aiAnswer").textContent=lastAiText;
+  show("aiAnswerPanel",true);
+  $("aiSpeak").disabled=false;
+  status("aiTutorStatus","AI-generated study response received. Check important claims against authorised training materials.","success");
+  $("aiConsent").checked=false;
+ }catch(e){status("aiTutorStatus","Could not get a connected instructor answer: "+e.message,"error");}
+ finally{$("aiAskButton").disabled=!connectedAiEnabled}
+}
+function stopNarration(){
+ if(window.speechSynthesis)try{window.speechSynthesis.cancel()}catch{}
+ if(activeAudio){activeAudio.pause();activeAudio.src="";activeAudio=null;}
+ if(activeAudioUrl){URL.revokeObjectURL(activeAudioUrl);activeAudioUrl=null;}
+}
+async function playAiVoice(){
+ if(!lastAiText)return;
+ stopNarration();
+ const choice=$("aiVoiceChoice").value;
+ if(choice==="device"){
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
+   status("aiTutorStatus","Device speech is unavailable in this browser.","error");return;
+  }
+  try{
+   const utterance=new SpeechSynthesisUtterance(lastAiText.slice(0,1800));
+   utterance.lang="en";utterance.rate=1;
+   window.speechSynthesis.speak(utterance);
+   status("aiTutorStatus","Speaking with a synthetic voice available on your device.");
+  }catch(e){status("aiTutorStatus","Device narration could not start.","error")}
+  return;
+ }
+ if(!connectedVoiceEnabled){
+  status("aiTutorStatus","Natural generated speech is not configured. Select the device voice instead.","error");return;
+ }
+ $("aiSpeak").disabled=true;
+ try{
+  const token=csrfToken();
+  if(!token)throw Error("Your secure session token is missing");
+  const response=await fetch("/api/v1/ai/voice",{
+   method:"POST",credentials:"same-origin",cache:"no-store",
+   headers:{"Content-Type":"application/json","X-AGSA-CSRF":token},
+   body:JSON.stringify({text:lastAiText.slice(0,700),voice:choice})
+  });
+  if(!response.ok){
+   let detail="Voice service unavailable";
+   try{const body=await response.json();detail=body.message||detail}catch{}
+   throw Error(detail);
+  }
+  const blob=await response.blob();
+  if(blob.size<32||blob.size>900000)throw Error("Unexpected audio size");
+  activeAudioUrl=URL.createObjectURL(blob);
+  activeAudio=new Audio(activeAudioUrl);
+  activeAudio.onended=()=>{stopNarration();status("aiTutorStatus","AI voice narration completed.")};
+  await activeAudio.play();
+  status("aiTutorStatus","Playing AI-generated voice (not a human instructor).");
+ }catch(e){stopNarration();status("aiTutorStatus","Natural speech could not play: "+e.message,"error");}
+ finally{$("aiSpeak").disabled=false}
+}
+$("aiQuestionForm").addEventListener("submit",askAiQuestion);
+$("aiSpeak").addEventListener("click",playAiVoice);
+$("aiStop").addEventListener("click",()=>{stopNarration();status("aiTutorStatus","Narration stopped.")});
 $("loginForm").addEventListener("submit",signIn);
 $("logoutButton").addEventListener("click",signOut);
 $("submissionForm").addEventListener("submit",submitPractice);
