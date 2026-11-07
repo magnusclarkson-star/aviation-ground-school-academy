@@ -15,6 +15,9 @@ test("role SQL uses escaped, distinct identifiers with narrow privileges",()=>{
  assert.ok(!sql.includes('GRANT DELETE ON public.audit_events'));
  assert.ok(sql.includes('GRANT UPDATE(revoked_at) ON public.sessions'));
  assert.ok(sql.includes('GRANT UPDATE(active) ON public.instructor_assignments TO "ci_bootstrap"'));
+ assert.ok(sql.includes('GRANT UPDATE(last_used_step) ON public.instructor_mfa TO "ci_web"'));
+ assert.ok(sql.includes('GRANT SELECT,INSERT ON public.instructor_mfa TO "ci_bootstrap"'));
+ assert.ok(!sql.includes('GRANT UPDATE(encrypted_secret) ON public.instructor_mfa TO "ci_web"'));
  assert.ok(!sql.includes('GRANT UPDATE(active) ON public.instructor_assignments TO "ci_web"'));
 });
 test("real PostgreSQL denies runtime audit changes, approvals and role escalation",async t=>{
@@ -61,6 +64,15 @@ test("real PostgreSQL denies runtime audit changes, approvals and role escalatio
   assert.equal(await checkPrivilege(app,"instructor_assignments","UPDATE"),false);
   assert.equal(await checkPrivilege(provision,"instructor_assignments","INSERT"),true);
   assert.equal(await checkPrivilege(app,"sessions","DELETE"),false);
+  assert.equal(await checkPrivilege(app,"instructor_mfa","SELECT"),true);
+  assert.equal(await checkPrivilege(app,"instructor_mfa","INSERT"),false);
+  assert.equal(await checkPrivilege(app,"instructor_mfa","DELETE"),false);
+  assert.equal(await checkPrivilege(app,"instructor_mfa","UPDATE"),false);
+  const mfaCounter=await client.query("SELECT has_column_privilege($1,'public.instructor_mfa','last_used_step','UPDATE') AS allowed",[app]);
+  assert.equal(mfaCounter.rows[0].allowed,true);
+  const mfaSecret=await client.query("SELECT has_column_privilege($1,'public.instructor_mfa','encrypted_secret','UPDATE') AS allowed",[app]);
+  assert.equal(mfaSecret.rows[0].allowed,false);
+  await expectDenied(app,"UPDATE public.instructor_mfa SET encrypted_secret='newsecret' WHERE false");
   assert.equal(await checkPrivilege(app,"users","UPDATE"),false);
   const column=await client.query("SELECT has_column_privilege($1,'public.sessions','revoked_at','UPDATE') AS allowed",[app]);
   assert.equal(column.rows[0].allowed,true);
