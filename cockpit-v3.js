@@ -9,6 +9,7 @@ const sin=Math.sin,cos=Math.cos,round=Math.round;
 const clamp=M.clamp;
 let state=M.makeState(),input=M.makeInput(),mode="analog",pfdPage="pfd";
 let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[];
+let mission=null,lastMissionPhase=null;
 const instruments=[
  ["asi","Airspeed indicator","The indicated airspeed needle uses a numbered dial with colored reference arcs. Airspeed changes with throttle, pitch and flaps. The arcs are conceptual and MUST be checked against a real aircraft's approved operating handbook."],
  ["att","Attitude indicator","The miniature aircraft is fixed. Blue represents sky, brown represents ground, and the moving horizon shows pitch and bank. Pulling the yoke raises the nose and moves the horizon down."],
@@ -207,22 +208,82 @@ function paint(){
  const d=Math.abs(state.roll)>5?(state.roll>0?"Banking right.":"Banking left."):Math.abs(state.pitch)>3?(state.pitch>0?"Nose-high attitude.":"Nose-low attitude."):"Near level attitude.";
  $("teachingFeedback").innerHTML="<p><strong>"+d+"</strong> Airspeed "+round(state.speed)+" kt; vertical speed "+round(state.verticalSpeed)+" ft/min. The readings change from controls, not direct touches on the dial.</p>";
 }
+function syncMissionControls(){
+ $("throttle").value=String(round(input.throttle));
+ $("trim").value=String(round(input.trim*100));
+ setFlaps(input.flaps);
+}
+function startMission(phase="roll"){
+ const training=window.CockpitV3Mission;
+ if(!training)throw Error("Guided flight mission could not load");
+ if(!mission)mission=training.make(phase);
+ else training.setup(mission,phase);
+ state=mission.state;input=mission.input;
+ presetUntil=0;trail=[];
+ paused=false;$("pauseBtn").setAttribute("aria-pressed","false");$("pauseBtn").textContent="Pause flight";
+ syncMissionControls();
+ lastMissionPhase=mission.phase;
+ if(window.CockpitV3Focus)window.CockpitV3Focus.dockMission(mission.phase);
+ renderMission();
+}
+function renderMission(){
+ if(!mission||mode!=="mission")return;
+ const cfg=window.CockpitV3Mission.phases[mission.phase];
+ if(!cfg)return;
+ $("missionPhase").textContent=cfg.title;
+ $("missionTask").textContent=cfg.task;
+ $("missionGoal").textContent=cfg.goal;
+ $("missionState").textContent=mission.state.grounded?"RUNWAY · ON GROUND":"AIRBORNE · "+round(mission.state.altitude)+" FT";
+ $("missionIAS").textContent=round(mission.state.speed)+" kt";
+ $("missionHeight").textContent=round(mission.state.altitude)+" ft AGL";
+ $("missionVSI").textContent=round(mission.state.verticalSpeed)+" fpm";
+ $("missionFlaps").textContent=round(input.flaps)+"°";
+ $("missionFeedback").textContent=mission.message+(mission.lastCheck?" · "+mission.lastCheck:"");
+ const steps=["roll","climb","approach","landing","rollout"];
+ let pos=steps.indexOf(mission.phase);
+ if(mission.phase==="climbReady")pos=2;
+ if(mission.phase==="review")pos=3;
+ if(mission.phase==="complete")pos=5;
+ for(let i=0;i<steps.length;i++){
+  const node=document.querySelector('[data-phase="'+steps[i]+'"]');
+  if(node)node.setAttribute("data-status",i<pos?"complete":i===pos?"current":"upcoming");
+ }
+ $("missionContinue").classList.toggle("hidden",mission.phase!=="climbReady");
+ $("missionGoAround").classList.toggle("hidden",!["approach","landing","review"].includes(mission.phase));
+ $("missionRepeat").classList.toggle("hidden",!["review","complete"].includes(mission.phase));
+}
 function setMode(next){
+ const wasMission=mode==="mission";
+ if(next==="mission"&&!wasMission){
+  mission=null;
+  mode="mission";
+  pfdPage="pfd";
+  startMission("roll");
+  setPFD("pfd");
+ }else if(wasMission&&next!=="mission"){
+  mission=null;state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
+  $("throttle").value="55";$("trim").value="0";setFlaps(0);
+ }
  mode=next;
  const focused=window.CockpitV3Focus;
  if(focused){
   if(next==="focus")focused.dock(focus,instruments);
   else if(next==="digital")focused.dockDigital(focus,instruments,pfdPage);
+  else if(next==="mission")focused.dockMission(mission.phase);
   else focused.restore();
  }
  $("focusMode").setAttribute("aria-pressed",String(mode==="focus"));
  $("analogMode").setAttribute("aria-pressed",String(mode==="analog"));
  $("digitalMode").setAttribute("aria-pressed",String(mode==="digital"));
+ $("missionMode").setAttribute("aria-pressed",String(mode==="mission"));
  $("focusSection").classList.toggle("hidden",mode!=="focus");
  $("analogSection").classList.toggle("hidden",mode!=="analog");
- $("digitalSection").classList.toggle("hidden",mode!=="digital");
- $("controlOverview").classList.toggle("hidden",mode==="focus"||mode==="digital");
+ $("digitalSection").classList.toggle("hidden",!["digital","mission"].includes(mode));
+ $("missionPanel").classList.toggle("hidden",mode!=="mission");
+ $("controlOverview").classList.toggle("hidden",["focus","digital","mission"].includes(mode));
+ document.querySelector(".lesson-bar").classList.toggle("hidden",mode==="mission");
  paint();
+ renderMission();
 }
 function setPFD(next){
  pfdPage=next;
@@ -249,6 +310,7 @@ function setFocus(n){
  }
 }
 function reset(){
+ if(mode==="mission"){startMission("roll");paint();return;}
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
  $("throttle").value="55";$("trim").value="0";setFlaps(0);paint();
 }
@@ -278,6 +340,32 @@ function wireControls(){
  $("focusMode").onclick=()=>setMode("focus");
  $("analogMode").onclick=()=>setMode("analog");
  $("digitalMode").onclick=()=>setMode("digital");
+ $("missionMode").onclick=()=>setMode("mission");
+ $("missionRestart").onclick=()=>{startMission("roll");paint();};
+ $("missionContinue").onclick=()=>{
+  if(mission&&mission.phase==="climbReady"){
+   window.CockpitV3Mission.approach(mission);
+   state=mission.state;input=mission.input;syncMissionControls();
+   lastMissionPhase=mission.phase;
+   window.CockpitV3Focus.dockMission(mission.phase);
+   setPFD("pfd");paint();renderMission();
+  }
+ };
+ $("missionRepeat").onclick=()=>{if(mission){startMission("approach");paint();}};
+ $("missionGoAround").onclick=()=>{
+  if(mission){
+   window.CockpitV3Mission.goAround(mission);
+   syncMissionControls();window.CockpitV3Focus.dockMission(mission.phase);
+   setPFD("pfd");paint();renderMission();
+  }
+ };
+ document.querySelectorAll("[data-mission-stage]").forEach(btn=>btn.addEventListener("click",()=>{
+  if(mode==="mission"){
+   startMission(btn.dataset.missionStage);
+   setPFD("pfd");paint();
+   const details=btn.closest("details");if(details)details.open=false;
+  }
+ }));
  $("pfdTab").onclick=()=>setPFD("pfd");$("mapTab").onclick=()=>setPFD("map");$("engineTab").onclick=()=>setPFD("engine");
  $("prevFocus").onclick=()=>setFocus(focus-1);$("nextFocus").onclick=()=>setFocus(focus+1);
  $("narrateFocus").onclick=()=>{
@@ -345,12 +433,20 @@ function frame(now){
  let dt=clamp((now-previous)/1000,0,.1);previous=now;
  if(!paused){
   if(presetUntil&&now>presetUntil){presetUntil=0;releaseYoke();}
-  M.step(state,input,dt);
+  if(mode==="mission"&&mission){
+   const phaseBefore=mission.phase;
+   window.CockpitV3Mission.step(mission,dt);
+   state=mission.state;input=mission.input;
+   if(phaseBefore!==mission.phase){
+    lastMissionPhase=mission.phase;
+    if(window.CockpitV3Focus)window.CockpitV3Focus.dockMission(mission.phase);
+   }
+  }else M.step(state,input,dt);
   if(!trail.length||Math.hypot(trail[trail.length-1].x-state.x,trail[trail.length-1].y-state.y)>.00008){
    trail.push({x:state.x,y:state.y});if(trail.length>260)trail.shift();
   }
  }
- if(now-lastDraw>90){lastDraw=now;paint();}
+ if(now-lastDraw>90){lastDraw=now;paint();if(mode==="mission")renderMission();}
  requestAnimationFrame(frame);
 }
 buildAnalogue();
