@@ -229,3 +229,18 @@ To control spend, `sql/004_ai_usage.sql` adds **atomic per-account, per-organisa
 **Provider lifecycle warning:** the optional `gpt-4o-mini-tts` Speech API adapter is deprecated and scheduled for shutdown on **6 January 2027**. Its long-term replacement will require a reviewed `gpt-realtime-2.1-mini` Realtime API design, not a drop-in model swap. Device speech continues to work independently where supported. Connected AI is not currently hosted or configured with a paid provider.
 
 Detailed architecture and operational restrictions: [AI Instructor and Voice Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
+
+
+## V0.5 — Private two-way AI voice tutor (WebRTC staging foundation)
+
+The private dashboard now supports `/api/v1/ai/realtime-connect` and `/api/v1/ai/realtime-end`. On a user-confirmed, authenticated request, the browser asks permission for its microphone and sends a bounded SDP offer **to this same-origin API**, not a provider key. The server combines the offer with its own fixed educational session configuration and exchanges it using OpenAI's **GA `POST /v1/realtime/calls` unified WebRTC API**. The browser then uses the returned SDP answer for microphone audio and synthetic instructor speech. It never sees a long-lived API key or short-lived provider token.
+
+**Default is disabled**: for fictional staging ONLY, a trusted operator must explicitly set all three `AGSA_AI_ENABLED=1`, `AGSA_AI_REALTIME_ENABLED=1`, `AGSA_AI_REALTIME_STAGING_APPROVED=1`, and supply `OPENAI_API_KEY` from a private secret manager. No API key or account is preconfigured and no live paid voice calls have been made in tests.
+
+Safety and spend constraints: a verified login and CSRF token are mandatory; explicit voice consent is required for each call. A validated lesson topic, teaching style and synthetic voice are the only client-selectable settings; model `gpt-realtime-2.1-mini`, AI instructions and token limits remain server-owned. The voice tutor includes a **two-minute client timer** and the private server attempts to end each call through **`POST /v1/realtime/calls/{call_id}/hangup`** after 120 seconds. Staging also permits **only one live voice session per learner per application process**, and two session reservations per account per UTC day via PostgreSQL. The student may manually mute or end a call; sign-out triggers server hangup. Local, nonpersisted generated transcripts may appear in the browser.
+
+**Important production caveat:** The server hangup scheduler and active-session registry are currently in memory. A server crash or restart may interrupt the timer while a provider call is still active. Provider errors can also prevent teardown. These are *best-effort controls, not a hard financial cap*: use provider-side billing limits and a **durable call-expiry worker** before any real paid rollout. The user interface does not grant qualification, course credit, approved training time or real-time flight guidance. Unverified minors should not be onboarded without the separate safeguarding design.
+
+Automated CI now checks session validation, no external provider credentials in responses, simulated backend handshakes, mock provider hangup, access and quota boundaries, and fake desktop/mobile WebRTC browser flows. All provider calls in CI are mocked.
+
+See [AI Instructor and Voice Engineering Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
