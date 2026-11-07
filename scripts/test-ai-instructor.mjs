@@ -1,0 +1,31 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const L=require("../ai-instructor-lessons.js");
+assert.equal(L.lessons.length,6,"Public tutor has six editorially curated lessons");
+assert.deepEqual(L.lessons.map(x=>x.id),["forces","instruments","controls","flaps","weather","radio"]);
+for(const lesson of L.lessons){
+ assert.ok(lesson.name.length>6);
+ assert.ok(lesson.intro.length>40&&lesson.body.length>120);
+ assert.ok(lesson.options.length===3);
+ assert.ok(lesson.correct>=0&&lesson.correct<3);
+ assert.match(lesson.explanation,/[.!]/);
+ assert.ok(L.voiceScript(lesson.id,"mentor").includes(lesson.name)===false||L.voiceScript(lesson.id).length>lesson.body.length);
+ const good=L.evaluateQuiz(lesson.id,lesson.correct);
+ assert.equal(good.correct,true);
+ for(let i=0;i<3;i++)if(i!==lesson.correct)assert.equal(L.evaluateQuiz(lesson.id,i).correct,false);
+}
+assert.match(L.voiceScript("forces","scouts"),/Air Scouts/);
+assert.match(L.voiceScript("controls","exam"),/Theory review/);
+assert.equal(L.localAnswer("What does the PFD show?","forces").lessonId,"instruments");
+assert.equal(L.localAnswer("How do rudder pedals work?","forces").lessonId,"controls");
+assert.equal(L.localAnswer("Does a flap increase drag?","forces").lessonId,"flaps");
+assert.equal(L.localAnswer("What is a TAF?","forces").lessonId,"weather");
+assert.equal(L.localAnswer("How should I study radio phraseology?","forces").lessonId,"radio");
+const unknown=L.localAnswer("Something I am curious about","forces");
+assert.equal(unknown.mode,"CURATED_GUIDANCE");
+assert.equal(unknown.lessonId,"forces");
+assert.match(unknown.text,/not a live AI answer/);
+assert.throws(()=>L.localAnswer(" "),"Enter a question");
+assert.throws(()=>L.evaluateQuiz("forces",99),/valid response/);
+console.log("Public instructor lesson tests passed: 6 lessons, answer matching, quiz scoring, three teaching personas and no false AI claims.");
