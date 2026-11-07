@@ -59,6 +59,7 @@ async function api(path,{method="GET",payload,key}={}){
  return data;
 }
 function resetSession(message){
+ window.dispatchEvent(new Event("agsa:logout"));
  state.user=null;state.attempts=[];state.assigned=[];state.drafts=[];state.selectedId=null;
  state.pendingUpload=null;
  stopNarration();
@@ -271,9 +272,11 @@ async function refreshAiStatus(){
   const ttsOption=$("aiVoiceChoice").querySelectorAll("option");
   ttsOption.forEach((option,i)=>{if(i>0)option.disabled=!connectedVoiceEnabled});
   $("aiVoiceChoice").value="device";
+  window.dispatchEvent(new CustomEvent("agsa:ai-status",{detail:data}));
  }catch(e){
   connectedAiEnabled=false;connectedVoiceEnabled=false;
   $("aiAskButton").disabled=true;
+  window.dispatchEvent(new CustomEvent("agsa:ai-status",{detail:{realtimeEnabled:false}}));
   status("aiAvailability","Connected AI availability could not be checked: "+e.message,"error");
  }
 }
