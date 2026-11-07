@@ -158,6 +158,17 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 #flapTravelMeter{display:block;width:100%;height:16px;margin:9px 0 1px;accent-color:#f7c875}
 .flap-demo-ticks{display:flex;justify-content:space-between;color:#a3c7d8;font-size:10px}
 .flap-demo-caption{font-size:11px!important;line-height:1.4;color:#aac5d7;margin:7px 0 0}
+
+.flap-effects-panel{margin-top:12px;padding:10px;background:#091723;border:1px solid #466580;border-radius:10px}
+.flap-effects-panel h4{font-size:13px;color:#f5d18f;margin:1px 0 9px}
+.flap-force-row{margin:7px 0}
+.flap-force-row label{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#d0e6f2;font-size:12px}
+.flap-force-row output{color:#ffd486;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.flap-force-row progress{display:block;width:100%;height:12px;margin-top:4px;accent-color:#e5b45c}
+.flap-live-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
+.flap-live-pair span{border:1px solid #3b607c;border-radius:8px;padding:7px;color:#acd2e7;font-size:10px;font-weight:750}
+.flap-live-pair strong{display:block;color:#f8f4e7;font-size:16px;font-variant-numeric:tabular-nums}
+.flap-context{margin:9px 0 2px!important;color:#d6e7f1!important;font-size:11px!important;line-height:1.45}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
@@ -287,7 +298,14 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
       </div>
       <meter id="flapTravelMeter" min="0" max="30" value="0" aria-label="Actual animated flap extension from zero to thirty degrees">0°</meter>
       <div class="flap-demo-ticks" aria-hidden="true"><span>0°</span><span>10°</span><span>20°</span><span>30°</span></div>
-      <p class="flap-demo-caption" id="flapDemoDescription">Generic hinged trailing-edge flap, side view. The position moves toward the selected detent. Aircraft-specific flap mechanisms and operating limits differ.</p>
+      <div class="flap-effects-panel" aria-label="Live educational lift and drag effects">
+        <h4>What the flaps change</h4>
+        <div class="flap-force-row"><label for="flapLiftProgress">Relative lift potential <output id="flapLiftIndex">1.00×</output></label><progress id="flapLiftProgress" min="0" max="1.5" value="1"></progress></div>
+        <div class="flap-force-row"><label for="flapDragProgress">Relative drag <output id="flapDragIndex">1.00×</output></label><progress id="flapDragProgress" min="0" max="2.3" value="1"></progress></div>
+        <div class="flap-live-pair"><span>AIRSPEED <strong id="flapIAS">102 kt</strong></span><span>VERTICAL SPEED <strong id="flapVSI">0 ft/min</strong></span></div>
+        <p class="flap-context" id="flapContext">With the wing clean, the simulated lift and drag indices are at their reference values.</p>
+      </div>
+      <p class="flap-demo-caption" id="flapDemoDescription">Generic hinged trailing-edge flap, side view. Indices are relative teaching aids, not actual aerodynamic coefficients or aircraft performance data. Aircraft-specific flap mechanisms, pitch responses and limitations differ.</p>
     </div>
   </div>
  </div>
