@@ -3,12 +3,13 @@ import {createServer} from "node:http";
 import {randomUUID} from "node:crypto";
 import {chromium} from "playwright";
 import {createHandler} from "../src/http.mjs";
-import {hashPassword} from "../src/crypto.mjs";
+import {hashPassword,hashSha256,generateSecret} from "../src/crypto.mjs";
 import {totpAtStep,checkTotp} from "../src/mfa.mjs";
 const demoTotpSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 
 const org=randomUUID(),student=randomUUID(),teacher=randomUUID(),unassigned=randomUUID();
 const password="staging-only-password-2026";
+const inviteToken=generateSecret();
 const exampleReport={
  schema:"agsa.practice-observation.v1",
  createdAt:"2026-11-07T19:25:00.000Z",
@@ -24,10 +25,18 @@ class FakeStore{
    ["pilot.unassigned@example.org",{userId:unassigned,organizationId:org,role:"instructor",passwordHash}]
   ]);
   this.sessions=new Map();this.attempts=[];this.drafts=[];this.mfaSteps=new Map();
+  this.verified=new Set([teacher,unassigned]);this.inviteHash=hashSha256(inviteToken);
  }
  async ping(){return true}
  async recordLoginAttempt(){return true}
- async lookupLogin(email,slug){return slug==="agsa-pilot"&&this.accounts.has(email)?{...this.accounts.get(email),email}:null}
+ async lookupLogin(email,slug){
+  const found=this.accounts.get(email);
+  return slug==="agsa-pilot"&&found&&this.verified.has(found.userId)?{...found,email}:null;
+ }
+ async consumeEmailVerification(hash){
+  if(hash!==this.inviteHash||this.verified.has(student))return false;
+  this.verified.add(student);this.inviteHash=null;return true;
+ }
  async consumeInstructorOtp({userId,code}){
   const step=checkTotp(demoTotpSecret,code,Date.now(),this.mfaSteps.get(userId)??-1);
   if(step===null)return false;
@@ -37,7 +46,10 @@ class FakeStore{
   const item=[...this.accounts.entries()].find(([,v])=>v.userId===userId);
   this.sessions.set(tokenHash,{userId,organizationId,csrfHash,role:item[1].role,email:item[0]});
  }
- async getSession(hash){return this.sessions.get(hash)||null}
+ async getSession(hash){
+  const actor=this.sessions.get(hash)||null;
+  return actor&&this.verified.has(actor.userId)?actor:null;
+ }
  async revokeSession(hash){this.sessions.delete(hash)}
  async createAttempt(actor,key,digest,report){
   const prior=this.attempts.find(x=>x.studentId===actor.userId&&x.organizationId===actor.organizationId&&x.key===key);
@@ -88,7 +100,22 @@ async function login(page,email){
 try{
  const desktop=await browser.newPage({viewport:{width:1260,height:870}});
  desktop.on("pageerror",e=>pageErrors.push("desktop: "+e.message));
- await desktop.goto(base+"/portal/");
+ await desktop.goto(base+"/portal/#verify-email="+inviteToken);
+ assert.equal(await desktop.locator("#verifyPanel").isVisible(),true);
+ assert.equal(await desktop.evaluate(()=>window.location.hash),"","invitation fragment erased immediately");
+ await desktop.locator("#loginPanel").waitFor({state:"visible"});
+ await desktop.locator("#organization").fill("agsa-pilot");
+ await desktop.locator("#email").fill("pilot.student@example.org");
+ await desktop.locator("#password").fill(password);
+ await desktop.locator("#loginButton").click();
+ await desktop.waitForFunction(()=>document.querySelector("#globalStatus").textContent.includes("Sign-in unsuccessful"));
+ assert.equal(await desktop.locator("#workspace").isVisible(),false,
+  "student must not sign in until email ownership is confirmed");
+ assert.equal(store.verified.has(student),false,"invitation is not auto-consumed by opening URL");
+ await desktop.locator("#verifyButton").click();
+ await desktop.waitForFunction(()=>document.querySelector("#verifyStatus").textContent.includes("Email confirmed"));
+ assert.equal(store.verified.has(student),true,"deliberate verification activates staging email");
+ assert.equal(await desktop.locator("#verifyButton").isVisible(),false);
  assert.equal(await desktop.locator("#loginPanel").isVisible(),true);
  assert.equal(await desktop.locator("#workspace").isVisible(),false);
  assert.equal(await desktop.locator("#loadingPanel").isVisible(),false);
