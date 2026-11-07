@@ -32,7 +32,7 @@ export function validateRealtimeRequest(data){
  if(typeof sdp!=="string"||sdp.length<80||sdp.length>16000||
    !sdp.startsWith("v=0")||!sdp.includes("m=audio ")||!sdp.includes("a=")||
    /\u0000/.test(sdp))bad("Valid bounded WebRTC audio SDP is required");
- return {topic,style,voice,sdp};
+ return {topic,style,voice,sdp,consent:true};
 }
 export function makeRealtimeSession({topic,style,voice}){
  return {
