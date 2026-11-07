@@ -146,6 +146,18 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .flap-status strong{font-variant-numeric:tabular-nums;color:#fff;font-size:15px}
 .digital-control-column .flap-status{margin-top:4px}
 @media(max-width:650px){.focus-gauge .flap-status{margin:3px 0;padding:3px 8px;font-size:10px}.focus-gauge .flap-status strong{font-size:12px}}
+
+/* Animated conceptual wing section, kept inside the real flap-selector hardware */
+.flap-demonstration{margin-top:12px;border:1px solid #53768c;border-radius:13px;background:linear-gradient(160deg,#0f2c41,#081c2b);padding:10px;min-width:0}
+.flap-demo-title,.flap-demo-readouts{display:flex;justify-content:space-between;gap:9px;align-items:center;flex-wrap:wrap}
+.flap-demo-title strong{font-size:12px;color:#f4f8fb}
+.flap-demo-title span{font-size:10px;color:#f4d197;letter-spacing:.08em;font-weight:800}
+.flap-wing-svg{display:block;width:100%;height:auto;max-width:390px;margin:8px auto 4px;pointer-events:none}
+.flap-demo-readouts{font-size:11px;font-weight:800;color:#b7d6e6;letter-spacing:.035em}
+.flap-demo-readouts output{color:#ffcf7c;font-variant-numeric:tabular-nums;font-size:15px}
+#flapTravelMeter{display:block;width:100%;height:16px;margin:9px 0 1px;accent-color:#f7c875}
+.flap-demo-ticks{display:flex;justify-content:space-between;color:#a3c7d8;font-size:10px}
+.flap-demo-caption{font-size:11px!important;line-height:1.4;color:#aac5d7;margin:7px 0 0}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
@@ -240,6 +252,43 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
   <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Select 0°, 10°, 20° or 30° at any instrument. Flaps primarily change lift and drag; in this simplified model, watch the airspeed response rather than expecting every gauge to move.</p>
     <div class="flap-row"><button id="flaps0" aria-pressed="true">0°</button><button id="flaps10" aria-pressed="false">10°</button><button id="flaps20" aria-pressed="false">20°</button><button id="flaps30" aria-pressed="false">30°</button></div>
     <div class="meter"><label>Selected flaps <output id="outFlaps">0°</output></label></div>
+    <div class="flap-demonstration" aria-label="Animated wing flap training illustration">
+      <div class="flap-demo-title"><strong>Wing section · flap movement</strong><span>SIMULATED</span></div>
+      <svg class="flap-wing-svg" viewBox="0 0 380 198" role="img" aria-label="Side cross-section of an illustrated wing. Its hinged trailing-edge flap rotates down as the indicated flap angle increases." aria-describedby="flapDemoDescription">
+        <defs>
+          <linearGradient id="wingMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#edf5f9"/><stop offset=".43" stop-color="#a9cadb"/><stop offset="1" stop-color="#4b738c"/></linearGradient>
+          <linearGradient id="flapMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe6b8"/><stop offset=".75" stop-color="#f2ac51"/><stop offset="1" stop-color="#ad6638"/></linearGradient>
+        </defs>
+        <rect x="2" y="2" width="376" height="194" rx="13" fill="#0b1f30" stroke="#486d80"/>
+        <path d="M14 30 H360" stroke="#426987" stroke-dasharray="3 12" opacity=".5"/>
+        <path d="M17 106 H360" stroke="#426987" stroke-dasharray="3 12" opacity=".5"/>
+        <text x="18" y="20" font-size="11" fill="#9dcde5" letter-spacing="1">AIRFLOW →</text>
+        <path d="M22 88 H75 M30 88 L23 82 M30 88 L23 94" stroke="#74caea" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M22 120 H67 M30 120 L23 114 M30 120 L23 126" stroke="#74caea" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M74 87 C79 67 115 59 156 64 C181 67 198 76 207 85 L207 103 C163 111 121 116 87 110 C75 106 69 96 74 87Z"
+          fill="url(#wingMetal)" stroke="#e8faff" stroke-width="2.4"/>
+        <path d="M207 85 L287 89 L311 97 L283 108 L207 103Z"
+          fill="none" stroke="#90aebd" stroke-width="1.5" stroke-dasharray="5 4" opacity=".85"/>
+        <g id="flapWingSurface" transform="rotate(0 207 92)">
+          <path d="M207 84 L282 88 Q303 92 311 98 L286 108 L207 103Z"
+            fill="url(#flapMetal)" stroke="#ffe3ad" stroke-width="2.2"/>
+          <path d="M215 92 L290 96" stroke="#a3632a" stroke-width="2" opacity=".55"/>
+        </g>
+        <circle cx="207" cy="93" r="5" fill="#273f4c" stroke="#eff8ff" stroke-width="2"/>
+        <path d="M208 112 L208 142" stroke="#a8c5d5" stroke-dasharray="3 5"/>
+        <text x="209" y="156" text-anchor="middle" fill="#bcdbec" font-size="11">HINGE</text>
+        <text x="88" y="147" text-anchor="middle" fill="#bbd2e4" font-size="11">FIXED WING</text>
+        <text x="287" y="160" text-anchor="middle" fill="#ffdc9f" font-size="11">TRAILING FLAP</text>
+        <text id="flapSvgAngle" x="361" y="23" fill="#ffdb90" text-anchor="end" font-size="15" font-weight="700">0°</text>
+      </svg>
+      <div class="flap-demo-readouts">
+        <span>SELECTED <output id="flapCommanded">0°</output></span>
+        <span>INDICATED <output id="flapIndicated">0.0°</output></span>
+      </div>
+      <meter id="flapTravelMeter" min="0" max="30" value="0" aria-label="Actual animated flap extension from zero to thirty degrees">0°</meter>
+      <div class="flap-demo-ticks" aria-hidden="true"><span>0°</span><span>10°</span><span>20°</span><span>30°</span></div>
+      <p class="flap-demo-caption" id="flapDemoDescription">Generic hinged trailing-edge flap, side view. The position moves toward the selected detent. Aircraft-specific flap mechanisms and operating limits differ.</p>
+    </div>
   </div>
  </div>
  <div class="actions" style="margin-top:12px"><button id="presetLevel">Straight & level</button><button id="presetClimb">Climb demo</button><button id="presetRight">Right turn demo</button><button id="presetDescend">Descent demo</button></div>
