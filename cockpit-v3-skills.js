@@ -53,7 +53,7 @@
    pitchDeg:value(s.pitch),bankDeg:value(s.roll),headingDeg:value(s.heading),
    airspeedKt:value(s.speed),verticalSpeedFpm:value(s.verticalSpeed),
    turnRateDegS:value(s.turnRate),slip:value(s.slip),
-   selectedFlapsDeg:value(i.flaps),indicatedFlapsDeg:value(s.flaps),
+   selectedFlapsDeg:value(i.flaps),indicatedFlapsDeg:value(s.flaps),relativeDragIndex:value(s.dragIndex),
    throttlePercent:value(i.throttle),altitudeFt:value(s.altitude)
   };
  }
