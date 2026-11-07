@@ -85,3 +85,20 @@ The journal is **opt-in**. It is not created automatically, has a maximum of **2
 To convert this into legitimate provider-managed training records later, a qualified school would need an approved syllabus, role-based permissions, explicit student identity verification, instructor review and sign-off, evidence retention schedule, tamper-evident server records, privacy/security controls, accessibility and human evaluation. All legal/approval claims must be reviewed with the relevant regulator and school partners.
 
 **Engineering checks:** `scripts/test-cockpit-coach-journal.mjs` validates the feedback engine and storage, including corrupt data handling and simulated storage access errors; `scripts/test-cockpit-journal-browser.mjs` tests desktop and mobile browser consent, persistence, export and deletion via a local HTTP test server. No production database or cloud account is used.
+
+## V3.8 — Practice report review workbench (prototype)
+
+The public [Practice Report Review Workspace](../instructor-review.html) provides a manual **unverified feedback draft** workflow. It accepts two file schemas:
+
+- `agsa.practice-observation.v1` — an individual, unsigned Skills Practice JSON report.
+- `agsa.local-journal.v1` — a local practice journal export, limited to 20 summary entries.
+
+The intake enforces JSON syntax, a **256 KB maximum file size**, supported training task IDs, bounded observation numbers and supported outcome values. All imported text is rendered as **literal text**, never executable HTML. Imported reports are explicitly treated as **untrusted** and user-editable, regardless of origin.
+
+The workspace shows claimed exercise details, score, timestamp, available synthetic indications and prior automated suggestions. A reviewer can select three non-authoritative **discussion rubric prompts** (instrument scanning, control coordination, safety/decisions), type coaching notes and export an `agsa.unverified-review-draft.v1` JSON document. Drafts always carry a conspicuous no-signature/no-credit declaration. A review must contain at least one note or next action to export.
+
+**Not implemented:** real authenticated instructor accounts, verified student identity, document signatures, school records, approved curriculum assessment criteria, record retention, secure multi-organisation access or a real training administration backend. The workspace keeps imports and edits in browser memory only and deliberately does **not** persist them to local storage or any server.
+
+See [Secure Student Records Engineering Blueprint](STUDENT-RECORDS-ARCHITECTURE.md) for the proposed protected API, role model, database entities, auditing, privacy and future regulatory process. It is design material, not deployed functionality.
+
+**Automated checks:** `scripts/test-instructor-review.mjs` tests parsing, safety validation and review schemas. `scripts/test-instructor-review-browser.mjs` tests actual file import, unsupported/oversized files, untrusted markup escaping, desktop/mobile interactions, import clearing and download of unverified JSON.
