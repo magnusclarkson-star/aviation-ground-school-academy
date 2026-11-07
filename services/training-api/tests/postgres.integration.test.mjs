@@ -170,7 +170,7 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
  }finally{
   // All data are synthetic; isolate cleanup to identifiers created in this test.
   try{
-   await pool.query("DELETE FROM audit_events WHERE organization_id = ANY($1::uuid[])",[orgs]);
+   await pool.query("DELETE FROM audit_events WHERE organization_id = ANY($1::uuid[]) OR actor_user_id = ANY($2::uuid[])",[orgs,users]);
    await pool.query("DELETE FROM feedback_drafts WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM practice_attempts WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM sessions WHERE organization_id = ANY($1::uuid[])",[orgs]);
