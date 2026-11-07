@@ -9,6 +9,9 @@ on:
       - 'cockpit-v3-focus.js'
       - 'cockpit-v3-mission.js'
       - 'cockpit-v3-skills.js'
+      - 'cockpit-v3-coach.js'
+      - 'cockpit-v3-journal.js'
+      - 'scripts/test-cockpit-journal-browser.mjs'
       - 'scripts/test-cockpit-skills-browser.mjs'
       - 'scripts/test-cockpit-browser.mjs'
       - 'scripts/test-cockpit-mission-browser.mjs'
@@ -32,3 +35,4 @@ jobs:
       - run: node scripts/test-cockpit-mission-browser.mjs
       - run: node scripts/test-cockpit-control-options.mjs
       - run: node scripts/test-cockpit-skills-browser.mjs
+      - run: node scripts/test-cockpit-journal-browser.mjs
