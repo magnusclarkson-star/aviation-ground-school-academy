@@ -134,6 +134,14 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
  const s1=await login("s1@example.org");
  const s2=await login("s2@example.org");
  const t1=await login("t1@example.org");
+ await t.test("same 30-second instructor OTP cannot create a second session",async()=>{
+  const reused=await ask("POST","/api/v1/auth/login",{
+   email:"t1@example.org",password,organization:"academy-one",
+   verificationCode:totpAtStep(exampleMfaSecret,Math.floor(Date.now()/30000))
+  });
+  assert.equal(reused.status,401);
+  assert.equal(reused.headers.getSetCookie().length,0);
+ });
  const t2=await login("t2@example.org");
  const other=await login("teacher@example.org","academy-two");
  await t.test("authenticated identity comes only from session; insecure requests fail",async()=>{
