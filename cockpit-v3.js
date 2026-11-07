@@ -169,6 +169,7 @@ function renderEngine(){
 }
 function paint(){
  renderAnalogue();renderPFD();if(pfdPage==="map")renderMap();if(pfdPage==="engine")renderEngine();
+ if(window.CockpitV3Focus)window.CockpitV3Focus.update();
  $("distance").textContent=state.distance.toFixed(2)+" NM";
  $("turnrate").textContent=state.turnRate.toFixed(1)+"°/s";
  let t=round(state.elapsed);$("elapsed").textContent=Math.floor(t/60)+":"+String(t%60).padStart(2,"0");
@@ -180,8 +181,15 @@ function paint(){
 }
 function setMode(next){
  mode=next;
- $("analogMode").setAttribute("aria-pressed",String(mode==="analog"));$("digitalMode").setAttribute("aria-pressed",String(mode==="digital"));
- $("analogSection").classList.toggle("hidden",mode!=="analog");$("digitalSection").classList.toggle("hidden",mode!=="digital");
+ const focused=window.CockpitV3Focus;
+ if(focused){if(next==="focus")focused.dock(focus,instruments);else focused.restore();}
+ $("focusMode").setAttribute("aria-pressed",String(mode==="focus"));
+ $("analogMode").setAttribute("aria-pressed",String(mode==="analog"));
+ $("digitalMode").setAttribute("aria-pressed",String(mode==="digital"));
+ $("focusSection").classList.toggle("hidden",mode!=="focus");
+ $("analogSection").classList.toggle("hidden",mode!=="analog");
+ $("digitalSection").classList.toggle("hidden",mode!=="digital");
+ $("controlOverview").classList.toggle("hidden",mode==="focus");
  paint();
 }
 function setPFD(next){
@@ -200,6 +208,8 @@ function setFocus(n){
  $("focusCount").textContent="INSTRUMENT "+(focus+1)+" / "+instruments.length;
  $("focusTitle").textContent=x[1];$("focusText").textContent=x[2];
  for(const y of instruments){$("tile-"+y[0]).setAttribute("aria-current",String(y===x));}
+ const focused=window.CockpitV3Focus;
+ if(focused){focused.highlight(focus,instruments);if(mode==="focus")focused.dock(focus,instruments);}
 }
 function reset(){
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
@@ -223,6 +233,7 @@ function applyPreset(type){
 function releaseYoke(){input.yokeX=0;input.yokeY=0;$("grip").style.transform="translate(0px,0px)"}
 function cancelPreset(){presetUntil=0}
 function wireControls(){
+ $("focusMode").onclick=()=>setMode("focus");
  $("analogMode").onclick=()=>setMode("analog");
  $("digitalMode").onclick=()=>setMode("digital");
  $("pfdTab").onclick=()=>setPFD("pfd");$("mapTab").onclick=()=>setPFD("map");$("engineTab").onclick=()=>setPFD("engine");
@@ -302,9 +313,10 @@ function frame(now){
 }
 buildAnalogue();
 wireControls();
+if(window.CockpitV3Focus)window.CockpitV3Focus.init(instruments,setFocus);
 setFocus(0);
 setPFD("pfd");
-setMode("analog");
+setMode("focus");
 paint();
 requestAnimationFrame(frame);
 })();
