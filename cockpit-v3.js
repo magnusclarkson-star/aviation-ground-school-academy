@@ -9,7 +9,7 @@ const sin=Math.sin,cos=Math.cos,round=Math.round;
 const clamp=M.clamp;
 let state=M.makeState(),input=M.makeInput(),mode="analog",pfdPage="pfd";
 let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[],controlStyle="yoke";
-let mission=null,lastMissionPhase=null;
+let mission=null,lastMissionPhase=null,skillsSession=null;
 const instruments=[
  ["asi","Airspeed indicator","The indicated airspeed needle uses a numbered dial with colored reference arcs. Airspeed changes with throttle, pitch and flaps. The arcs are conceptual and MUST be checked against a real aircraft's approved operating handbook."],
  ["att","Attitude indicator","The miniature aircraft is fixed. Blue represents sky, brown represents ground, and the moving horizon shows pitch and bank. Pulling the yoke raises the nose and moves the horizon down."],
@@ -224,6 +224,7 @@ function paint(){
  $("outFlaps").textContent=round(input.flaps)+"°";
  const d=Math.abs(state.roll)>5?(state.roll>0?"Banking right.":"Banking left."):Math.abs(state.pitch)>3?(state.pitch>0?"Nose-high attitude.":"Nose-low attitude."):"Near level attitude.";
  $("teachingFeedback").innerHTML="<p><strong>"+d+"</strong> Airspeed "+round(state.speed)+" kt; vertical speed "+round(state.verticalSpeed)+" ft/min. The readings change from controls, not direct touches on the dial.</p>";
+ if(mode==="skills")renderSkills();
 }
 function syncMissionControls(){
  $("throttle").value=String(round(input.throttle));
@@ -272,16 +273,77 @@ function renderMission(){
  $("missionGoAround").classList.toggle("hidden",!["approach","landing","review"].includes(mission.phase));
  $("missionRepeat").classList.toggle("hidden",!["review","complete"].includes(mission.phase));
 }
+function selectSkillTask(id){
+ const Skills=window.CockpitV3Skills;
+ if(!Skills)throw Error("Skills practice module did not load");
+ skillsSession=Skills.create(id);
+ state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
+ paused=false;$("pauseBtn").setAttribute("aria-pressed","false");$("pauseBtn").textContent="Pause flight";
+ $("throttle").value="55";$("trim").value="0";
+ $("flapPitchMode").value=input.flapPitchMode;
+ setFlaps(0);
+ $("skillsSelect").value=id;
+ if(window.CockpitV3Focus)window.CockpitV3Focus.dockSkills(id);
+ renderSkills();
+}
+function renderSkills(){
+ if(!skillsSession||mode!=="skills")return;
+ const Skills=window.CockpitV3Skills;
+ const task=Skills.tasks[skillsSession.id];
+ const running=skillsSession.status==="running";
+ const done=skillsSession.status==="finished";
+ $("skillsBriefing").textContent=task.briefing;
+ $("skillsTarget").textContent=task.target;
+ $("skillsStage").textContent=running?"OBSERVING":done?(skillsSession.passed?"TARGET MET":"REVIEW"):"READY";
+ $("skillsElapsed").textContent=skillsSession.elapsed.toFixed(1)+" / "+Skills.duration.toFixed(1)+" s";
+ $("skillsMatched").textContent=skillsSession.percent+"%";
+ $("skillsProgress").value=skillsSession.elapsed;
+ $("skillsResult").textContent=skillsSession.feedback;
+ $("skillsMiniPhase").textContent=task.title;
+ $("skillsMiniHint").textContent=running
+  ?skillsSession.elapsed.toFixed(1)+"s / "+Skills.duration+"s · "+skillsSession.percent+"% within target"
+  :done?("Result: "+skillsSession.percent+"% · "+(skillsSession.passed?"example target met":"repeat practice"))
+  :"Example target: "+task.target;
+ $("skillsSelect").disabled=running;
+ $("skillsStart").disabled=running;
+ $("skillsEnd").disabled=!running;
+ $("skillsExport").disabled=!done;
+ $("skillsStart").textContent=done?"Start new observation":"Start 12-second observation";
+ $("skillsSummary").classList.toggle("hidden",!done);
+ if(done){
+  $("skillsOutcome").textContent=skillsSession.passed?"PRACTICE TARGET MET":skillsSession.stopReason==="ended"?"INCOMPLETE":"PRACTICE AGAIN";
+  $("skillsScore").textContent=skillsSession.percent+"% (target ≥"+Skills.threshold+"%)";
+  $("skillsStreak").textContent=(skillsSession.maxStreak*Skills.sampleInterval).toFixed(1)+" s";
+  $("skillsReviewNote").textContent=skillsSession.feedback+" The optional JSON records only synthetic readings and is not a signed assessment.";
+ }
+}
+function downloadSkillReport(){
+ if(!skillsSession||skillsSession.status!=="finished")return;
+ const report=window.CockpitV3Skills.report(skillsSession);
+ const blob=new Blob([JSON.stringify(report,null,2)+"\n"],{type:"application/json"});
+ const href=URL.createObjectURL(blob);
+ const anchor=document.createElement("a");
+ anchor.href=href;
+ anchor.download="academy-unofficial-"+skillsSession.id+"-practice.json";
+ document.body.appendChild(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(href),250);
+}
 function setMode(next){
- const wasMission=mode==="mission";
+ const wasMission=mode==="mission",wasSkills=mode==="skills";
  if(next==="mission"&&!wasMission){
   mission=null;
   mode="mission";
   pfdPage="pfd";
   startMission("roll");
   setPFD("pfd");
- }else if(wasMission&&next!=="mission"){
-  mission=null;state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
+ }else if(next==="skills"&&!wasSkills){
+  mission=null;
+  mode="skills";
+  pfdPage="pfd";
+  selectSkillTask($("skillsSelect").value||"level");
+  setPFD("pfd");
+ }else if((wasMission||wasSkills)&&next!=="mission"&&next!=="skills"){
+  mission=null;skillsSession=null;state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
   $("throttle").value="55";$("trim").value="0";$("flapPitchMode").value=input.flapPitchMode;setFlaps(0);
  }
  mode=next;
@@ -290,21 +352,28 @@ function setMode(next){
   if(next==="focus")focused.dock(focus,instruments);
   else if(next==="digital")focused.dockDigital(focus,instruments,pfdPage);
   else if(next==="mission")focused.dockMission(mission.phase);
+  else if(next==="skills")focused.dockSkills(skillsSession.id);
   else focused.restore();
  }
  $("focusMode").setAttribute("aria-pressed",String(mode==="focus"));
  $("analogMode").setAttribute("aria-pressed",String(mode==="analog"));
  $("digitalMode").setAttribute("aria-pressed",String(mode==="digital"));
  $("missionMode").setAttribute("aria-pressed",String(mode==="mission"));
+ $("skillsMode").setAttribute("aria-pressed",String(mode==="skills"));
  $("focusSection").classList.toggle("hidden",mode!=="focus");
  $("analogSection").classList.toggle("hidden",mode!=="analog");
- $("digitalSection").classList.toggle("hidden",!["digital","mission"].includes(mode));
+ $("digitalSection").classList.toggle("hidden",!["digital","mission","skills"].includes(mode));
  $("missionPanel").classList.toggle("hidden",mode!=="mission");
  $("missionMiniStatus").classList.toggle("hidden",mode!=="mission");
- $("controlOverview").classList.toggle("hidden",["focus","digital","mission"].includes(mode));
- document.querySelector(".lesson-bar").classList.toggle("hidden",mode==="mission");
+ $("skillsPanel").classList.toggle("hidden",mode!=="skills");
+ $("skillsMiniStatus").classList.toggle("hidden",mode!=="skills");
+ $("mapTab").disabled=mode==="skills";
+ $("engineTab").disabled=mode==="skills";
+ $("controlOverview").classList.toggle("hidden",["focus","digital","mission","skills"].includes(mode));
+ document.querySelector(".lesson-bar").classList.toggle("hidden",mode==="mission"||mode==="skills");
  paint();
  renderMission();
+ renderSkills();
 }
 function setPFD(next){
  pfdPage=next;
@@ -332,6 +401,7 @@ function setFocus(n){
 }
 function reset(){
  if(mode==="mission"){startMission("roll");paint();return;}
+ if(mode==="skills"){selectSkillTask(skillsSession?skillsSession.id:"level");paint();return;}
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
  $("throttle").value="55";$("trim").value="0";
  $("flapPitchMode").value=input.flapPitchMode;
@@ -380,6 +450,24 @@ function wireControls(){
  $("analogMode").onclick=()=>setMode("analog");
  $("digitalMode").onclick=()=>setMode("digital");
  $("missionMode").onclick=()=>setMode("mission");
+ $("skillsMode").onclick=()=>setMode("skills");
+ $("skillsSelect").onchange=e=>{
+  if(mode==="skills"&&skillsSession?.status!=="running"){selectSkillTask(e.target.value);paint();}
+ };
+ $("skillsStart").onclick=()=>{
+  if(mode!=="skills"||!skillsSession)return;
+  if(skillsSession.status==="finished")selectSkillTask(skillsSession.id);
+  window.CockpitV3Skills.begin(skillsSession);
+  renderSkills();
+ };
+ $("skillsEnd").onclick=()=>{
+  if(mode!=="skills"||skillsSession?.status!=="running")return;
+  skillsSession.final=window.CockpitV3Skills.snapshot(state,input);
+  window.CockpitV3Skills.finish(skillsSession,"ended");
+  renderSkills();
+ };
+ $("skillsRetry").onclick=()=>{if(mode==="skills"){selectSkillTask($("skillsSelect").value);paint();}};
+ $("skillsExport").onclick=downloadSkillReport;
  $("missionRestart").onclick=()=>{startMission("roll");paint();};
  $("missionContinue").onclick=()=>{
   if(mission&&mission.phase==="climbReady"){
@@ -480,7 +568,10 @@ function frame(now){
     lastMissionPhase=mission.phase;
     if(window.CockpitV3Focus)window.CockpitV3Focus.dockMission(mission.phase);
    }
-  }else M.step(state,input,dt);
+  }else {
+   M.step(state,input,dt);
+   if(mode==="skills"&&skillsSession?.status==="running")window.CockpitV3Skills.observe(skillsSession,state,input,dt);
+  }
   if(!trail.length||Math.hypot(trail[trail.length-1].x-state.x,trail[trail.length-1].y-state.y)>.00008){
    trail.push({x:state.x,y:state.y});if(trail.length>260)trail.shift();
   }
@@ -493,7 +584,8 @@ wireControls();
 if(window.CockpitV3Focus)window.CockpitV3Focus.init(instruments,setFocus);
 setFocus(0);
 setPFD("pfd");
-setMode(new URLSearchParams(window.location.search).get("mode")==="mission"?"mission":"focus");
+const queryMode=new URLSearchParams(window.location.search).get("mode");
+setMode(queryMode==="mission"?"mission":queryMode==="skills"?"skills":"focus");
 paint();
 requestAnimationFrame(frame);
 })();
