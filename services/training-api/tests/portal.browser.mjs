@@ -107,7 +107,7 @@ try{
  assert.equal(await desktop.locator("#studentPanel").isVisible(),true);
  await desktop.locator("#studentList .list-item").first().waitFor();
  await desktop.locator("#logoutButton").click();
- assert.equal(await desktop.locator("#loginPanel").isVisible(),true);
+ await desktop.locator("#loginPanel").waitFor({state:"visible"});
  assert.equal((await desktop.request.get(base+"/api/v1/me")).status(),401);
  await login(desktop,"pilot.teacher@example.org");
  assert.equal(await desktop.locator("#studentPanel").isVisible(),false);
