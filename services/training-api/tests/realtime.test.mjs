@@ -91,7 +91,7 @@ test("one in-progress call per user; only owner may stop; end sends server-side 
  const handle=registry.reserve(actor);
  assert.match(handle,/^[A-Za-z0-9_-]{32}$/);
  assert.throws(()=>registry.reserve(actor),e=>e.status===409);
- registry.activate(handle,"rtc_valid_001abc");
+ await registry.activate(handle,"rtc_valid_001abc");
  await assert.rejects(registry.stop(handle,other),e=>e.status===403);
  assert.equal(await registry.stop(handle,actor),true);
  assert.equal(ended.length,1);
@@ -102,6 +102,18 @@ test("one in-progress call per user; only owner may stop; end sends server-side 
  assert.equal(registry.active.size,0);
  assert.notEqual(handle,again);
 });
+test("late provider handshake is terminated if account reservation closed",async()=>{
+ const calls=[];
+ const registry=new RealtimeCallRegistry({
+  env,request:async url=>{calls.push(url);return new Response("",{status:200})}
+ });
+ const handle=registry.reserve(actor);
+ await registry.stop(handle,actor);
+ await assert.rejects(registry.activate(handle,"rtc_orphaned_001abc"),/Untracked/);
+ assert.equal(calls.length,1,"late call must be hung up");
+ assert.ok(calls[0].endsWith("/rtc_orphaned_001abc/hangup"));
+ await registry.shutdown();
+});
 test("orphaned calls are force-ended by server timer",async()=>{
  const requests=[];
  const registry=new RealtimeCallRegistry({
@@ -109,7 +121,7 @@ test("orphaned calls are force-ended by server timer",async()=>{
   maxSeconds:0.06
  });
  const handle=registry.reserve(actor);
- registry.activate(handle,"rtc_timer_001abc");
+ await registry.activate(handle,"rtc_timer_001abc");
  await new Promise(resolve=>setTimeout(resolve,140));
  assert.equal(registry.active.size,0);
  assert.equal(requests.length,1);
