@@ -42,6 +42,14 @@ function init(instruments,selectInstrument){
    button.setAttribute("aria-pressed","false");
    button.addEventListener("click",()=>selectInstrument(i));
    selector.appendChild(button);
+   const digitalButton=document.createElement("button");
+   digitalButton.type="button";
+   digitalButton.id="digitalFocusSelect-"+id;
+   digitalButton.textContent=({asi:"Airspeed",att:"Attitude",alt:"Altitude",tc:"Turn/Slip",hdg:"Heading",vsi:"VSI"})[id]||name;
+   digitalButton.setAttribute("aria-label","Show controls for "+name);
+   digitalButton.setAttribute("aria-pressed","false");
+   digitalButton.addEventListener("click",()=>selectInstrument(i));
+   $("digitalFocusSelector").appendChild(digitalButton);
  }
  initialized=true;
 }
@@ -51,6 +59,8 @@ function highlight(index,instruments){
  for(const [id] of instruments){
    const b=$("focusSelect-"+id);
    if(b)b.setAttribute("aria-pressed",String(id===chosen));
+   const db=$("digitalFocusSelect-"+id);
+   if(db)db.setAttribute("aria-pressed",String(id===chosen));
  }
 }
 function dock(index,instruments){
@@ -67,11 +77,38 @@ function dock(index,instruments){
  highlight(index,instruments);
  update();
 }
+function dockDigital(index,instruments,page){
+ if(!initialized)return;
+ const chosenId=instruments[index][0];
+ let keys,title,hint;
+ if(page==="map"){
+   keys=["yoke","rudder","throttle"];
+   title="Navigation map — change aircraft track";
+   hint="Bank with the yoke, apply rudder or change power. The synthetic ground track responds as the aircraft travels forward.";
+ }else if(page==="engine"){
+   keys=["throttle","flaps"];
+   title="Engine display — power and flaps";
+   hint="Move the actual throttle control or select flaps. Watch the digital power and flap indications change immediately.";
+ }else{
+   const choice=spec[chosenId];
+   if(!choice)throw new Error("Unknown digital training instrument "+chosenId);
+   keys=choice.controls;
+   title="Touch controls — "+instruments[index][1];
+   hint=choice.hint;
+ }
+ restore();
+ const target=$("digitalControlDock");
+ for(const key of keys)target.appendChild($("control-"+key));
+ $("digitalControlsTitle").textContent=title;
+ $("digitalControlsHint").textContent=hint;
+ $("digitalFocusSelector").classList.toggle("hidden",page!=="pfd");
+ highlight(index,instruments);
+}
 function update(){
  if(!initialized)return;
  const source=$("read-"+chosen);
  const target=$("focusValue");
  if(source&&target)target.textContent=source.textContent;
 }
-global.CockpitV3Focus={init,restore,dock,highlight,update,spec};
+global.CockpitV3Focus={init,restore,dock,dockDigital,highlight,update,spec};
 })(window);
