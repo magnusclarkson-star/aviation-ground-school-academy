@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b2b">
+<meta name="description" content="Aviation Ground School Academy spoken introductory lessons and practice questions. Device narration available where supported; live AI needs a private account.">
+<title>AI Instructor Studio | Aviation Ground School Academy</title>
+<link rel="stylesheet" href="ai-instructor.css">
+<script src="ai-instructor-lessons.js" defer></script>
+<script src="ai-instructor.js" defer></script>
+</head>
+<body>
+<header class="site-head">
+ <a href="index.html" class="brand"><span class="logo">✈</span><span>AVIATION GROUND SCHOOL ACADEMY<small>AI INSTRUCTOR STUDIO</small></span></a>
+ <nav aria-label="Academy navigation"><a href="cockpit-v3.html">Cockpit V3</a><a href="study-lab.html">Study Lab</a><a href="standards-readiness.html">Training standards</a></nav>
+</header>
+<main>
+<section class="hero">
+ <div>
+  <div class="eyebrow">NEW · SPEAKING GROUND-SCHOOL TUTOR</div>
+  <h1>Meet your aviation learning companions</h1>
+  <p>Choose an instructor style, hear short lessons, ask a study question and test your knowledge. Voice narration works with your device's available voices.</p>
+  <div class="hero-tags"><span>Air Scouts</span><span>Beginner pilots</span><span>Aviation enthusiasts</span></div>
+ </div>
+ <div class="hero-icon" aria-hidden="true"><span>🎧</span><span>✈</span></div>
+</section>
+<div class="notice" role="note"><strong>Educational use only.</strong> The public lesson mode uses human-authored explanations and is <strong>not connected to a generative AI service</strong>. Any speech is computer-generated, not a human instructor. Neither lessons nor answers are approved operational flight advice, an ATC service, accreditation or certification.</div>
+<div class="layout">
+ <section class="panel main-panel" aria-label="Choose an instructor and lesson">
+  <div class="eyebrow">STEP 1 · YOUR INSTRUCTOR</div>
+  <div class="instructors" role="group" aria-label="Instructor teaching style">
+   <button type="button" class="instructor selected" id="instructorMentor" data-style="mentor" aria-pressed="true">
+    <span class="avatar">👩‍✈️</span><strong>Captain Sky</strong><small>Friendly flight mentor</small>
+   </button>
+   <button type="button" class="instructor" id="instructorScouts" data-style="scouts" aria-pressed="false">
+    <span class="avatar">🧭</span><strong>Scout Guide</strong><small>Explore and discover</small>
+   </button>
+   <button type="button" class="instructor" id="instructorExam" data-style="exam" aria-pressed="false">
+    <span class="avatar">📋</span><strong>Theory Coach</strong><small>Questions and revision</small>
+   </button>
+  </div>
+  <label class="field-label" for="lessonSelect">Choose a lesson</label>
+  <select id="lessonSelect" aria-describedby="lessonHelp"></select>
+  <p class="tiny" id="lessonHelp">Lesson content is introductory and non-aircraft-specific.</p>
+  <div class="lesson-copy">
+   <div class="eyebrow">LESSON BRIEFING</div>
+   <h2 id="lessonTitle">The four forces of flight</h2>
+   <p id="lessonIntro"></p>
+   <p id="lessonBody"></p>
+   <div class="buttons">
+    <button id="readLesson" class="primary" type="button"><span aria-hidden="true">▶</span> Play spoken lesson</button>
+    <button id="stopVoice" type="button">Stop voice</button>
+    <button id="repeatLesson" type="button">Repeat</button>
+   </div>
+  </div>
+  <div class="quiz" aria-label="Lesson checkpoint">
+   <div class="eyebrow">STEP 2 · CHECK YOUR UNDERSTANDING</div>
+   <h3 id="quizQuestion"></h3>
+   <div id="quizAnswers" class="answers" role="group" aria-label="Question choices"></div>
+   <p id="quizResult" role="status" aria-live="polite"></p>
+  </div>
+ </section>
+ <aside class="side-stack">
+  <section class="panel" aria-label="Voice settings">
+   <div class="eyebrow">VOICE STUDIO</div><h2>Instructor voice</h2>
+   <label class="field-label" for="voiceSelect">Available device voice</label>
+   <select id="voiceSelect"><option value="">Default system voice</option></select>
+   <label class="field-label" for="voiceRate">Speaking speed <output id="rateValue">1.0×</output></label>
+   <input type="range" id="voiceRate" min="0.7" max="1.3" step="0.1" value="1">
+   <div class="voice-status" id="voiceStatus" role="status" aria-live="polite">Checking speech on this device…</div>
+   <p class="tiny">Device speech can work without an Academy AI account, but voices, accents and offline availability depend on your browser and phone. No recorded voice is used or impersonated.</p>
+  </section>
+  <section class="panel" aria-label="Ask an aviation study question">
+   <div class="eyebrow">STEP 3 · ASK A QUESTION</div><h2>Ask your instructor</h2>
+   <p class="tiny">Public mode matches your question to curated introductory lessons. It does not generate a novel answer.</p>
+   <form id="questionForm">
+    <label class="field-label" for="questionInput">Your study question</label>
+    <textarea id="questionInput" maxlength="400" rows="4" placeholder="For example: What does the attitude indicator show?" required></textarea>
+    <div class="buttons">
+     <button type="submit" class="primary" id="questionButton">Find lesson answer</button>
+     <button type="button" id="microphoneButton" disabled title="Microphone input is not available on every device">Use microphone</button>
+    </div>
+   </form>
+   <div class="answer" id="answerPanel" hidden>
+    <div class="eyebrow">CURATED LESSON EXCERPT · NOT LIVE AI</div>
+    <p id="answerText"></p>
+    <button type="button" id="speakAnswer">Read answer aloud</button>
+   </div>
+   <p class="tiny" id="microphoneNote">Microphone dictation is optional and may use your browser's speech recognition service. Do not dictate personal or sensitive data.</p>
+  </section>
+  <section class="panel linked">
+   <div class="eyebrow">COMING TO PRIVATE TRAINING ACCOUNTS</div><h2>Connected AI + natural voice</h2>
+   <p>Our separate private backend supports connecting an AI text instructor and generated speech using protected server-side credentials and per-account usage controls. These services are <strong>not active on this public page</strong>.</p>
+   <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="external-link">Use ChatGPT separately for additional study discussion</a>
+   <p class="tiny">External service. Answers may contain errors and must be checked against approved materials and qualified instructors.</p>
+  </section>
+ </aside>
+</div>
+<footer><a href="index.html">Academy home</a> · <a href="cockpit-v3.html">Try the touchscreen cockpit</a> · Teaching assistant is not a person, examiner or flight instructor of record.</footer>
+</main>
+</body></html>
