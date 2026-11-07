@@ -21,6 +21,7 @@ const server=http.createServer(createHandler(store,{
  allowInsecureLocal:insecureLocal,
  publicOrigin:env.AGSA_PUBLIC_ORIGIN,
  mfaKey,
+ aiEnv:env,
  logError:e=>console.error("[training-api] request failed",e?.code||e?.name||"unknown")
 }));
 server.requestTimeout=15000;
