@@ -61,6 +61,17 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
   const teacher={userId:teacher1,organizationId:org1,role:"instructor"};
   const otherTeacher={userId:teacher2,organizationId:org1,role:"instructor"};
   const crossOrg={userId:outsider,organizationId:org2,role:"instructor"};
+  const legacyInstructorToken=hashSha256(generateSecret());
+  const newInstructorToken=hashSha256(generateSecret());
+  const expiresAt=new Date(Date.now()+3600000).toISOString();
+  await db.createSession({tokenHash:legacyInstructorToken,csrfHash:hashSha256(generateSecret()),
+   userId:teacher1,organizationId:org1,expiresAt});
+  assert.equal(await db.getSession(legacyInstructorToken),null,
+   "existing password-only instructor sessions must not survive the MFA upgrade");
+  await db.createSession({tokenHash:newInstructorToken,csrfHash:hashSha256(generateSecret()),
+   userId:teacher1,organizationId:org1,expiresAt,mfaVerified:true});
+  assert.equal((await db.getSession(newInstructorToken)).role,"instructor",
+   "verified instructor session remains usable");
   assert.equal(await db.ping(),true);
   const known=await db.lookupLogin("staging-0-"+suffix+"@example.org","test-org-one-"+suffix);
   assert.equal(known.userId,student1);
