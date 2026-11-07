@@ -11,6 +11,7 @@ services:
       - "443:443"
     environment:
       AGSA_STAGE_HOST: ${AGSA_STAGE_HOST:?Set a dedicated staging hostname}
+      AGSA_ACME_EMAIL: ${AGSA_ACME_EMAIL:?Set the staging certificate contact email}
     volumes:
       - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
