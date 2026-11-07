@@ -37,3 +37,13 @@ footer{margin-top:20px;border-top:1px solid #35546b;padding:12px 0;color:#92b8ca
 @media(max-width:850px){.columns{grid-template-columns:1fr}main{padding:20px 12px 35px}.panel{padding:15px}}
 @media(max-width:480px){.identity strong{font-size:12px}.edition{font-size:9px}.intro h1{font-size:27px}.sign-in{margin-top:12px;padding:17px}.panel h2{font-size:20px}.section-header h2{font-size:23px}.profilebar strong{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.loading-dot{animation:none}}
+
+.ai-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;align-items:end}
+.ai-consent{display:flex;align-items:flex-start;gap:9px;font-size:12px!important;color:#dceaf3!important;font-weight:600!important;line-height:1.6;margin:14px 0!important}
+.ai-consent input{width:19px;min-width:19px;min-height:19px;height:19px;accent-color:#69d4ee;margin-top:2px}
+.ai-answer{background:#0b2538;border:1px solid #597f9b;border-radius:12px;padding:15px;margin:13px 0}
+.ai-answer strong{color:#f8d59b;font-size:12px}
+.ai-answer p{white-space:pre-wrap;color:#e2f1fa;font-size:14px;line-height:1.74;overflow-wrap:anywhere}
+.ai-actions{display:flex;align-items:flex-end;gap:9px}.ai-actions button{flex:1}
+#aiTutorSection{margin-top:10px}
+@media(max-width:620px){.ai-options{grid-template-columns:1fr}.ai-actions{flex-wrap:wrap}.ai-actions button{min-width:110px}}
