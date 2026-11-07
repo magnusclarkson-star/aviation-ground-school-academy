@@ -38,7 +38,7 @@
     // A type-dependent response selectable in the cockpit, NOT a universal
     // flap pitching moment. Default "noseUp" is an openly fictional example.
     const flapPitchSign=input.flapPitchMode==="noseDown"?-1:input.flapPitchMode==="neutral"?0:1;
-    state.flapPitchBias=flaps*.045*flapPitchSign;
+    state.flapPitchBias=state.flaps*.045*flapPitchSign;
     const targetPitch=clamp(-y*16 + trim*5 + state.flapPitchBias, -25,25);
     // Demonstrates small secondary yaw-to-roll coupling. The slip/turn
     // indicators below remain the primary feedback for rudder input.
