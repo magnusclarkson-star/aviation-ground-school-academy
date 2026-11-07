@@ -148,7 +148,7 @@ export class PgStore{
   finally{client.release()}
  }
  async reserveAiUsage(actor,kind,maxCount){
-  if(!["text","voice"].includes(kind)||!Number.isInteger(maxCount)||maxCount<1||maxCount>100)
+  if(!["text","voice","realtime"].includes(kind)||!Number.isInteger(maxCount)||maxCount<1||maxCount>100)
    throw Error("Invalid AI usage reservation");
   const result=await this.pool.query(`
    INSERT INTO ai_daily_usage(organization_id,user_id,usage_day,kind,request_count)
