@@ -44,12 +44,15 @@ try {
  assert.equal(await page.locator('#flapCommanded').textContent(),'30°');
  assert.equal(await page.locator('#focusFlapsState').textContent(),'30°');
  await page.waitForTimeout(400);
- const movingFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
+ const snapshot=await page.evaluate(()=>({
+  indicated:parseFloat(document.querySelector('#flapIndicated').textContent),
+  rotation:parseFloat(document.querySelector('#flapWingSurface').getAttribute('transform').match(/rotate\(([-\d.]+)/)[1]),
+  meter:document.querySelector('#flapTravelMeter').value
+ }));
+ const movingFlap=snapshot.indicated;
  assert.ok(movingFlap>initialFlap+2 && movingFlap<30,'wing flap should travel gradually toward the selected angle');
- const surfaceAngle=Number((await page.locator('#flapWingSurface').getAttribute('transform')).match(/rotate\(([-\d.]+)/)[1]);
- assert.ok(Math.abs(surfaceAngle-movingFlap)<0.3,'wing trailing surface animation matches numeric indicated position');
- const meter=await page.locator('#flapTravelMeter').evaluate(el=>el.value);
- assert.ok(Math.abs(meter-movingFlap)<0.3,'position meter tracks real wing animation');
+ assert.ok(Math.abs(snapshot.rotation-movingFlap)<0.3,'wing trailing surface animation matches numeric indicated position');
+ assert.ok(Math.abs(snapshot.meter-movingFlap)<0.3,'position meter tracks real wing animation');
  await page.waitForTimeout(600);
  const laterFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
  assert.ok(laterFlap>movingFlap,'flap continues extending toward its detent over time');
