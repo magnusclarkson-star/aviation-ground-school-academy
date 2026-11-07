@@ -1,0 +1,60 @@
+# Academy Private Staging Deployment Runbook
+
+**Status: infrastructure prepared; not deployed.** The public Academy and cockpit stay on GitHub Pages. This runbook concerns the separate training API and instructor/student staging dashboard, which is **not yet available at any public URL**. Use fictional accounts and synthetic practice reports only.
+
+## Deployment boundary
+
+- **Public:** [Aviation Ground School Academy](https://magnusclarkson-star.github.io/aviation-ground-school-academy/). No real student login or training API.
+- **Private staging candidate:** `services/training-api/portal/`, available only after an operator deploys the Docker/HTTPS composition to a controlled host.
+- **Database:** separate managed PostgreSQL 16+ with verified TLS, private access, restricted service account and separate migration/provisioning accounts. Never reuse the Salone One database, provider keys or infrastructure credentials.
+- **Access:** issue accounts only to authorised *fictional testers* until legal, data-protection, security and training-regulator review is complete.
+
+## Prepared files
+
+| Path | Role |
+| --- | --- |
+| `Dockerfile` | Non-root runtime image; `npm ci` against committed lockfile |
+| `compose.staging.yml` | Caddy 80/443 ingress, internal API network access only; no published API port |
+| `Caddyfile.staging` | Automatic HTTPS for an operator-controlled staging domain and reverse proxy |
+| `package-lock.json` | Committed, CI-resolved and integrity-labelled dependency tree |
+| `sql/001_init.sql` | Staging-only database schema |
+| `src/grants.mjs` | Explicit runtime vs provisioning SQL privilege model |
+| `scripts/apply-grants.mjs` | Migration-owner script to grant narrow table privileges |
+| `scripts/test-staging-config.mjs` | Automated Docker/Compose and TLS boundary assertions |
+| `.github/workflows/training-api.yml` | Auth, scope, database, portal browser and staging image validation |
+
+## Operator checklist before private staging goes online
+
+1. **Own a dedicated staging domain** (e.g. `training-staging.example.org`), configure its A/AAAA DNS record to a separately secured host, and reserve ports 80/443 exclusively for HTTPS termination. Never point real students at the staging hostname.
+2. **Obtain a separate managed PostgreSQL instance**, reachable from the private host, with verified CA/TLS and restricted IP/network access. Establish backup and restoration expectations before storing anything.
+3. **Create three separate database roles**, using the provider's secure admin interface: migration owner, provisioning operator, and web application runtime; no role sharing, superuser access, or migration-role inheritance for the latter two.
+4. **Run migrations with the migration owner** in an isolated operator environment: `npm ci` in `services/training-api`, supply a temporary operator environment including `DATABASE_URL`, `NODE_ENV=production`, `PGSSL_MODE=verify-full`, and then `npm run migrate`.
+5. **Apply least-privilege grants** with the migration owner: set `AGSA_MIGRATION_DATABASE_URL`, `AGSA_APP_DB_ROLE`, `AGSA_PROVISION_DB_ROLE`, `PGSSL_MODE=verify-full`; run `node scripts/apply-grants.mjs`. This command refuses elevated or table-owning application roles. Verify its claims with `tests/grants.test.mjs` in isolated CI.
+6. **Provision fictional test users** only from a trusted operator terminal, connecting as the provisioning role (not as the API web role) with a process-scoped `AGSA_PROVISION_PASSWORD`. Use `npm run provision -- org ...`, `user ...` and `assign ...` as documented in [Training API README](README.md). Do not log, email, upload or commit generated passwords.
+7. **Create an ignored local `.env.staging`** inside `services/training-api`. Include only the dedicated runtime role's `DATABASE_URL`; do not put this file in Git. If the hosting system provides secret files, prefer that instead of Docker Compose environment injection.
+8. **Export hostname and ACME contact from a trusted operator shell** as `AGSA_STAGE_HOST` and `AGSA_ACME_EMAIL`. Then review the compose manifest carefully and, on the isolated host, run `docker compose -f compose.staging.yml config`, `docker compose -f compose.staging.yml up -d --build`. Keep the proxy and app image tags pinned to reviewed digests before any real-data usage.
+9. **Run the staging smoke tests**, verifying that HTTPS has a valid certificate; `/portal/` shows only the sign-in page when logged out; `/api/v1/me` denies unauthenticated access; student and instructor records remain separate; `/api/v1/ready` is *not exposed* publicly through the reverse proxy; there is no direct external port 3100.
+10. **Security review gate:** complete independent application and database permission audits, MFA for staff, account recovery, email verification, backup restore drills, data deletion/retention, logging/redaction, approved curriculum and qualified instructor verification *before any real learner onboarding*. **Nothing here currently creates real training credit.**
+
+### Example environment keys (placeholders only)
+
+```sh
+# Run at the operator terminal; never commit actual values.
+AGSA_STAGE_HOST=your-private-staging-domain.example
+AGSA_ACME_EMAIL=operator@example.org
+
+# In ignored .env.staging (or better, provider-managed secrets):
+DATABASE_URL=postgresql://WEB_APP_ROLE:<PROTECTED_SECRET>@PRIVATE_PG_HOST:5432/agsa_staging?sslmode=verify-full
+```
+
+**Do not paste real credentials into ChatGPT, GitHub issues, terminal screenshots, or this repository.**
+
+## CI acceptance criteria
+
+The CI job uses disposable PostgreSQL 16, a locked package installation, SQL migration, role isolation tests, desktop/mobile Chromium flows and a Docker image build. It also validates a fictional-host Compose manifest and the Caddyfile. CI therefore provides evidence about build *structure*, not a successful deployment on a real host.
+
+The public site deployment is separately constrained by `scripts/build-pages.mjs`: backend, local settings, CI, developer scripts and private staging portal are excluded from GitHub Pages.
+
+## Remaining limitations
+
+The staging dashboard is intentionally not a certified LMS. Email verification, authenticated instructor credentials, multi-factor authentication, regulatory course mapping, signed assessments, tamper-evident evidence records and production data-governance controls are **not yet implemented**. There is no demonstrated live hostname, private database, certificate, monitoring or real user account in this repository.
