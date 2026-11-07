@@ -2,6 +2,9 @@
 -- Secrets are encrypted with AES-256-GCM using AGSA_MFA_ENCRYPTION_KEY
 -- managed outside the repository. A browser user cannot self-enrol or reset MFA.
 BEGIN;
+-- Pre-existing password-only instructor sessions remain untrusted; a session
+-- must carry a freshly authenticated second-factor timestamp for staff access.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS mfa_verified_at timestamptz;
 CREATE TABLE IF NOT EXISTS instructor_mfa (
  organization_id uuid NOT NULL,
  instructor_id uuid NOT NULL,
