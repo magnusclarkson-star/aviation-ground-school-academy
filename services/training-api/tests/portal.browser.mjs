@@ -93,7 +93,8 @@ const base="http://127.0.0.1:"+server.address().port;
 const aiEnv={
  OPENAI_API_KEY:"fake-provider-credentials-for-tests-only",
  AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
- AGSA_AI_TEXT_MODEL:"gpt-6-luna"
+ AGSA_AI_TEXT_MODEL:"gpt-6-luna",
+ AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1"
 };
 let providerCalls=0;
 const aiRequest=async(url)=>{
@@ -102,6 +103,11 @@ const aiRequest=async(url)=>{
   output:[{type:"message",content:[{type:"output_text",text:"Lift is an aerodynamic force that can be discussed in classroom lessons."}]}]
  }),{status:200,headers:{"Content-Type":"application/json"}});
  if(url.endsWith("/v1/audio/speech"))return new Response(Buffer.alloc(256,65),{status:200});
+ if(url.endsWith("/v1/realtime/calls"))return new Response(
+  ["v=0","o=- 1 2 IN IP4 127.0.0.1","s=AGSA","t=0 0",
+   "m=audio 9 UDP/TLS/RTP/SAVPF 111","a=sendrecv","a=rtpmap:111 opus/48000/2"].join("\r\n")+"\r\n",
+  {status:201,headers:{Location:"/v1/realtime/calls/rtc_browser_test_001abc"}});
+ if(url.endsWith("/hangup"))return new Response("",{status:200});
  throw Error("Unexpected provider request");
 };
 handler=createHandler(store,{publicOrigin:base,nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,2),
