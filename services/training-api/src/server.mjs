@@ -2,6 +2,7 @@ import http from "node:http";
 import {createPool,PgStore} from "./postgres.mjs";
 import {createHandler} from "./http.mjs";
 import {parseEncryptionKey} from "./mfa.mjs";
+import {RealtimeCallRegistry} from "./realtime-voice.mjs";
 
 const env=process.env;
 const port=Number(env.PORT||3100);
@@ -16,12 +17,14 @@ const mfaKey=parseEncryptionKey(env.AGSA_MFA_ENCRYPTION_KEY);
 const pool=createPool(env);
 const store=new PgStore(pool);
 await store.ping();
+const realtimeRegistry=new RealtimeCallRegistry({env});
 const server=http.createServer(createHandler(store,{
  nodeEnv:env.NODE_ENV,
  allowInsecureLocal:insecureLocal,
  publicOrigin:env.AGSA_PUBLIC_ORIGIN,
  mfaKey,
  aiEnv:env,
+ realtimeRegistry,
  logError:e=>console.error("[training-api] request failed",e?.code||e?.name||"unknown")
 }));
 server.requestTimeout=15000;
@@ -33,6 +36,7 @@ await new Promise((resolve,reject)=>{
 console.info("[training-api] listening on",host+":"+port,"— educational staging only; not a public accredited LMS");
 async function shutdown(){
  server.close();
+ await realtimeRegistry.shutdown();
  await pool.end();
 }
 process.on("SIGINT",()=>{void shutdown().then(()=>process.exit(0));});
