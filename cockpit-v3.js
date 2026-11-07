@@ -8,7 +8,7 @@ const deg=d=>d*Math.PI/180;
 const sin=Math.sin,cos=Math.cos,round=Math.round;
 const clamp=M.clamp;
 let state=M.makeState(),input=M.makeInput(),mode="analog",pfdPage="pfd";
-let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[];
+let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[],controlStyle="yoke";
 let mission=null,lastMissionPhase=null;
 const instruments=[
  ["asi","Airspeed indicator","The indicated airspeed needle uses a numbered dial with colored reference arcs. Airspeed changes with throttle, pitch and flaps. The arcs are conceptual and MUST be checked against a real aircraft's approved operating handbook."],
@@ -150,13 +150,30 @@ function renderPFD(){
  '<rect x="0" y="430" width="680" height="60" fill="#071827"/>'+comp.join("")+
  '<path d="M340 432 L330 445 L350 445 Z" fill="#fcd26e"/><text x="340" y="483" text-anchor="middle" font-size="13" fill="#ffd480">'+(round(s.heading)%360)+'° HDG</text>'+
  '<rect x="563" y="260" width="108" height="125" fill="#091c29"/><text x="613" y="284" text-anchor="middle" fill="#88d8ed" font-size="11">VS FPM</text><text x="613" y="329" text-anchor="middle" fill="#fff" font-size="24">'+round(s.verticalSpeed)+'</text>';
- $("pfdSvg").innerHTML=display;
+ // The attitude horizon depicts pitch/roll. Yaw is indicated separately
+ // through a slip-skid cue and rate-of-turn annotation; no false yaw horizon.
+ const slipX=(334+clamp(s.slip,-1,1)*25).toFixed(1);
+ const turnText="TURN "+s.turnRate.toFixed(1)+"°/s";
+ const flapMode=input.flapPitchMode==="noseUp"?"UP":input.flapPitchMode==="noseDown"?"DOWN":"NONE";
+ const cue='<g id="pfdSlipIndicator" aria-label="Slip skid indicator">'
+  +'<rect x="295" y="376" width="78" height="34" rx="6" fill="#061625" stroke="#b9d4e3" stroke-width="2"/>'
+  +'<line x1="325" y1="382" x2="325" y2="402" stroke="#eff9fd" stroke-width="2"/>'
+  +'<line x1="343" y1="382" x2="343" y2="402" stroke="#eff9fd" stroke-width="2"/>'
+  +'<circle id="pfdSlipBall" cx="'+slipX+'" cy="392" r="7" fill="#ffd47a" stroke="#0d2535" stroke-width="2"/>'
+  +'<text x="334" y="371" text-anchor="middle" font-size="12" fill="#f9e6bb">SLIP / SKID</text></g>'
+  +'<rect x="254" y="53" width="165" height="39" rx="7" fill="#071c30" fill-opacity=".9" stroke="#33536e"/>'
+  +'<text id="pfdTurnRate" x="336" y="70" text-anchor="middle" fill="#f8d47b" font-size="13">'+turnText+'</text>'
+  +'<text x="336" y="86" text-anchor="middle" fill="#bedfee" font-size="11">FLAP PITCH '+flapMode+' '+s.flapPitchBias.toFixed(1)+'°</text>';
+ $("pfdSvg").innerHTML=display+cue;
  $("dv-speed").textContent=round(s.speed);
  $("dv-alt").textContent=round(s.altitude).toLocaleString();
  $("dv-vs").textContent=round(s.verticalSpeed);
  $("dv-hdg").textContent=(round(s.heading)%360)+"°";
  $("dv-bank").textContent=s.roll.toFixed(1)+"°";
  $("dv-pitch").textContent=s.pitch.toFixed(1)+"°";
+ $("dv-turn").textContent=s.turnRate.toFixed(1)+"°/s";
+ $("dv-slip").textContent=Math.abs(s.slip)<.15?"CENTERED":s.slip>0?"RIGHT":"LEFT";
+ $("dv-flap-pitch").textContent=(s.flapPitchBias>=0?"+":"")+s.flapPitchBias.toFixed(1)+"°";
  $("digitalClock").textContent="SIM "+Math.floor(s.elapsed/60)+":"+String(Math.floor(s.elapsed%60)).padStart(2,"0");
 }
 function renderMap(){
@@ -211,6 +228,7 @@ function paint(){
 function syncMissionControls(){
  $("throttle").value=String(round(input.throttle));
  $("trim").value=String(round(input.trim*100));
+ $("flapPitchMode").value=input.flapPitchMode;
  setFlaps(input.flaps);
 }
 function startMission(phase="roll"){
@@ -264,7 +282,7 @@ function setMode(next){
   setPFD("pfd");
  }else if(wasMission&&next!=="mission"){
   mission=null;state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
-  $("throttle").value="55";$("trim").value="0";setFlaps(0);
+  $("throttle").value="55";$("trim").value="0";$("flapPitchMode").value=input.flapPitchMode;setFlaps(0);
  }
  mode=next;
  const focused=window.CockpitV3Focus;
@@ -315,7 +333,9 @@ function setFocus(n){
 function reset(){
  if(mode==="mission"){startMission("roll");paint();return;}
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
- $("throttle").value="55";$("trim").value="0";setFlaps(0);paint();
+ $("throttle").value="55";$("trim").value="0";
+ $("flapPitchMode").value=input.flapPitchMode;
+ setFlaps(0);paint();
 }
 function setFlaps(n){
  // The physical flap selector is shared across every instrument workstation.
@@ -340,7 +360,22 @@ function applyPreset(type){
 }
 function releaseYoke(){input.yokeX=0;input.yokeY=0;$("grip").style.transform="translate(0px,0px)"}
 function cancelPreset(){presetUntil=0}
+function selectControlStyle(next){
+ controlStyle=next==="joystick"?"joystick":"yoke";
+ $("controlTypeYoke").setAttribute("aria-pressed",String(controlStyle==="yoke"));
+ $("controlTypeStick").setAttribute("aria-pressed",String(controlStyle==="joystick"));
+ $("controlPad").classList.toggle("joystick-layout",controlStyle==="joystick");
+ $("gripTypeLabel").textContent=controlStyle==="joystick"?"STICK":"YOKE";
+ $("grip").setAttribute("aria-label","Drag "+(controlStyle==="joystick"?"joystick":"yoke")+" left or right for bank, up or down for pitch. Use arrow keys on desktop.");
+ $("controlStyleHint").textContent=controlStyle==="joystick"
+  ?"Joystick: move the stick sideways to bank or forward/back to change pitch. Touch dragging uses the same aircraft state."
+  :"Yoke: turn left or right to bank; push forward or pull back to pitch.";
+}
 function wireControls(){
+ $("controlTypeYoke").onclick=()=>selectControlStyle("yoke");
+ $("controlTypeStick").onclick=()=>selectControlStyle("joystick");
+ $("flapPitchMode").addEventListener("change",e=>{input.flapPitchMode=e.target.value;});
+ selectControlStyle("yoke");
  $("focusMode").onclick=()=>setMode("focus");
  $("analogMode").onclick=()=>setMode("analog");
  $("digitalMode").onclick=()=>setMode("digital");
@@ -387,8 +422,8 @@ function wireControls(){
  let drag=null;
  function moveGrip(e){
   const box=pad.getBoundingClientRect();
-  let dx=clamp((e.clientX-(box.left+box.width/2))/(box.width*.34),-1,1);
-  let dy=clamp((e.clientY-(box.top+box.height/2))/(box.height*.3),-1,1);
+  let dx=clamp((e.clientX-(box.left+box.width/2))/(box.width*(controlStyle==="joystick"?.31:.34)),-1,1);
+  let dy=clamp((e.clientY-(box.top+box.height/2))/(box.height*(controlStyle==="joystick"?.29:.3)),-1,1);
   input.yokeX=dx;input.yokeY=dy;
   grip.style.transform="translate("+(dx*48).toFixed(0)+"px,"+(dy*25).toFixed(0)+"px)";
  }
