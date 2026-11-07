@@ -99,7 +99,8 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
  const aiEnv={
   OPENAI_API_KEY:"fake-testing-provider-key-value-not-live",
   AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
-  AGSA_AI_TEXT_MODEL:"gpt-6-luna"
+  AGSA_AI_TEXT_MODEL:"gpt-6-luna",
+  AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1"
  };
  let providerCalls=0;
  const aiRequest=async(url,opts)=>{
@@ -109,6 +110,10 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
    output:[{type:"message",content:[{type:"output_text",text:"Lift is a force. Check approved teaching materials."}]}]
   }),{status:200,headers:{"Content-Type":"application/json"}});
   if(url.endsWith("/v1/audio/speech"))return new Response(Buffer.alloc(64,67),{status:200});
+  if(url.endsWith("/v1/realtime/calls"))return new Response(
+   "v=0\\r\\no=- 1 2 IN IP4 127.0.0.1\\r\\ns=AGSA\\r\\nt=0 0\\r\\nm=audio 9 UDP/TLS/RTP/SAVPF 111\\r\\na=sendrecv\\r\\n",
+   {status:201,headers:{Location:"/v1/realtime/calls/rtc_http_001abcdef"}});
+  if(url.endsWith("/hangup"))return new Response("",{status:200});
   throw Error("Unexpected provider route");
  };
  const server=createServer(createHandler(store,{publicOrigin:"http://127.0.0.1:3100",
