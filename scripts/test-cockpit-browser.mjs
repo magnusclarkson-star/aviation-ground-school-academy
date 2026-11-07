@@ -35,6 +35,24 @@ try {
      assert.equal(await page.locator('#flaps'+setting).getAttribute('aria-pressed'),'true','flap detent highlighted');
    }
  }
+ // Real animation: selected detent changes at once, while displayed flap position travels.
+ await page.locator('#focusSelect-asi').click();
+ await page.locator('#flaps0').click();
+ await page.waitForTimeout(1100);
+ const initialFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
+ await page.locator('#flaps30').click();
+ assert.equal(await page.locator('#flapCommanded').textContent(),'30°');
+ assert.equal(await page.locator('#focusFlapsState').textContent(),'30°');
+ await page.waitForTimeout(400);
+ const movingFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
+ assert.ok(movingFlap>initialFlap+2 && movingFlap<30,'wing flap should travel gradually toward the selected angle');
+ const surfaceAngle=Number((await page.locator('#flapWingSurface').getAttribute('transform')).match(/rotate\(([-\d.]+)/)[1]);
+ assert.ok(Math.abs(surfaceAngle-movingFlap)<0.3,'wing trailing surface animation matches numeric indicated position');
+ const meter=await page.locator('#flapTravelMeter').evaluate(el=>el.value);
+ assert.ok(Math.abs(meter-movingFlap)<0.3,'position meter tracks real wing animation');
+ await page.waitForTimeout(600);
+ const laterFlap=Number((await page.locator('#flapIndicated').textContent()).replace('°',''));
+ assert.ok(laterFlap>movingFlap,'flap continues extending toward its detent over time');
  // Keep the turn coordinator selected when switching modes to test continuity.
  await page.locator('#focusSelect-tc').click();
  await page.locator('#analogMode').click();
@@ -60,6 +78,7 @@ try {
  }
  await page.locator('#flaps30').click();
  assert.equal(await page.locator('#digitalFlapsState').textContent(),'30°','digital flap detent updates at 30°');
+ assert.equal(await page.locator('#flapCommanded').textContent(),'30°','wing diagram persists in the digital control dock');
  await page.locator('#mapTab').click();
  assert.equal(await page.locator('#mapView').isVisible(),true);
  assert.equal(await page.locator('#digitalControlDock #control-rudder').count(),1,'navigation map includes rudder');
@@ -124,6 +143,10 @@ try {
  assert.equal(await phone.locator('#digitalControlDock #control-flaps').count(),1,'phone digital attitude has flap selector');
  await phone.locator('#flaps30').tap();
  assert.equal(await phone.locator('#digitalFlapsState').textContent(),'30°');
+ assert.equal(await phone.locator('#flapCommanded').textContent(),'30°');
+ assert.equal(await phone.locator('#flapWingSurface').count(),1,'phone wing flap graphic remains mounted');
+ await phone.waitForTimeout(450);
+ assert.ok(Number((await phone.locator('#flapIndicated').textContent()).replace('°',''))>0,'flap surface responds to phone detent press');
  await phone.locator('#grip').scrollIntoViewIfNeeded();
  const digitalSticky=await phone.locator('.digital-screen-column').boundingBox();
  assert.ok(digitalSticky&&digitalSticky.y>=-2&&digitalSticky.y<390,'digital flight display remains within view while user operates yoke');
@@ -157,5 +180,5 @@ try {
  assert.equal(await phone.locator('#outFlaps').textContent(),'0°');
  await phone.close();
  assert.deepEqual(errors,[],'No runtime page errors');
- console.log('Browser smoke passed: desktop analogue, PFD, map, engine, presets, reset, throttle, flaps, self-test; Android-sized touchscreen navigation.');
+ console.log('Browser smoke passed: desktop and phone-sized touch cockpit, linked wing flap animation, selected/indicated position, meter, controls, PFD/map/engine and resets.');
 } finally {await browser.close();}
