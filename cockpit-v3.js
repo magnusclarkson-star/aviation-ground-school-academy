@@ -342,7 +342,7 @@ function renderCoach(review){
  }
 }
 function downloadJSON(value,fileName){
- const blob=new Blob([JSON.stringify(value,null,2)+"\\n"],{type:"application/json"});
+ const blob=new Blob([JSON.stringify(value,null,2)+"\n"],{type:"application/json"});
  const href=URL.createObjectURL(blob);
  const link=document.createElement("a");
  link.href=href;link.download=fileName;
