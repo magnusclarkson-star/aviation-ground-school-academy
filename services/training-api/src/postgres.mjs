@@ -30,31 +30,9 @@ export class PgStore{
   return r.rows[0]||null;
  }
  async consumeEmailVerification(tokenHash){
-  const client=await this.pool.connect();
-  try{
-   await client.query("BEGIN");
-   const consumed=await client.query(`
-    UPDATE email_verification_challenges SET consumed_at=now()
-    WHERE token_hash=$1 AND consumed_at IS NULL AND expires_at>now()
-    RETURNING user_id`,[tokenHash]);
-   if(!consumed.rowCount){await client.query("COMMIT");return false}
-   const user=await client.query(`
-    UPDATE users SET email_verified_at=now()
-    WHERE id=$1 AND status='active' AND email_verified_at IS NULL
-    RETURNING id`,[consumed.rows[0].user_id]);
-   if(!user.rowCount){
-    // This token may be valid but the account was suspended or previously
-    // verified; do not pretend a successful new verification happened.
-    await client.query("ROLLBACK");
-    return false;
-   }
-   await client.query(`
-    INSERT INTO audit_events(actor_user_id,action,target_type,target_id)
-    VALUES($1,'auth.email.verify','user',$1)`,[user.rows[0].id]);
-   await client.query("COMMIT");
-   return true;
-  }catch(e){await client.query("ROLLBACK").catch(()=>{});throw e}
-  finally{client.release()}
+  const result=await this.pool.query(
+   "SELECT public.consume_email_challenge($1::char(64)) AS verified",[tokenHash]);
+  return result.rows[0]?.verified===true;
  }
  async recordLoginAttempt(keyHashes){
   const thresholds=[30,8];
@@ -119,7 +97,7 @@ export class PgStore{
     JOIN memberships m ON m.user_id=s.user_id AND m.organization_id=s.organization_id
    WHERE s.token_hash=$1 AND s.revoked_at IS NULL
     AND s.expires_at>now() AND u.status='active' AND u.email_verified_at IS NOT NULL
-    AND m.status='active'
+    AND s.created_at>=u.email_verified_at AND m.status='active'
     AND (m.role='student' OR (m.role='instructor' AND s.mfa_verified_at IS NOT NULL))`,[tokenHash]);
   return r.rows[0]||null;
  }
