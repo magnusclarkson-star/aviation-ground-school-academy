@@ -233,7 +233,7 @@ export function createHandler(store,config={}){
      const created=await createRealtimeCall(input,actor,{
       env:config.aiEnv,request:config.aiRequest||fetch
      });
-     realtimeRegistry.activate(handle,created.callId);
+     await realtimeRegistry.activate(handle,created.callId);
      json(res,200,{
       sdp:created.sdp,handle,maxSeconds:created.maxSeconds,
       mode:"REALTIME_AI_VOICE",voice:created.voice,
