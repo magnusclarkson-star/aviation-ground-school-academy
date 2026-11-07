@@ -1,5 +1,6 @@
 import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordCost,secureEquals} from "./crypto.mjs";
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
+import {isPortalPath,servePortal} from "./portal.mjs";
 const MAX_JSON_BYTES=32*1024;
 const SESSION_MS=6*60*60*1000;
 function requestError(status,code,message){return new ClientError(status,code,message);}
@@ -100,6 +101,9 @@ export function createHandler(store,config={}){
    const method=req.method;
    if(!["GET","POST"].includes(method))throw requestError(405,"method_not_allowed","Method not allowed");
    if(method==="POST")allowedOrigin(req,publicOrigin);
+   if(method==="GET"&&isPortalPath(pathname)){
+    await servePortal(pathname,res,{secure});return;
+   }
    if(method==="GET"&&pathname==="/api/v1/health"){
     json(res,200,{status:"ok",component:"training-api",scope:"private-staging"});return;
    }
