@@ -72,3 +72,12 @@ For instructor sign-in, the API checks password then requires the authenticator 
 When `002_instructor_mfa.sql` is applied, the new `sessions.mfa_verified_at` field defaults to NULL. **Older instructor sessions are invalidated** by the API's database session query, even if the cookie has not expired. Instructors must receive their operator-enrolled TOTP secret and sign in again using both password and authenticator code. Students' existing session logic remains unchanged. Operators should verify this migration on a disposable staging database before applying it anywhere else.
 
 OTP seed backups must be encrypted and separately protected; if the encryption key or authenticator is lost, no recovery or bypass exists in this prototype. Do not rotate the key or edit `instructor_mfa` records manually without a separately documented, verified identity-recovery workflow.
+
+
+## Email verification release gate
+
+Private staging **must** run `sql/003_email_verification.sql` after migrations 001 and 002, then reapply least-privilege database grants. Existing staging accounts become unable to sign in until their email ownership is verified. Do not alter `email_verified_at` manually or create a password-only bypass for convenience. In-flight sessions created before verification remain invalid afterwards.
+
+To enable invitation emails for **fictional accounts only**, an operator must separately set `AGSA_MAIL_PROVIDER=resend`, `AGSA_RESEND_API_KEY`, `AGSA_MAIL_FROM` (a provider-verified sender), and the exact HTTPS `AGSA_PUBLIC_ORIGIN`, all in a secret manager or protected terminal, never Git. Use `npm run invite -- <org-slug> <fictional-email>` under the provisioning DB role. Tokens are 30-minute, one-use, database-hashed and never printed by the CLI. Email delivery is not assumed to work until an end-to-end message and user confirmation has been tested on the private staging host.
+
+The portal uses a fragment-only invitation link and **explicit confirmation button**. The private API verifies the token atomically with narrowly delegated PostgreSQL function execution. Merely receiving an invite, or the provider accepting an email API request, does not mark the account verified. Verification of an email address is not verification of the person's identity or aviation teaching credentials.
