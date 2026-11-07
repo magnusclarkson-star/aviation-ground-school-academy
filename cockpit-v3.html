@@ -200,6 +200,20 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .mission-mini strong{font-size:12px;line-height:1.25;color:#ffe1a3}
 .mission-mini span{font-size:11px;line-height:1.25;max-width:65%;text-align:right}
 @media(max-width:650px){.mission-mini{padding:5px 8px}.mission-mini strong,.mission-mini span{font-size:10px}}
+
+.control-style-choice{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 5px}
+.control-style-choice button{min-height:44px;flex:1;border-color:#658da2}
+.control-help{font-size:11px!important;line-height:1.42!important;color:#b9d6e7!important;margin:6px 0 10px!important}
+.control-option-label{display:block;color:#d0ebfa;font-weight:700;font-size:12px;margin:13px 0 6px}
+#flapPitchMode{display:block;width:100%;min-height:44px;max-width:100%;background:#19374e;border:1px solid #6893ad;border-radius:9px;color:#f4fbff;padding:9px}
+.grip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:2px}
+.grip .control-symbol{display:block;width:100%;height:48px;max-width:75px;pointer-events:none}
+.grip .symbol-stick{display:none}
+.grip span{font-size:10px;letter-spacing:.08em;font-weight:900;pointer-events:none}
+.control-pad.joystick-layout .grip{border-radius:35% 35% 44% 44%;width:86px;height:105px;border-width:11px 9px 8px;background:linear-gradient(155deg,#344e63,#172737);box-shadow:inset 0 0 0 2px #8dabbd,0 7px 16px #0009}
+.control-pad.joystick-layout .symbol-yoke{display:none}
+.control-pad.joystick-layout .symbol-stick{display:block;height:62px}
+.control-pad.joystick-layout .grip span{font-size:9px}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
@@ -281,6 +295,9 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
      <div class="pfd-tile"><small>MAGNETIC HDG*</small><strong id="dv-hdg">270°</strong></div>
      <div class="pfd-tile"><small>BANK</small><strong id="dv-bank">0°</strong></div>
      <div class="pfd-tile"><small>PITCH</small><strong id="dv-pitch">0°</strong></div>
+     <div class="pfd-tile"><small>TURN RATE</small><strong id="dv-turn">0.0°/s</strong></div>
+     <div class="pfd-tile"><small>SLIP / SKID</small><strong id="dv-slip">CENTERED</strong></div>
+     <div class="pfd-tile"><small>FLAP PITCH EXAMPLE</small><strong id="dv-flap-pitch">+0.0°</strong></div>
    </div>
   </div>
  </div>
@@ -293,13 +310,22 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
   <p class="digital-hint">The digital indications cannot be dragged directly. Adjust the aircraft controls to see their effect in real time.</p>
  </div>
  </div>
- <p class="section-help">The PFD, NAV MAP and ENGINE buttons are touchscreen functions. The display resembles the general layout of modern electronic flight displays but is not a copy of a Garmin product. *Heading is simulated, not connected to magnetic sensors.</p>
+ <p class="section-help">Rudder input primarily changes yaw and slip/skid; the illustrated secondary bank tendency is deliberately small. Flap pitch response can be set to nose-up, nose-down or neutral. The horizon is not a yaw instrument. The PFD, NAV MAP and ENGINE buttons are touchscreen functions. The display resembles the general layout of modern electronic flight displays but is not a copy of a Garmin product. *Heading is simulated, not connected to magnetic sensors.</p>
 </section>
 <div class="layout" id="controlOverview">
  <section class="card"><h2>Aircraft controls — touch, drag or tap</h2>
  <div class="control-grid" id="controlGrid">
-  <div class="hardware" id="control-yoke"><h3>Yoke / control column</h3><p class="note">Move the grip left/right to bank and up/down to pitch. Release to center the command.</p>
-   <div class="control-pad" id="controlPad"><div class="pad-cross"></div><button type="button" id="grip" class="grip" aria-label="Drag yoke to bank or pitch. Arrow keys also work.">YOKE</button></div>
+  <div class="hardware" id="control-yoke"><h3>Yoke or joystick</h3>
+   <p class="note">Choose the control style for this aeroplane. Both use the same pitch and roll model, so you can compare their handling on a touchscreen.</p>
+   <div class="control-style-choice" role="group" aria-label="Choose airplane control type">
+     <button type="button" id="controlTypeYoke" aria-pressed="true">Yoke</button>
+     <button type="button" id="controlTypeStick" aria-pressed="false">Joystick</button>
+   </div>
+   <p id="controlStyleHint" class="control-help">Yoke: turn left or right to bank; push forward or pull back to pitch.</p>
+   <div class="control-pad" id="controlPad"><div class="pad-cross"></div><button type="button" id="grip" class="grip" aria-label="Drag yoke left or right to bank and up or down to pitch. Arrow keys also work.">
+     <svg class="control-symbol symbol-yoke" viewBox="0 0 100 68" aria-hidden="true"><path d="M8 27 C22 10 78 10 92 27 L84 43 L66 35 L61 49 H39 L34 35 L16 43Z" fill="#142e44" stroke="#f5d5a2" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="37" r="12" fill="#6d96ae" stroke="#ecfbff" stroke-width="3"/></svg>
+     <svg class="control-symbol symbol-stick" viewBox="0 0 100 68" aria-hidden="true"><path d="M36 60 H64 L59 50 L41 50 Z" fill="#2d4455" stroke="#cde4ee" stroke-width="2"/><path d="M49 49 L54 24" stroke="#c3d9e4" stroke-width="12" stroke-linecap="round"/><ellipse cx="55" cy="19" rx="15" ry="18" fill="#284a62" stroke="#f5d5a2" stroke-width="4"/></svg>
+     <span id="gripTypeLabel">YOKE</span></button></div>
    <div class="actions"><button id="noseUp">Nose up</button><button id="noseDown">Nose down</button><button id="bankLeft">Bank left</button><button id="bankRight">Bank right</button></div>
   </div>
   <div class="hardware" id="control-throttle"><h3>Engine throttle</h3><p class="note">Change engine power. The airspeed and vertical-speed indications respond over time.</p>
@@ -311,7 +337,14 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
    <div class="pedals"><button class="pedal" id="leftRudder" aria-label="Hold left rudder">LEFT</button><button class="pedal" id="rightRudder" aria-label="Hold right rudder">RIGHT</button></div>
    <p class="note">On a keyboard, use A and D for rudder.</p>
   </div>
-  <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Select 0°, 10°, 20° or 30° at any instrument. Flaps primarily change lift and drag; in this simplified model, watch the airspeed response rather than expecting every gauge to move.</p>
+  <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Select 0°, 10°, 20° or 30°. Flaps change lift and drag; the attitude effect below is a configurable <strong>type-dependent teaching illustration</strong>, not a universal aircraft response.</p>
+    <label for="flapPitchMode" class="control-option-label">Illustrative flap pitching response</label>
+    <select id="flapPitchMode" aria-describedby="flapPitchHelp">
+      <option value="noseUp" selected>Nose-up tendency (example)</option>
+      <option value="noseDown">Nose-down tendency (example)</option>
+      <option value="neutral">No pitch coupling</option>
+    </select>
+    <p id="flapPitchHelp" class="control-help">Watch the artificial horizon for a small pitch shift as flaps travel. The sign and amount vary by aircraft and must be verified from its POH/AFM.</p>
     <div class="flap-row"><button id="flaps0" aria-pressed="true">0°</button><button id="flaps10" aria-pressed="false">10°</button><button id="flaps20" aria-pressed="false">20°</button><button id="flaps30" aria-pressed="false">30°</button></div>
     <div class="meter"><label>Selected flaps <output id="outFlaps">0°</output></label></div>
     <div class="flap-demonstration" aria-label="Animated wing flap training illustration">
