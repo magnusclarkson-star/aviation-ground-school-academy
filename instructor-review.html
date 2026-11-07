@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081829">
+<meta name="description" content="Aviation Ground School Academy draft review workspace for unsigned practice reports. No official training records or qualifications.">
+<title>Practice Report Review Workspace | Aviation Ground School Academy</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#081522;color:#e6f4fd;line-height:1.48}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 70% 0,#153b54,transparent 48%),#081522}
+a{color:#93e7ff}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#0c2335;border-bottom:1px solid #38627b;padding:15px clamp(12px,3vw,42px)}
+header strong{font-size:14px;letter-spacing:.05em}
+nav{display:flex;flex-wrap:wrap;gap:15px;font-size:13px}
+main{width:min(1180px,100%);margin:auto;padding:26px 14px 62px}
+.hero{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:15px;margin-bottom:19px}
+.hero h1{font-size:clamp(27px,4.5vw,42px);letter-spacing:-.025em;margin:4px 0 7px}
+.eyebrow{font-size:11px;color:#91dced;font-weight:800;letter-spacing:.15em}
+.hero p{font-size:15px;color:#c3dce9;max-width:680px}
+.status-badge{color:#ffdaa1;border:1px solid #a88557;border-radius:17px;padding:7px 10px;font-size:11px;letter-spacing:.04em;font-weight:800}
+.warning{background:#2a281f;border:1px solid #98744c;border-left:4px solid #efd09a;border-radius:12px;padding:12px 15px;color:#ffdea9;font-size:13px;margin:16px 0}
+.grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:15px;align-items:start}
+.panel{background:#0f283d;border:1px solid #42647c;border-radius:16px;padding:19px;margin:0 0 15px;min-width:0}
+.panel h2{font-size:21px;margin:0 0 5px}
+.panel h3{font-size:16px;margin:0 0 10px}
+.panel p{font-size:13px;color:#b8d1e0;line-height:1.53}
+.subtle{font-size:12px!important;color:#aac5d7!important}
+label{display:block;font-size:12px;font-weight:750;color:#cce5f4;margin:13px 0 5px}
+input[type=file],textarea,select{display:block;width:100%;background:#10283d;border:1px solid #648ba6;border-radius:9px;color:#f1fcff;font:inherit;padding:10px;font-size:13px}
+textarea{resize:vertical;min-height:106px;line-height:1.55}
+input[type=file]{min-height:50px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #78d9ff;outline-offset:2px}
+button{background:#173b54;border:1px solid #6b9ab3;color:#e6f7ff;border-radius:9px;cursor:pointer;padding:10px 13px;min-height:44px;font-size:13px;font-weight:750}
+button.primary{background:#55c8e4;color:#092235;border-color:#7ee9ff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.actions button{flex:1 1 130px}
+hr{border:0;border-top:1px solid #3b596f;margin:16px 0}
+.output{background:#081f30;border:1px solid #426681;border-radius:10px;padding:11px;margin:10px 0;min-height:42px;color:#d1ebf8;font-size:12px;overflow-wrap:anywhere}
+.output[data-state=error]{color:#ffd3bf;border-color:#c2796b}
+.output[data-state=success]{color:#c6f5dc;border-color:#4d8d75}
+.hidden{display:none!important}
+.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.metric{padding:10px;border:1px solid #3f5e77;border-radius:10px;background:#0a1d2e;min-width:0}
+.metric small{color:#8fbad0;font-size:11px;display:block}
+.metric strong{font-size:16px;font-weight:800;color:#f9e4b4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.evidence{background:#162b3e;border-left:3px solid #e6bd6e;padding:10px 12px;border-radius:5px;color:#f1dbaa!important}
+.suggestions{padding-left:21px;color:#bedbe9;font-size:12px}
+.suggestions li{padding:4px 0}
+.rubric{border:1px solid #3b5f7a;border-radius:12px;padding:12px;margin:13px 0;background:#0b2337}
+.rubric h3{margin:0 0 2px}
+.rubric p{font-size:11px;margin:3px 0 9px}
+.rubric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.review-flag{font-size:11px;color:#ffdcab;font-weight:750}
+.footer{color:#9bb9cd;font-size:12px;margin:23px 0}
+details{border:1px solid #3b5f76;border-radius:10px;padding:11px;margin-top:12px;font-size:12px}
+summary{cursor:pointer;font-weight:800;color:#b6eaff}
+details p{font-size:12px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.panel{padding:15px}}
+@media(max-width:480px){.summary-grid,.rubric-grid{grid-template-columns:1fr}.panel h2{font-size:18px}.actions button{flex:1 1 100%}main{padding:18px 10px 48px}}
+</style>
+<script src="academy-brand.js" defer></script>
+<script src="instructor-review-model.js" defer></script>
+<script src="instructor-review.js" defer></script>
+</head>
+<body>
+<header><strong>AVIATION GROUND SCHOOL ACADEMY · REVIEW WORKSPACE</strong>
+ <nav aria-label="Academy pages"><a href="index.html">Academy home</a><a href="cockpit-v3.html?mode=skills">Skills practice</a><a href="standards-readiness.html">Standards &amp; accreditation</a></nav>
+</header>
+<main>
+<section class="hero">
+ <div><div class="eyebrow">V3.8 · REPORT INTAKE + RUBRIC PROTOTYPE</div>
+ <h1>Practice report review</h1>
+ <p>Inspect a learner-supplied practice export, add structured coaching notes and download an <strong>unverified review draft</strong> for further discussion.</p></div>
+ <div class="status-badge">NOT AN ACCREDITED REVIEW SYSTEM</div>
+</section>
+<div class="warning" role="note"><strong>Important:</strong> Anyone can change a downloaded practice report. This workspace does not verify student or instructor identity, authenticate records, provide digital signatures or confer credit. It is an educational demonstration only. Do not import confidential real student records.</div>
+<div class="grid">
+ <div>
+  <section class="panel" aria-label="Import practice report">
+   <h2>1. Load a practice export</h2>
+   <p>Use the JSON downloaded from <a href="cockpit-v3.html?mode=skills">Skills Practice</a> or an exported local journal. The file is processed in this browser; no upload service is used.</p>
+   <label for="reportFile">Choose AGSA JSON file (maximum 256 KB)</label>
+   <input id="reportFile" type="file" accept=".json,application/json">
+   <div class="actions"><button id="demoLoad" type="button">Load fictional example</button><button id="clearReview" type="button">Clear current workspace</button></div>
+   <details><summary>Or paste an exported JSON report</summary>
+    <label for="reportText">Paste complete JSON, without additional text</label>
+    <textarea id="reportText" rows="5" placeholder='{"schema":"agsa.practice-observation.v1", ...}' spellcheck="false" maxlength="262144"></textarea>
+    <button id="parseText" type="button">Read pasted JSON</button>
+   </details>
+   <div id="importStatus" class="output" role="status">No report loaded. You can open a sample without needing a student account.</div>
+  </section>
+  <section id="reportPanel" class="panel hidden" aria-label="Imported report details">
+   <h2>2. Inspect source details</h2>
+   <label for="recordSelect">Selected report (up to 20 journal entries)</label>
+   <select id="recordSelect"></select>
+   <div id="sourceDetails" class="summary-grid">
+    <div class="metric"><small>Practice task</small><strong id="sourceTask">—</strong></div>
+    <div class="metric"><small>Claimed result</small><strong id="sourceOutcome">—</strong></div>
+    <div class="metric"><small>Claimed time</small><strong id="sourceTime">—</strong></div>
+    <div class="metric"><small>Claimed score</small><strong id="sourceScore">—</strong></div>
+   </div>
+   <p id="sourceNotice" class="evidence">The imported source has not been authenticated.</p>
+   <p id="sourceTarget" class="subtle"></p>
+   <div id="sourceIndications" class="subtle"></div>
+   <div id="suggestionGroup" class="hidden">
+    <h3>Previously generated practice suggestions</h3>
+    <ul class="suggestions" id="sourceSuggestions"></ul>
+   </div>
+  </section>
+ </div>
+ <div>
+  <section id="reviewPanel" class="panel hidden" aria-label="Draft review questions">
+   <h2>3. Draft coaching feedback</h2>
+   <p class="review-flag">UNVERIFIED DRAFT · NO INSTRUCTOR AUTHENTICATION OR SIGN-OFF</p>
+   <p>These rubric prompts support discussion, not independent evaluation of manoeuvre proficiency. Source evidence may be incomplete or edited.</p>
+   <div class="rubric">
+    <h3>Discussion rubric</h3>
+    <p>Select what the available evidence suggests may need discussion. None of these settings signifies a certified assessment.</p>
+    <div class="rubric-grid">
+     <div><label for="rubricScan">Instrument scanning</label>
+      <select id="rubricScan"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Discuss indications</option><option value="practice-recommended">Further practice suggested</option></select></div>
+     <div><label for="rubricControl">Control coordination</label>
+      <select id="rubricControl"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Discuss control technique</option><option value="practice-recommended">Further practice suggested</option></select></div>
+     <div><label for="rubricRisk">Safety and decisions</label>
+      <select id="rubricRisk"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Discuss decision-making</option><option value="practice-recommended">Further practice suggested</option></select></div>
+    </div>
+   </div>
+   <label for="reviewComment">Review notes (maximum 1,200 characters)</label>
+   <textarea id="reviewComment" maxlength="1200" rows="5" placeholder="Describe what should be checked with a qualified instructor. Do not add sensitive personal details."></textarea>
+   <label for="reviewNext">Proposed next practice activity (maximum 600 characters)</label>
+   <textarea id="reviewNext" maxlength="600" rows="3" placeholder="Example: repeat the coordinated turn exercise and compare PFD slip and bank indications."></textarea>
+   <div class="actions"><button id="draftDownload" class="primary" type="button">Download review draft JSON</button><button id="draftReset" type="button">Reset rubric and notes</button></div>
+   <div id="reviewStatus" class="output" role="status">Nothing has been signed, approved or saved to a school record.</div>
+  </section>
+  <section class="panel">
+   <h2>What a verified training record would require</h2>
+   <p>Official student records cannot be secured by browser-only forms. Production work still requires a protected backend, properly authenticated and authorised learner/instructor accounts, secure storage, consent and retention policies, approved course criteria and a tamper-evident audit trail.</p>
+   <p>This workspace intentionally <strong>does not store imports or draft notes across page refreshes</strong>. Download the JSON if you wish to keep a private working copy.</p>
+   <a href="standards-readiness.html">Read the regulatory readiness and training-quality plan</a>
+  </section>
+ </div>
+</div>
+<div class="footer">Aviation Ground School Academy · Educational prototype · Unofficial review workspace. No actual qualification or training approval is represented.</div>
+</main>
+</body>
+</html>
