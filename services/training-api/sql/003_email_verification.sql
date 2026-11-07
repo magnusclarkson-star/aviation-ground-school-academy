@@ -24,7 +24,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public
-AS $
+AS $agsa$
 DECLARE account_id uuid;
 BEGIN
  UPDATE public.email_verification_challenges AS c
@@ -45,7 +45,7 @@ BEGIN
  VALUES(account_id,'auth.email.verify','user',account_id);
  RETURN true;
 END
-$;
+$agsa$;
 REVOKE ALL ON FUNCTION public.consume_email_challenge(char(64)) FROM PUBLIC;
 
 -- The service checks verification on every authenticated request; sessions
