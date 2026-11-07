@@ -6,6 +6,12 @@
 const $=id=>document.getElementById(id);
 const state={user:null,attempts:[],assigned:[],drafts:[],selectedId:null,pendingUpload:null};
 const csrfNames=["__Host-AGSA-CSRF","agsa_local_csrf"];
+// A fragment token is not sent to the server by navigation. Remove it from
+// history immediately, hold it only in memory, and wait for a deliberate click.
+const invitation=new URLSearchParams(location.hash.slice(1)).get("verify-email");
+let pendingVerifyToken=typeof invitation==="string"&&/^[A-Za-z0-9_-]{43}$/.test(invitation)?invitation:null;
+if(location.hash)history.replaceState(null,"",location.pathname+location.search);
+
 function status(id,message,tone=""){
  const el=$(id);el.textContent=message;
  if(tone)el.dataset.tone=tone;else el.removeAttribute("data-tone");
@@ -31,7 +37,7 @@ async function api(path,{method="GET",payload,key}={}){
  const headers={Accept:"application/json"};
  if(method!=="GET"){
   headers["Content-Type"]="application/json";
-  if(path!=="/api/v1/auth/login"){
+  if(path!=="/api/v1/auth/login"&&path!=="/api/v1/auth/verify-email"){
    const token=csrfToken();
    if(!token)throw Error("Session verification token is missing. Please sign in again.");
    headers["X-AGSA-CSRF"]=token;
@@ -224,6 +230,26 @@ async function signOut(){
  catch(e){status("globalStatus","Unable to confirm logout. The current session may still be active: "+e.message,"error");$("logoutButton").disabled=false;return;}
  resetSession("Signed out. No user credentials were stored by this page.");
  $("logoutButton").disabled=false;
+}
+async function confirmEmail(){
+ if(!pendingVerifyToken){status("verifyStatus","This invitation link is invalid or missing.","error");return;}
+ $("verifyButton").disabled=true;
+ try{
+  await api("/api/v1/auth/verify-email",{method:"POST",payload:{token:pendingVerifyToken}});
+  pendingVerifyToken=null;
+  $("verifyButton").classList.add("hidden");
+  status("verifyStatus","Email confirmed for the staging account. You may now sign in with your password and, if you are an instructor, your authenticator code.","success");
+ }catch(error){
+  status("verifyStatus","Email confirmation unsuccessful: "+error.message,"error");
+ }finally{$("verifyButton").disabled=false;}
+}
+$("verifyButton").addEventListener("click",confirmEmail);
+if(pendingVerifyToken){
+ show("verifyPanel",true);
+}else if(invitation!==null){
+ show("verifyPanel",true);
+ $("verifyButton").disabled=true;
+ status("verifyStatus","Invalid verification invitation. Request a new email from your staging operator.","error");
 }
 $("loginForm").addEventListener("submit",signIn);
 $("logoutButton").addEventListener("click",signOut);
