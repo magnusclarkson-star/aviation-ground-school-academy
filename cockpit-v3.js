@@ -165,7 +165,7 @@ function renderMap(){
 }
 function renderEngine(){
  let p=round(state.power);
- $("engineData").innerHTML='<div class="pfd-tile"><small>POWER COMMAND</small><strong>'+p+'%</strong><p>Derived from the throttle. Not a real engine RPM or manifold pressure reading.</p></div><div class="pfd-tile"><small>FLAPS SELECTED</small><strong>'+round(input.flaps)+'°</strong></div><div class="pfd-tile"><small>FLAPS INDICATED</small><strong>'+state.flaps.toFixed(1)+'°</strong></div><div class="pfd-tile"><small>TRAINING AIRSPEED</small><strong>'+round(state.speed)+' KT</strong></div>';
+ $("engineData").innerHTML='<div class="pfd-tile"><small>POWER COMMAND</small><strong>'+p+'%</strong><p>Derived from the throttle. Not a real engine RPM or manifold pressure reading.</p></div><div class="pfd-tile"><small>FLAPS SELECTED</small><strong>'+round(input.flaps)+'°</strong></div><div class="pfd-tile"><small>FLAPS INDICATED</small><strong>'+state.flaps.toFixed(1)+'°</strong></div><div class="pfd-tile"><small>RELATIVE LIFT POTENTIAL</small><strong>'+state.liftIndex.toFixed(2)+'×</strong></div><div class="pfd-tile"><small>RELATIVE DRAG</small><strong>'+state.dragIndex.toFixed(2)+'×</strong></div><div class="pfd-tile"><small>TRAINING AIRSPEED</small><strong>'+round(state.speed)+' KT</strong></div><div class="pfd-tile"><small>VERTICAL SPEED</small><strong>'+round(state.verticalSpeed)+' FPM</strong></div>';
 }
 function updateFlapIllustration(){
  // Move only the hinged trailing-edge flap, not the fixed wing. Animation is
@@ -177,6 +177,22 @@ function updateFlapIllustration(){
  $("flapCommanded").textContent=round(selected)+"°";
  $("flapIndicated").textContent=indicated.toFixed(1)+"°";
  $("flapTravelMeter").value=indicated;
+ $("flapLiftIndex").textContent=state.liftIndex.toFixed(2)+"×";
+ $("flapDragIndex").textContent=state.dragIndex.toFixed(2)+"×";
+ $("flapLiftProgress").value=state.liftIndex;
+ $("flapDragProgress").value=state.dragIndex;
+ $("flapIAS").textContent=round(state.speed)+" kt";
+ $("flapVSI").textContent=round(state.verticalSpeed)+" ft/min";
+ let message;
+ if(indicated<1){
+  message="Clean-wing reference: flap lift and drag additions are not applied. Try 10° and compare the response.";
+ }else if(indicated<=15){
+  message="Early flap extension: the model adds proportionally more lift potential than drag. With pitch and power unchanged, a small temporary upward tendency may appear.";
+ }else{
+  message="Larger flap deflections: drag grows much faster. Watch for reduced airspeed and a possible steeper descent at the same pitch and power.";
+ }
+ if(paused)message+=" Flight is paused; resume to observe changes.";
+ $("flapContext").textContent=message;
 }
 function paint(){
  updateFlapIllustration();
