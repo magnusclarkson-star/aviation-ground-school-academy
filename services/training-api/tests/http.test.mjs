@@ -250,6 +250,47 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   assert.equal((await ask("GET","/api/v1/instructor/feedback-drafts",undefined,t1)).body.items.length,1);
   assert.equal((await ask("GET","/api/v1/instructor/feedback-drafts",undefined,t2)).body.items.length,0);
  });
+ await t.test("AI questions require login, CSRF and per-account usage limits",async()=>{
+  assert.equal((await ask("GET","/api/v1/ai/status")).status,401);
+  const flags=await ask("GET","/api/v1/ai/status",undefined,s1);
+  assert.equal(flags.status,200);
+  assert.equal(flags.body.enabled,true);
+  assert.equal(flags.body.voiceEnabled,true);
+  assert.equal(flags.body.limits.text,12);
+  assert.equal(JSON.stringify(flags.body).includes(aiEnv.OPENAI_API_KEY),false);
+  const question={question:"What is lift?",topic:"forces",style:"mentor"};
+  assert.equal((await ask("POST","/api/v1/ai/ask",question)).status,401);
+  assert.equal((await ask("POST","/api/v1/ai/ask",question,{cookies:s1.cookies})).status,403);
+  assert.equal((await ask("POST","/api/v1/ai/ask",{...question,question:"a"},s1)).status,400);
+  assert.equal((await ask("POST","/api/v1/ai/ask",{...question,style:"not-valid"},s1)).status,400);
+  const before=providerCalls;
+  for(let i=0;i<12;i++){
+   const reply=await ask("POST","/api/v1/ai/ask",question,s1);
+   assert.equal(reply.status,200,JSON.stringify(reply.body));
+   assert.equal(reply.body.mode,"GENERATIVE_AI");
+   assert.equal(JSON.stringify(reply.body).includes(aiEnv.OPENAI_API_KEY),false);
+  }
+  assert.equal(providerCalls-before,12);
+  assert.equal((await ask("POST","/api/v1/ai/ask",question,s1)).status,429);
+  assert.equal((await ask("POST","/api/v1/ai/ask",question,s2)).status,200);
+  assert.equal((await ask("POST","/api/v1/ai/ask",question,t1)).status,200);
+ });
+ await t.test("natural voice is CSRF protected and subject to a separate daily limit",async()=>{
+  assert.equal((await ask("POST","/api/v1/ai/voice",{text:"Hello world"},s1,{Origin:"https://unrelated.example"})).status,403);
+  assert.equal((await ask("POST","/api/v1/ai/voice",{text:"Hi",voice:"coral"},s1)).status,400);
+  for(let i=0;i<5;i++){
+   const audio=await fetch(root+"/api/v1/ai/voice",{
+    method:"POST",headers:{
+     Origin:"http://127.0.0.1:3100","Content-Type":"application/json",
+     "X-AGSA-CSRF":s1.csrf,Cookie:s1.cookies
+    },body:JSON.stringify({text:"Aviation teaching sample "+i,voice:"coral"})
+   });
+   assert.equal(audio.status,200);
+   assert.equal(audio.headers.get("content-type"),"audio/mpeg");
+   assert.equal((await audio.arrayBuffer()).byteLength,64);
+  }
+  assert.equal((await ask("POST","/api/v1/ai/voice",{text:"Aviation sample",voice:"coral"},s1)).status,429);
+ });
  await t.test("logout revokes session and clears cookies",async()=>{
   assert.equal((await ask("POST","/api/v1/auth/logout",{},s1)).status,200);
   assert.equal((await ask("GET","/api/v1/me",undefined,s1)).status,401);
