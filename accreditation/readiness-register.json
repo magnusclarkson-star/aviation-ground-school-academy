@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-07",
+  "public_status": "educational_prototype_unapproved",
+  "accreditation_held": false,
+  "simulator_qualified": false,
+  "flight_credit_permitted": false,
+  "permitted_claim": "Educational demonstration only; no approved course, rating, or simulator credit.",
+  "pathways": [
+    {
+      "id": "SLCAA",
+      "jurisdiction": "Sierra Leone",
+      "scheme": "Approved Training Organisation / personnel licensing",
+      "status": "not_applied",
+      "reference_url": "https://slcaa.gov.sl/information-resources/regulations/",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "organisation approval",
+        "training and procedures manual",
+        "instructor qualifications",
+        "versioned curriculum",
+        "assessment records",
+        "quality and safety processes"
+      ]
+    },
+    {
+      "id": "FAA141",
+      "jurisdiction": "United States",
+      "scheme": "FAA Part 141 Pilot School",
+      "status": "not_applied",
+      "reference_url": "https://www.faa.gov/licenses_certificates/airline_certification/pilotschools",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "certificate holder",
+        "FAA-approved training courses",
+        "instructors and personnel",
+        "stage checks",
+        "records",
+        "facilities"
+      ]
+    },
+    {
+      "id": "FAAATD",
+      "jurisdiction": "United States",
+      "scheme": "FAA BATD/AATD training device",
+      "status": "not_qualified",
+      "reference_url": "https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1034348",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "device qualification and LOA",
+        "hardware/configuration validation",
+        "QAG",
+        "training-credit limitations"
+      ]
+    },
+    {
+      "id": "EASAATO",
+      "jurisdiction": "EU/EASA",
+      "scheme": "ATO/DTO training and distance learning",
+      "status": "not_applied",
+      "reference_url": "https://www.easa.europa.eu/en/domains/aircrew-and-medical/approved-training-organisations-ato",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "competent-authority process",
+        "programme documents",
+        "instructor supervision",
+        "progress evidence",
+        "assessment integrity",
+        "records and data protection"
+      ]
+    },
+    {
+      "id": "EASAFSTD",
+      "jurisdiction": "EU/EASA",
+      "scheme": "FSTD qualification (including 2026 framework)",
+      "status": "not_qualified",
+      "reference_url": "https://www.easa.europa.eu/en/domains/aircrew-and-medical/flight-simulation-training-devices-fstd",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "qualified device capabilities",
+        "validation/test plan",
+        "source data",
+        "continuing qualification",
+        "rule implementation date"
+      ]
+    },
+    {
+      "id": "UKCAA",
+      "jurisdiction": "United Kingdom",
+      "scheme": "UK CAA ATO/DTO, distinct from EASA",
+      "status": "not_applied",
+      "reference_url": "https://www.caa.co.uk/data-and-analysis/approved-persons-and-organisations/approved-organisations/pilot-training-providers-atos-and-dtos/",
+      "authority_verification": null,
+      "approved_course_scopes": [],
+      "evidence_required": [
+        "UK-specific route",
+        "organisation eligibility and location",
+        "syllabus",
+        "instructor oversight",
+        "records"
+      ]
+    }
+  ],
+  "planned_capabilities": [
+    {
+      "id": "verified_syllabus",
+      "status": "planned",
+      "evidence": "versioned syllabi, objectives and POH/AFM references"
+    },
+    {
+      "id": "instructor_attestation",
+      "status": "planned",
+      "evidence": "signed instructor review and progression"
+    },
+    {
+      "id": "student_ledger",
+      "status": "planned",
+      "evidence": "secure attendance, assessments, audit events and retention"
+    },
+    {
+      "id": "simulator_validation",
+      "status": "prototype",
+      "evidence": "GitHub CI and Chromium tests; needs type validation"
+    },
+    {
+      "id": "offline_lessons",
+      "status": "planned",
+      "evidence": "offline caching/sync with student records integrity"
+    },
+    {
+      "id": "public_standards_page",
+      "status": "implemented",
+      "evidence": "standards-readiness.html"
+    }
+  ],
+  "safeguarding": {
+    "personal_data_in_public_repository": false,
+    "authority_secrets_in_public_repository": false,
+    "verification_required_before_claiming_approval": true
+  }
+}
