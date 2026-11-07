@@ -121,6 +121,13 @@ async function login(page,email){
 try{
  const desktop=await browser.newPage({viewport:{width:1260,height:870}});
  desktop.on("pageerror",e=>pageErrors.push("desktop: "+e.message));
+ await desktop.addInitScript(()=>{
+  window.Audio=class{
+   constructor(url){this.src=url;this.onended=null}
+   async play(){window.__mockAudioPlayed=true;return true}
+   pause(){}
+  };
+ });
  await desktop.goto(base+"/portal/#verify-email="+inviteToken);
  assert.equal(await desktop.locator("#verifyPanel").isVisible(),true);
  assert.equal(await desktop.evaluate(()=>window.location.hash),"","invitation fragment erased immediately");
@@ -150,6 +157,29 @@ try{
  assert.equal(await desktop.locator("#studentPanel").isVisible(),true);
  assert.equal(await desktop.locator("#instructorPanel").isVisible(),false);
  assert.equal((await desktop.request.get(base+"/api/v1/instructor/assigned-attempts")).status(),403);
+ await desktop.waitForFunction(()=>document.querySelector("#aiAvailability").textContent.includes("enabled for fictional"));
+ assert.equal(await desktop.locator("#aiAskButton").isDisabled(),false);
+ await desktop.locator("#aiQuestion").fill("What is lift?");
+ const preAI=providerCalls;
+ await desktop.locator("#aiAskButton").click();
+ assert.match(await desktop.locator("#aiTutorStatus").textContent(),/acknowledge/);
+ assert.equal(providerCalls,preAI,"no AI request before explicit consent");
+ await desktop.locator("#aiTopic").selectOption("forces");
+ await desktop.locator("#aiStyle").selectOption("mentor");
+ await desktop.locator("#aiConsent").check();
+ await desktop.locator("#aiAskButton").click();
+ await desktop.waitForFunction(()=>document.querySelector("#aiAnswer").textContent.includes("Lift is an aerodynamic"));
+ assert.equal(await desktop.locator("#aiAnswerPanel").isVisible(),true);
+ assert.match(await desktop.locator("#aiAnswerPanel").textContent(),/AI-generated/);
+ assert.equal(providerCalls,preAI+1);
+ assert.equal(await desktop.locator("#aiConsent").isChecked(),false);
+ await desktop.locator("#aiVoiceChoice").selectOption("coral");
+ await desktop.locator("#aiSpeak").click();
+ await desktop.waitForFunction(()=>window.__mockAudioPlayed===true);
+ assert.equal(providerCalls,preAI+2);
+ assert.match(await desktop.locator("#aiTutorStatus").textContent(),/AI-generated voice/);
+ await desktop.locator("#aiStop").click();
+ assert.match(await desktop.locator("#aiTutorStatus").textContent(),/stopped/);
  await desktop.locator("#reportFile").setInputFiles({
   name:"flap-practice.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(exampleReport))
@@ -207,6 +237,15 @@ try{
  await login(phone,"pilot.student@example.org");
  assert.equal(await phone.locator("#studentList .list-item").count(),1);
  assert.equal(await phone.locator("#studentPanel").isVisible(),true);
+ await phone.waitForFunction(()=>document.querySelector("#aiAvailability").textContent.includes("enabled for fictional"));
+ await phone.locator("#aiTopic").selectOption("instruments");
+ await phone.locator("#aiQuestion").fill("What does the artificial horizon show?");
+ await phone.locator("#aiConsent").check();
+ await phone.locator("#aiAskButton").tap();
+ await phone.waitForFunction(()=>document.querySelector("#aiAnswer").textContent.includes("Lift is an aerodynamic"));
+ assert.equal(await phone.locator("#aiAnswerPanel").isVisible(),true);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+  "Mobile AI tutoring controls must not overflow horizontally");
  await phone.close();
  assert.deepEqual(pageErrors,[]);
  console.log("Portal browser integration passed: same-origin CSP, no leaked unauthenticated data, student submission, instructor assignments/drafts, CSRF-backed actions and responsive mobile accounts.");
