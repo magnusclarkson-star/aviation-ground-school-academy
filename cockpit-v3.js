@@ -323,6 +323,7 @@ function setFlaps(n){
  $("focusFlapsState").textContent=n+"°";
  $("digitalFlapsState").textContent=n+"°";
  updateFlapIllustration();
+ if(mode==="mission"&&mission)renderMission();
 }
 function applyPreset(type){
  presetUntil=performance.now()+4300;
