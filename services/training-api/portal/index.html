@@ -112,6 +112,56 @@
     </div>
    </div>
   </section>
+  <section id="aiTutorSection" class="panel" aria-labelledby="aiTutorHeading">
+   <div class="section-header">
+    <div><span class="kicker">OPTIONAL · CONNECTED EDUCATIONAL AI</span>
+     <h2 id="aiTutorHeading">Ask an AI ground-school instructor</h2>
+     <p>Educational text answers and optional computer-generated narration. Not a human flight instructor, examiner, ATC service or approved training system.</p></div>
+   </div>
+   <p class="warning">Questions are sent to a separate AI provider only if an operator enables it and you explicitly agree. Avoid personal data or real-flight decisions. Per-account daily limits apply. No official training credit.</p>
+   <div id="aiAvailability" class="status" role="status">Checking whether connected AI is enabled…</div>
+   <form id="aiQuestionForm">
+    <div class="ai-options">
+     <div><label for="aiTopic">Lesson area</label>
+      <select id="aiTopic">
+       <option value="forces">Four forces of flight</option>
+       <option value="instruments">Flight instruments</option>
+       <option value="controls">Yoke, joystick and rudder</option>
+       <option value="flaps">Flaps and aerodynamic effects</option>
+       <option value="weather">Weather and preflight concepts</option>
+       <option value="radio">Aviation radio basics</option>
+      </select></div>
+     <div><label for="aiStyle">Instructor teaching style</label>
+      <select id="aiStyle">
+       <option value="mentor">Captain Sky — friendly mentor</option>
+       <option value="scouts">Scout Guide — discovery lesson</option>
+       <option value="exam">Theory Coach — exam revision</option>
+      </select></div>
+    </div>
+    <label for="aiQuestion">Your question (maximum 500 characters)</label>
+    <textarea id="aiQuestion" maxlength="500" rows="3" placeholder="For example: Why does extending flaps usually increase drag?"></textarea>
+    <label class="ai-consent"><input id="aiConsent" type="checkbox"> I understand this educational question will be sent to an external AI provider when I press Ask.</label>
+    <button id="aiAskButton" class="primary" type="submit" disabled>Ask connected AI instructor</button>
+   </form>
+   <div id="aiAnswerPanel" class="ai-answer hidden">
+    <strong>AI-generated study answer · may be inaccurate</strong>
+    <p id="aiAnswer" aria-live="polite"></p>
+    <div class="ai-options">
+     <div><label for="aiVoiceChoice">Narration</label>
+      <select id="aiVoiceChoice"><option value="device">Use device voice (no Academy speech API)</option>
+       <option value="coral">Natural AI voice · Coral</option>
+       <option value="nova">Natural AI voice · Nova</option>
+       <option value="sage">Natural AI voice · Sage</option>
+      </select></div>
+     <div class="ai-actions">
+      <button type="button" id="aiSpeak" disabled>Read answer aloud</button>
+      <button type="button" id="aiStop">Stop voice</button>
+     </div>
+    </div>
+   </div>
+   <p id="aiTutorStatus" role="status" aria-live="polite" class="status">You can practise public lessons with device narration even without a connected AI service.</p>
+   <p class="muted"><a href="https://magnusclarkson-star.github.io/aviation-ground-school-academy/ai-instructor.html" target="_blank" rel="noopener noreferrer">Open free guided lessons and device narration</a>. Spoken audio is synthetic and not a real person's voice.</p>
+  </section>
  </section>
  <div id="globalStatus" class="status hidden" role="status" aria-live="polite"></div>
  <footer>
