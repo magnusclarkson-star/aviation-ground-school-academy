@@ -9,6 +9,7 @@
 <title>Private Training Portal — AGSA Staging</title>
 <link rel="stylesheet" href="/portal/styles.css">
 <script src="/portal/app.js" defer></script>
+<script src="/portal/realtime.js" defer></script>
 </head>
 <body>
 <header class="masthead">
@@ -161,6 +162,38 @@
    </div>
    <p id="aiTutorStatus" role="status" aria-live="polite" class="status">You can practise public lessons with device narration even without a connected AI service.</p>
    <p class="muted"><a href="https://magnusclarkson-star.github.io/aviation-ground-school-academy/ai-instructor.html" target="_blank" rel="noopener noreferrer">Open free guided lessons and device narration</a>. Spoken audio is synthetic and not a real person's voice.</p>
+  </section>
+  <section id="realtimeVoiceSection" class="panel" aria-labelledby="realtimeVoiceTitle">
+   <div class="section-header"><div>
+    <span class="kicker">VOICE-TO-VOICE · PRIVATE STAGING ONLY</span>
+    <h2 id="realtimeVoiceTitle">Speak with an AI ground-school tutor</h2>
+    <p>Ask a question out loud, then hear a synthetic spoken answer. Uses your browser microphone and a real-time AI provider only when the operator enables this service.</p>
+   </div></div>
+   <p class="warning"><strong>Not a human or qualified instructor.</strong> No flight control instructions, ATC clearances, safety decisions or official grades. Do not use it while operating an aircraft. Microphone audio goes directly to the external AI service via an encrypted WebRTC connection after you consent.</p>
+   <div class="ai-options">
+    <div><label for="realtimeVoice">Synthetic instructor voice</label>
+     <select id="realtimeVoice">
+      <option value="coral">Coral — friendly</option>
+      <option value="marin">Marin — clear</option>
+      <option value="cedar">Cedar — steady</option>
+      <option value="sage">Sage — calm</option>
+     </select>
+     <p class="muted">Lesson topic and teaching style follow the selectors above.</p>
+    </div>
+    <div><label for="realtimePlayback">Instructor audio</label>
+      <audio id="realtimePlayback" autoplay controls playsinline aria-label="AI instructor voice playback"></audio>
+      <p class="muted">If your phone blocks autoplay, tap Play on this audio control.</p>
+    </div>
+   </div>
+   <label class="ai-consent"><input id="realtimeConsent" type="checkbox"> I consent to sending my microphone audio to an external AI provider, understand the voice is synthetic, and will use this only for fictional educational practice.</label>
+   <div class="buttons ai-actions">
+    <button id="realtimeStart" class="primary" type="button" disabled>Start speaking with AI</button>
+    <button id="realtimeMute" type="button" disabled>Mute microphone</button>
+    <button id="realtimeStop" type="button" disabled>End conversation</button>
+   </div>
+   <div id="realtimeStatus" class="status" role="status" aria-live="polite">Two-way AI voice is not configured. The free spoken lessons remain available.</div>
+   <p class="muted" id="realtimeDuration">Maximum practice session: 2 minutes. Limit: 2 sessions per account per day. The server attempts to end calls even if you close the browser.</p>
+   <div class="ai-answer" aria-label="AI instructor speech transcript"><strong>Generated speech transcript · may contain errors</strong><p id="realtimeTranscript" aria-live="polite">Start a session to practise a question. Transcripts are displayed locally and are not stored in the Academy practice database.</p></div>
   </section>
  </section>
  <div id="globalStatus" class="status hidden" role="status" aria-live="polite"></div>
