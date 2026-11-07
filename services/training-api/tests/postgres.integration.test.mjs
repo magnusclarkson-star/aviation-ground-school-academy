@@ -4,6 +4,7 @@ import {randomUUID} from "node:crypto";
 import {createPool,PgStore} from "../src/postgres.mjs";
 import {hashSha256,generateSecret,hashPassword} from "../src/crypto.mjs";
 import {ClientError} from "../src/validation.mjs";
+import {encryptTotpSecret,totpAtStep} from "../src/mfa.mjs";
 
 const connection=process.env.AGSA_TEST_DATABASE_URL;
 if(!connection)throw Error("AGSA_TEST_DATABASE_URL is required for the isolated PostgreSQL integration suite");
@@ -30,6 +31,31 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
   for(const [id,org,role] of [[student1,org1,"student"],[student2,org1,"student"],[teacher1,org1,"instructor"],[teacher2,org1,"instructor"],[outsider,org2,"instructor"]]){
    await pool.query("INSERT INTO memberships(user_id,organization_id,role) VALUES($1,$2,$3)",[id,org,role]);
   }
+  const mfaKey=Buffer.alloc(32,19);
+  const totpSecret="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+  const step=Math.floor(Date.now()/30000),otp=totpAtStep(totpSecret,step);
+  assert.equal(await db.consumeInstructorOtp({
+   userId:teacher1,organizationId:org1,code:otp,encryptionKey:mfaKey
+  }),false,"unenrolled instructor must fail closed");
+  await pool.query(`INSERT INTO instructor_mfa(organization_id,instructor_id,encrypted_secret)
+    VALUES($1,$2,$3)`,[org1,teacher1,encryptTotpSecret(totpSecret,mfaKey)]);
+  assert.equal(await db.consumeInstructorOtp({
+   userId:teacher1,organizationId:org2,code:otp,encryptionKey:mfaKey
+  }),false,"MFA enrollment is organisation scoped");
+  assert.equal(await db.consumeInstructorOtp({
+   userId:teacher1,organizationId:org1,code:"999999",encryptionKey:mfaKey
+  }),false,"wrong OTP denied");
+  const parallel=await Promise.all([
+   db.consumeInstructorOtp({userId:teacher1,organizationId:org1,code:otp,encryptionKey:mfaKey}),
+   db.consumeInstructorOtp({userId:teacher1,organizationId:org1,code:otp,encryptionKey:mfaKey})
+  ]);
+  assert.deepEqual(parallel.sort(),[false,true],"simultaneous reuse of one TOTP can only succeed once");
+  assert.equal(await db.consumeInstructorOtp({
+   userId:teacher1,organizationId:org1,code:otp,encryptionKey:mfaKey
+  }),false,"replayed TOTP denied");
+  const mfaEvents=await pool.query(`SELECT COUNT(*)::integer AS count FROM audit_events
+    WHERE organization_id=$1 AND action='auth.mfa.verify'`,[org1]);
+  assert.equal(mfaEvents.rows[0].count,1,"exactly one audit event for consumed code");
   const student={userId:student1,organizationId:org1,role:"student"};
   const otherStudent={userId:student2,organizationId:org1,role:"student"};
   const teacher={userId:teacher1,organizationId:org1,role:"instructor"};
@@ -106,6 +132,7 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
    await pool.query("DELETE FROM practice_attempts WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM sessions WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM instructor_assignments WHERE organization_id = ANY($1::uuid[])",[orgs]);
+   await pool.query("DELETE FROM instructor_mfa WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM memberships WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])",[users]);
    await pool.query("DELETE FROM organizations WHERE id = ANY($1::uuid[])",[orgs]);
