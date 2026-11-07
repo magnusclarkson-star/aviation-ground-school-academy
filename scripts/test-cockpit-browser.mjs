@@ -21,10 +21,20 @@ try {
  assert.equal(await page.locator('#focusDialDock #tile-att').count(),1,'attitude selected');
  assert.equal(await page.locator('#focusControlDock #control-yoke').count(),1);
  assert.equal(await page.locator('#focusControlDock #control-throttle').count(),1);
- assert.equal(await page.locator('#focusControlDock #control-flaps').count(),0,'unrelated flaps not in attitude view');
+ assert.equal(await page.locator('#focusControlDock #control-flaps').count(),1,'flaps always available in attitude view');
  await page.locator('#focusSelect-tc').click();
  assert.equal(await page.locator('#focusDialDock #tile-tc').count(),1,'turn coordinator selected');
  assert.equal(await page.locator('#focusControlDock #control-rudder').count(),1,'rudder shown for turn coordination');
+ for (const id of ['asi','att','alt','tc','hdg','vsi']) {
+   await page.locator('#focusSelect-'+id).click();
+   assert.equal(await page.locator('#focusControlDock #control-flaps').count(),1,'flaps available for '+id+' analogue instrument');
+   for (const setting of [0,10,20,30]) {
+     await page.locator('#flaps'+setting).click();
+     assert.equal(await page.locator('#outFlaps').textContent(),setting+'°','flap selection accepted for '+id);
+     assert.equal(await page.locator('#focusFlapsState').textContent(),setting+'°','gauge flap status for '+id);
+     assert.equal(await page.locator('#flaps'+setting).getAttribute('aria-pressed'),'true','flap detent highlighted');
+   }
+ }
  await page.locator('#analogMode').click();
  assert.equal(await page.locator('#analogSection').isVisible(),true);
  assert.equal(await page.locator('#analogSection .dial-tile').count(),6,'all gauges restore to six-pack');
@@ -37,12 +47,22 @@ try {
  assert.equal(await page.locator('#digitalControlDock #control-yoke').count(),1,'PFD attitude selection includes yoke');
  assert.equal(await page.locator('#digitalControlDock #control-throttle').count(),1,'PFD attitude selection includes throttle');
  assert.equal(await page.locator('#digitalControlDock #control-rudder').count(),0,'PFD attitude hides irrelevant rudder');
+ assert.equal(await page.locator('#digitalControlDock #control-flaps').count(),1,'flap selector in digital attitude view');
+ await page.locator('#flaps10').click();
+ assert.equal(await page.locator('#digitalFlapsState').textContent(),'10°','digital flap setting visible beside controls');
  await page.locator('#digitalFocusSelect-asi').click();
  assert.equal(await page.locator('#digitalControlDock #control-flaps').count(),1,'PFD airspeed selection includes flap selector');
+ for(const id of ['asi','att','alt','tc','hdg','vsi']){
+   await page.locator('#digitalFocusSelect-'+id).click();
+   assert.equal(await page.locator('#digitalControlDock #control-flaps').count(),1,'flaps available on PFD for '+id);
+ }
+ await page.locator('#flaps30').click();
+ assert.equal(await page.locator('#digitalFlapsState').textContent(),'30°','digital flap detent updates at 30°');
  await page.locator('#mapTab').click();
  assert.equal(await page.locator('#mapView').isVisible(),true);
  assert.equal(await page.locator('#digitalControlDock #control-rudder').count(),1,'navigation map includes rudder');
  assert.equal(await page.locator('#digitalControlDock #control-yoke').count(),1,'navigation map includes yoke');
+ assert.equal(await page.locator('#digitalControlDock #control-flaps').count(),1,'navigation map includes flaps');
  await page.locator('#engineTab').click();
  assert.equal(await page.locator('#engineView').isVisible(),true);
  assert.equal(await page.locator('#digitalControlDock #control-throttle').count(),1,'engine view includes throttle');
@@ -92,10 +112,16 @@ try {
  assert.ok(sticky && sticky.y>=0 && sticky.y<844,'selected instrument remains visible while operating controls on mobile');
  await phone.locator('#focusSelect-tc').tap();
  assert.equal(await phone.locator('#focusControlDock #control-rudder').count(),1);
+ assert.equal(await phone.locator('#focusControlDock #control-flaps').count(),1);
+ await phone.locator('#flaps10').tap();
+ assert.equal(await phone.locator('#focusFlapsState').textContent(),'10°');
  await phone.locator('#digitalMode').tap();
  assert.equal(await phone.locator('#digitalSection').isVisible(),true);
  await phone.locator('#digitalFocusSelect-att').tap();
  assert.equal(await phone.locator('#digitalControlDock #control-yoke').count(),1,'phone PFD has live attitude yoke');
+ assert.equal(await phone.locator('#digitalControlDock #control-flaps').count(),1,'phone digital attitude has flap selector');
+ await phone.locator('#flaps30').tap();
+ assert.equal(await phone.locator('#digitalFlapsState').textContent(),'30°');
  await phone.locator('#grip').scrollIntoViewIfNeeded();
  const digitalSticky=await phone.locator('.digital-screen-column').boundingBox();
  assert.ok(digitalSticky&&digitalSticky.y>=-2&&digitalSticky.y<390,'digital flight display remains within view while user operates yoke');
@@ -105,6 +131,7 @@ try {
  await phone.locator('#mapTab').tap();
  assert.equal(await phone.locator('#mapView').isVisible(),true);
  assert.equal(await phone.locator('#digitalControlDock #control-rudder').count(),1,'phone map includes rudder');
+ assert.equal(await phone.locator('#digitalControlDock #control-flaps').count(),1,'phone map includes flaps');
  await phone.locator('#engineTab').tap();
  assert.equal(await phone.locator('#engineView').isVisible(),true);
  assert.equal(await phone.locator('#digitalControlDock #control-flaps').count(),1,'phone engine page includes flaps');
