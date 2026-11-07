@@ -89,6 +89,17 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
     WHERE organization_id=$1 AND action='auth.mfa.verify'`,[org1]);
   assert.equal(mfaEvents.rows[0].count,1,"exactly one audit event for consumed code");
   const student={userId:student1,organizationId:org1,role:"student"};
+  for(let i=0;i<12;i++)assert.equal(await db.reserveAiUsage(student,"text",12),true,
+   "each permitted student question has a quota reservation");
+  assert.equal(await db.reserveAiUsage(student,"text",12),false,
+   "13th text request must be refused");
+  for(let i=0;i<5;i++)assert.equal(await db.reserveAiUsage(student,"voice",5),true);
+  assert.equal(await db.reserveAiUsage(student,"voice",5),false,
+   "6th generated voice request must be refused");
+  assert.equal(await db.reserveAiUsage({
+   userId:student2,organizationId:org1},"text",12),true,
+   "other student gets an independent usage budget");
+
   const otherStudent={userId:student2,organizationId:org1,role:"student"};
   const teacher={userId:teacher1,organizationId:org1,role:"instructor"};
   const otherTeacher={userId:teacher2,organizationId:org1,role:"instructor"};
@@ -177,6 +188,7 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
    await pool.query("DELETE FROM instructor_assignments WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM instructor_mfa WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM email_verification_challenges WHERE user_id = ANY($1::uuid[])",[users]);
+   await pool.query("DELETE FROM ai_daily_usage WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM memberships WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])",[users]);
    await pool.query("DELETE FROM organizations WHERE id = ANY($1::uuid[])",[orgs]);
