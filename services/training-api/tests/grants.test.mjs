@@ -19,6 +19,9 @@ test("role SQL uses escaped, distinct identifiers with narrow privileges",()=>{
  assert.ok(sql.includes('GRANT SELECT,INSERT ON public.instructor_mfa TO "ci_bootstrap"'));
  assert.ok(!sql.includes('GRANT UPDATE(encrypted_secret) ON public.instructor_mfa TO "ci_web"'));
  assert.ok(!sql.includes('GRANT UPDATE(active) ON public.instructor_assignments TO "ci_web"'));
+ assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.consume_email_challenge(char(64)) TO "ci_web"'));
+ assert.ok(sql.includes('GRANT SELECT,INSERT ON public.email_verification_challenges TO "ci_bootstrap"'));
+ assert.ok(!sql.includes('GRANT UPDATE(email_verified_at) ON public.users TO "ci_web"'));
 });
 test("real PostgreSQL denies runtime audit changes, approvals and role escalation",async t=>{
  const uri=process.env.AGSA_TEST_DATABASE_URL;
@@ -74,6 +77,17 @@ test("real PostgreSQL denies runtime audit changes, approvals and role escalatio
   assert.equal(mfaSecret.rows[0].allowed,false);
   await expectDenied(app,"UPDATE public.instructor_mfa SET encrypted_secret='newsecret' WHERE false");
   assert.equal(await checkPrivilege(app,"users","UPDATE"),false);
+  assert.equal(await checkPrivilege(app,"email_verification_challenges","SELECT"),false);
+  assert.equal(await checkPrivilege(app,"email_verification_challenges","INSERT"),false);
+  assert.equal(await checkPrivilege(app,"email_verification_challenges","UPDATE"),false);
+  assert.equal(await checkPrivilege(provision,"email_verification_challenges","INSERT"),true);
+  assert.equal(await checkPrivilege(provision,"users","UPDATE"),false);
+  const verifyGrant=await client.query(
+   "SELECT has_function_privilege($1,'public.consume_email_challenge(character(64))','EXECUTE') AS allowed",
+   [app]);
+  assert.equal(verifyGrant.rows[0].allowed,true);
+  await expectDenied(app,"UPDATE public.users SET email_verified_at=now() WHERE false");
+  await expectDenied(app,"UPDATE public.email_verification_challenges SET consumed_at=now() WHERE false");
   const column=await client.query("SELECT has_column_privilege($1,'public.sessions','revoked_at','UPDATE') AS allowed",[app]);
   assert.equal(column.rows[0].allowed,true);
   const other=await client.query("SELECT has_column_privilege($1,'public.sessions','user_id','UPDATE') AS allowed",[app]);
