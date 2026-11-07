@@ -67,9 +67,23 @@ export class RealtimeCallRegistry{
   record.timer.unref?.();
   return handle;
  }
- activate(handle,callId){
+ async hangupCall(callId){
+  if(! /^[A-Za-z0-9_-]{8,150}$/.test(callId))return;
+  try{
+   await this.request("https://api.openai.com/v1/realtime/calls/"+callId+"/hangup",{
+    method:"POST",headers:{Authorization:"Bearer "+this.env.OPENAI_API_KEY},
+    signal:AbortSignal.timeout(6500)
+   });
+  }catch{/* Server crash and provider failures still require billing limits. */}
+ }
+ async activate(handle,callId){
   const record=this.active.get(handle);
-  if(!record||! /^[A-Za-z0-9_-]{8,150}$/.test(callId))throw Error("Untracked realtime call");
+  if(!record||! /^[A-Za-z0-9_-]{8,150}$/.test(callId)){
+   // A logout/page exit may occur while provider negotiation is in progress.
+   // Do not leave an orphaned billable call after its local reservation vanishes.
+   await this.hangupCall(callId);
+   throw Error("Untracked realtime call");
+  }
   record.callId=callId;
   clearTimeout(record.timer);
   record.timer=setTimeout(()=>{void this.stop(handle).catch(()=>{})},this.maxSeconds*1000);
@@ -83,14 +97,7 @@ export class RealtimeCallRegistry{
   clearTimeout(record.timer);
   this.active.delete(handle);
   this.byActor.delete(record.actorKey);
-  if(record.callId){
-   try{
-    await this.request("https://api.openai.com/v1/realtime/calls/"+record.callId+"/hangup",{
-     method:"POST",headers:{Authorization:"Bearer "+this.env.OPENAI_API_KEY},
-     signal:AbortSignal.timeout(6500)
-    });
-   }catch{/* Fail closed locally; provider budget policies still required. */}
-  }
+  if(record.callId)await this.hangupCall(record.callId);
   return true;
  }
  async stopForActor(actor){
