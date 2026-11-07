@@ -36,6 +36,9 @@
    <input id="email" name="email" type="email" maxlength="254" autocomplete="username" placeholder="fictional.student@example.org" required>
    <label for="password">Password</label>
    <input id="password" name="password" type="password" maxlength="128" minlength="12" autocomplete="current-password" required>
+   <label for="verificationCode">Authenticator code <span class="muted">(required for instructors only)</span></label>
+   <input id="verificationCode" name="verificationCode" type="text" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code" aria-describedby="verificationNote">
+   <p id="verificationNote" class="hint">Instructors must use a 6-digit code from their operator-enrolled authenticator app. Students can leave this empty. Codes are never saved in this browser.</p>
    <button id="loginButton" class="primary" type="submit">Sign in</button>
   </form>
  </section>
