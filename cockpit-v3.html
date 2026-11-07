@@ -214,10 +214,38 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .control-pad.joystick-layout .symbol-yoke{display:none}
 .control-pad.joystick-layout .symbol-stick{display:block;height:62px}
 .control-pad.joystick-layout .grip span{font-size:9px}
+
+.skills-panel{border:1px solid #557b91;background:linear-gradient(120deg,#173c55,#102336);border-radius:16px;padding:16px;margin:12px 0 18px}
+.skills-overline{color:#edc982;font-size:10px;font-weight:850;letter-spacing:.14em}
+.skills-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap;margin-top:9px}
+.skills-heading h3{font-size:21px}
+.skills-heading p{max-width:720px;font-size:13px}
+.skills-stage{font-size:11px;font-weight:850;color:#a6e9ff;border:1px solid #5b9db2;background:#0a283d;border-radius:15px;padding:7px 11px;min-width:80px;text-align:center}
+.skills-task-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:9px 0}
+.skills-task-row label{font-size:12px;font-weight:700}
+.skills-task-row select{max-width:min(100%,400px)}
+.skills-briefing{color:#dcecf4;font-size:13px;line-height:1.55}
+.skills-target{font-size:12px;color:#f7d6a8}
+.skills-meter-line{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:#bad5e8;margin-top:12px}
+.skills-meter-line strong{font-variant-numeric:tabular-nums;color:#ffdc99}
+#skillsProgress{display:block;width:100%;height:14px;margin:6px 0 14px;accent-color:#4bc6e8}
+.skills-result{background:#0b2539;border-left:3px solid #edb75a;border-radius:6px;padding:10px 13px;font-size:13px;line-height:1.55;min-height:43px}
+.skills-buttons{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+.skills-buttons button{font-size:12px;min-height:41px}
+#skillsStart{background:#42c1e5;color:#071f34}
+.skills-summary{border:1px solid #5b839a;padding:13px;border-radius:12px;background:#0b2234;margin-top:13px}
+.skills-summary h4{font-size:16px;margin:0 0 8px}
+.skills-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.skills-summary-grid span{border:1px solid #345b76;border-radius:7px;padding:8px;font-size:10px;color:#b4d5e6}
+.skills-summary-grid strong{display:block;font-size:15px;font-variant-numeric:tabular-nums;color:#f5ddaa}
+.skills-summary p{font-size:12px}
+.skills-disclaimer{color:#dfc6a9!important;font-size:11px!important;line-height:1.45}
+@media(max-width:650px){.skills-panel{padding:10px}.skills-heading h3{font-size:18px}.skills-summary-grid{grid-template-columns:1fr}.skills-buttons button{flex:1}.skills-task-row select{width:100%}}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
 <script src="cockpit-v3-mission.js" defer></script>
+<script src="cockpit-v3-skills.js" defer></script>
 <script src="cockpit-v3-focus.js" defer></script>
 <script src="cockpit-v3.js" defer></script>
 </head>
@@ -229,7 +257,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  <div class="pill">EDUCATIONAL MODEL<br>NOT CERTIFIED</div>
 </section>
 <div class="toolbar">
- <div class="tabs" aria-label="Choose cockpit display"><button id="focusMode" aria-pressed="true">Instrument + controls</button><button id="analogMode" aria-pressed="false">Full six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button><button id="missionMode" aria-pressed="false">Guided flight exercise</button></div>
+ <div class="tabs" aria-label="Choose cockpit display"><button id="focusMode" aria-pressed="true">Instrument + controls</button><button id="analogMode" aria-pressed="false">Full six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button><button id="missionMode" aria-pressed="false">Guided flight exercise</button><button id="skillsMode" aria-pressed="false">Skills practice</button></div>
  <div class="actions"><button id="pauseBtn" aria-pressed="false">Pause flight</button><button id="resetBtn">Reset flight</button></div>
 </div>
 <section class="card lesson-bar" aria-label="Guided instrument lesson">
@@ -277,9 +305,37 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
    <details class="mission-jump"><summary>Practise a particular stage instead</summary><p>Choosing a stage explicitly repositions the imaginary aircraft. This is not a continuous real-world traffic pattern.</p><div class="mission-actions"><button data-mission-stage="roll">Runway roll</button><button data-mission-stage="climb">Climb</button><button data-mission-stage="approach">Approach</button><button data-mission-stage="landing">Short final</button></div></details>
    <p class="mission-warning">Example speeds, altitudes, gates and power settings are invented for this educational demonstration; they are <strong>not aircraft operating procedures</strong>. Consult an instructor and the actual aircraft's POH/AFM for flight training. A missed stability checkpoint is a cue to review/go around, not to force a landing.</p>
  </section>
- <div class="digital-workstation">
+ <section id="skillsPanel" class="skills-panel hidden" aria-label="Unaccredited flying-skills observation practice">
+  <div class="skills-overline">PRACTICAL SKILLS · UNOFFICIAL SELF-OBSERVATION · NO LICENCE CREDIT</div>
+  <div class="skills-heading"><div><h3>Instrument skills practice</h3><p class="note">Choose a task, read the example target, then hold the relevant flight indications for a 12-second observation. The instrument display stays beside your controls.</p></div><div id="skillsStage" class="skills-stage">READY</div></div>
+  <div class="skills-task-row"><label for="skillsSelect">Practice objective</label><select id="skillsSelect">
+    <option value="level">Straight and level</option>
+    <option value="climb">Climb and power</option>
+    <option value="turn">Controlled bank and turn</option>
+    <option value="descent">Controlled descent</option>
+    <option value="flap">Flap configuration observation</option>
+  </select></div>
+  <p id="skillsBriefing" class="skills-briefing">Hold a near-level pitch and bank, steady heading and moderate airspeed.</p>
+  <p class="skills-target"><strong>Example target:</strong> <span id="skillsTarget">Pitch ±3°, bank ±5°, turn rate within ±0.4°/s, IAS 75–125 kt.</span></p>
+  <div class="skills-meter-line"><span>Time <strong id="skillsElapsed">0.0 / 12.0 s</strong></span><span>Within target <strong id="skillsMatched">0%</strong></span></div>
+  <progress id="skillsProgress" min="0" max="12" value="0" aria-label="Observed practice seconds">0</progress>
+  <div class="skills-result" id="skillsResult" role="status">Select Start to begin. Practice thresholds are fictional teaching values, not aircraft manoeuvre standards.</div>
+  <div class="skills-buttons">
+    <button type="button" id="skillsStart">Start 12-second observation</button>
+    <button type="button" id="skillsEnd" disabled>End attempt</button>
+    <button type="button" id="skillsRetry">Reset task</button>
+    <button type="button" id="skillsExport" disabled>Download unofficial JSON report</button>
+  </div>
+  <div class="skills-summary hidden" id="skillsSummary"><h4>Practice review</h4>
+    <div class="skills-summary-grid"><span>Outcome <strong id="skillsOutcome">—</strong></span><span>Time in target <strong id="skillsScore">—</strong></span><span>Longest continuous match <strong id="skillsStreak">—</strong></span></div>
+    <p id="skillsReviewNote">This is a simulation exercise only.</p>
+  </div>
+  <p class="skills-disclaimer">Nothing on this page is a certificate, qualified simulator record, flight log or instructor assessment. The optional report contains no name, account or student ID, is not uploaded, and is suitable only as a draft practice artifact for later review.</p>
+</section>
+<div class="digital-workstation">
   <div class="digital-screen-column">
  <div id="missionMiniStatus" class="mission-mini hidden"><strong id="missionMiniPhase">Takeoff roll</strong><span id="missionMiniHint">Observe the selected flight instruments</span></div>
+ <div id="skillsMiniStatus" class="mission-mini hidden"><strong id="skillsMiniPhase">Skill check ready</strong><span id="skillsMiniHint">Watch the PFD while using the controls</span></div>
  <div class="glass-panel">
   <div class="pfd-top"><span>AGSA · DIGITAL TRAINER</span><div class="pfd-modes"><button id="pfdTab" aria-pressed="true">PFD</button><button id="mapTab" aria-pressed="false">NAV MAP</button><button id="engineTab" aria-pressed="false">ENGINE</button></div><span id="digitalClock">SIM</span></div>
   <div class="pfd-body">
