@@ -182,14 +182,18 @@ function paint(){
 function setMode(next){
  mode=next;
  const focused=window.CockpitV3Focus;
- if(focused){if(next==="focus")focused.dock(focus,instruments);else focused.restore();}
+ if(focused){
+  if(next==="focus")focused.dock(focus,instruments);
+  else if(next==="digital")focused.dockDigital(focus,instruments,pfdPage);
+  else focused.restore();
+ }
  $("focusMode").setAttribute("aria-pressed",String(mode==="focus"));
  $("analogMode").setAttribute("aria-pressed",String(mode==="analog"));
  $("digitalMode").setAttribute("aria-pressed",String(mode==="digital"));
  $("focusSection").classList.toggle("hidden",mode!=="focus");
  $("analogSection").classList.toggle("hidden",mode!=="analog");
  $("digitalSection").classList.toggle("hidden",mode!=="digital");
- $("controlOverview").classList.toggle("hidden",mode==="focus");
+ $("controlOverview").classList.toggle("hidden",mode==="focus"||mode==="digital");
  paint();
 }
 function setPFD(next){
@@ -201,6 +205,7 @@ function setPFD(next){
  $("mapView").classList.toggle("active",next==="map");
  $("engineView").classList.toggle("active",next==="engine");
  if(next==="map")renderMap();if(next==="engine")renderEngine();
+ if(mode==="digital"&&window.CockpitV3Focus)window.CockpitV3Focus.dockDigital(focus,instruments,next);
 }
 function setFocus(n){
  focus=(n+instruments.length)%instruments.length;
@@ -209,7 +214,11 @@ function setFocus(n){
  $("focusTitle").textContent=x[1];$("focusText").textContent=x[2];
  for(const y of instruments){$("tile-"+y[0]).setAttribute("aria-current",String(y===x));}
  const focused=window.CockpitV3Focus;
- if(focused){focused.highlight(focus,instruments);if(mode==="focus")focused.dock(focus,instruments);}
+ if(focused){
+  focused.highlight(focus,instruments);
+  if(mode==="focus")focused.dock(focus,instruments);
+  if(mode==="digital")focused.dockDigital(focus,instruments,pfdPage);
+ }
 }
 function reset(){
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
