@@ -77,10 +77,11 @@ export class PgStore{
   }catch(error){await client.query("ROLLBACK").catch(()=>{});throw error}
   finally{client.release()}
  }
- async createSession({tokenHash,csrfHash,userId,organizationId,expiresAt}){
+ async createSession({tokenHash,csrfHash,userId,organizationId,expiresAt,mfaVerified=false}){
   await this.pool.query(`
-   INSERT INTO sessions(token_hash,csrf_hash,user_id,organization_id,expires_at)
-   VALUES($1,$2,$3,$4,$5)`,[tokenHash,csrfHash,userId,organizationId,expiresAt]);
+   INSERT INTO sessions(token_hash,csrf_hash,user_id,organization_id,expires_at,mfa_verified_at)
+   VALUES($1,$2,$3,$4,$5,$6)`,
+   [tokenHash,csrfHash,userId,organizationId,expiresAt,mfaVerified?new Date():null]);
  }
  async getSession(tokenHash){
   const r=await this.pool.query(`
@@ -89,7 +90,8 @@ export class PgStore{
    FROM sessions s JOIN users u ON u.id=s.user_id
     JOIN memberships m ON m.user_id=s.user_id AND m.organization_id=s.organization_id
    WHERE s.token_hash=$1 AND s.revoked_at IS NULL
-    AND s.expires_at>now() AND u.status='active' AND m.status='active'`,[tokenHash]);
+    AND s.expires_at>now() AND u.status='active' AND m.status='active'
+    AND (m.role='student' OR (m.role='instructor' AND s.mfa_verified_at IS NOT NULL))`,[tokenHash]);
   return r.rows[0]||null;
  }
  async revokeSession(tokenHash,actor){
