@@ -148,7 +148,8 @@ export function createHandler(store,config={}){
     const expiresAt=new Date(Date.now()+SESSION_MS).toISOString();
     await store.createSession({
      tokenHash:hashSha256(token),csrfHash:hashSha256(csrf),
-     userId:candidate.userId,organizationId:candidate.organizationId,expiresAt
+     userId:candidate.userId,organizationId:candidate.organizationId,expiresAt,
+     mfaVerified:candidate.role==="instructor"
     });
     json(res,200,{
      status:"signed_in",
