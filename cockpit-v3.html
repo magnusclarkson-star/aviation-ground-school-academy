@@ -169,9 +169,36 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .flap-live-pair span{border:1px solid #3b607c;border-radius:8px;padding:7px;color:#acd2e7;font-size:10px;font-weight:750}
 .flap-live-pair strong{display:block;color:#f8f4e7;font-size:16px;font-variant-numeric:tabular-nums}
 .flap-context{margin:9px 0 2px!important;color:#d6e7f1!important;font-size:11px!important;line-height:1.45}
+
+/* Guided V3 exercise: compact stages above the same touchscreen and operating controls. */
+.mission-panel{border:1px solid #607e91;border-radius:16px;background:linear-gradient(120deg,#183c51,#132335);padding:15px;margin:13px 0 17px}
+.mission-overline{font-size:10px;color:#f0cc83;letter-spacing:.13em;font-weight:800;margin-bottom:9px}
+.mission-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.mission-header h3{font-size:21px;margin:0 0 4px}
+.mission-header p{margin:4px 0;font-size:13px}
+.mission-state{border:1px solid #5ca7bb;color:#b8eeff;border-radius:25px;padding:8px 11px;font-size:12px;font-weight:800;white-space:nowrap}
+.mission-path{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:13px 0}
+.mission-path span{font-size:11px;text-align:center;padding:8px 3px;border-radius:8px;background:#0b1e31;border:1px solid #3a5a6b;color:#acc7d9;font-weight:750}
+.mission-path span[data-status="current"]{color:#082136;background:#72d2ee;border-color:#9eeeff}
+.mission-path span[data-status="complete"]{color:#d5f6d9;background:#224734;border-color:#5caa85}
+.mission-goal{font-size:12px;color:#d3e4ee}
+.mission-readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:9px 0}
+.mission-readouts span{border:1px solid #5a7489;border-radius:8px;background:#091c2f;color:#9dcbdf;font-size:10px;font-weight:800;letter-spacing:.06em;padding:8px}
+.mission-readouts strong{display:block;color:#fff;font-size:17px;font-variant-numeric:tabular-nums;letter-spacing:0;margin-top:2px}
+.mission-feedback{background:#092538;border-left:3px solid #f7ca79;color:#e6f4fc;font-size:13px;padding:9px 12px;min-height:45px;border-radius:4px;line-height:1.4}
+.mission-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.mission-actions button{min-height:41px;font-size:12px;padding:8px 11px}
+#missionContinue{background:#48bfd7;color:#0a2430}
+#missionGoAround{background:#c68533;color:#0a1d2b}
+.mission-jump{border-top:1px solid #466176;margin-top:12px;padding-top:8px;font-size:12px}
+.mission-jump summary{cursor:pointer;color:#bde9fc;font-weight:700;padding:5px 0}
+.mission-jump p{font-size:12px}
+.mission-warning{color:#d4c1a7!important;font-size:11px!important;line-height:1.45}
+@media(max-width:650px){.mission-panel{padding:10px}.mission-header h3{font-size:17px}.mission-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-path span{font-size:9px}.mission-readouts strong{font-size:14px}}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
+<script src="cockpit-v3-mission.js" defer></script>
 <script src="cockpit-v3-focus.js" defer></script>
 <script src="cockpit-v3.js" defer></script>
 </head>
@@ -183,7 +210,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  <div class="pill">EDUCATIONAL MODEL<br>NOT CERTIFIED</div>
 </section>
 <div class="toolbar">
- <div class="tabs" aria-label="Choose cockpit display"><button id="focusMode" aria-pressed="true">Instrument + controls</button><button id="analogMode" aria-pressed="false">Full six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button></div>
+ <div class="tabs" aria-label="Choose cockpit display"><button id="focusMode" aria-pressed="true">Instrument + controls</button><button id="analogMode" aria-pressed="false">Full six-pack</button><button id="digitalMode" aria-pressed="false">Digital touchscreen</button><button id="missionMode" aria-pressed="false">Guided flight exercise</button></div>
  <div class="actions"><button id="pauseBtn" aria-pressed="false">Pause flight</button><button id="resetBtn">Reset flight</button></div>
 </div>
 <section class="card lesson-bar" aria-label="Guided instrument lesson">
@@ -213,6 +240,24 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 <section id="digitalSection" class="card hidden" aria-label="Digital touchscreen cockpit">
  <h2>Glass cockpit — display and live controls together</h2>
  <p class="note">The touchscreen flight display stays alongside its operating controls. Choose the instrument you want to practise; NAV MAP and ENGINE automatically show relevant controls.</p>
+ <section id="missionPanel" class="mission-panel hidden" aria-label="Guided takeoff climb approach and landing exercise">
+   <div class="mission-overline">PRACTICAL LEARNING MISSION · FICTIONAL TRAINER · 2× SIMULATED TIME</div>
+   <div class="mission-header"><div><h3 id="missionPhase">1 · Takeoff roll</h3><p id="missionTask">Use throttle and yoke to explore a simulated runway departure.</p></div><div class="mission-state" id="missionState">RUNWAY · 0 FT</div></div>
+   <div class="mission-path" id="missionPath" aria-label="Training exercise progress">
+     <span data-phase="roll">Takeoff</span><span data-phase="climb">Climb</span><span data-phase="approach">Approach</span><span data-phase="landing">Landing</span><span data-phase="rollout">Rollout</span>
+   </div>
+   <p class="mission-goal"><strong>Target:</strong> <span id="missionGoal">Observe speed building on the runway.</span></p>
+   <div class="mission-readouts"><span>IAS <strong id="missionIAS">0 kt</strong></span><span>HEIGHT <strong id="missionHeight">0 ft AGL</strong></span><span>VSI <strong id="missionVSI">0 fpm</strong></span><span>FLAPS <strong id="missionFlaps">0°</strong></span></div>
+   <div class="mission-feedback" id="missionFeedback" aria-live="polite">Exercise begins on a fictional runway.</div>
+   <div class="mission-actions">
+      <button type="button" id="missionRestart">Restart exercise</button>
+      <button type="button" id="missionContinue" class="hidden">Begin approach segment</button>
+      <button type="button" id="missionGoAround" class="hidden">Go around</button>
+      <button type="button" id="missionRepeat" class="hidden">Repeat approach</button>
+   </div>
+   <details class="mission-jump"><summary>Practise a particular stage instead</summary><p>Choosing a stage explicitly repositions the imaginary aircraft. This is not a continuous real-world traffic pattern.</p><div class="mission-actions"><button data-mission-stage="roll">Runway roll</button><button data-mission-stage="climb">Climb</button><button data-mission-stage="approach">Approach</button><button data-mission-stage="landing">Short final</button></div></details>
+   <p class="mission-warning">Example speeds, altitudes, gates and power settings are invented for this educational demonstration; they are <strong>not aircraft operating procedures</strong>. Consult an instructor and the actual aircraft's POH/AFM for flight training. A missed stability checkpoint is a cue to review/go around, not to force a landing.</p>
+ </section>
  <div class="digital-workstation">
   <div class="digital-screen-column">
  <div class="glass-panel">
