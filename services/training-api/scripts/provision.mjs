@@ -16,6 +16,7 @@ async function findMember(client,slug,email,role){
  return r.rows[0];
 }
 const client=await pool.connect();
+let mfaSetupUri=null;
 try{
  await client.query("BEGIN");
  if(command==="org"){
@@ -58,11 +59,7 @@ try{
    VALUES(NULL,$1,'bootstrap.mfa.enroll','instructor_mfa',$2)`,[teacher.org_id,teacher.id]);
   // Reveal the one-time setup URI only to this trusted interactive operator,
   // never to application logs, GitHub, screenshots or unverified email.
-  await client.query("COMMIT");
-  console.info("IMPORTANT: show this one-time URI only to the intended fictional staging instructor in a trusted channel.");
-  console.info(provisioningUri(normalizeEmail(instructorEmail),secret));
-  console.info("MFA enrolment committed. Delete this terminal output and verify a working authenticator before relying on the staging account.");
-  process.exit(0);
+  mfaSetupUri=provisioningUri(normalizeEmail(instructorEmail),secret);
  }else if(command==="assign"){
   const [slug,instructorEmail,studentEmail]=args;
   const teacher=await findMember(client,slug,instructorEmail,"instructor");
@@ -76,6 +73,11 @@ try{
   console.info("Created staging instructor-student assignment in",slug);
  }
  await client.query("COMMIT");
+ if(mfaSetupUri){
+  console.info("ONE-TIME STAGING MFA ENROLLMENT: only share this with the intended fictional instructor through a trusted channel.");
+  console.info(mfaSetupUri);
+  console.info("Delete terminal output and verify the authenticator. The URI contains a sensitive shared secret.");
+ }
 }catch(error){
  await client.query("ROLLBACK").catch(()=>{});
  console.error("Provision operation failed:",error.message);
