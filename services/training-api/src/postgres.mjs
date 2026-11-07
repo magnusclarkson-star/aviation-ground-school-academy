@@ -1,5 +1,6 @@
 import pg from "pg";
 import {ClientError} from "./validation.mjs";
+import {decryptTotpSecret,checkTotp} from "./mfa.mjs";
 
 export function createPool(env=process.env){
  const url=env.DATABASE_URL;
@@ -48,6 +49,32 @@ export class PgStore{
    await client.query("COMMIT");
    return counts.every((n,i)=>n<=thresholds[i]);
   }catch(e){await client.query("ROLLBACK");throw e}
+  finally{client.release()}
+ }
+ async consumeInstructorOtp({userId,organizationId,code,encryptionKey,nowMs=Date.now()}){
+  const client=await this.pool.connect();
+  try{
+   await client.query("BEGIN");
+   const found=await client.query(`
+    SELECT encrypted_secret AS "encryptedSecret",last_used_step AS "lastUsedStep"
+    FROM instructor_mfa WHERE organization_id=$1 AND instructor_id=$2 FOR UPDATE`,
+    [organizationId,userId]);
+   if(!found.rowCount){await client.query("COMMIT");return false}
+   const row=found.rows[0];
+   const secret=decryptTotpSecret(row.encryptedSecret,encryptionKey);
+   const matched=checkTotp(secret,code,nowMs,Number(row.lastUsedStep));
+   if(matched===null){await client.query("COMMIT");return false}
+   const updated=await client.query(`
+    UPDATE instructor_mfa SET last_used_step=$3
+    WHERE organization_id=$1 AND instructor_id=$2 AND last_used_step<$3`,
+    [organizationId,userId,matched]);
+   if(!updated.rowCount)throw Error("Instructor MFA counter conflict");
+   await client.query(`
+    INSERT INTO audit_events(actor_user_id,organization_id,action,target_type)
+    VALUES($1,$2,'auth.mfa.verify','instructor_mfa')`,[userId,organizationId]);
+   await client.query("COMMIT");
+   return true;
+  }catch(error){await client.query("ROLLBACK").catch(()=>{});throw error}
   finally{client.release()}
  }
  async createSession({tokenHash,csrfHash,userId,organizationId,expiresAt}){
