@@ -1,6 +1,7 @@
 import http from "node:http";
 import {createPool,PgStore} from "./postgres.mjs";
 import {createHandler} from "./http.mjs";
+import {parseEncryptionKey} from "./mfa.mjs";
 
 const env=process.env;
 const port=Number(env.PORT||3100);
@@ -11,6 +12,7 @@ if(env.NODE_ENV==="production"&&(!env.AGSA_PUBLIC_ORIGIN?.startsWith("https://")
  throw Error("Refusing insecure production configuration");
 if(env.NODE_ENV==="production"&&env.HOST!=="127.0.0.1"&&env.AGSA_PRIVATE_PROXY_CONFIRMED!=="1")
  throw Error("External production binding requires documented private TLS proxy isolation; set AGSA_PRIVATE_PROXY_CONFIRMED=1 after review");
+const mfaKey=parseEncryptionKey(env.AGSA_MFA_ENCRYPTION_KEY);
 const pool=createPool(env);
 const store=new PgStore(pool);
 await store.ping();
@@ -18,6 +20,7 @@ const server=http.createServer(createHandler(store,{
  nodeEnv:env.NODE_ENV,
  allowInsecureLocal:insecureLocal,
  publicOrigin:env.AGSA_PUBLIC_ORIGIN,
+ mfaKey,
  logError:e=>console.error("[training-api] request failed",e?.code||e?.name||"unknown")
 }));
 server.requestTimeout=15000;
