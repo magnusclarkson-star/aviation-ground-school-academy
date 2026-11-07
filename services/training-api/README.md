@@ -214,3 +214,18 @@ Do not put provider keys, real student email lists, live invitation links, or pr
 **Security checks:** HTTP/browser tests cover pre-verification login denial, fragment removal, user-confirmed activation, token replay and malformed links; PostgreSQL integration tests cover expired and simultaneous tokens, audit trail, session invalidation, and prevention of arbitrary runtime email-approval updates. Unit tests cover fail-closed provider settings and sanitized delivery failures.
 
 **Not implemented:** real student signups, a trusted email-provider account, public staging hostname, delivery-webhook receipts, invitation support operations, verified real identities or instructors, password recovery, secure MFA recovery, passkeys, production data privacy controls or regulatory accreditation. All live onboarding remains disabled until those requirements are assessed.
+
+
+## V0.4 — Optional connected AI instructor and synthetic voice
+
+The public [AI Instructor Studio](../../ai-instructor.html) works now with **six curated lessons**, three teaching styles, quizzes, device speech synthesis and optional browser dictation. This public experience explicitly states it **is not a live generative AI** and embeds no provider credentials.
+
+The separate private staging portal includes an additional AI tutor interface: `GET /api/v1/ai/status` reports availability, `POST /api/v1/ai/ask` sends a short consented ground-school question to an operator-configured OpenAI Responses API, and `POST /api/v1/ai/voice` can generate an MP3 of a short synthetic narration. All endpoints require a verified, authenticated account (except that the public guided page has no API calls). State-changing routes enforce CSRF. Provider keys and model choices are server-controlled; no CORS is available to the public Pages site.
+
+**Paid provider calls are disabled by default.** Enable only in a private staging deployment with explicit operator configuration: `AGSA_AI_ENABLED=1`, `OPENAI_API_KEY` in a secret manager and optionally `AGSA_AI_VOICE_ENABLED=1`. A provider account with budget controls, verified appropriate data handling and actual private staging hosting are prerequisites. All CI tests mock the provider, never calling it or billing an account.
+
+To control spend, `sql/004_ai_usage.sql` adds **atomic per-account, per-organisation daily usage reservations**: maximum 12 AI questions and 5 generated-voice clips per UTC day, with 500-character input questions, 440 output tokens and 700-character speech requests. The audio is limited to 900 KB. There is no automatic AI-driven assessment or credential issuance. The private portal requires explicit student acknowledgment before sending a question to the provider and stores no conversation history in local storage.
+
+**Provider lifecycle warning:** the optional `gpt-4o-mini-tts` Speech API adapter is deprecated and scheduled for shutdown on **6 January 2027**. Its long-term replacement will require a reviewed `gpt-realtime-2.1-mini` Realtime API design, not a drop-in model swap. Device speech continues to work independently where supported. Connected AI is not currently hosted or configured with a paid provider.
+
+Detailed architecture and operational restrictions: [AI Instructor and Voice Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
