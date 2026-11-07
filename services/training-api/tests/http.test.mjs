@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {createServer} from "node:http";
 import {randomUUID} from "node:crypto";
 import {createHandler} from "../src/http.mjs";
-import {hashPassword,hashSha256} from "../src/crypto.mjs";
+import {hashPassword,hashSha256,generateSecret} from "../src/crypto.mjs";
 import {ClientError} from "../src/validation.mjs";
 import {totpAtStep,checkTotp} from "../src/mfa.mjs";
 const exampleMfaSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
@@ -33,13 +33,19 @@ class FakeStore{
   this.assignments=new Set([orgA+"|"+instructorA+"|"+studentA]);
   this.allowLogin=true;
   this.mfaSteps=new Map();
+  this.verified=new Set([studentA,instructorA,unassignedInstructor,instructorB]);
+  this.inviteHash=null;
  }
  async ping(){return true}
  async lookupLogin(email,slug){
-  const u=this.byEmail.get(slug+"|"+email);if(!u)return null;
+  const u=this.byEmail.get(slug+"|"+email);if(!u||!this.verified.has(u.id))return null;
   return {userId:u.id,email:u.email,passwordHash:u.passwordHash,organizationId:u.org,role:u.role};
  }
  async recordLoginAttempt(){return this.allowLogin}
+ async consumeEmailVerification(hash){
+  if(hash!==this.inviteHash||this.verified.has(studentB))return false;
+  this.verified.add(studentB);this.inviteHash=null;return true;
+ }
  async consumeInstructorOtp({userId,code}){
   const step=checkTotp(exampleMfaSecret,code,Date.now(),this.mfaSteps.get(userId)??-1);
   if(step===null)return false;
@@ -49,7 +55,10 @@ class FakeStore{
   const row=[...this.byEmail.values()].find(u=>u.id===userId&&u.org===organizationId);
   this.sessions.set(tokenHash,{userId,organizationId,csrfHash,role:row.role,email:row.email});
  }
- async getSession(hash){return this.sessions.get(hash)||null}
+ async getSession(hash){
+  const actor=this.sessions.get(hash)||null;
+  return actor&&this.verified.has(actor.userId)?actor:null;
+ }
  async revokeSession(hash){this.sessions.delete(hash)}
  async createAttempt(actor,key,digest,report){
   const prev=this.attempts.find(x=>x.organizationId===actor.organizationId&&x.studentId===actor.userId&&x.key===key);
@@ -130,6 +139,25 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   const bad=await ask("POST","/api/v1/auth/login",{...base,verificationCode:"000000"});
   assert.equal(bad.status,401);
   assert.equal(bad.headers.getSetCookie().length,0);
+ });
+ const inviteToken=generateSecret();
+ store.inviteHash=hashSha256(inviteToken);
+ await t.test("unverified account fails login until its inbox token is consumed once",async()=>{
+  const before=await ask("POST","/api/v1/auth/login",{
+   email:"s2@example.org",password,organization:"academy-one"
+  });
+  assert.equal(before.status,401);
+  assert.equal(before.headers.getSetCookie().length,0);
+  const malformed=await ask("POST","/api/v1/auth/verify-email",{token:"bad-token"});
+  assert.equal(malformed.status,400);
+  const unknown=await ask("POST","/api/v1/auth/verify-email",{token:generateSecret()});
+  assert.equal(unknown.status,400);
+  const verified=await ask("POST","/api/v1/auth/verify-email",{token:inviteToken});
+  assert.equal(verified.status,200);
+  assert.equal(verified.body.status,"email_verified");
+  assert.equal(verified.headers.getSetCookie().length,0);
+  assert.equal((await ask("POST","/api/v1/auth/verify-email",{token:inviteToken})).status,400,
+   "a reused token must not verify again");
  });
  const s1=await login("s1@example.org");
  const s2=await login("s2@example.org");
