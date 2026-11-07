@@ -29,8 +29,8 @@ try{
  }
  const owners=await client.query(`
   SELECT tablename,tableowner FROM pg_tables WHERE schemaname='public'
-   AND tablename=ANY($1::text[])`,[["organizations","users","memberships","instructor_assignments","sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa"]]);
- if(owners.rows.length!==10)throw Error("Run database migrations before granting privileges");
+   AND tablename=ANY($1::text[])`,[["organizations","users","memberships","instructor_assignments","sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges"]]);
+ if(owners.rows.length!==11)throw Error("Run database migrations before granting privileges");
  if(owners.rows.some(x=>[app,provision].includes(x.tableowner)))
   throw Error("Runtime or provisioning role must not own database tables");
  for(const statement of grantStatements(app,provision))await client.query(statement);
