@@ -13,7 +13,7 @@ export function grantStatements(appRole,provisionRole){
  if(app===provision)throw Error("Application and provisioning roles must differ");
  const tables=[
   "organizations","users","memberships","instructor_assignments",
-  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges"
+  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges","ai_daily_usage"
  ];
  const statements=[];
  // Revoke any direct privileges; database owners and role memberships need separate review.
@@ -31,6 +31,8 @@ export function grantStatements(appRole,provisionRole){
  statements.push(`GRANT SELECT ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT UPDATE(last_used_step) ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT EXECUTE ON FUNCTION public.consume_email_challenge(char(64)) TO ${app}`);
+ statements.push(`GRANT SELECT,INSERT ON public.ai_daily_usage TO ${app}`);
+ statements.push(`GRANT UPDATE(request_count) ON public.ai_daily_usage TO ${app}`);
  statements.push(`GRANT UPDATE(revoked_at) ON public.sessions TO ${app}`);
  statements.push(`GRANT UPDATE(window_start,attempt_count) ON public.login_throttles TO ${app}`);
  // Full table reads of audit_events and changes to history are forbidden.
