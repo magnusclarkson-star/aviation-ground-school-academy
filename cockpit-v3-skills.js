@@ -60,12 +60,12 @@
  function create(id="level"){
   if(!tasks[id])throw new Error("Unknown practice task "+id);
   return {id,status:"ready",elapsed:0,total:0,matched:0,streak:0,maxStreak:0,
-    sampleAccumulator:0,percent:0,passed:false,final:null,last:null,feedback:"Select Start when ready. These are fictional educational targets.",stopReason:null};
+    sampleAccumulator:0,percent:0,passed:false,final:null,last:null,telemetry:[],feedback:"Select Start when ready. These are fictional educational targets.",stopReason:null};
  }
  function begin(session){
   if(!tasks[session.id])throw new Error("Invalid task");
   Object.assign(session,{status:"running",elapsed:0,total:0,matched:0,streak:0,maxStreak:0,
-   sampleAccumulator:0,percent:0,passed:false,final:null,last:null,feedback:"Practice running — keep the instrument indications inside the stated target band.",stopReason:null});
+   sampleAccumulator:0,percent:0,passed:false,final:null,last:null,telemetry:[],feedback:"Practice running — keep the instrument indications inside the stated target band.",stopReason:null});
   return session;
  }
  function finish(session,reason="time"){
@@ -91,6 +91,7 @@
    if(good){session.matched++;session.streak++;session.maxStreak=Math.max(session.maxStreak,session.streak);}
    else session.streak=0;
    session.last=snapshot(state,input);
+   session.telemetry.push(session.last);
   }
   session.percent=session.total?Math.round(100*session.matched/session.total):0;
   if(session.elapsed>=duration-.000001){
