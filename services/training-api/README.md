@@ -127,3 +127,37 @@ For the wider architecture and accreditation context, see [Student Records Bluep
 - [Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
 - [Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+
+
+## V0.2 — Same-origin student and instructor dashboard (staging only)
+
+A new browser dashboard lives in `portal/index.html`, `portal/styles.css`, and `portal/app.js`, served by this backend at **`/portal/`**. The frontend is intentionally **not connected to the public GitHub Pages Academy**. Starting the private backend locally with `AGSA_PUBLIC_ORIGIN=http://127.0.0.1:3100` makes it available at `http://127.0.0.1:3100/portal/` to *manually provisioned fictional* student/instructor accounts.
+
+### Functional workflow
+
+- **Login:** the portal calls `POST /api/v1/auth/login` on the *same origin*. The API, not the browser, verifies membership, password and role. Browser JavaScript never receives or stores the HttpOnly session token; password inputs are cleared after each attempt.
+- **Student:** `GET /api/v1/practice-attempts` lists only the student's submissions. A user can choose an individual `agsa.practice-observation.v1` JSON report and submit it through `POST /api/v1/practice-attempts` with a random idempotency key. The browser enforces a convenience 32 KB file limit, and the server independently validates it and retains only an allowlisted **unverified** summary.
+- **Instructor:** `GET /api/v1/instructor/assigned-attempts` displays only assigned students' unverified attempts, and `POST /api/v1/instructor/feedback-drafts` saves a review draft for the selected attempt. `GET /api/v1/instructor/feedback-drafts` lists the instructor's drafts. **No assessment approval, grading credential, flight credit or certificate endpoint exists.**
+- **Logout:** the portal sends an authenticated, CSRF-protected `POST /api/v1/auth/logout` to revoke its session.
+- **Responsive design:** the layout works with phone screens and desktop widths, including touchscreen buttons and input labels. All API-provided text is inserted with `textContent` rather than executable HTML.
+- **Storage:** the private portal does not write session tokens, passwords, learner data or feedback to `localStorage`, `sessionStorage` or IndexedDB. Database persistence is server-side for simulated submissions and drafts.
+
+The portal assets are **publicly readable code** (the login screen and bundled JS/CSS), but **student/instructor data and API operations always require authenticated server-side access**. Do not put credentials or confidential data into those files.
+
+### Deployment separation and security boundary
+
+The GitHub Pages deployment now builds a reviewed **public-only** artifact using `scripts/build-pages.mjs`, rather than publishing the entire repository. Only top-level intended public pages/scripts/images/styles and the public accreditation readiness JSON are published. The test `scripts/test-pages-package.mjs` verifies that `services/training-api/`, private portal files, docs, CI and internal scripts do **not** enter the GitHub Pages artifact.
+
+This filtering prevents accidental exposure of backend file *copies via the Pages deployment*. **Repository source access is a separate issue:** this project may be a public GitHub repository, so never commit secrets, private student records or unredacted authorization documents, even if Pages excludes them.
+
+### Automated testing
+
+The Training API Security Checks workflow now runs the existing isolated PostgreSQL 16 security suite and a real Chromium browser test, `tests/portal.browser.mjs`, against the real HTTP handler with fictional test identities. The browser test exercises:
+
+- Unauthenticated API denial, cookie-based sign-in, session restoration and logout.
+- Student-only report submission, strict sanitization and instructor-route denial.
+- Assigned instructor review and draft feedback, and denied access for an unassigned instructor.
+- Small-screen role-specific mobile layouts.
+- Allowlisted portal asset delivery, restrictive Content Security Policy and absence of unauthenticated student records.
+
+**Remaining blockers for any real-world deployment:** verified account onboarding, staff MFA, session/account recovery, production rate-limit identity and proxy trust configuration, independent security audit, least-privilege PostgreSQL credentials, private backups, operational monitoring, legal/privacy review, verified instructor identities and regulatory approval decisions. Keep the backend in *isolated fictional staging* until these gates are resolved.
