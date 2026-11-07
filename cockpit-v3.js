@@ -225,9 +225,13 @@ function reset(){
  $("throttle").value="55";$("trim").value="0";setFlaps(0);paint();
 }
 function setFlaps(n){
+ // The physical flap selector is shared across every instrument workstation.
+ // Change its commanded detent immediately; modelled flap travel follows over time.
  input.flaps=n;
  for(const v of [0,10,20,30])$("flaps"+v).setAttribute("aria-pressed",String(n===v));
  $("outFlaps").textContent=n+"°";
+ $("focusFlapsState").textContent=n+"°";
+ $("digitalFlapsState").textContent=n+"°";
 }
 function applyPreset(type){
  presetUntil=performance.now()+4300;
