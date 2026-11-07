@@ -19,8 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Build the allowlisted public website (never publish private backend files)
+        run: node scripts/build-pages.mjs
+      - name: Verify private sources are absent from deployment
+        run: node scripts/test-pages-package.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./dist-pages
       - id: deployment
         uses: actions/deploy-pages@v4
