@@ -114,6 +114,37 @@ handler=createHandler(store,{publicOrigin:base,nodeEnv:"test",allowInsecureLocal
  aiEnv,aiRequest,logError:e=>{throw e}});
 const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const pageErrors=[];
+async function installFakeWebRTC(page){
+ await page.addInitScript(()=>{
+  window.__mockMicStopCount=0;
+  const track={enabled:true,stop(){window.__mockMicStopCount++}};
+  Object.defineProperty(navigator,"mediaDevices",{
+   configurable:true,value:{getUserMedia:async()=>({
+    getTracks:()=>[track],getAudioTracks:()=>[track]
+   })}
+  });
+  window.__mockMicTrack=track;
+  window.HTMLMediaElement.prototype.play=function(){return Promise.resolve()};
+  window.HTMLMediaElement.prototype.pause=function(){};
+  class Channel{
+   constructor(){this.readyState="open";this.listeners={};window.__mockVoiceChannel=this}
+   addEventListener(type,handler){this.listeners[type]=handler}
+   close(){this.readyState="closed"}
+  }
+  window.RTCPeerConnection=class{
+   constructor(){this.localDescription=null;this.connectionState="new"}
+   addTrack(){}
+   createDataChannel(){return new Channel()}
+   async createOffer(){return {type:"offer",sdp:[
+    "v=0","o=- 1 2 IN IP4 127.0.0.1","s=AGSA","t=0 0",
+    "m=audio 9 UDP/TLS/RTP/SAVPF 111","a=sendrecv","a=rtpmap:111 opus/48000/2"
+   ].join("\r\n")+"\r\n"}}
+   async setLocalDescription(description){this.localDescription=description}
+   async setRemoteDescription(answer){window.__mockVoiceAnswer=answer}
+   close(){this.connectionState="closed";this.onconnectionstatechange?.()}
+  };
+ });
+}
 async function login(page,email){
  await page.locator("#organization").fill("agsa-pilot");
  await page.locator("#email").fill(email);
@@ -127,6 +158,7 @@ async function login(page,email){
 try{
  const desktop=await browser.newPage({viewport:{width:1260,height:870}});
  desktop.on("pageerror",e=>pageErrors.push("desktop: "+e.message));
+ await installFakeWebRTC(desktop);
  await desktop.addInitScript(()=>{
   window.Audio=class{
    constructor(url){this.src=url;this.onended=null}
@@ -233,6 +265,7 @@ try{
 
  const phone=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
  phone.on("pageerror",e=>pageErrors.push("phone: "+e.message));
+ await installFakeWebRTC(phone);
  await phone.goto(base+"/portal/");
  await login(phone,"pilot.unassigned@example.org");
  assert.equal(await phone.locator("#instructorPanel").isVisible(),true);
