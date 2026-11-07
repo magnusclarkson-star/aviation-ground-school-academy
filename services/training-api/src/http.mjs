@@ -1,6 +1,7 @@
 import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordCost,secureEquals} from "./crypto.mjs";
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
 import {isPortalPath,servePortal} from "./portal.mjs";
+import {verifyTokenFormat} from "./invites.mjs";
 const MAX_JSON_BYTES=32*1024;
 const SESSION_MS=6*60*60*1000;
 function requestError(status,code,message){return new ClientError(status,code,message);}
@@ -110,6 +111,21 @@ export function createHandler(store,config={}){
    if(method==="GET"&&pathname==="/api/v1/ready"){
     try{await store.ping();json(res,200,{status:"ready"});}
     catch{json(res,503,{status:"not_ready"});}
+    return;
+   }
+   if(method==="POST"&&pathname==="/api/v1/auth/verify-email"){
+    const raw=await bodyJson(req);
+    const token=raw.token;
+    if(!verifyTokenFormat(token))throw requestError(400,"invalid_verification","Invalid or expired verification invitation");
+    const ip=String(req.socket.remoteAddress||"unknown");
+    const allowed=await store.recordLoginAttempt([
+     hashSha256("verify-email-ip:"+ip),
+     hashSha256("verify-email-address-probe:"+ip)
+    ]);
+    if(!allowed)throw requestError(429,"rate_limited","Too many verification attempts");
+    const verified=await store.consumeEmailVerification(hashSha256(token));
+    if(!verified)throw requestError(400,"invalid_verification","Invalid or expired verification invitation");
+    json(res,200,{status:"email_verified",notice:"Email ownership verified for a staging account. This does not verify identity, instructor qualifications or training accreditation."});
     return;
    }
    if(method==="POST"&&pathname==="/api/v1/auth/login"){
