@@ -10,6 +10,7 @@ on:
       - 'cockpit-v3-mission.js'
       - 'scripts/test-cockpit-browser.mjs'
       - 'scripts/test-cockpit-mission-browser.mjs'
+      - 'scripts/test-cockpit-control-options.mjs'
       - '.github/workflows/cockpit-browser.yml'
   workflow_dispatch:
 permissions:
@@ -27,3 +28,4 @@ jobs:
       - run: npx playwright install chromium
       - run: node scripts/test-cockpit-browser.mjs
       - run: node scripts/test-cockpit-mission-browser.mjs
+      - run: node scripts/test-cockpit-control-options.mjs
