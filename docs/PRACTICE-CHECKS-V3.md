@@ -66,3 +66,22 @@ For a regional comparison and explicit status of each authority route, see [Regu
 - Task selection resets its illustrative flight state, preventing one task's conditions from contaminating the next.
 
 **Important:** a passing synthetic task is only an interactive learning aid. It is not training completion, a proficiency check, an exam pass, certified hours, or an official credential.
+
+
+## V3.7 — Automated coaching and optional on-device practice journal
+
+The existing timed skills exercises now maintain a short-lived, in-memory 0.1-second observation series. An **automated practice coach** uses the series to give criterion-specific feedback (for example, pitch, bank, airspeed, coordination, climb/descent rate or flap travel), highlight weak indications and suggest what to practise next. This is machine-generated feedback, not instructor supervision or human assessment.
+
+The student may explicitly click **Save attempt on this device** after completing or ending a task. A local browser journal then contains only:
+
+- Practice objective, time saved, synthetic percentage and illustrative outcome.
+- Summary of automated feedback, weak criteria and two recommended next steps.
+- A browser-local random record identifier. No name, account number, date of birth, school ID, email, address or instructor signature.
+
+The journal is **opt-in**. It is not created automatically, has a maximum of **20 entries** (the oldest are discarded if more are saved), and remains only in the browser's `localStorage` at the academy origin. It offers **Delete entry**, two-step **Delete all**, and **Download journal JSON**. A refresh preserves the selected saved entries if local storage is enabled. Clearing site data, switching browser/device, private browsing or unavailable storage can erase or block them. Shared devices expose journal records to other users of the same browser profile. No records are uploaded to GitHub or to a backend.
+
+**Technical file:** `cockpit-v3-journal.js`; storage schema `agsa.local-journal.v1`. The journal is unverified and user-editable: no hash, signature, audit log or evidence of a student's identity. It is **not an official training record** and is not suitable as a compliance ledger.
+
+To convert this into legitimate provider-managed training records later, a qualified school would need an approved syllabus, role-based permissions, explicit student identity verification, instructor review and sign-off, evidence retention schedule, tamper-evident server records, privacy/security controls, accessibility and human evaluation. All legal/approval claims must be reviewed with the relevant regulator and school partners.
+
+**Engineering checks:** `scripts/test-cockpit-coach-journal.mjs` validates the feedback engine and storage, including corrupt data handling and simulated storage access errors; `scripts/test-cockpit-journal-browser.mjs` tests desktop and mobile browser consent, persistence, export and deletion via a local HTTP test server. No production database or cloud account is used.
