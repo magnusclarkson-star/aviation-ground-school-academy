@@ -35,7 +35,8 @@ test("MFA shared secrets stay authenticated and encrypted at rest",()=>{
  assert.ok(!encrypted.includes(rfcSecret));
  assert.equal(decryptTotpSecret(encrypted,key),rfcSecret);
  assert.throws(()=>decryptTotpSecret(encrypted,randomBytes(32)),/authenticate|decrypt|Unsupported|bad/i);
- const changed=encrypted.slice(0,-1)+(encrypted.at(-1)==="A"?"B":"A");
+ const midpoint=encrypted.indexOf(".",encrypted.indexOf(".")+1)+3;
+ const changed=encrypted.slice(0,midpoint)+(encrypted[midpoint]==="A"?"Z":"A")+encrypted.slice(midpoint+1);
  assert.throws(()=>decryptTotpSecret(changed,key));
  assert.throws(()=>encryptTotpSecret("INVALID SECRET",key),/Invalid/);
 });
