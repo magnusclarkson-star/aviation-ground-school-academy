@@ -218,6 +218,28 @@ try{
  assert.match(await desktop.locator("#aiTutorStatus").textContent(),/AI-generated voice/);
  await desktop.locator("#aiStop").click();
  assert.match(await desktop.locator("#aiTutorStatus").textContent(),/stopped/);
+ await desktop.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("available for this fictional"));
+ assert.equal(await desktop.locator("#realtimeStart").isDisabled(),true,"microphone needs express consent");
+ await desktop.locator("#realtimeConsent").check();
+ await desktop.locator("#realtimeStart").click();
+ await desktop.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("Connected"));
+ assert.equal(await desktop.locator("#realtimeMute").isDisabled(),false);
+ assert.equal(await desktop.evaluate(()=>window.__mockVoiceAnswer.type),"answer");
+ await desktop.evaluate(()=>{
+  window.__mockVoiceChannel.listeners.message({
+   data:JSON.stringify({type:"response.output_audio_transcript.delta",
+    delta:"AI-generated sample: lift and drag."})
+  });
+ });
+ assert.match(await desktop.locator("#realtimeTranscript").textContent(),/lift and drag/);
+ await desktop.locator("#realtimeMute").click();
+ assert.equal(await desktop.evaluate(()=>window.__mockMicTrack.enabled),false);
+ await desktop.locator("#realtimeMute").click();
+ assert.equal(await desktop.evaluate(()=>window.__mockMicTrack.enabled),true);
+ await desktop.locator("#realtimeStop").click();
+ await desktop.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("Conversation ended"));
+ assert.ok(await desktop.evaluate(()=>window.__mockMicStopCount>0),"microphone track released after hangup");
+ assert.equal(await desktop.locator("#realtimeStart").isDisabled(),true,"new session requires fresh consent");
  await desktop.locator("#reportFile").setInputFiles({
   name:"flap-practice.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(exampleReport))
@@ -282,6 +304,14 @@ try{
  await phone.locator("#aiConsent").check();
  await phone.locator("#aiAskButton").tap();
  await phone.waitForFunction(()=>document.querySelector("#aiAnswer").textContent.includes("Lift is an aerodynamic"));
+ await phone.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("available for this fictional"));
+ await phone.locator("#realtimeConsent").check();
+ await phone.locator("#realtimeStart").tap();
+ await phone.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("Connected"));
+ await phone.locator("#realtimeMute").tap();
+ assert.equal(await phone.evaluate(()=>window.__mockMicTrack.enabled),false);
+ await phone.locator("#realtimeStop").tap();
+ await phone.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("Conversation ended"));
  assert.equal(await phone.locator("#aiAnswerPanel").isVisible(),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
   "Mobile AI tutoring controls must not overflow horizontally");
