@@ -33,3 +33,6 @@ jobs:
       - run: node --check instructor-review-model.js
       - run: node --check instructor-review.js
       - run: node scripts/test-instructor-review.mjs
+      - run: node --check ai-instructor-lessons.js
+      - run: node --check ai-instructor.js
+      - run: node scripts/test-ai-instructor.mjs
