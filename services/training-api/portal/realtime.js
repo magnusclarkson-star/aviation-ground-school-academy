@@ -107,7 +107,7 @@ async function startConversation(){
    audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},
    video:false
   });
-  if(run!==generation)return;
+  if(run!==generation){for(const track of microphone.getTracks())track.stop();microphone=null;return;}
   connection=new RTCPeerConnection();
   connection.ontrack=event=>{
    if(run!==generation)return;
