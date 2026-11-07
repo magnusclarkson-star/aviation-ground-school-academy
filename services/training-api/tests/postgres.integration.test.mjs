@@ -96,6 +96,10 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
   for(let i=0;i<5;i++)assert.equal(await db.reserveAiUsage(student,"voice",5),true);
   assert.equal(await db.reserveAiUsage(student,"voice",5),false,
    "6th generated voice request must be refused");
+  assert.equal(await db.reserveAiUsage(student,"realtime",2),true);
+  assert.equal(await db.reserveAiUsage(student,"realtime",2),true);
+  assert.equal(await db.reserveAiUsage(student,"realtime",2),false,
+   "third connected AI voice session is forbidden for same user and UTC day");
   assert.equal(await db.reserveAiUsage({
    userId:student2,organizationId:org1},"text",12),true,
    "other student gets an independent usage budget");
