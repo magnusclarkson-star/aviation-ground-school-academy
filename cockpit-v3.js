@@ -233,6 +233,8 @@ function renderMission(){
  $("missionPhase").textContent=cfg.title;
  $("missionTask").textContent=cfg.task;
  $("missionGoal").textContent=cfg.goal;
+ $("missionMiniPhase").textContent=cfg.title;
+ $("missionMiniHint").textContent=cfg.goal;
  $("missionState").textContent=mission.state.grounded?"RUNWAY · ON GROUND":"AIRBORNE · "+round(mission.state.altitude)+" FT";
  $("missionIAS").textContent=round(mission.state.speed)+" kt";
  $("missionHeight").textContent=round(mission.state.altitude)+" ft AGL";
@@ -280,6 +282,7 @@ function setMode(next){
  $("analogSection").classList.toggle("hidden",mode!=="analog");
  $("digitalSection").classList.toggle("hidden",!["digital","mission"].includes(mode));
  $("missionPanel").classList.toggle("hidden",mode!=="mission");
+ $("missionMiniStatus").classList.toggle("hidden",mode!=="mission");
  $("controlOverview").classList.toggle("hidden",["focus","digital","mission"].includes(mode));
  document.querySelector(".lesson-bar").classList.toggle("hidden",mode==="mission");
  paint();
