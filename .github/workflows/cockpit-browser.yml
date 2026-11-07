@@ -6,6 +6,8 @@ on:
       - 'cockpit-v3.html'
       - 'cockpit-v3.js'
       - 'cockpit-v3-model.js'
+      - 'cockpit-v3-focus.js'
+      - 'cockpit-v3-mission.js'
       - 'scripts/test-cockpit-browser.mjs'
       - '.github/workflows/cockpit-browser.yml'
   workflow_dispatch:
