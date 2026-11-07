@@ -2,6 +2,7 @@ import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordC
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
 import {isPortalPath,servePortal} from "./portal.mjs";
 import {verifyTokenFormat} from "./invites.mjs";
+import {validateTutorRequest,validateVoiceRequest,askTutor,synthesizeTutorSpeech,aiFlags,AI_LIMITS} from "./ai-tutor.mjs";
 const MAX_JSON_BYTES=32*1024;
 const SESSION_MS=6*60*60*1000;
 function requestError(status,code,message){return new ClientError(status,code,message);}
@@ -176,6 +177,43 @@ export function createHandler(store,config={}){
     return;
    }
    const session=await authenticate(req),actor=session.actor;
+   if(method==="GET"&&pathname==="/api/v1/ai/status"){
+    json(res,200,{
+     ...aiFlags(config.aiEnv||{}),limits:AI_LIMITS,
+     availableTo:"verified staging accounts only",
+     voiceDisclosure:"Synthetic AI voice; not a human instructor.",
+     note:"No accredited flight training or operational advice. No public AI service is active until privately configured."
+    });return;
+   }
+   if(method==="POST"&&pathname==="/api/v1/ai/ask"){
+    requireCsrf(req,session);
+    const input=validateTutorRequest(await bodyJson(req));
+    if(!aiFlags(config.aiEnv||{}).enabled)
+     throw requestError(503,"ai_unavailable","The connected AI instructor is not enabled on this staging service");
+    if(!await store.reserveAiUsage(actor,"text",AI_LIMITS.text))
+     throw requestError(429,"ai_daily_limit","Daily AI study question limit reached");
+    const output=await askTutor(input,{env:config.aiEnv,request:config.aiRequest||fetch});
+    json(res,200,output);return;
+   }
+   if(method==="POST"&&pathname==="/api/v1/ai/voice"){
+    requireCsrf(req,session);
+    const input=validateVoiceRequest(await bodyJson(req));
+    if(!aiFlags(config.aiEnv||{}).voiceEnabled)
+     throw requestError(503,"voice_unavailable","Natural generated voice is not enabled; use device narration");
+    if(!await store.reserveAiUsage(actor,"voice",AI_LIMITS.voice))
+     throw requestError(429,"voice_daily_limit","Daily natural voice limit reached");
+    const audio=await synthesizeTutorSpeech(input,{env:config.aiEnv,request:config.aiRequest||fetch});
+    res.writeHead(200,{
+     "Content-Type":"audio/mpeg",
+     "Content-Length":audio.byteLength,
+     "Cache-Control":"private, no-store",
+     "Content-Security-Policy":"default-src 'none'",
+     "X-Content-Type-Options":"nosniff",
+     "X-Frame-Options":"DENY",
+     "Referrer-Policy":"no-referrer"
+    });
+    res.end(audio);return;
+   }
    if(method==="GET"&&pathname==="/api/v1/me"){
     json(res,200,{user:{id:actor.userId,email:actor.email,role:actor.role,organizationId:actor.organizationId},
      trainingStatus:"UNACCREDITED_STAGING_DEMO"});return;
