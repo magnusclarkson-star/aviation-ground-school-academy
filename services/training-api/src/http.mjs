@@ -137,12 +137,12 @@ export function createHandler(store,config={}){
       throw requestError(503,"mfa_unavailable","Instructor sign-in is temporarily unavailable");
      const code=data.verificationCode;
      if(typeof code!=="string"||! /^\d{6}$/.test(code))
-      throw requestError(401,"invalid_credentials","Invalid credentials or verification code");
+      throw requestError(401,"invalid_credentials","Invalid credentials");
      const verified=await store.consumeInstructorOtp({
       userId:candidate.userId,organizationId:candidate.organizationId,
       code,encryptionKey:config.mfaKey
      });
-     if(!verified)throw requestError(401,"invalid_credentials","Invalid credentials or verification code");
+     if(!verified)throw requestError(401,"invalid_credentials","Invalid credentials");
     }
     const token=generateSecret(),csrf=generateSecret();
     const expiresAt=new Date(Date.now()+SESSION_MS).toISOString();
