@@ -241,11 +241,35 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .skills-summary p{font-size:12px}
 .skills-disclaimer{color:#dfc6a9!important;font-size:11px!important;line-height:1.45}
 @media(max-width:650px){.skills-panel{padding:10px}.skills-heading h3{font-size:18px}.skills-summary-grid{grid-template-columns:1fr}.skills-buttons button{flex:1}.skills-task-row select{width:100%}}
+
+.coach-panel{border:1px solid #577c8b;background:#081e30;border-radius:13px;padding:12px;margin:12px 0 2px}
+.coach-panel h4{font-size:15px;margin:0 0 8px;color:#f7dba4}
+.coach-panel h4 small{display:block;font-size:10px;color:#a6c5d7;font-weight:600}
+.coach-panel h5{font-size:12px;letter-spacing:.06em;color:#8cd8f5;margin:12px 0 5px}
+.coach-panel ul{color:#d0e5f1;padding-left:22px;margin:5px 0}
+.coach-panel li{font-size:12px;line-height:1.5;padding:3px 0}
+.coach-criteria{font-size:12px;color:#bddcec;border-top:1px solid #39566b;padding-top:10px;margin-top:12px}
+.coach-criteria summary{cursor:pointer;font-weight:700}
+.coach-criterion{display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid #36536b;padding:7px 0}
+.coach-criterion span{font-size:12px}
+.coach-criterion strong{color:#f3d391;font-variant-numeric:tabular-nums}
+.skills-journal{margin:12px 0 0;border:1px solid #54798c;background:#0a2235;border-radius:13px;padding:12px}
+.skills-journal summary{font-size:13px;color:#b2eaff;font-weight:750;cursor:pointer;padding:5px 0}
+.skills-privacy{font-size:12px!important;color:#d1cbb8!important;line-height:1.5!important}
+.journal-list{display:grid;gap:8px;margin:10px 0}
+.journal-entry{border:1px solid #4b6881;background:#0d2a41;border-radius:10px;padding:11px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.journal-entry h5{font-size:13px;margin:0 0 3px;color:#ebf8fd}
+.journal-entry p{font-size:11px;color:#aacbdd;margin:3px 0}
+.journal-entry button{font-size:11px;min-height:36px;padding:7px 10px}
+.journal-status{font-size:12px!important;color:#f6cf8d!important;min-height:17px}
+@media(max-width:650px){.coach-panel,.skills-journal{padding:9px}.journal-entry{gap:6px}.journal-entry button{width:100%}}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
 <script src="cockpit-v3-mission.js" defer></script>
 <script src="cockpit-v3-skills.js" defer></script>
+<script src="cockpit-v3-coach.js" defer></script>
+<script src="cockpit-v3-journal.js" defer></script>
 <script src="cockpit-v3-focus.js" defer></script>
 <script src="cockpit-v3.js" defer></script>
 </head>
@@ -325,11 +349,33 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
     <button type="button" id="skillsEnd" disabled>End attempt</button>
     <button type="button" id="skillsRetry">Reset task</button>
     <button type="button" id="skillsExport" disabled>Download unofficial JSON report</button>
+    <button type="button" id="skillsSave" disabled>Save attempt on this device</button>
   </div>
   <div class="skills-summary hidden" id="skillsSummary"><h4>Practice review</h4>
     <div class="skills-summary-grid"><span>Outcome <strong id="skillsOutcome">—</strong></span><span>Time in target <strong id="skillsScore">—</strong></span><span>Longest continuous match <strong id="skillsStreak">—</strong></span></div>
     <p id="skillsReviewNote">This is a simulation exercise only.</p>
+    <div id="skillsCoach" class="coach-panel" aria-label="Automated coaching recommendations">
+      <h4>Automated practice coach <small>Not reviewed by an instructor</small></h4>
+      <p id="coachHeadline">Feedback appears when an exercise ends.</p>
+      <h5>Indications to improve</h5>
+      <ul id="coachImprovements"></ul>
+      <h5>What to try next</h5>
+      <ul id="coachNextSteps"></ul>
+      <details class="coach-criteria"><summary>Show how each indication was scored</summary>
+        <div id="coachCriteria"></div>
+      </details>
+    </div>
   </div>
+  <details class="skills-journal" id="skillsJournal">
+    <summary>My practice journal · optional on-device history</summary>
+    <p class="skills-privacy">Journal entries are <strong>not saved automatically</strong>. Select “Save attempt on this device” after finishing an exercise. Saved entries stay only in this browser's local storage, may be visible to others using this device, and may disappear if browser data is cleared. They are not official records or backed up to an instructor.</p>
+    <div id="skillsJournalList" class="journal-list" aria-label="Saved self-practice entries"><p>No attempts saved on this device.</p></div>
+    <div class="skills-buttons">
+      <button type="button" id="skillsExportJournal" disabled>Download journal JSON</button>
+      <button type="button" id="skillsClearJournal" disabled>Delete all local entries</button>
+    </div>
+    <p id="skillsJournalStatus" class="journal-status" role="status"></p>
+  </details>
   <p class="skills-disclaimer">Nothing on this page is a certificate, qualified simulator record, flight log or instructor assessment. The optional report contains no name, account or student ID, is not uploaded, and is suitable only as a draft practice artifact for later review.</p>
 </section>
 <div class="digital-workstation">
