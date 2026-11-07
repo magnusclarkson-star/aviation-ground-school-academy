@@ -104,11 +104,31 @@ function dockDigital(index,instruments,page){
  $("digitalFocusSelector").classList.toggle("hidden",page!=="pfd");
  highlight(index,instruments);
 }
+function dockMission(phase){
+ if(!initialized)return;
+ const pick={
+  roll:["throttle","yoke","flaps"],
+  climb:["yoke","throttle","flaps"],
+  climbReady:["yoke","throttle","flaps"],
+  approach:["throttle","yoke","flaps"],
+  landing:["yoke","throttle","flaps"],
+  rollout:["throttle","rudder","flaps"],
+  review:["throttle","yoke","flaps"],
+  complete:["throttle","flaps"]
+ };
+ const keys=pick[phase]||pick.roll;
+ restore();
+ const target=$("digitalControlDock");
+ for(const key of keys)target.appendChild($("control-"+key));
+ $("digitalControlsTitle").textContent="Working controls — guided flight";
+ $("digitalControlsHint").textContent="Operate the actual yoke, throttle, flaps or rudder below while watching the live touchscreen. The lesson instructions remain just above.";
+ $("digitalFocusSelector").classList.add("hidden");
+}
 function update(){
  if(!initialized)return;
  const source=$("read-"+chosen);
  const target=$("focusValue");
  if(source&&target)target.textContent=source.textContent;
 }
-global.CockpitV3Focus={init,restore,dock,dockDigital,highlight,update,spec};
+global.CockpitV3Focus={init,restore,dock,dockDigital,dockMission,highlight,update,spec};
 })(window);
