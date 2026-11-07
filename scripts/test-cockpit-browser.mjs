@@ -35,6 +35,8 @@ try {
      assert.equal(await page.locator('#flaps'+setting).getAttribute('aria-pressed'),'true','flap detent highlighted');
    }
  }
+ // Keep the turn coordinator selected when switching modes to test continuity.
+ await page.locator('#focusSelect-tc').click();
  await page.locator('#analogMode').click();
  assert.equal(await page.locator('#analogSection').isVisible(),true);
  assert.equal(await page.locator('#analogSection .dial-tile').count(),6,'all gauges restore to six-pack');
