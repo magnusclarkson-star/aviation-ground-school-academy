@@ -56,6 +56,7 @@ async function endConversation(reason="Session ended.",{silent=false,keepalive=f
  handle=null;
  stopLocal();
  $("realtimeConsent").checked=false;
+ setButtons();
  if(!silent)setStatus(reason);
  if(oldHandle){
   try{await post("/api/v1/ai/realtime-end",{handle:oldHandle},{keepalive})}
