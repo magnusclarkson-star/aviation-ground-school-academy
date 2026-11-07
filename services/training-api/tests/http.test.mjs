@@ -96,8 +96,24 @@ class FakeStore{
 test("private staging API enforces cookies, CSRF, tenant boundaries, role assignments and replay safety",async t=>{
  const password="a-long-strong-test-passphrase-27";
  const store=new FakeStore(await hashPassword(password));
+ const aiEnv={
+  OPENAI_API_KEY:"fake-testing-provider-key-value-not-live",
+  AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
+  AGSA_AI_TEXT_MODEL:"gpt-6-luna"
+ };
+ let providerCalls=0;
+ const aiRequest=async(url,opts)=>{
+  providerCalls++;
+  assert.equal(opts.headers.Authorization,"Bearer "+aiEnv.OPENAI_API_KEY);
+  if(url.endsWith("/v1/responses"))return new Response(JSON.stringify({
+   output:[{type:"message",content:[{type:"output_text",text:"Lift is a force. Check approved teaching materials."}]}]
+  }),{status:200,headers:{"Content-Type":"application/json"}});
+  if(url.endsWith("/v1/audio/speech"))return new Response(Buffer.alloc(64,67),{status:200});
+  throw Error("Unexpected provider route");
+ };
  const server=createServer(createHandler(store,{publicOrigin:"http://127.0.0.1:3100",
-  nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,1),logError:e=>{throw e;}}));
+  nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,1),aiEnv,aiRequest,
+  logError:e=>{throw e;}}));
  await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});
  t.after(()=>new Promise(resolve=>server.close(resolve)));
  const root="http://127.0.0.1:"+server.address().port;
