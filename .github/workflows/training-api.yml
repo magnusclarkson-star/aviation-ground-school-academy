@@ -51,3 +51,10 @@ jobs:
         run: node services/training-api/scripts/migrate.mjs
       - name: Test authentication isolation and real database behavior
         run: node --test services/training-api/tests/*.test.mjs
+      - name: Install browser test dependency
+        run: npm install --prefix services/training-api --no-save --no-package-lock --no-audit --ignore-scripts playwright@1.56.1
+      - name: Install Chromium for browser tests
+        working-directory: services/training-api
+        run: npx playwright install chromium
+      - name: Test the private student and instructor portal
+        run: node services/training-api/tests/portal.browser.mjs
