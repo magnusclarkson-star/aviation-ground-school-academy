@@ -10,6 +10,7 @@ const clamp=M.clamp;
 let state=M.makeState(),input=M.makeInput(),mode="analog",pfdPage="pfd";
 let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[],controlStyle="yoke";
 let mission=null,lastMissionPhase=null,skillsSession=null;
+let skillsCoachCache=null,skillsCoachRendered=false,skillsSaved=false,journalDeleteArmed=false;
 const instruments=[
  ["asi","Airspeed indicator","The indicated airspeed needle uses a numbered dial with colored reference arcs. Airspeed changes with throttle, pitch and flaps. The arcs are conceptual and MUST be checked against a real aircraft's approved operating handbook."],
  ["att","Attitude indicator","The miniature aircraft is fixed. Blue represents sky, brown represents ground, and the moving horizon shows pitch and bank. Pulling the yoke raises the nose and moves the horizon down."],
@@ -277,6 +278,7 @@ function selectSkillTask(id){
  const Skills=window.CockpitV3Skills;
  if(!Skills)throw Error("Skills practice module did not load");
  skillsSession=Skills.create(id);
+ skillsCoachCache=null;skillsCoachRendered=false;skillsSaved=false;
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
  paused=false;$("pauseBtn").setAttribute("aria-pressed","false");$("pauseBtn").textContent="Pause flight";
  $("throttle").value="55";$("trim").value="0";
@@ -308,6 +310,8 @@ function renderSkills(){
  $("skillsStart").disabled=running;
  $("skillsEnd").disabled=!running;
  $("skillsExport").disabled=!done;
+ $("skillsSave").disabled=!done||skillsSaved;
+ $("skillsSave").textContent=skillsSaved?"Saved on this device":"Save attempt on this device";
  $("skillsStart").textContent=done?"Start new observation":"Start 12-second observation";
  $("skillsSummary").classList.toggle("hidden",!done);
  if(done){
@@ -315,18 +319,117 @@ function renderSkills(){
   $("skillsScore").textContent=skillsSession.percent+"% (target ≥"+Skills.threshold+"%)";
   $("skillsStreak").textContent=(skillsSession.maxStreak*Skills.sampleInterval).toFixed(1)+" s";
   $("skillsReviewNote").textContent=skillsSession.feedback+" The optional JSON records only synthetic readings and is not a signed assessment.";
+  if(!skillsCoachCache)skillsCoachCache=window.CockpitV3Coach.analyse(skillsSession);
+  if(!skillsCoachRendered){renderCoach(skillsCoachCache);skillsCoachRendered=true;}
  }
+}
+function renderCoach(review){
+ $("coachHeadline").textContent=review.headline;
+ function list(id,lines,emptyText){
+  const ul=$(id);ul.replaceChildren();
+  for(const line of lines.length?lines:[emptyText]){
+   const li=document.createElement("li");li.textContent=line;ul.appendChild(li);
+  }
+ }
+ list("coachImprovements",review.improvements,"No major metric gaps were observed in this fictional target.");
+ list("coachNextSteps",review.nextSteps,"Repeat the task with steady inputs and cross-check your instruments.");
+ const node=$("coachCriteria");node.replaceChildren();
+ for(const crit of review.criterionScores){
+  const row=document.createElement("div");row.className="coach-criterion";
+  const name=document.createElement("span");name.textContent=crit.label;
+  const score=document.createElement("strong");score.textContent=crit.percent+"% of sampled time";
+  row.append(name,score);node.appendChild(row);
+ }
+}
+function downloadJSON(value,fileName){
+ const blob=new Blob([JSON.stringify(value,null,2)+"\\n"],{type:"application/json"});
+ const href=URL.createObjectURL(blob);
+ const link=document.createElement("a");
+ link.href=href;link.download=fileName;
+ document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(href),250);
+}
+function renderJournal(){
+ const journal=window.CockpitV3Journal;
+ const target=$("skillsJournalList");
+ try{
+  const entries=journal.read(window.localStorage);
+  target.replaceChildren();
+  if(!entries.length){
+   const empty=document.createElement("p");
+   empty.textContent="No attempts saved on this device.";
+   target.appendChild(empty);
+  }
+  for(const record of entries){
+   const row=document.createElement("div");row.className="journal-entry";
+   const textPart=document.createElement("div");
+   const heading=document.createElement("h5");heading.textContent=record.taskTitle;
+   const p=document.createElement("p");p.textContent=record.storedAt+" · "+record.score+"% · "+record.outcome.replace(/_/g," ");
+   const summary=document.createElement("p");summary.textContent=record.coachHeadline;
+   textPart.append(heading,p,summary);
+   const del=document.createElement("button");del.type="button";del.textContent="Delete entry";
+   del.setAttribute("aria-label","Delete saved "+record.taskTitle+" attempt");
+   del.addEventListener("click",()=>{
+    try{
+     journal.remove(window.localStorage,record.id);
+     $("skillsJournalStatus").textContent="Selected entry deleted from this browser.";
+     journalDeleteArmed=false;$("skillsClearJournal").textContent="Delete all local entries";
+     renderJournal();
+    }catch(e){$("skillsJournalStatus").textContent="Cannot delete entry: "+e.message;}
+   });
+   row.append(textPart,del);target.appendChild(row);
+  }
+  $("skillsExportJournal").disabled=!entries.length;
+  $("skillsClearJournal").disabled=!entries.length;
+  return entries;
+ }catch(e){
+  target.replaceChildren();
+  const p=document.createElement("p");p.textContent="Cannot read this device's journal: "+e.message;
+  target.appendChild(p);
+  $("skillsExportJournal").disabled=true;$("skillsClearJournal").disabled=true;
+  return null;
+ }
+}
+function saveSkillAttempt(){
+ if(mode!=="skills"||!skillsSession||skillsSession.status!=="finished"||skillsSaved)return;
+ try{
+  const coach=skillsCoachCache||window.CockpitV3Coach.analyse(skillsSession);
+  const item=window.CockpitV3Journal.makeRecord(skillsSession,coach);
+  window.CockpitV3Journal.save(window.localStorage,item);
+  skillsSaved=true;
+  $("skillsJournalStatus").textContent="Saved locally. This does not submit your result to an instructor or school.";
+  $("skillsJournal").open=true;
+  renderJournal();renderSkills();
+ }catch(e){$("skillsJournalStatus").textContent="Save unsuccessful: "+e.message;$("skillsJournal").open=true;}
+}
+function exportSkillJournal(){
+ try{
+  const archive=window.CockpitV3Journal.exportJournal(window.localStorage);
+  if(!archive.records.length)throw Error("No saved entries");
+  downloadJSON(archive,"academy-unofficial-practice-journal.json");
+  $("skillsJournalStatus").textContent="Local journal JSON downloaded. No data was sent to a school.";
+ }catch(e){$("skillsJournalStatus").textContent="Export unsuccessful: "+e.message;}
+}
+function clearSkillJournal(){
+ if(!journalDeleteArmed){
+  journalDeleteArmed=true;
+  $("skillsClearJournal").textContent="Confirm delete all entries";
+  $("skillsJournalStatus").textContent="Press the confirm button again to delete all saved journal entries on this device.";
+  return;
+ }
+ try{
+  window.CockpitV3Journal.clear(window.localStorage);
+  journalDeleteArmed=false;
+  $("skillsClearJournal").textContent="Delete all local entries";
+  $("skillsJournalStatus").textContent="All saved journal entries deleted from this browser.";
+  renderJournal();
+ }catch(e){$("skillsJournalStatus").textContent="Deletion unsuccessful: "+e.message;}
 }
 function downloadSkillReport(){
  if(!skillsSession||skillsSession.status!=="finished")return;
  const report=window.CockpitV3Skills.report(skillsSession);
- const blob=new Blob([JSON.stringify(report,null,2)+"\n"],{type:"application/json"});
- const href=URL.createObjectURL(blob);
- const anchor=document.createElement("a");
- anchor.href=href;
- anchor.download="academy-unofficial-"+skillsSession.id+"-practice.json";
- document.body.appendChild(anchor);anchor.click();anchor.remove();
- setTimeout(()=>URL.revokeObjectURL(href),250);
+ report.automatedPracticeFeedback=skillsCoachCache||window.CockpitV3Coach.analyse(skillsSession);
+ downloadJSON(report,"academy-unofficial-"+skillsSession.id+"-practice.json");
 }
 function setMode(next){
  const wasMission=mode==="mission",wasSkills=mode==="skills";
@@ -468,6 +571,10 @@ function wireControls(){
  };
  $("skillsRetry").onclick=()=>{if(mode==="skills"){selectSkillTask($("skillsSelect").value);paint();}};
  $("skillsExport").onclick=downloadSkillReport;
+ $("skillsSave").onclick=saveSkillAttempt;
+ $("skillsExportJournal").onclick=exportSkillJournal;
+ $("skillsClearJournal").onclick=clearSkillJournal;
+ renderJournal();
  $("missionRestart").onclick=()=>{startMission("roll");paint();};
  $("missionContinue").onclick=()=>{
   if(mission&&mission.phase==="climbReady"){
