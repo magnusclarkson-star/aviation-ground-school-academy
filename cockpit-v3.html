@@ -142,6 +142,10 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  .digital-control-grid{grid-template-columns:1fr}
  .digital-control-grid .control-pad{height:143px}
 }
+.flap-status{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:5px 0 9px;padding:5px 10px;border-radius:12px;border:1px solid #c4a064;background:#302717;color:#ffe0a2;font-size:11px;font-weight:750;letter-spacing:.03em;line-height:1.25}
+.flap-status strong{font-variant-numeric:tabular-nums;color:#fff;font-size:15px}
+.digital-control-column .flap-status{margin-top:4px}
+@media(max-width:650px){.focus-gauge .flap-status{margin:3px 0;padding:3px 8px;font-size:10px}.focus-gauge .flap-status strong{font-size:12px}}
 </style>
 <script src="academy-brand.js" defer></script>
 <script src="cockpit-v3-model.js" defer></script>
@@ -167,7 +171,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
   <div class="focus-section-header"><div><h2>Focused instrument workstation</h2><p class="note">Select an instrument. Its working aircraft controls appear alongside it, so you can watch the indication as you operate them.</p></div><span class="focus-flag">ONE INSTRUMENT AT A TIME</span></div>
   <div id="focusSelector" class="focus-selector" role="group" aria-label="Select an instrument"></div>
   <div class="focus-grid">
-    <div class="focus-gauge" id="focusGauge"><div id="focusDialDock" aria-label="Selected live analogue instrument"></div><p class="focus-value" id="focusValue">102 KT IAS</p><p class="focus-tip">Instrument face is read-only. Use the actual controls beside or below it.</p></div>
+    <div class="focus-gauge" id="focusGauge"><div id="focusDialDock" aria-label="Selected live analogue instrument"></div><p class="focus-value" id="focusValue">102 KT IAS</p><p class="flap-status" aria-label="Current flap selector setting">FLAPS SELECTED <strong id="focusFlapsState">0°</strong></p><p class="focus-tip">Instrument face is read-only. Use the actual controls beside or below it.</p></div>
     <div class="focus-right"><h3 id="focusControlsTitle">Controls that affect this instrument</h3><p class="focus-tip" id="focusControlsHint">Use throttle, yoke and flaps to explore airspeed.</p><div id="focusControlDock" class="focus-control-grid"></div></div>
   </div>
 </section>
@@ -209,7 +213,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  </div>
  <div class="digital-control-column">
   <h3 id="digitalControlsTitle">Touch controls for your selected instrument</h3>
-  <p id="digitalControlsHint" class="note">Select a reading, then operate the matching flight controls here while watching the touchscreen display.</p>
+  <p id="digitalControlsHint" class="note">Select a reading, then operate the matching flight controls here while watching the touchscreen display.</p><p class="flap-status" aria-label="Current flap selector setting">FLAPS SELECTED <strong id="digitalFlapsState">0°</strong></p>
   <div class="digital-focus-selector" id="digitalFocusSelector" role="group" aria-label="Select digital flight instrument"></div>
   <div id="digitalControlDock" class="digital-control-grid"></div>
   <p class="digital-hint">The digital indications cannot be dragged directly. Adjust the aircraft controls to see their effect in real time.</p>
@@ -233,7 +237,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
    <div class="pedals"><button class="pedal" id="leftRudder" aria-label="Hold left rudder">LEFT</button><button class="pedal" id="rightRudder" aria-label="Hold right rudder">RIGHT</button></div>
    <p class="note">On a keyboard, use A and D for rudder.</p>
   </div>
-  <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Choose a simplified flap setting. It changes the model's speed response, not its certified limits.</p>
+  <div class="hardware" id="control-flaps"><h3>Flap selector</h3><p class="note">Select 0°, 10°, 20° or 30° at any instrument. Flaps primarily change lift and drag; in this simplified model, watch the airspeed response rather than expecting every gauge to move.</p>
     <div class="flap-row"><button id="flaps0" aria-pressed="true">0°</button><button id="flaps10" aria-pressed="false">10°</button><button id="flaps20" aria-pressed="false">20°</button><button id="flaps30" aria-pressed="false">30°</button></div>
     <div class="meter"><label>Selected flaps <output id="outFlaps">0°</output></label></div>
   </div>
