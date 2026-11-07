@@ -147,6 +147,18 @@ export class PgStore{
   }catch(e){await client.query("ROLLBACK").catch(()=>{});throw e}
   finally{client.release()}
  }
+ async reserveAiUsage(actor,kind,maxCount){
+  if(!["text","voice"].includes(kind)||!Number.isInteger(maxCount)||maxCount<1||maxCount>100)
+   throw Error("Invalid AI usage reservation");
+  const result=await this.pool.query(`
+   INSERT INTO ai_daily_usage(organization_id,user_id,usage_day,kind,request_count)
+   VALUES($1,$2,(now() AT TIME ZONE 'UTC')::date,$3,1)
+   ON CONFLICT(organization_id,user_id,usage_day,kind)
+   DO UPDATE SET request_count=ai_daily_usage.request_count+1
+   WHERE ai_daily_usage.request_count<$4
+   RETURNING request_count`,[actor.organizationId,actor.userId,kind,maxCount]);
+  return result.rowCount===1;
+ }
  async listOwnAttempts(actor,limit){
   const r=await this.pool.query(`
    SELECT id,source_status AS "sourceStatus",report_json AS report,
