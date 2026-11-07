@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">Aviation Ground School aircraft illustration</title>
+<desc id="desc">A civilian training aircraft flying over a coastal airfield, with distant mountains and helicopter silhouettes.</desc>
+<defs>
+<linearGradient id="sky" x2="0" y2="1"><stop stop-color="#12365b"/><stop offset=".54" stop-color="#367ca7"/><stop offset="1" stop-color="#e3b88b"/></linearGradient>
+<radialGradient id="sun"><stop stop-color="#fff1c6" stop-opacity=".8"/><stop offset="1" stop-color="#fff1c6" stop-opacity="0"/></radialGradient>
+<linearGradient id="body" x1="0" x2="0" y2="1"><stop stop-color="#f8fcff"/><stop offset=".48" stop-color="#dae8ee"/><stop offset="1" stop-color="#7c96a6"/></linearGradient>
+<linearGradient id="wing" x1="0" x2="0" y2="1"><stop stop-color="#e9f5fc"/><stop offset="1" stop-color="#7291a5"/></linearGradient>
+<linearGradient id="ground" x2="0" y2="1"><stop stop-color="#546c70"/><stop offset="1" stop-color="#172e3f"/></linearGradient>
+<filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+<filter id="shadow" x="-30%" y="-50%" width="160%" height="210%"><feDropShadow dx="3" dy="16" stdDeviation="15" flood-color="#091d2e" flood-opacity=".52"/></filter>
+</defs>
+<rect width="1600" height="900" fill="url(#sky)"/>
+<circle cx="1180" cy="205" r="290" fill="url(#sun)"/>
+<path d="M0 420q190-80 370 0t350-10 360-17 520 50" fill="none" stroke="#fff" stroke-opacity=".19" stroke-width="40" filter="url(#blur)"/>
+<path d="M0 550 190 455 350 527 510 430 690 520 870 405 1050 505 1210 410 1380 505 1600 440v460H0Z" fill="#254b67" opacity=".38"/>
+<path d="M0 630 240 535 390 602 590 510 760 595 1000 510 1220 610 1405 530 1600 615v285H0Z" fill="#1b3f5a" opacity=".58"/>
+<path d="M0 680Q430 621 770 670T1600 651v249H0Z" fill="url(#ground)"/>
+<path d="M0 830 650 686h300l650 144v70H0Z" fill="#223548"/>
+<path d="M779 707h42v193h-42z" fill="#eadfbf" opacity=".45"/>
+<path d="M795 733h10v65h-10zM795 833h10v67h-10z" fill="#ffefc5"/>
+<g opacity=".58" fill="#e7eff3" transform="translate(190 298) scale(.58)">
+<path d="M-160 0 160 0l60 9-60 11H-160l-65-9Z"/><path d="M-10-22h20l8 45H-18Z"/><path d="M-205 0l-50-16 11-6 68 22 63 3Z"/><path d="M110 0l62-16 13 5-43 16Z"/>
+</g>
+<g opacity=".64" transform="translate(1260 294) scale(.72)" fill="#dce9f0">
+<path d="M-75 2q-13-36 6-57t63-18q49 9 54 44L28 4Z"/><path d="M30-12 165-2l21 8-151 2Z"/><path d="M-40-59v-24h5v24Z"/><path d="M-147-85h240v5h-240Z"/><path d="M-60 9h70l13 15h-103Z" fill="none" stroke="#dce9f0" stroke-width="8"/><path d="M155-2v-38h6v38Z"/>
+</g>
+<g transform="translate(720 510) rotate(-6)" filter="url(#shadow)">
+<path d="M-525 15-210-57H235L536 21 240 37-208 42Z" fill="url(#wing)" stroke="#effaff" stroke-width="7" stroke-linejoin="round"/>
+<path d="M-365 30 55 35l-103 85-105 14Z" fill="#7695a9" opacity=".8"/>
+<path d="M-370-7q-20-35 14-47 180-35 400-23 139 1 305 42 42 17 40 35-10 26-68 29H-317q-42-6-53-36Z" fill="url(#body)" stroke="#f4fcff" stroke-width="5"/>
+<path d="M-254-53q135-20 233-24L-44-9H-250Z" fill="#174e75" stroke="#87b7d0" stroke-width="7"/>
+<path d="M-34-76h95L85-6H-13Z" fill="#195576" stroke="#87b7d0" stroke-width="7"/>
+<path d="M208-53 294-185l38-2-18 139Z" fill="url(#wing)" stroke="#dbeaf0" stroke-width="7"/>
+<path d="M260-12 374-78l81 8-130 89Z" fill="#d1e7f0" stroke="#c8e2f0" stroke-width="6"/>
+<path d="M-358-17 379-6" stroke="#e79745" stroke-width="11"/>
+<path d="M-176 32v32m400-18v29" stroke="#2b3844" stroke-width="13"/>
+<circle cx="-176" cy="74" r="26" fill="#172738" stroke="#80909b" stroke-width="8"/>
+<circle cx="224" cy="76" r="25" fill="#172738" stroke="#80909b" stroke-width="8"/>
+<path d="M-355-45v90m-45-44h86" stroke="#dce8e9" stroke-width="8" stroke-linecap="round"/>
+<circle cx="-357" cy="-1" r="16" fill="#183e58"/>
+</g>
+<rect y="840" width="1600" height="60" fill="#13283a" opacity=".48"/>
+</svg>
