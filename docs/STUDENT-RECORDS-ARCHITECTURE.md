@@ -100,3 +100,14 @@ The initial CI pipeline `.github/workflows/training-api.yml` provisions a dispos
 **Next deployment gate:** a separate restricted staging host, managed private database, reproducible lockfile, least-privilege migration/service DB roles, HTTPS same-origin private frontend, password recovery and staff MFA, and a targeted security/privacy review. For now this is a testing foundation, **not** a service suitable for real students or live enrolment. No regulatory approval is implied.
 
 See [training API setup and limitations](../services/training-api/README.md).
+
+
+## Engineering update — Same-origin staging dashboard and public-site isolation
+
+**Built and tested in source code, not publicly hosted:** `services/training-api/portal/` now contains a responsive learner and instructor dashboard. It is served only by the independent training API at `/portal/`, using the same origin as its authenticated endpoints. The student workspace permits individual **unverified** practice-report submission and viewing of the student's own summaries; the instructor workspace lists **assigned students only** and creates **unsigned** feedback drafts. Login uses server-side opaque session cookies and CSRF validation. The frontend neither stores passwords nor caches learner records in browser storage.
+
+The Training API Security Checks workflow includes a Chromium browser suite that exercises the actual HTTP handler using fictional staging identities. It confirms login, logout, report submission, instructor role restrictions, student ownership, assignment-scoped feedback and mobile layout. The separate isolated PostgreSQL suite still verifies database-scoped permissions, idempotency and assignment revocation.
+
+**Critical public-release boundary:** GitHub Pages previously packaged the entire repository; it now runs `scripts/build-pages.mjs` to publish only approved public site files. `scripts/test-pages-package.mjs` checks that backend code, private portal assets, service configuration and internal documents are absent from the Pages artifact. Repository source itself may still be publicly accessible, so **never commit secrets or real student data**.
+
+This does **not** make the Academy production-ready. The staging dashboard is not hosted on a secure public backend, no real learners are registered, no production credential issuance or verified instructor accreditation exists, and no training credit is given. Before any real learner access: implement email verification, staff MFA, protected hosting, least-privilege database roles, audit hardening, data governance, instructor qualification verification, backup/restore and security/privacy review.
