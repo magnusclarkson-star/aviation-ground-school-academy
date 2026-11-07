@@ -35,6 +35,7 @@ class FakeStore{
   this.mfaSteps=new Map();
   this.verified=new Set([studentA,instructorA,unassignedInstructor,instructorB]);
   this.inviteHash=null;
+  this.aiCalls=new Map();
  }
  async ping(){return true}
  async lookupLogin(email,slug){
@@ -60,6 +61,13 @@ class FakeStore{
   return actor&&this.verified.has(actor.userId)?actor:null;
  }
  async revokeSession(hash){this.sessions.delete(hash)}
+ async reserveAiUsage(actor,kind,maxCount){
+  const key=actor.organizationId+"|"+actor.userId+"|"+kind;
+  const used=this.aiCalls.get(key)||0;
+  if(used>=maxCount)return false;
+  this.aiCalls.set(key,used+1);
+  return true;
+ }
  async createAttempt(actor,key,digest,report){
   const prev=this.attempts.find(x=>x.organizationId===actor.organizationId&&x.studentId===actor.userId&&x.key===key);
   if(prev)return {created:false,conflict:prev.digest!==digest,id:prev.id,submittedAt:prev.submittedAt};
