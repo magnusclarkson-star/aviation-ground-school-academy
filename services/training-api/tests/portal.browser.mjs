@@ -4,6 +4,8 @@ import {randomUUID} from "node:crypto";
 import {chromium} from "playwright";
 import {createHandler} from "../src/http.mjs";
 import {hashPassword} from "../src/crypto.mjs";
+import {totpAtStep} from "../src/mfa.mjs";
+const demoTotpSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 
 const org=randomUUID(),student=randomUUID(),teacher=randomUUID(),unassigned=randomUUID();
 const password="staging-only-password-2026";
@@ -21,11 +23,16 @@ class FakeStore{
    ["pilot.teacher@example.org",{userId:teacher,organizationId:org,role:"instructor",passwordHash}],
    ["pilot.unassigned@example.org",{userId:unassigned,organizationId:org,role:"instructor",passwordHash}]
   ]);
-  this.sessions=new Map();this.attempts=[];this.drafts=[];
+  this.sessions=new Map();this.attempts=[];this.drafts=[];this.mfaSteps=new Map();
  }
  async ping(){return true}
  async recordLoginAttempt(){return true}
  async lookupLogin(email,slug){return slug==="agsa-pilot"&&this.accounts.has(email)?{...this.accounts.get(email),email}:null}
+ async consumeInstructorOtp({userId,code}){
+  const step=Math.floor(Date.now()/30000);
+  if(code!==totpAtStep(demoTotpSecret,step)||step<=(this.mfaSteps.get(userId)??-1))return false;
+  this.mfaSteps.set(userId,step);return true;
+ }
  async createSession({tokenHash,csrfHash,userId,organizationId}){
   const item=[...this.accounts.entries()].find(([,v])=>v.userId===userId);
   this.sessions.set(tokenHash,{userId,organizationId,csrfHash,role:item[1].role,email:item[0]});
@@ -64,7 +71,7 @@ let handler=null;
 const server=createServer((req,res)=>handler(req,res));
 await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve);});
 const base="http://127.0.0.1:"+server.address().port;
-handler=createHandler(store,{publicOrigin:base,nodeEnv:"test",allowInsecureLocal:true,
+handler=createHandler(store,{publicOrigin:base,nodeEnv:"test",allowInsecureLocal:true,mfaKey:Buffer.alloc(32,2),
  logError:e=>{throw e}});
 const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const pageErrors=[];
@@ -72,6 +79,8 @@ async function login(page,email){
  await page.locator("#organization").fill("agsa-pilot");
  await page.locator("#email").fill(email);
  await page.locator("#password").fill(password);
+ if(email.includes("teacher")||email.includes("unassigned"))
+  await page.locator("#verificationCode").fill(totpAtStep(demoTotpSecret,Math.floor(Date.now()/30000)));
  await page.locator("#loginButton").click();
  await page.locator("#profileEmail").waitFor({state:"visible"});
  assert.equal(await page.locator("#profileEmail").textContent(),email);
@@ -109,7 +118,15 @@ try{
  await desktop.locator("#logoutButton").click();
  await desktop.locator("#loginPanel").waitFor({state:"visible"});
  assert.equal((await desktop.request.get(base+"/api/v1/me")).status(),401);
+ // An instructor password without an authenticator code must not work.
+ await desktop.locator("#organization").fill("agsa-pilot");
+ await desktop.locator("#email").fill("pilot.teacher@example.org");
+ await desktop.locator("#password").fill(password);
+ await desktop.locator("#loginButton").click();
+ await desktop.waitForFunction(()=>document.querySelector("#globalStatus").textContent.includes("Sign-in unsuccessful"));
+ assert.equal(await desktop.locator("#workspace").isVisible(),false);
  await login(desktop,"pilot.teacher@example.org");
+ assert.equal(await desktop.locator("#verificationCode").inputValue(),"","MFA code cleared after login");
  assert.equal(await desktop.locator("#studentPanel").isVisible(),false);
  assert.equal(await desktop.locator("#instructorPanel").isVisible(),true);
  assert.equal((await desktop.request.get(base+"/api/v1/practice-attempts")).status(),403);
