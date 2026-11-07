@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071725">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="description" content="Private staging learner and instructor practice portal. No official assessments or training credit.">
+<title>Private Training Portal — AGSA Staging</title>
+<link rel="stylesheet" href="/portal/styles.css">
+<script src="/portal/app.js" defer></script>
+</head>
+<body>
+<header class="masthead">
+ <a class="identity" href="/portal/" aria-label="Academy private staging portal home">
+  <span class="emblem" aria-hidden="true">✈</span>
+  <span><strong>Aviation Ground School Academy</strong><small>PRIVATE TRAINING WORKSPACE</small></span>
+ </a>
+ <span class="edition">STAGING ONLY · NOT ACCREDITED</span>
+</header>
+<main>
+ <div class="intro">
+  <p class="eyebrow">SECURE ACCOUNT FOUNDATION · DEMONSTRATION</p>
+  <h1>Training records workspace</h1>
+  <p>Practise the student submission and assigned-instructor feedback workflow in a private, same-origin environment. The simulated results are not verified proficiency, flight hours or qualifications.</p>
+ </div>
+ <div class="warning" role="note"><strong>Use fictional staging accounts and synthetic training reports only.</strong> No verified student registration, school approval, instructor licensing or formal sign-off is available. Do not enter real student information.</div>
+
+ <section id="loadingPanel" class="panel" aria-label="Checking sign-in status"><div class="loading-dot" aria-hidden="true"></div><p>Checking your staging session…</p></section>
+ <section id="loginPanel" class="panel sign-in hidden" aria-labelledby="signInTitle">
+  <div class="panel-heading"><div><span class="kicker">ACCOUNT ACCESS</span><h2 id="signInTitle">Sign in to staging</h2><p>Accounts must be provisioned by a trusted staging operator. Self-registration is disabled.</p></div><span class="icon-plate" aria-hidden="true">⌁</span></div>
+  <form id="loginForm">
+   <label for="organization">Organisation code</label>
+   <input id="organization" name="organization" type="text" minlength="2" maxlength="63" pattern="[a-z0-9][a-z0-9-]{1,62}" autocomplete="organization" placeholder="e.g. agsa-pilot" required>
+   <label for="email">Email address</label>
+   <input id="email" name="email" type="email" maxlength="254" autocomplete="username" placeholder="fictional.student@example.org" required>
+   <label for="password">Password</label>
+   <input id="password" name="password" type="password" maxlength="128" minlength="12" autocomplete="current-password" required>
+   <button id="loginButton" class="primary" type="submit">Sign in</button>
+  </form>
+ </section>
+ <section id="workspace" class="hidden" aria-label="Role-specific workspace">
+  <div class="profilebar panel">
+   <div><span class="kicker">SIGNED-IN STAGING ACCOUNT</span><strong id="profileEmail">—</strong><p id="profileRole">—</p></div>
+   <div class="profile-actions"><span id="profileStatus" class="small-tag">UNACCREDITED DEMO</span><button id="logoutButton" type="button">Sign out</button></div>
+  </div>
+  <section id="studentPanel" class="hidden" aria-labelledby="studentTitle">
+   <div class="section-header"><div><span class="kicker">STUDENT AREA</span><h2 id="studentTitle">My practice attempts</h2><p>Upload a self-practice JSON report generated in the separate public cockpit. The server accepts a narrow unverified summary only.</p></div></div>
+   <div class="columns">
+    <div class="panel">
+     <h3>Submit an unofficial report</h3>
+     <p class="muted">The file is not uploaded as an attachment. A small, validated summary is retained in this private staging database and associated with your signed-in account.</p>
+     <form id="submissionForm">
+      <label for="reportFile">AGSA skills-practice JSON</label>
+      <input id="reportFile" type="file" name="reportFile" accept=".json,application/json" required>
+      <p class="hint">Maximum 32 KB. No names, IDs, addresses or unrelated attachments.</p>
+      <button id="submitButton" class="primary" type="submit">Submit unverified practice</button>
+     </form>
+     <div id="submissionStatus" class="status" role="status" aria-live="polite">Choose an exported practice report.</div>
+    </div>
+    <div class="panel">
+     <div class="section-line"><h3>My submissions</h3><button id="refreshStudent" type="button" class="subtle-button">Refresh</button></div>
+     <div id="studentList" class="item-list"><p class="muted">No records loaded.</p></div>
+    </div>
+   </div>
+  </section>
+  <section id="instructorPanel" class="hidden" aria-labelledby="instructorTitle">
+   <div class="section-header"><div><span class="kicker">INSTRUCTOR AREA</span><h2 id="instructorTitle">Assigned practice review</h2><p>View only learners assigned to your current organisation. All feedback remains an unverified draft and cannot issue training credit.</p></div></div>
+   <div class="columns">
+    <div class="panel">
+     <div class="section-line"><h3>Assigned attempts</h3><button id="refreshInstructor" type="button" class="subtle-button">Refresh</button></div>
+     <div id="assignedList" class="item-list"><p class="muted">No assigned attempts loaded.</p></div>
+     <div id="selectedAttempt" class="selected-info hidden"><h4>Selected simulated report</h4><dl>
+       <div><dt>Task</dt><dd id="selectedTask">—</dd></div>
+       <div><dt>Claimed score</dt><dd id="selectedScore">—</dd></div>
+       <div><dt>Attempt ID</dt><dd id="selectedId">—</dd></div>
+      </dl><p>Source: editable and unverified browser report. Do not treat this as an approved assessment.</p></div>
+    </div>
+    <div>
+     <section class="panel" aria-labelledby="draftTitle">
+      <h3 id="draftTitle">Create feedback draft</h3>
+      <p class="muted">Select an assigned attempt first. The API checks the assignment again when saving.</p>
+      <form id="feedbackForm">
+       <label for="rubricScan">Instrument scanning</label>
+       <select id="rubricScan"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Needs discussion</option><option value="practice-recommended">Further practice recommended</option></select>
+       <label for="rubricControl">Control coordination</label>
+       <select id="rubricControl"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Needs discussion</option><option value="practice-recommended">Further practice recommended</option></select>
+       <label for="rubricRisk">Safety and decisions</label>
+       <select id="rubricRisk"><option value="not-reviewed">Not reviewed</option><option value="needs-discussion">Needs discussion</option><option value="practice-recommended">Further practice recommended</option></select>
+       <label for="comments">Draft comments</label>
+       <textarea id="comments" maxlength="1200" rows="4" placeholder="Discussion only — no signed evaluation"></textarea>
+       <label for="nextAction">Proposed next practice activity</label>
+       <textarea id="nextAction" maxlength="600" rows="3" placeholder="For example, repeat a synthetic coordinated-turn task"></textarea>
+       <button id="feedbackButton" class="primary" type="submit" disabled>Save unverified feedback draft</button>
+      </form>
+      <div id="feedbackStatus" class="status" role="status" aria-live="polite">Choose an assigned attempt before drafting.</div>
+     </section>
+     <section class="panel">
+      <div class="section-line"><h3>My draft feedback</h3><button id="refreshFeedback" class="subtle-button" type="button">Refresh</button></div>
+      <div id="feedbackList" class="item-list"><p class="muted">No feedback drafts loaded.</p></div>
+     </section>
+    </div>
+   </div>
+  </section>
+ </section>
+ <div id="globalStatus" class="status hidden" role="status" aria-live="polite"></div>
+ <footer>
+  <p>Training API private staging interface. No public registration, course approval, official exam results, simulator qualification, licence or flight-time credit is offered.</p>
+ </footer>
+</main>
+</body>
+</html>
