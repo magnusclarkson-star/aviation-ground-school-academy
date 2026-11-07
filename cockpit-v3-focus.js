@@ -6,11 +6,11 @@
 const $=id=>document.getElementById(id);
 const spec={
  asi:{controls:["throttle","yoke","flaps"],hint:"Airspeed: advance or reduce throttle, change the pitch with the yoke, or select flaps. Watch the needle change over time."},
- att:{controls:["yoke","throttle"],hint:"Attitude: move the yoke sideways for bank or vertically for pitch. Throttle changes power, but not the attitude directly."},
- alt:{controls:["yoke","throttle"],hint:"Altitude: use the yoke for pitch and throttle for power. A climb or descent gradually changes the altimeter hands."},
- tc:{controls:["yoke","rudder"],hint:"Turn coordinator: command a bank using the yoke. Press and hold rudder to observe the simulated slip/skid ball."},
- hdg:{controls:["yoke","rudder"],hint:"Heading: bank with the yoke for a gradual heading change. Rudder also affects yaw in this simplified model."},
- vsi:{controls:["yoke","throttle"],hint:"Vertical speed: change pitch with the yoke and power with the throttle. The needle responds to the simulated climb or descent rate."}
+ att:{controls:["yoke","throttle","flaps"],hint:"Attitude: move the yoke sideways for bank or vertically for pitch. Throttle changes power, but not the attitude directly."},
+ alt:{controls:["yoke","throttle","flaps"],hint:"Altitude: use the yoke for pitch and throttle for power. A climb or descent gradually changes the altimeter hands."},
+ tc:{controls:["yoke","rudder","flaps"],hint:"Turn coordinator: command a bank using the yoke. Press and hold rudder to observe the simulated slip/skid ball."},
+ hdg:{controls:["yoke","rudder","flaps"],hint:"Heading: bank with the yoke for a gradual heading change. Rudder also affects yaw in this simplified model."},
+ vsi:{controls:["yoke","throttle","flaps"],hint:"Vertical speed: change pitch with the yoke and power with the throttle. The needle responds to the simulated climb or descent rate."}
 };
 const origins=new Map();
 let initialized=false, chosen="asi";
@@ -72,7 +72,7 @@ function dock(index,instruments){
  dialDock.appendChild(dial);
  for(const key of item.controls)controlDock.appendChild($("control-"+key));
  $("focusControlsTitle").textContent="Relevant controls — "+instruments[index][1];
- $("focusControlsHint").textContent=item.hint;
+ $("focusControlsHint").textContent=item.hint+" Flap selection is always available, although a flap change does not directly change every instrument.";
  chosen=id;
  highlight(index,instruments);
  update();
@@ -82,7 +82,7 @@ function dockDigital(index,instruments,page){
  const chosenId=instruments[index][0];
  let keys,title,hint;
  if(page==="map"){
-   keys=["yoke","rudder","throttle"];
+   keys=["yoke","rudder","throttle","flaps"];
    title="Navigation map — change aircraft track";
    hint="Bank with the yoke, apply rudder or change power. The synthetic ground track responds as the aircraft travels forward.";
  }else if(page==="engine"){
@@ -100,7 +100,7 @@ function dockDigital(index,instruments,page){
  const target=$("digitalControlDock");
  for(const key of keys)target.appendChild($("control-"+key));
  $("digitalControlsTitle").textContent=title;
- $("digitalControlsHint").textContent=hint;
+ $("digitalControlsHint").textContent=hint+" Flaps remain selectable on every digital page; their primary model effect is on airspeed.";
  $("digitalFocusSelector").classList.toggle("hidden",page!=="pfd");
  highlight(index,instruments);
 }
