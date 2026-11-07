@@ -16,3 +16,5 @@ jobs:
           node-version: '22'
       - run: node scripts/check-site.mjs
       - run: node --check academy-brand.js
+      - run: node --check flight-lab-v2.js
+      - run: node scripts/test-flight-lab.mjs
