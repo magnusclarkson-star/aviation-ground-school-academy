@@ -1,6 +1,10 @@
-# Skyward Aviation Ground School Academy — V1 Prototype
+# Aviation Ground School Academy — V1 Prototype
 
 A standalone, responsive aviation ground school learning app. This project is **separate from Salone One**.
+
+## Branding
+
+Selected logo: blue-and-gold aircraft, open book and graduation cap, with *Learn by Doing* tagline. A compact embedded web icon is loaded by `academy-brand.js` across academy pages.
 
 ## Run
 
