@@ -1,0 +1,14 @@
+{
+  email {$AGSA_ACME_EMAIL}
+}
+{$AGSA_STAGE_HOST} {
+  encode zstd gzip
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+    Strict-Transport-Security "max-age=31536000"
+  }
+  @ready path /api/v1/ready
+  respond @ready "Not found" 404
+  reverse_proxy api:3100
+}
