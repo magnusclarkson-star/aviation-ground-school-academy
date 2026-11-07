@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {chromium} from "playwright";
 import {createHandler} from "../src/http.mjs";
 import {hashPassword} from "../src/crypto.mjs";
-import {totpAtStep} from "../src/mfa.mjs";
+import {totpAtStep,checkTotp} from "../src/mfa.mjs";
 const demoTotpSecret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 
 const org=randomUUID(),student=randomUUID(),teacher=randomUUID(),unassigned=randomUUID();
@@ -29,8 +29,8 @@ class FakeStore{
  async recordLoginAttempt(){return true}
  async lookupLogin(email,slug){return slug==="agsa-pilot"&&this.accounts.has(email)?{...this.accounts.get(email),email}:null}
  async consumeInstructorOtp({userId,code}){
-  const step=Math.floor(Date.now()/30000);
-  if(code!==totpAtStep(demoTotpSecret,step)||step<=(this.mfaSteps.get(userId)??-1))return false;
+  const step=checkTotp(demoTotpSecret,code,Date.now(),this.mfaSteps.get(userId)??-1);
+  if(step===null)return false;
   this.mfaSteps.set(userId,step);return true;
  }
  async createSession({tokenHash,csrfHash,userId,organizationId}){
