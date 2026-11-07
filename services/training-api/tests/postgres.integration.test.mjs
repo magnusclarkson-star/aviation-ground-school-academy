@@ -26,11 +26,43 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
      VALUES($1,$3,'AGSA Fake Training Org One','SL'),($2,$4,'AGSA Fake Training Org Two','SL')`,
     [org1,org2,"test-org-one-"+suffix,"test-org-two-"+suffix]);
   for(const [i,id] of users.entries()){
-   await pool.query("INSERT INTO users(id,email,password_hash) VALUES($1,$2,$3)",[id,"staging-"+i+"-"+suffix+"@example.org",pw]);
+   await pool.query("INSERT INTO users(id,email,password_hash,email_verified_at) VALUES($1,$2,$3,now()-interval '1 minute')",[id,"staging-"+i+"-"+suffix+"@example.org",pw]);
   }
   for(const [id,org,role] of [[student1,org1,"student"],[student2,org1,"student"],[teacher1,org1,"instructor"],[teacher2,org1,"instructor"],[outsider,org2,"instructor"]]){
    await pool.query("INSERT INTO memberships(user_id,organization_id,role) VALUES($1,$2,$3)",[id,org,role]);
   }
+  await pool.query("UPDATE users SET email_verified_at=NULL WHERE id=$1",[student2]);
+  const studentTwoEmail="staging-1-"+suffix+"@example.org";
+  assert.equal(await db.lookupLogin(studentTwoEmail,"test-org-one-"+suffix),null,
+    "unverified staging account must not pass login lookup");
+  const oldStudentSession=hashSha256(generateSecret());
+  await db.createSession({tokenHash:oldStudentSession,csrfHash:hashSha256(generateSecret()),
+   userId:student2,organizationId:org1,expiresAt:new Date(Date.now()+3600000)});
+  assert.equal(await db.getSession(oldStudentSession),null,
+   "a pre-verification session cannot access private data");
+  const staleToken=generateSecret();
+  await pool.query(`INSERT INTO email_verification_challenges(user_id,token_hash,issued_at,expires_at)
+   VALUES($1,$2,now()-interval '60 minutes',now()-interval '30 minutes')`,[student2,hashSha256(staleToken)]);
+  assert.equal(await db.consumeEmailVerification(hashSha256(staleToken)),false,
+   "expired invitations must fail");
+  const inviteToken=generateSecret(),inviteHash=hashSha256(inviteToken);
+  await pool.query(`INSERT INTO email_verification_challenges(user_id,token_hash,expires_at)
+   VALUES($1,$2,now()+interval '30 minutes')`,[student2,inviteHash]);
+  const verified=await Promise.all([
+   db.consumeEmailVerification(inviteHash),db.consumeEmailVerification(inviteHash)
+  ]);
+  assert.deepEqual(verified.sort(),[false,true],"concurrent email token replay cannot succeed twice");
+  assert.equal(await db.consumeEmailVerification(inviteHash),false,"token must stay single-use");
+  assert.equal((await db.lookupLogin(studentTwoEmail,"test-org-one-"+suffix)).userId,student2);
+  assert.equal(await db.getSession(oldStudentSession),null,
+   "previously issued session must not become valid after email verification");
+  const newStudentSession=hashSha256(generateSecret());
+  await db.createSession({tokenHash:newStudentSession,csrfHash:hashSha256(generateSecret()),
+   userId:student2,organizationId:org1,expiresAt:new Date(Date.now()+3600000)});
+  assert.equal((await db.getSession(newStudentSession)).userId,student2);
+  const verifiedEvents=await pool.query(`SELECT COUNT(*)::integer AS count FROM audit_events
+   WHERE actor_user_id=$1 AND action='auth.email.verify'`,[student2]);
+  assert.equal(verifiedEvents.rows[0].count,1,"email verification records exactly one audit event");
   const mfaKey=Buffer.alloc(32,19);
   const totpSecret="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
   const step=Math.floor(Date.now()/30000),otp=totpAtStep(totpSecret,step);
@@ -144,6 +176,7 @@ test("isolated PostgreSQL enforces student scoping and assigned-instructor write
    await pool.query("DELETE FROM sessions WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM instructor_assignments WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM instructor_mfa WHERE organization_id = ANY($1::uuid[])",[orgs]);
+   await pool.query("DELETE FROM email_verification_challenges WHERE user_id = ANY($1::uuid[])",[users]);
    await pool.query("DELETE FROM memberships WHERE organization_id = ANY($1::uuid[])",[orgs]);
    await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])",[users]);
    await pool.query("DELETE FROM organizations WHERE id = ANY($1::uuid[])",[orgs]);
