@@ -66,3 +66,9 @@ Before enabling staff access, run both migrations and grant the updated `instruc
 For instructor sign-in, the API checks password then requires the authenticator code. It never issues an instructor session for a missing seed, wrong code or replayed time step. Students remain password-authenticated staging accounts, not identity-verified real learners.
 
 **Not done:** provider-backed email delivery and verification, instructor qualification verification, phishing-resistant staff WebAuthn, MFA recovery, real user data protection/governance and a deployed hostname. The addition of TOTP does **not** confer accreditation or make the staging API ready for real learner records.
+
+### MFA upgrade behaviour for existing fictional staging accounts
+
+When `002_instructor_mfa.sql` is applied, the new `sessions.mfa_verified_at` field defaults to NULL. **Older instructor sessions are invalidated** by the API's database session query, even if the cookie has not expired. Instructors must receive their operator-enrolled TOTP secret and sign in again using both password and authenticator code. Students' existing session logic remains unchanged. Operators should verify this migration on a disposable staging database before applying it anywhere else.
+
+OTP seed backups must be encrypted and separately protected; if the encryption key or authenticator is lost, no recovery or bypass exists in this prototype. Do not rotate the key or edit `instructor_mfa` records manually without a separately documented, verified identity-recovery workflow.
