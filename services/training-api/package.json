@@ -1,6 +1,6 @@
 {
   "name": "agsa-training-api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,7 +10,7 @@
     "start": "node src/server.mjs",
     "migrate": "node scripts/migrate.mjs",
     "provision": "node scripts/provision.mjs",
-    "test": "node --test tests/validation.test.mjs tests/http.test.mjs tests/mfa.test.mjs tests/invites.test.mjs tests/grants.test.mjs",
+    "test": "node --test tests/validation.test.mjs tests/http.test.mjs tests/mfa.test.mjs tests/invites.test.mjs tests/grants.test.mjs tests/ai.test.mjs",
     "test:integration": "node --test tests/postgres.integration.test.mjs tests/grants.test.mjs",
     "test:all": "node --test tests/*.test.mjs",
     "invite": "node scripts/send-invite.mjs"
