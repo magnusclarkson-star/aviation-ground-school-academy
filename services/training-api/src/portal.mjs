@@ -5,7 +5,8 @@ import {readFile} from "node:fs/promises";
 const ASSETS=new Map([
  ["/portal/",{file:new URL("../portal/index.html",import.meta.url),type:"text/html; charset=utf-8"}],
  ["/portal/styles.css",{file:new URL("../portal/styles.css",import.meta.url),type:"text/css; charset=utf-8"}],
- ["/portal/app.js",{file:new URL("../portal/app.js",import.meta.url),type:"text/javascript; charset=utf-8"}]
+ ["/portal/app.js",{file:new URL("../portal/app.js",import.meta.url),type:"text/javascript; charset=utf-8"}],
+ ["/portal/realtime.js",{file:new URL("../portal/realtime.js",import.meta.url),type:"text/javascript; charset=utf-8"}]
 ]);
 export function isPortalPath(path){return path==="/portal"||ASSETS.has(path);}
 export async function servePortal(path,res,{secure=false}={}){
