@@ -2,6 +2,7 @@ import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordC
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
 import {isPortalPath,servePortal} from "./portal.mjs";
 import {verifyTokenFormat} from "./invites.mjs";
+import {REALTIME_LIMITS,realtimeEnabled,validateRealtimeRequest,createRealtimeCall,RealtimeCallRegistry} from "./realtime-voice.mjs";
 import {validateTutorRequest,validateVoiceRequest,askTutor,synthesizeTutorSpeech,aiFlags,AI_LIMITS} from "./ai-tutor.mjs";
 const MAX_JSON_BYTES=32*1024;
 const SESSION_MS=6*60*60*1000;
@@ -78,6 +79,9 @@ export function createHandler(store,config={}){
  const name=localMode?"agsa_local_session":"__Host-AGSA";
  const csrfName=localMode?"agsa_local_csrf":"__Host-AGSA-CSRF";
  const secure=!localMode;
+ const realtimeRegistry=config.realtimeRegistry||new RealtimeCallRegistry({
+  env:config.aiEnv||{},request:config.aiRequest||fetch
+ });
  async function authenticate(req){
   const cookies=parseCookies(req.headers.cookie);
   const token=cookies&&cookies[name];
@@ -179,7 +183,10 @@ export function createHandler(store,config={}){
    const session=await authenticate(req),actor=session.actor;
    if(method==="GET"&&pathname==="/api/v1/ai/status"){
     json(res,200,{
-     ...aiFlags(config.aiEnv||{}),limits:AI_LIMITS,
+     ...aiFlags(config.aiEnv||{}),
+     realtimeEnabled:realtimeEnabled(config.aiEnv||{}),
+     realtimeMaxSeconds:REALTIME_LIMITS.maxSeconds,
+     limits:{...AI_LIMITS,realtime:REALTIME_LIMITS.dailyCalls},
      availableTo:"verified staging accounts only",
      voiceDisclosure:"Synthetic AI voice; not a human instructor.",
      note:"No accredited flight training or operational advice. No public AI service is active until privately configured."
@@ -214,12 +221,45 @@ export function createHandler(store,config={}){
     });
     res.end(audio);return;
    }
+   if(method==="POST"&&pathname==="/api/v1/ai/realtime-connect"){
+    requireCsrf(req,session);
+    const input=validateRealtimeRequest(await bodyJson(req));
+    if(!realtimeEnabled(config.aiEnv||{}))
+     throw requestError(503,"realtime_unavailable","Two-way AI voice is not enabled for this private staging service");
+    const handle=realtimeRegistry.reserve(actor);
+    try{
+     if(!await store.reserveAiUsage(actor,"realtime",REALTIME_LIMITS.dailyCalls))
+      throw requestError(429,"realtime_daily_limit","Daily two-way AI voice session limit reached");
+     const created=await createRealtimeCall(input,actor,{
+      env:config.aiEnv,request:config.aiRequest||fetch
+     });
+     realtimeRegistry.activate(handle,created.callId);
+     json(res,200,{
+      sdp:created.sdp,handle,maxSeconds:created.maxSeconds,
+      mode:"REALTIME_AI_VOICE",voice:created.voice,
+      notice:"Audio is transmitted to an external AI provider. The voice is synthetic, not a human instructor. No accredited training credit."
+     });
+    }catch(e){
+     await realtimeRegistry.stop(handle);
+     throw e;
+    }
+    return;
+   }
+   if(method==="POST"&&pathname==="/api/v1/ai/realtime-end"){
+    requireCsrf(req,session);
+    const data=await bodyJson(req);
+    if(typeof data.handle!=="string"||! /^[A-Za-z0-9_-]{32}$/.test(data.handle))
+     throw requestError(400,"invalid_realtime_handle","Invalid voice session reference");
+    const stopped=await realtimeRegistry.stop(data.handle,actor);
+    json(res,200,{status:stopped?"ended":"already_ended"});return;
+   }
    if(method==="GET"&&pathname==="/api/v1/me"){
     json(res,200,{user:{id:actor.userId,email:actor.email,role:actor.role,organizationId:actor.organizationId},
      trainingStatus:"UNACCREDITED_STAGING_DEMO"});return;
    }
    if(method==="POST"&&pathname==="/api/v1/auth/logout"){
     requireCsrf(req,session);
+    await realtimeRegistry.stopForActor(actor);
     await store.revokeSession(session.tokenHash,actor);
     json(res,200,{status:"signed_out"},{"Set-Cookie":[
      cookie(name,"",secure,true,0),cookie(csrfName,"",secure,false,0)
