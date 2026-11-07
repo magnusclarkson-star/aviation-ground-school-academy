@@ -81,3 +81,14 @@ Private staging **must** run `sql/003_email_verification.sql` after migrations 0
 To enable invitation emails for **fictional accounts only**, an operator must separately set `AGSA_MAIL_PROVIDER=resend`, `AGSA_RESEND_API_KEY`, `AGSA_MAIL_FROM` (a provider-verified sender), and the exact HTTPS `AGSA_PUBLIC_ORIGIN`, all in a secret manager or protected terminal, never Git. Use `npm run invite -- <org-slug> <fictional-email>` under the provisioning DB role. Tokens are 30-minute, one-use, database-hashed and never printed by the CLI. Email delivery is not assumed to work until an end-to-end message and user confirmation has been tested on the private staging host.
 
 The portal uses a fragment-only invitation link and **explicit confirmation button**. The private API verifies the token atomically with narrowly delegated PostgreSQL function execution. Merely receiving an invite, or the provider accepting an email API request, does not mark the account verified. Verification of an email address is not verification of the person's identity or aviation teaching credentials.
+
+
+## Optional AI Instructor — separately controlled paid-provider release
+
+The public Academy's new [AI Instructor Studio](../../ai-instructor.html) uses browser/device voices and curated introductory teaching, with no API key or account. Never redirect the public GitHub Pages application to a private login cookie by disabling same-origin requirements.
+
+The private backend offers `/api/v1/ai/status`, `/api/v1/ai/ask` and `/api/v1/ai/voice`, all protected by existing staging session, consent and usage-limit constraints. All paid provider calls are **OFF** unless an operator explicitly configures `AGSA_AI_ENABLED=1` with a private `OPENAI_API_KEY`, then separately `AGSA_AI_VOICE_ENABLED=1` for generated voice. Keep these values in a secret manager, not Git. Database migration `004_ai_usage.sql` and updated least-privilege grants are required before enabling the service.
+
+Before any provider activation, verify billing limits, data-processing permissions, student/parent consent where necessary, moderation, privacy/retention rules, account abuse controls and real staging host isolation. The service allows no public AI requests and no AI-generated grades or official training records.
+
+**Temporary voice adapter warning:** the existing optional Speech API model is deprecated and planned to shut down 6 January 2027. Plan a Realtime API replacement before considering long-lived natural-voice deployment. Full architecture: [AI Instructor and Voice Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
