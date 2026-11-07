@@ -72,3 +72,23 @@ All actual OpenAI provider requests in automated tests are mocked, so **no live 
 ## Future instructor experience
 
 A later release can add optional low-latency two-way spoken tutoring using the provider Realtime API and **instructor-reviewed** topic-specific knowledge, with separately approved curriculum versions, verified user eligibility and a clear distinction between AI guidance and human instruction. Do not misrepresent current training devices, AI teachers or assessment tools as FAA/EASA-authorised.
+
+
+## Next upgrade — Two-way WebRTC AI flight-theory tutoring
+
+The separate private staging dashboard now contains a **start/mute/end two-way voice tutor** using a microphone, an AI-generated voice and optional response transcript. The public `ai-instructor.html` stays curated and works with browser speech even when no provider account exists.
+
+**Backend flow:**
+1. A fictional, verified staging account explicitly agrees to external voice processing and presses Start. Only then does the browser request microphone permission.
+2. The browser negotiates a local WebRTC offer and posts the bounded SDP plus a curated topic, teaching style and synthetic-voice choice to `POST /api/v1/ai/realtime-connect` on the authenticated **same origin**, with CSRF validation.
+3. The server validates input, reserves one of **two voice sessions per UTC day** atomically in PostgreSQL, and sends a multipart SDP + server-owned session configuration to **`POST https://api.openai.com/v1/realtime/calls`** using a private API key and hashed safety identifier.
+4. A generated SDP answer is returned to the browser. Microphone audio and synthetic responses travel over WebRTC, not through an Academy recording database; JSON speech status and generated output transcript events travel over the data channel. The browser does **not** receive a provider API key or reusable ephemeral provider token.
+5. The learner can mute, unmute or end the conversation. A server in-memory registry limits active calls per user, ends them on logout or stop, and **attempts provider-side hangup after 120 seconds**. The browser also ends the call at the two-minute limit and releases microphone tracks when leaving the page.
+
+The server fixes the model to `gpt-realtime-2.1-mini`, educational instructions, speaker voice allowlist and single-response output token budget. The model is a synthetic educational tool, not a qualified human instructor; it cannot verify flight proficiency or issue official grades. It may be inaccurate. Do not use during real flight, for clearances, aircraft operating limitations or go/no-go decisions.
+
+**Activation requires explicit private operator approval:** `AGSA_AI_ENABLED=1`, `AGSA_AI_REALTIME_ENABLED=1`, `AGSA_AI_REALTIME_STAGING_APPROVED=1`, plus a valid privately managed `OPENAI_API_KEY` and an isolated HTTPS staging environment. Without these, the connect endpoint returns unavailable and the public lesson/voice alternative remains accessible. None of these keys has been configured; tests simulate the upstream provider.
+
+**Limitations and production gates:** This is deliberately a private staging implementation, not a deployed commercial AI school or guaranteed expense ceiling. The server's call-expiry timers are process-local; a server restart or provider hangup failure can leave an external call running. Two daily reservations limit *new* attempts but cannot independently cap token usage of an already connected call. Before involving real students, add provider-enforced spend limits, durable server call tracking and expiry, media safety review, access/age verification, instructor oversight, model evaluation and approved educational content. Audio handling and retention are also subject to the provider's terms; do not claim audio is stored only locally. The application does not persist transcripts in the Academy practice database.
+
+Official protocol references: [Realtime WebRTC](https://developers.openai.com/api/docs/guides/voice-webrtc), [Realtime Conversations](https://developers.openai.com/api/docs/guides/realtime-conversations), [Provider Hangup API](https://developers.openai.com/api/reference/resources/realtime/subresources/calls/methods/hangup).
