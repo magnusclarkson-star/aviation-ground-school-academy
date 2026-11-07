@@ -45,12 +45,8 @@ jobs:
           for file in services/training-api/src/*.mjs services/training-api/scripts/*.mjs services/training-api/tests/*.mjs; do
             node --check "$file"
           done
-      - name: Install the pinned PostgreSQL client
-        run: npm install --prefix services/training-api --no-package-lock --no-audit --ignore-scripts
-      - name: Generate one-time reviewed dependency lock candidate
-        run: |
-          npm install --prefix services/training-api --package-lock-only --ignore-scripts --no-audit --no-fund
-          node -e "const fs=require('node:fs');console.log('AGSA_LOCK_BEGIN');console.log(fs.readFileSync('services/training-api/package-lock.json').toString('base64'));console.log('AGSA_LOCK_END')"
+      - name: Install exact backend dependencies from reviewed lockfile
+        run: npm ci --prefix services/training-api --ignore-scripts --no-audit --no-fund
       - name: Migrate isolated CI database
         run: node services/training-api/scripts/migrate.mjs
       - name: Test authentication isolation and real database behavior
