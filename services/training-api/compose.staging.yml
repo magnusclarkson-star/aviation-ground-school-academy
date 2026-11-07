@@ -1,0 +1,56 @@
+# Operator-configured staging: requires a valid public staging DNS name,
+# HTTPS certificate issuance, isolated managed PostgreSQL with verified TLS,
+# and an ignored local .env.staging for DATABASE_URL.
+# NO default student accounts or real school data.
+services:
+  gateway:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      AGSA_STAGE_HOST: ${AGSA_STAGE_HOST:?Set a dedicated staging hostname}
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - staging
+    depends_on:
+      api:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env.staging
+    environment:
+      NODE_ENV: production
+      HOST: "0.0.0.0"
+      PORT: "3100"
+      AGSA_PRIVATE_PROXY_CONFIRMED: "1"
+      AGSA_PUBLIC_ORIGIN: https://${AGSA_STAGE_HOST:?Set a dedicated staging hostname}
+      PGSSL_MODE: verify-full
+      AGSA_ALLOW_INSECURE_LOCAL: "0"
+    expose:
+      - "3100"
+    networks:
+      - staging
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 384m
+networks:
+  staging:
+    driver: bridge
+volumes:
+  caddy_data:
+  caddy_config:
