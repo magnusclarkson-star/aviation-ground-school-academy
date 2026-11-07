@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+coverage
+*.log
+sql
+scripts
+tests
+*.md
+compose.staging.yml
+Caddyfile.staging
