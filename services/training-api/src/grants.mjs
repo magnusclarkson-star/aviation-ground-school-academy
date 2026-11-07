@@ -13,7 +13,7 @@ export function grantStatements(appRole,provisionRole){
  if(app===provision)throw Error("Application and provisioning roles must differ");
  const tables=[
   "organizations","users","memberships","instructor_assignments",
-  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events"
+  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa"
  ];
  const statements=[];
  // Revoke any direct privileges; database owners and role memberships need separate review.
@@ -28,6 +28,8 @@ export function grantStatements(appRole,provisionRole){
  // not web requests. Session token hashes are never returned by API.
  for(const table of ["sessions","practice_attempts","feedback_drafts","login_throttles"])
   statements.push(`GRANT SELECT,INSERT ON public.${table} TO ${app}`);
+ statements.push(`GRANT SELECT ON public.instructor_mfa TO ${app}`);
+ statements.push(`GRANT UPDATE(last_used_step) ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT UPDATE(revoked_at) ON public.sessions TO ${app}`);
  statements.push(`GRANT UPDATE(window_start,attempt_count) ON public.login_throttles TO ${app}`);
  // Full table reads of audit_events and changes to history are forbidden.
@@ -36,6 +38,7 @@ export function grantStatements(appRole,provisionRole){
  // Provisioning account is explicitly more privileged and used only manually.
  for(const table of ["organizations","users","memberships","instructor_assignments"])
   statements.push(`GRANT SELECT,INSERT ON public.${table} TO ${provision}`);
+ statements.push(`GRANT SELECT,INSERT ON public.instructor_mfa TO ${provision}`);
  statements.push(`GRANT UPDATE(active) ON public.instructor_assignments TO ${provision}`);
  statements.push(`GRANT INSERT ON public.audit_events TO ${provision}`);
  statements.push(`GRANT USAGE ON SEQUENCE public.audit_events_id_seq TO ${provision}`);
