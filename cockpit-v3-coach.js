@@ -32,7 +32,7 @@ const spec={
  flap:[
   ["command","Flap selection",s=>s.selectedFlapsDeg===20,"Select the 20° detent before starting this example observation."],
   ["travel","Flap travel",s=>s.indicatedFlapsDeg>=17&&s.indicatedFlapsDeg<=23,"Wait for the indicated flap position to approach the selected setting."],
-  ["drag","Relative drag",s=>s.indicatedFlapsDeg>=17&&s.indicatedFlapsDeg<=23,"Compare the drag meter to its clean-wing reference as the flap travels."],
+  ["drag","Relative drag",s=>s.relativeDragIndex>1.25,"Compare the drag meter to its clean-wing reference as the flap travels."],
   ["speed","Airspeed",s=>s.airspeedKt>=55&&s.airspeedKt<=145,"Observe airspeed while changing flap configuration and power."]
  ]
 };
