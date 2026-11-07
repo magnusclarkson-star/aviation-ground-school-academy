@@ -30,3 +30,6 @@ jobs:
       - run: node --check cockpit-v3-journal.js
       - run: node scripts/test-cockpit-coach-journal.mjs
       - run: node scripts/test-accreditation-readiness.mjs
+      - run: node --check instructor-review-model.js
+      - run: node --check instructor-review.js
+      - run: node scripts/test-instructor-review.mjs
