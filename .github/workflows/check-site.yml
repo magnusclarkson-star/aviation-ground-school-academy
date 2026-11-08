@@ -44,3 +44,6 @@ jobs:
       - run: node --check ai-instructor-progress.js
       - run: node scripts/test-ai-instructor-progress.mjs
       - run: node scripts/test-ai-instructor.mjs
+      - run: node --check ground-school-modules.js
+      - run: node --check ground-school-modules-ui.js
+      - run: node scripts/test-ground-school-modules.mjs
