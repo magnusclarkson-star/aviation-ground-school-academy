@@ -17,7 +17,7 @@ function createEngine({windowLike,documentLike}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  const Audio=win?.AudioContext||win?.webkitAudioContext;
  const supported=typeof Audio==="function";
- let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=58,duck=false,mode="airplane",texture="smooth",grainGain=null;
+ let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=100,duck=false,mode="airplane",texture="textured",grainGain=null;
  function setTarget(parameter,value){
   if(parameter&&ctx){
    try{parameter.setTargetAtTime(value,ctx.currentTime,.06);}
