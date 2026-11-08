@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="flight-sim-aircraft-systems.css">
 <link rel="stylesheet" href="flight-sim-aerodynamics.css">
 <link rel="stylesheet" href="flight-sim-loading.css">
+<link rel="stylesheet" href="flight-sim-exercises.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -26,6 +27,7 @@
 <script src="flight-sim-gamepad-ui.js" defer></script>
 <script src="flight-sim-3d.js" defer></script>
 <script src="flight-sim-aircraft-systems.js" defer></script>
+<script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -180,6 +182,40 @@
       <span id="loadingCgMarker" class="cg-marker" aria-hidden="true"></span>
      </div>
      <p id="loadingStatus" class="loading-status" data-level="normal" role="status" aria-live="polite">Inside the imaginary comparison band. Not an aircraft operating limit.</p>
+    </section>
+    <section id="exerciseLab" class="exercise-lab hidden" aria-labelledby="exerciseLabTitle">
+     <div class="exercise-head">
+      <h3 id="exerciseLabTitle">Guided flight-physics explorations</h3>
+      <span id="exerciseReviewStatus" class="exercise-review">Instructor content review pending</span>
+     </div>
+     <p class="hint">Four structured self-checks use the fictional loadout and force calculations above. Not an instructor's assessment, validated curriculum or training credit. No student data is recorded or transmitted.</p>
+     <label for="exerciseSelect">Choose a conceptual learning exercise</label>
+     <select id="exerciseSelect">
+      <option value="cgTransfer">01 · Moving a load aft</option>
+      <option value="massIncrease">02 · Mass and wing loading</option>
+      <option value="fuelShift">03 · Changing imaginary fuel load</option>
+      <option value="flapTrade">04 · Fictional flap lift–drag comparison</option>
+     </select>
+     <p id="exerciseGoal" class="exercise-goal">Compare two imaginary loadouts with exactly the same total mass.</p>
+     <p id="exerciseQuestion" class="exercise-question">How does the imaginary centre of gravity move?</p>
+     <p id="exercisePrompt" class="hint">Apply Reference, then Comparison. Observe the numbers before deciding.</p>
+     <div class="exercise-actions">
+      <button id="exerciseReference" type="button">1 · Apply Reference</button>
+      <button id="exerciseComparison" type="button">2 · Apply Comparison</button>
+     </div>
+     <div class="exercise-observations">
+      <div><small>REFERENCE</small><p id="exerciseReferenceFact">Not observed yet</p></div>
+      <div><small>COMPARISON</small><p id="exerciseComparisonFact">Not observed yet</p></div>
+     </div>
+     <p id="exerciseEvidence" class="exercise-evidence">Reference and Comparison must both be observed.</p>
+     <label for="exerciseAnswer">Your explanation — self-check only</label>
+     <select id="exerciseAnswer"><option value="">Choose an explanation after observing both setups</option></select>
+     <div class="exercise-actions">
+      <button id="exerciseCheck" type="button">Check conceptual explanation</button>
+      <button id="exerciseClear" type="button">Clear this exercise</button>
+     </div>
+     <p id="exerciseFeedback" class="exercise-feedback" role="status" aria-live="polite">Start with the Reference setup. A qualified instructor has not approved this exercise.</p>
+     <p class="exercise-disclaimer">Review state: <code>SME_REVIEW_REQUIRED</code>. Feedback checks only the locally calculated fictional figures. It does not award a grade, certificate, pilot-training credit or endorsement.</p>
     </section>
     <div>
      <label for="windSelect">Illustrative wind environment</label>

@@ -7,9 +7,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
- W=window.AGSAFlightLoading;
+ W=window.AGSAFlightLoading,X=window.AGSAFlightExercises;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -20,6 +20,8 @@ let practice=G.start(state);
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
 let hardware=null;
+let exerciseSession=X.begin("cgTransfer","trainer");
+let exerciseApplying=false;
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -182,6 +184,71 @@ function renderLoadingPreview(preview=false){
   (preview?" Release the slider to restart this training scenario.":"");
  return load;
 }
+// Unsigned conceptual self-checks. The only records are held in this page
+// session; no storage, remote API, identity or verified grades are involved.
+function renderExercise(){
+ const d=X.get(exerciseSession.id);
+ $("exerciseGoal").textContent=d.goal;
+ $("exerciseQuestion").textContent=d.question;
+ $("exercisePrompt").textContent=d.prompt;
+ $("exerciseReviewStatus").textContent="Instructor content review pending · "+X.STATUS;
+ $("exerciseReferenceFact").textContent=X.observationText(exerciseSession.reference);
+ $("exerciseComparisonFact").textContent=X.observationText(exerciseSession.comparison);
+ $("exerciseEvidence").textContent=X.evidence(exerciseSession);
+ if(exerciseSession.feedback){
+  $("exerciseFeedback").textContent=exerciseSession.feedback.message;
+  $("exerciseFeedback").dataset.result=exerciseSession.feedback.status;
+ }
+}
+function startExercise(message){
+ exerciseSession=X.begin($("exerciseSelect").value,$("profileSelect").value);
+ const d=X.get(exerciseSession.id),answer=$("exerciseAnswer");
+ answer.replaceChildren();
+ const placeholder=document.createElement("option");
+ placeholder.value="";placeholder.textContent="Choose an explanation after observing both setups";
+ answer.appendChild(placeholder);
+ for(const option of d.options){
+  const el=document.createElement("option");
+  el.value=option.id;el.textContent=option.label;answer.appendChild(el);
+ }
+ answer.value="";
+ $("exerciseFeedback").dataset.result="neutral";
+ $("exerciseFeedback").textContent=message||
+  "Start with Reference, then Comparison. This is not a verified assessment.";
+ renderExercise();
+}
+function syncExercise(){
+ const active=state.mode==="airplane"&&state.physicsId==="aero";
+ show("exerciseLab",active);
+ if(!active)return;
+ if(exerciseSession.profileId!==state.profileId){
+  startExercise("Airframe response changed. Apply the two setups again for a fair comparison.");
+ }else renderExercise();
+}
+function applyExercise(stage){
+ if(state.mode!=="airplane"||state.physicsId!=="aero")return;
+ if(stage==="comparison"&&!exerciseSession.reference){
+  $("exerciseFeedback").textContent="Apply Reference first; then apply Comparison.";
+  $("exerciseFeedback").dataset.result="neutral";
+  return;
+ }
+ const goal=X.values(exerciseSession.id,stage,state.profileId);
+ exerciseApplying=true;
+ try{
+  for(const [id,key] of loadingFields)$(id).value=String(goal.loadout[key]);
+  reset(state.scenario); // change fictional mass only by restarting a scenario
+  input.flaps=goal.flaps;
+  setValues();
+  hardware?.resetPower();
+  updateReadouts();
+  const result=X.record(exerciseSession,stage,{
+   profileId:state.profileId,loadout:currentLoadout(),flaps:input.flaps
+  });
+  $("exerciseFeedback").dataset.result="neutral";
+  $("exerciseFeedback").textContent=result.message;
+  renderExercise();
+ }finally{exerciseApplying=false}
+}
 function reportEnvironment(){
  const profile=state.mode==="airplane"?E.selectProfile(state.profileId):null;
  const wind=E.selectWind(state.windId);
@@ -195,6 +262,7 @@ function reportEnvironment(){
  const loadingActive=state.mode==="airplane"&&state.physicsId==="aero";
  show("loadingWrap",loadingActive);
  if(loadingActive)renderLoadingPreview();
+ syncExercise();
  $("physicsHint").textContent=state.mode==="helicopter"?
   "The conceptual helicopter retains its original simplified hover model. Experimental aerodynamics apply only to fictional aeroplanes.":
   state.physicsId==="aero"?
@@ -215,6 +283,7 @@ function setMode(next){
  const oldMode=state.mode;
  type=newType;
  if(newMode!==oldMode){
+  startExercise("Aircraft mode changed. Apply Reference and Comparison again if you return to the experimental aeroplane.");
   state=makeConfiguredState(newMode);
   input=M.makeInput(newMode);
   paused=false;$("pauseFlight").setAttribute("aria-pressed","false");
@@ -372,12 +441,34 @@ $("collective").addEventListener("input",e=>{
  $("collectiveValue").textContent=round(input.collective*100)+"%";
  hardware?.resetPower();haptics.pulse("control");
 });
-$("flaps").addEventListener("change",e=>{input.flaps=Number(e.target.value);haptics.pulse("flap")});
-$("profileSelect").addEventListener("change",()=>reset(state.scenario));
+$("flaps").addEventListener("change",e=>{
+ input.flaps=Number(e.target.value);haptics.pulse("flap");
+ if(!exerciseApplying)startExercise("Manual flap change: prior exercise observations cleared. Reapply the two setups.");
+});
+$("profileSelect").addEventListener("change",()=>{
+ startExercise("Aircraft profile changed. Observations have been cleared.");
+ reset(state.scenario);
+});
 $("windSelect").addEventListener("change",()=>reset(state.scenario));
-$("physicsSelect").addEventListener("change",()=>reset(state.scenario));
+$("physicsSelect").addEventListener("change",()=>{
+ startExercise("Flight dynamics changed. Start a new conceptual comparison if available.");
+ reset(state.scenario);
+});
+$("exerciseSelect").addEventListener("change",()=>startExercise());
+$("exerciseReference").addEventListener("click",()=>applyExercise("reference"));
+$("exerciseComparison").addEventListener("click",()=>applyExercise("comparison"));
+$("exerciseCheck").addEventListener("click",()=>{
+ const result=X.review(exerciseSession,$("exerciseAnswer").value);
+ $("exerciseFeedback").dataset.result=result.status;
+ $("exerciseFeedback").textContent=result.message;
+});
+$("exerciseClear").addEventListener("click",()=>startExercise("Observations cleared. Set up Reference to begin again."));
 for(const [id] of loadingFields){
- $(id).addEventListener("input",()=>renderLoadingPreview(true));
+ $(id).addEventListener("input",()=>{
+  renderLoadingPreview(true);
+  if(!exerciseApplying&&state.mode==="airplane"&&state.physicsId==="aero")
+   startExercise("The loadout was manually changed. Earlier observations have been cleared.");
+ });
  $(id).addEventListener("change",()=>{
   if(state.mode==="airplane"&&state.physicsId==="aero")reset(state.scenario);
   else renderLoadingPreview();
