@@ -1,0 +1,114 @@
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eef7fd;background:#071421;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 75% 40% at 80% -6%,#204968a3,transparent),#071421;min-height:100vh}
+a{color:#9fe1f5}a:hover{color:#d3f6ff}button,input,select{font:inherit}
+button{touch-action:manipulation;cursor:pointer;border:1px solid #6c8da1;background:#1a394d;border-radius:10px;color:#f1f9ff;padding:10px 13px;min-height:44px;font-size:13px;font-weight:750}
+button:hover{background:#25536a}button[aria-pressed=true]{border-color:#b6eaf4;background:#24677a;color:#f4fcff}
+button:disabled{opacity:.5;cursor:not-allowed}:focus-visible{outline:3px solid #f2d08c!important;outline-offset:3px}
+.site-head{background:#0c2436;border-bottom:1px solid #3f6178;padding:14px max(14px,calc((100vw - 1400px)/2));display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.brand{text-decoration:none;color:#f2faff;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:850;letter-spacing:.065em}
+.brand small{display:block;font-size:9px;color:#86bfd5;letter-spacing:.14em;margin-top:4px}.brand-mark{display:grid;place-items:center;border-radius:12px;width:44px;height:44px;background:linear-gradient(145deg,#284e6d,#0b2b40);border:1px solid #658ba2;font-size:24px;color:#f0d49f}
+.site-head nav{display:flex;gap:16px;flex-wrap:wrap;font-size:12px}
+main{max-width:1410px;margin:0 auto;padding:18px 15px 55px}
+.intro{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:13px}
+.intro h1{font-size:clamp(27px,3.6vw,44px);letter-spacing:-.045em;line-height:1.1;margin:8px 0}
+.intro p{font-size:14px;color:#b7d3e1;line-height:1.65;max-width:880px;margin:6px 0}
+.eyebrow{display:block;font-size:10px;letter-spacing:.14em;color:#92d6e8;font-weight:850}
+.type-tag{border:1px solid #b19364;border-radius:12px;background:#2d2920;padding:11px 15px;min-width:155px;text-align:center;font-size:10px;letter-spacing:.08em;line-height:1.7;color:#f7dda7}
+.type-tag strong{font-size:14px}.notice{border:1px solid #9f7e4f;border-left:4px solid #f3cc8b;color:#f3dcaf;background:#2a281f;padding:11px 14px;border-radius:10px;font-size:12px;line-height:1.5;margin-bottom:14px}
+.scene-panel{border:1px solid #4b748a;background:#0a2433;border-radius:16px;overflow:hidden;box-shadow:0 12px 38px #0005;position:relative}
+.scene-shell{position:relative;aspect-ratio:16/9;background:linear-gradient(#16658c 50%,#527e62 50%);overflow:hidden}
+#outsideView{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.scene-top,.scene-bottom{pointer-events:none;position:absolute;left:11px;right:11px;display:flex;gap:8px;align-items:center;justify-content:space-between;text-shadow:0 2px 5px #092133;letter-spacing:.07em;font-size:11px;font-weight:850}
+.scene-top{top:12px}.scene-bottom{bottom:12px;justify-content:center;gap:12px}
+.scene-top span,.scene-bottom span{background:#082333b8;border:1px solid #cbeafc6e;padding:5px 8px;border-radius:7px}
+.scene-centre{pointer-events:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.wings-reference{display:block;width:11px;height:11px;border:2px solid #ffffffa8;border-radius:50%}
+.readouts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid #426f84;background:linear-gradient(180deg,#123446,#081b2c)}
+.readouts>div{padding:12px 9px;text-align:center;min-width:0;border-right:1px solid #345569;font-variant-numeric:tabular-nums}
+.readouts>div:last-child{border:0}.readouts small{display:block;color:#9ac7dd;font-size:9px;font-weight:800;letter-spacing:.08em}
+.readouts strong{display:block;font-size:clamp(16px,2.5vw,25px);font-weight:850;letter-spacing:-.04em;color:#ffe0a6;margin:3px 0}
+.readouts span{font-size:9px;color:#acc3d4}
+.flight-cue{padding:12px 15px;background:#123144;display:flex;gap:13px;align-items:center;min-height:54px}
+.flight-cue strong{flex:0 0 auto;font-size:11px;background:#0d2535;color:#d5eafa;border:1px solid #5b7e93;padding:7px 9px;border-radius:7px;letter-spacing:.045em}
+.flight-cue span{font-size:12px;line-height:1.4;color:#d5e7f3}
+.lab-grid{display:grid;grid-template-columns:minmax(305px,.8fr) minmax(0,1.2fr);gap:15px;align-items:start;margin-top:17px}
+.panel{border:1px solid #42667b;border-radius:16px;background:linear-gradient(145deg,#122d40,#0b2133 78%);padding:17px;min-width:0}
+.panel h2{font-size:21px;letter-spacing:-.02em;margin:6px 0 12px}
+.panel p,.hint{font-size:12px;color:#b6d1e0;line-height:1.55}
+.type-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.type-choices button{min-width:0;padding:9px 4px;font-size:11px;line-height:1.4;min-height:64px}
+.type-choices button span{display:block;font-size:23px;margin-bottom:3px}
+.scenario-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 12px}
+.scenario-controls button{font-size:12px;text-align:center}
+.scenario-controls .major{background:#ddbe83;border-color:#fae3af;color:#162c39}
+.scenario-controls .major:hover{background:#fae4af}
+.optional-feedback{margin-top:18px;border-top:1px solid #486c7f;padding-top:15px}
+.section-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-line strong{font-size:13px}.section-line button{white-space:nowrap}
+.optional-feedback p{margin:9px 0 11px}
+.optional-feedback label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:750;margin:11px 0 6px}
+.optional-feedback output{font-size:12px;font-weight:850;color:#f2d69f}
+input[type=range]{width:100%;accent-color:#82d4ed;height:33px;cursor:pointer}
+.control-panel h2{margin-bottom:4px}.control-panel .hint{margin:6px 0 12px}
+.physical-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.45fr);gap:11px;align-items:start}
+.control-assembly{min-width:0}
+.control-pad{height:233px;border-radius:17px;border:1px solid #688ca3;background:radial-gradient(ellipse at 50% 42%,#31566e,#152b3f 60%,#071a2b);position:relative;touch-action:none;user-select:none;display:grid;place-items:center;overflow:hidden}
+.control-pad:before{content:"";position:absolute;inset:22px;border:1px dashed #7fa6b443;border-radius:13px;pointer-events:none}
+.control-pad:after{content:"PITCH ↓ / ↑";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;letter-spacing:.11em;color:#b0cbd7b8;pointer-events:none}
+.control-guides{position:absolute;left:50%;top:50%;height:1px;width:90%;transform:translate(-50%,-50%);border-top:1px dashed #85bfd355;pointer-events:none}
+.control-guides:after{content:"";position:absolute;left:50%;top:-95px;width:1px;height:190px;border-left:1px dashed #85bfd355}
+.flight-grip{border:0;background:transparent!important;width:min(98%,340px);height:190px;z-index:1;display:grid;place-items:center;position:relative;cursor:grab;touch-action:none;user-select:none;padding:0;will-change:transform}
+.flight-grip:active{cursor:grabbing}
+.hardware-art{width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 7px 7px #000a)}
+.hardware-stick,.hardware-cyclic{display:none}
+.stick-mode .hardware-yoke,.cyclic-mode .hardware-yoke{display:none}
+.stick-mode .hardware-stick{display:block}
+.cyclic-mode .hardware-cyclic{display:block}
+.axis-values{display:flex;justify-content:space-between;gap:7px;font-variant-numeric:tabular-nums;margin-top:9px}
+.axis-values span{background:#0b1c2b;border:1px solid #3e6175;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:800;flex:1;color:#bedcea}
+.axis-values strong{color:#ffe0ac;float:right}
+.side-controls{display:grid;gap:9px;min-width:0}
+.lever-panel{background:linear-gradient(160deg,#263f53,#091b29);border:1px solid #5b7c91;border-radius:11px;padding:12px 10px;min-width:0}
+.lever-panel label{display:block;font-size:11px;color:#d6ebf7;font-weight:850;letter-spacing:.04em}
+.lever-panel output{display:block;text-align:right;font-variant-numeric:tabular-nums;color:#ffe0ac;margin:5px 0;font-size:15px}
+.lever-panel select{font:inherit;width:100%;min-height:44px;color:#f6faff;background:#12364b;border:1px solid #658ba1;border-radius:8px;padding:8px 6px;margin-top:12px;font-size:11px}
+.lever-track{position:relative;margin-top:8px;background:linear-gradient(180deg,#334954,#112536);border:1px solid #7d9da8;border-radius:9px;padding:8px 7px}
+.lever-track input{position:relative;z-index:1}
+.track-ornament{position:absolute;left:16px;right:16px;height:8px;top:20px;background:repeating-linear-gradient(90deg,#b5c5ce44 0 2px,transparent 2px 20px);pointer-events:none}
+.hidden{display:none!important}
+.rudder-deck{display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,1.1fr);align-items:center;gap:10px;margin-top:12px;border:1px solid #43677e;background:#0c2335;padding:10px 12px;border-radius:12px}
+.rudder-deck .hint{font-size:11px;margin:4px 0}
+.rudder-pedals{display:flex;gap:12px;align-items:center;justify-content:center}
+.rudder-pedals button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:82px;min-width:0;font-size:10px;letter-spacing:.1em;border:5px ridge #718d9d;background:repeating-linear-gradient(90deg,#14202c 0 7px,#516779 7px 11px);border-radius:9px;touch-action:none;user-select:none}
+.rudder-pedals button.held{transform:translateY(6px);background:repeating-linear-gradient(90deg,#214a56 0 7px,#5b8993 7px 11px)}
+.pedal-icon{font-size:20px;color:#c5dfe8}
+.brake-button{margin-top:10px;width:100%;background:#41382b;border-color:#9f926b;color:#ffe4b3}
+.brake-button.held{background:#89613f}
+.shortcuts{margin-top:8px;font-size:11px!important}
+.instructions{margin-top:17px}.mission-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.mission-cards article{background:#0d2a3c;border:1px solid #40677e;border-radius:12px;padding:13px}
+.mission-cards strong{font-size:13px;color:#f5dcad}.mission-cards p{font-size:12px;margin:7px 0 0}
+.disclaimer{font-size:11px!important;margin-top:15px;color:#f0d7a2!important}
+footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a;padding:17px 0}
+@media(max-width:1050px){.lab-grid{grid-template-columns:minmax(0,1fr)}.physical-controls{grid-template-columns:minmax(0,1fr) minmax(190px,.48fr)}.control-pad{height:255px}}
+@media(max-width:740px){
+ main{padding:11px 9px 38px}.site-head{padding:10px 12px}.site-head nav{gap:10px}
+ .intro{gap:6px}.intro p{font-size:12px}.type-tag{display:none}.notice{font-size:11px;padding:9px 10px}
+ .scene-panel{position:sticky;top:2px;z-index:5;box-shadow:0 6px 19px #0009}
+ .scene-shell{aspect-ratio:16/9}
+ .scene-top,.scene-bottom{font-size:8px;left:6px;right:6px;gap:3px}.scene-top{top:6px}.scene-bottom{bottom:6px}
+ .scene-top span,.scene-bottom span{padding:3px 5px}
+ .readouts{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .readouts>div{padding:5px 4px;border-bottom:1px solid #30546b}
+ .readouts strong{font-size:14px;margin:2px 0}.readouts small{font-size:8px}.readouts span{font-size:8px}
+ .flight-cue{padding:7px 8px;gap:6px;min-height:0}.flight-cue strong{font-size:9px;padding:4px 6px}.flight-cue span{font-size:10px}
+ .panel{padding:12px}.lab-grid{gap:11px;margin-top:12px}
+ .type-choices button{font-size:10px}.control-pad{height:190px}.flight-grip{height:165px}
+ .physical-controls{grid-template-columns:minmax(0,1.05fr) minmax(130px,.7fr);gap:7px}
+ .lever-panel{padding:8px 6px}.lever-panel label{font-size:9px}.lever-panel output{font-size:11px}
+ .rudder-deck{grid-template-columns:1fr;gap:5px}.rudder-deck .hint{margin:0}
+ .rudder-pedals button{min-height:70px}.rudder-pedals{gap:7px}
+ .mission-cards{grid-template-columns:1fr}
+}
+@media(max-width:365px){.scene-top .screen-chip{display:none}.control-pad{height:168px}.flight-grip{height:145px}.axis-values span{font-size:9px;padding:6px 4px}.readouts strong{font-size:12px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
