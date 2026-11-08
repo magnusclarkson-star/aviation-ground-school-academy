@@ -32,6 +32,7 @@
 <script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim-replay.js" defer></script>
+<script src="flight-sim-after-action.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -396,6 +397,15 @@
   <button id="traceDownload" type="button" disabled>Download unsigned trace JSON</button>
   <button id="traceClear" type="button">Clear recording</button>
   <button id="traceReplay" type="button" disabled>View recorded flight</button>
+  <button id="traceInsights" type="button" disabled>Generate after-flight learning summary</button>
+  <div id="traceInsightsPanel" hidden style="margin-top:1rem;border:1px solid #819cb6;padding:1rem;border-radius:8px;background:#f5faff">
+   <h3>After-flight learning summary — ungraded</h3>
+   <p>Generated from synthetic recorder values only. This is a local, rule-based learning aid, not a generative AI instructor or performance evaluation.</p>
+   <div id="traceInsightsFacts" style="white-space:pre-wrap"></div>
+   <h4>Questions to explore</h4>
+   <div id="traceInsightsPrompts" style="white-space:pre-wrap"></div>
+   <p id="traceInsightsWarning" role="note"></p>
+  </div>
   <div id="traceReplayPanel" hidden style="margin-top:1rem">
     <h3>Simulated flight replay — height, airspeed and bank</h3>
     <p>Charts have separate vertical scales. They are teaching illustrations, not flight performance evaluations.</p>
