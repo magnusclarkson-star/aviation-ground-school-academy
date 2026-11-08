@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b2b">
+<meta name="description" content="Aviation Ground School Academy educational curriculum review draft worksheet; no official instructor authentication, approval or training credit.">
+<title>Curriculum Review Drafts | Aviation Ground School Academy</title>
+<link rel="stylesheet" href="ai-instructor.css">
+<style>
+.review-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;align-items:start}
+.review-fieldset{border:1px solid #507b92;border-radius:12px;margin:15px 0;padding:10px;min-width:0}
+.review-fieldset legend{font-size:13px;font-weight:850;color:#dcf2ff;padding:0 6px}
+.review-fieldset select{margin-top:6px}
+.review-source-list{overflow-wrap:anywhere;padding-left:20px}
+.review-source-list li{margin:6px 0;font-size:13px}
+.review-snapshot{background:#0b2133;padding:13px;border:1px solid #50758c;border-radius:11px;margin:13px 0}
+.review-snapshot p,.review-snapshot li{font-size:13px;line-height:1.5;color:#c9e4f2}
+.review-status{padding:10px;border-radius:9px;background:#112f46;border:1px solid #52768b;font-size:13px;line-height:1.5}
+.review-warning{background:#312a20;border-left:4px solid #f0cc92;padding:11px;border-radius:8px;color:#ffe4ae;font-size:13px;line-height:1.5}
+@media(max-width:790px){.review-layout{grid-template-columns:1fr}}
+</style>
+<script src="ai-instructor-lessons.js" defer></script>
+<script src="ai-instructor-curriculum.js" defer></script>
+<script src="curriculum-review-model.js" defer></script>
+<script src="curriculum-review.js" defer></script>
+</head>
+<body>
+<header class="site-head">
+ <a href="index.html" class="brand"><span class="logo">✈</span><span>AVIATION GROUND SCHOOL ACADEMY<small>CURRICULUM REVIEW WORKSPACE</small></span></a>
+ <nav aria-label="Academy navigation"><a href="ai-instructor.html">Learning studio</a><a href="instructor-review.html">Practice report review</a><a href="standards-readiness.html">Training standards</a></nav>
+</header>
+<main>
+ <section class="hero"><div>
+  <div class="eyebrow">DRAFT CONTENT QUALITY WORKFLOW · NO OFFICIAL SIGN-OFF</div>
+  <h1>Review introductory ground-school lessons</h1>
+  <p>Inspect learning objectives, questions and publisher reading pointers. Record proposed editorial changes and download an unsigned review discussion draft.</p>
+ </div><div class="hero-icon" aria-hidden="true">📋</div></section>
+ <div class="notice" role="note"><strong>Educational prototype only.</strong> There is no instructor login, reviewer identity verification, regulator approval, certificate issuance or school record storage here. Files are generated in your browser and are not submitted to the Academy. Do not enter private student information. All lessons remain awaiting qualified subject-matter review.</div>
+ <div class="review-layout">
+ <section class="panel" aria-label="Curriculum content for review">
+  <label for="reviewLesson" class="field-label">Lesson under discussion</label>
+  <select id="reviewLesson"></select>
+  <div class="review-snapshot">
+   <p id="reviewRevision" class="tiny"></p>
+   <h2 id="reviewTitle"></h2>
+   <p id="reviewIntro"></p>
+   <p id="reviewBody"></p>
+   <h3>Learning objectives</h3><ul id="reviewObjectives"></ul>
+   <h3>Practice activity</h3><p id="reviewActivity"></p>
+   <p id="reviewScope" class="review-warning"></p>
+   <h3>Example question</h3><p id="reviewQuestion"></p>
+   <p id="reviewAnswer" class="tiny"></p>
+   <h3>Suggested reference pointers</h3><ul id="reviewSources" class="review-source-list"></ul>
+   <p class="tiny">Publisher links are reading aids; they have not been checked claim-by-claim or mapped to a specific local approval standard.</p>
+  </div>
+ </section>
+ <section class="panel" aria-label="Unsigned editorial review worksheet">
+  <div class="eyebrow">SIX CONTENT QUALITY CHECKS</div><h2>Document review observations</h2>
+  <p class="tiny">Select <strong>Needs edits</strong> or <strong>Discuss with instructor</strong> where appropriate. Even a complete worksheet cannot approve or publish a course.</p>
+  <form id="reviewForm">
+   <div id="reviewChecklist"></div>
+   <label class="field-label" for="reviewComments">Issues or evidence to check (maximum 1,400 characters)</label>
+   <textarea id="reviewComments" rows="5" maxlength="1400" placeholder="Example: confirm that the reference edition actually supports the flap explanation. Do not enter student information."></textarea>
+   <label class="field-label" for="reviewNextAction">Proposed editorial change (maximum 650 characters)</label>
+   <textarea id="reviewNextAction" rows="4" maxlength="650" placeholder="Example: ask a qualified reviewer to verify this subject and document the exact chapter."></textarea>
+   <div class="buttons">
+    <button type="submit" class="primary" id="reviewDownload">Download unsigned review JSON</button>
+    <button type="button" id="reviewClear">Clear draft</button>
+   </div>
+   <p id="reviewStatus" class="review-status" role="status" aria-live="polite">No review has been authenticated or approved.</p>
+  </form>
+  <div class="review-warning">Actual publication approval would require verified reviewer identities, version-controlled corrections, independently checked source-to-claim evidence, jurisdictional assessment, safeguarding and documented authorisation. This page provides none of those functions.</div>
+ </section>
+ </div>
+ <footer>Academy curriculum draft workspace · Unofficial educational content · No licence, training hours, approved syllabus or assessment credit.</footer>
+</main>
+</body></html>
