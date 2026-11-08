@@ -1,0 +1,25 @@
+/* Local educational force/energy panel for the experimental physics mode.
+ * It is explicitly not a validated aircraft display. */
+.physics-setting{min-width:0;border:1px solid #5c7f94;background:#133244;
+ border-radius:9px;padding:10px 9px}
+.physics-setting label{font-weight:850;color:#eddfb6}
+.physics-setting .hint{color:#b9d5df}
+.aero-readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ border-top:2px solid #866b48;background:#142d3c;gap:0}
+.aero-readouts.hidden{display:none!important}
+.aero-readouts>div{min-width:0;display:flex;justify-content:center;align-items:center;
+ flex-direction:column;padding:7px 5px;border-right:1px solid #44677b;
+ border-bottom:1px solid #44677b;font-variant-numeric:tabular-nums}
+.aero-readouts small{font-size:9px;font-weight:750;color:#d6e3e9;line-height:1.35}
+.aero-readouts strong{font-size:15px;font-weight:850;color:#f7d59f;margin-top:3px}
+.aero-alert{grid-column:1/-1;color:#e9dab8;font-size:10px;
+ padding:7px 10px;margin:0;background:#3b3428;line-height:1.5}
+.aero-alert[data-level="caution"]{color:#ffe5b9;background:#66352b;border-left:4px solid #ffb16b}
+@media(max-width:740px){
+ .physics-setting{padding:7px}
+ .aero-readouts{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .aero-readouts>div{padding:3px 2px;min-height:31px}
+ .aero-readouts small{font-size:7px}
+ .aero-readouts strong{font-size:11px;margin-top:0}
+ .aero-alert{font-size:9px;padding:4px 7px}
+}

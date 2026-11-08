@@ -7,6 +7,10 @@ on:
       - 'flight-sim.css'
       - 'flight-sim.js'
       - 'flight-sim-model.js'
+      - 'flight-sim-aerodynamics.js'
+      - 'flight-sim-aerodynamics.css'
+      - 'scripts/test-flight-sim-aerodynamics.mjs'
+      - 'scripts/test-flight-sim-aerodynamics-browser.mjs'
       - 'flight-sim-environment.js'
       - 'flight-sim-environment.css'
       - 'scripts/test-flight-sim-environment.mjs'
@@ -41,6 +45,10 @@ on:
       - 'flight-sim.css'
       - 'flight-sim.js'
       - 'flight-sim-model.js'
+      - 'flight-sim-aerodynamics.js'
+      - 'flight-sim-aerodynamics.css'
+      - 'scripts/test-flight-sim-aerodynamics.mjs'
+      - 'scripts/test-flight-sim-aerodynamics-browser.mjs'
       - 'flight-sim-environment.js'
       - 'flight-sim-environment.css'
       - 'scripts/test-flight-sim-environment.mjs'
@@ -85,6 +93,7 @@ jobs:
         run: |
           node --check flight-sim.js
           node --check flight-sim-model.js
+          node --check flight-sim-aerodynamics.js
           node --check flight-sim-environment.js
           node --check flight-sim-haptics.js
           node --check flight-sim-scenery.js
@@ -97,6 +106,7 @@ jobs:
       - name: Test deterministic flight model
         run: |
           node scripts/test-flight-sim-model.mjs
+          node scripts/test-flight-sim-aerodynamics.mjs
           node scripts/test-flight-sim-environment.mjs
           node scripts/test-flight-sim-3d.mjs
           node scripts/test-flight-sim-aircraft-systems.mjs
@@ -119,3 +129,4 @@ jobs:
           node scripts/test-flight-sim-environment-browser.mjs
           node scripts/test-flight-sim-3d-browser.mjs
           node scripts/test-flight-sim-aircraft-systems-browser.mjs
+          node scripts/test-flight-sim-aerodynamics-browser.mjs

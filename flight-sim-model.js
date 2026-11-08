@@ -5,6 +5,8 @@
 (function(root){"use strict";
 const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
 if(!E)throw Error("Fictional aircraft/environment profiles unavailable");
+const D=root?.AGSAFlightAerodynamics||(typeof module!=="undefined"?require("./flight-sim-aerodynamics.js"):null);
+if(!D)throw Error("Experimental aerodynamic engine unavailable");
 const RAD=Math.PI/180;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number.isFinite(x)?x:0));
 const smooth=(x,target,rate,dt)=>x+(target-x)*(1-Math.exp(-rate*dt));
@@ -19,21 +21,24 @@ function makeState(mode="airplane",scenario="runway",options={}){
  const windId=options.windId??"calm";
  E.selectWind(windId);
  const profileId=mode==="helicopter"?"rotor":options.profileId??"trainer";
+ const physicsId=mode==="helicopter"?"classic":(options.physicsId??"classic");
+ if(!["classic","aero"].includes(physicsId))throw Error("Unknown fictional physics mode");
  const profile=mode==="airplane"?E.selectProfile(profileId):null;
  if(mode==="helicopter"){
-  return {mode,profileId,windId,scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
+  return {mode,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
    groundSpeedKt:0,trackDeg:0,windXMps:0,windZMps:0,verticalMs:0,pitchDeg:0,rollDeg:0,headingDeg:0,
    lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:true,
    message:"A fictional helipad exercise. Increase collective for a gentle vertical lift."};
  }
  const approach=scenario==="approach";
- return {mode,profileId,windId,scenario:approach?"approach":"runway",
+ const plane={mode,profileId,windId,physicsId,scenario:approach?"approach":"runway",
   phase:approach?"approach":"roll",xM:0,zM:approach?-1450:0,
   altitudeM:approach?84:0,speedKt:approach?profile.approachKt:0,groundSpeedKt:approach?profile.approachKt:0,
   trackDeg:0,windXMps:0,windZMps:0,
   verticalMs:approach?-1.8:0,pitchDeg:approach?-2.8:0,rollDeg:0,headingDeg:0,
   lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:!approach,
   message:approach?"Fictional short-final setup. Descend toward the pictured runway.":"Set simulated power, build speed and gently rotate to explore liftoff."};
+ return physicsId==="aero"?D.prepare(plane):plane;
 }
 function step(state,input,seconds){
  const dt=clamp(seconds,0,.1);
@@ -93,6 +98,7 @@ function step(state,input,seconds){
   }
   return {state,events};
  }
+ if(state.physicsId==="aero")return D.step(state,input,dt,events,wind);
  const throttle=clamp(input.throttle,0,1);
  const flap=clamp(input.flaps,0,30);
  if(state.onGround){

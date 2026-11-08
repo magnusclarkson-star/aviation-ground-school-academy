@@ -12,7 +12,9 @@
 <link rel="stylesheet" href="flight-sim-environment.css">
 <link rel="stylesheet" href="flight-sim-3d.css">
 <link rel="stylesheet" href="flight-sim-aircraft-systems.css">
+<link rel="stylesheet" href="flight-sim-aerodynamics.css">
 <script src="flight-sim-environment.js" defer></script>
+<script src="flight-sim-aerodynamics.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
@@ -98,6 +100,15 @@
     <div><small id="systemsFlapLabel">FLAPS · SIM</small><strong id="systemsFlapValue">10°</strong></div>
     <div><small id="systemsMotionLabel">PROPELLER / CONTROL SURFACES</small><strong id="systemsMotionValue">ANIMATED</strong></div>
    </div>
+   <div id="energyPanel" class="aero-readouts hidden" aria-label="Unvalidated experimental flight energy and force readings">
+    <div><small>ANGLE OF ATTACK · SIM</small><strong id="aeroAoA">0.0°</strong></div>
+    <div><small>LIFT · SIM</small><strong id="aeroLift">0.0 kN</strong></div>
+    <div><small>DRAG · SIM</small><strong id="aeroDrag">0.0 kN</strong></div>
+    <div><small>WING LOAD · SIM</small><strong id="aeroLoad">0.00 g</strong></div>
+    <div><small>FLIGHT PATH · SIM</small><strong id="aeroPath">0.0°</strong></div>
+    <div><small>SPECIFIC ENERGY · SIM</small><strong id="aeroEnergy">0 J/kg</strong></div>
+    <p id="aeroAlert" class="aero-alert" role="status" aria-live="off">Experimental model only · all coefficients invented</p>
+   </div>
    <div class="alignment-widget" aria-label="Lateral offset from the imaginary runway or helipad">
     <span id="offsetLabel">RUNWAY OFFSET</span>
     <div class="alignment-track" aria-hidden="true"><span class="alignment-centre"></span><span id="alignmentMarker" class="alignment-marker"></span></div>
@@ -130,6 +141,14 @@
       <option value="touring">Touring trainer · steady</option>
      </select>
      <p id="profileHint" class="hint">Three imaginary handling profiles for comparing control response; no model recreates a real aircraft.</p>
+    </div>
+    <div id="physicsWrap" class="physics-setting">
+     <label for="physicsSelect">Flight-dynamics teaching model</label>
+     <select id="physicsSelect" aria-describedby="physicsHint">
+      <option value="classic" selected>Classic · guided flight practice</option>
+      <option value="aero">Experimental · lift, drag and energy</option>
+     </select>
+     <p id="physicsHint" class="hint">Classic keeps the familiar takeoff/landing behaviour. Experimental uses invented lift, drag, angle of attack, bank loading and engine response; it is not a validated flight model.</p>
     </div>
     <div>
      <label for="windSelect">Illustrative wind environment</label>

@@ -122,3 +122,7 @@ The [Immersive Flight Simulator](flight-sim.html) now offers a **real browser We
 ### Animated control surfaces, propeller and rotors (November 2026)
 
 The [Immersive Simulator](flight-sim.html) now animates its own **3D propeller, opposing ailerons, elevators, rudder and wing flaps** from the existing yoke, joystick, rudder pedals and flap selector. The **helicopter main and tail rotors** now animate in chase view. A compact illustrative engine/rotor and control-surface strip remains available even when 2D fallback scenery is used. All outputs are fictional and do not reproduce real aircraft mechanical systems. [Acceptance and limitations](docs/ANIMATED-AIRCRAFT-SYSTEMS.md).
+
+### Optional experimental aerodynamics and energy lab
+
+The [Immersive Simulator](flight-sim.html) now has an optional **Experimental · lift, drag and energy** teaching model for the fictional fixed-wing trainer. It preserves **Classic** as the default, and does not change the conceptual helicopter. Experimental mode offers invented aerodynamic coefficients, angle-of-attack, simulated lift/drag and bank loading, fictional engine lag, flight-path/energy indications and stall cues. It is **not** validated aircraft flight physics or an accredited flight simulator. [Read experimental aerodynamics and acceptance notes](docs/EXPERIMENTAL-AERODYNAMICS.md).
