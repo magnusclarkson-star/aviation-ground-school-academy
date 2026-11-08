@@ -1,0 +1,55 @@
+name: Immersive Flight Simulator Browser Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'flight-sim.html'
+      - 'flight-sim.css'
+      - 'flight-sim.js'
+      - 'flight-sim-model.js'
+      - 'flight-sim-haptics.js'
+      - 'flight-sim-scenery.js'
+      - 'scripts/test-flight-sim-model.mjs'
+      - 'scripts/test-flight-sim-haptics.mjs'
+      - 'scripts/test-flight-sim-browser.mjs'
+      - '.github/workflows/flight-sim-browser.yml'
+  pull_request:
+    paths:
+      - 'flight-sim.html'
+      - 'flight-sim.css'
+      - 'flight-sim.js'
+      - 'flight-sim-model.js'
+      - 'flight-sim-haptics.js'
+      - 'flight-sim-scenery.js'
+      - 'scripts/test-flight-sim-model.mjs'
+      - 'scripts/test-flight-sim-haptics.mjs'
+      - 'scripts/test-flight-sim-browser.mjs'
+      - '.github/workflows/flight-sim-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  immersive-sim:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate simulator source
+        run: |
+          node --check flight-sim.js
+          node --check flight-sim-model.js
+          node --check flight-sim-haptics.js
+          node --check flight-sim-scenery.js
+      - name: Test deterministic flight model
+        run: node scripts/test-flight-sim-model.mjs
+      - name: Test optional vibration
+        run: node scripts/test-flight-sim-haptics.mjs
+      - name: Install isolated browser test dependency
+        run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install chromium
+      - name: Test desktop and simultaneous touch controls
+        run: node scripts/test-flight-sim-browser.mjs

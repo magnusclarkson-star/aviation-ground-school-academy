@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071725">
+<meta name="description" content="Immersive fictional airfield flight simulator with scrolling runway scenery, yoke, joystick, helicopter cyclic, optional haptics, takeoff and landing practice. Not a certified simulator.">
+<title>Immersive Airfield Flight Simulator | Aviation Ground School Academy</title>
+<link rel="stylesheet" href="flight-sim.css">
+<script src="flight-sim-model.js" defer></script>
+<script src="flight-sim-haptics.js" defer></script>
+<script src="flight-sim-scenery.js" defer></script>
+<script src="flight-sim.js" defer></script>
+</head>
+<body>
+<header class="site-head">
+ <a class="brand" href="index.html"><span class="brand-mark">✈</span><span>AVIATION GROUND SCHOOL ACADEMY<small>IMMERSIVE PRACTICE AIRFIELD</small></span></a>
+ <nav aria-label="Academy links"><a href="cockpit-v3.html?mode=skills">Cockpit instruments</a><a href="ground-school-modules.html">Theory modules</a><a href="ai-instructor.html">AI Instructor Studio</a></nav>
+</header>
+<main>
+ <section class="intro">
+  <div><span class="eyebrow">VISUAL FLIGHT-LAB UPGRADE · FICTIONAL TRAINER</span>
+   <h1>Fly the approach. Feel the controls.</h1>
+   <p>Animated runway and surrounding terrain, responsive simulated flight instruments, aircraft-shaped touchscreen controls, and optional short vibration cues on supported phones.</p>
+  </div>
+  <div class="type-tag">PERSONAL PRACTICE<br><strong>NOT CERTIFIED</strong></div>
+ </section>
+ <section class="notice" role="note"><strong>Educational simulation only.</strong> The aircraft models, takeoff/landing speeds, helipad behaviour, terrain, cues and weather are fictional simplifications—not a qualified flight simulator or usable flight instruction. No real navigation, ATC clearance, flight-hour credit, or aircraft operating procedures. Use a qualified instructor and approved aircraft manuals for real flight training.</section>
+ <section class="scene-panel" aria-label="Animated simulated airfield view and flight instruments">
+  <div class="scene-shell">
+   <canvas id="outsideView" width="960" height="540" aria-label="Animated simulated forward view of a runway or helipad and scrolling countryside, with a horizon that follows pitch and bank">A synthetic moving airfield scene. Flight status is also provided as text below.</canvas>
+   <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
+   <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
+   <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
+  </div>
+  <div class="readouts" aria-label="Fictional flight indication">
+   <div><small>AIRSPEED</small><strong id="readSpeed">0</strong><span>kt · indicative</span></div>
+   <div><small>HEIGHT AGL</small><strong id="readAlt">0</strong><span>metres</span></div>
+   <div><small>VERTICAL RATE</small><strong id="readVS">0.0</strong><span>m/s</span></div>
+   <div><small>HEADING</small><strong id="readHeading">000°</strong><span>fictional</span></div>
+   <div><small>PITCH / BANK</small><strong id="readAttitude">0° / 0°</strong><span>degrees</span></div>
+   <div><small>RUNWAY OFFSET</small><strong id="readOffset">0</strong><span>metres · illustrative</span></div>
+  </div>
+  <div class="flight-cue" role="status" aria-live="polite"><strong id="flightPhase">RUNWAY START</strong><span id="flightMessage">Advance the throttle to begin a simulated runway departure.</span></div>
+ </section>
+ <div class="lab-grid">
+  <section class="panel choices" aria-labelledby="aircraftTitle">
+   <span class="eyebrow">01 · CHOOSE A FICTIONAL AIRCRAFT</span>
+   <h2 id="aircraftTitle">Aircraft and manoeuvre</h2>
+   <div class="type-choices" role="group" aria-label="Select aircraft control configuration">
+    <button id="typeYoke" type="button" aria-pressed="true"><span aria-hidden="true">🛩</span> Trainer yoke</button>
+    <button id="typeStick" type="button" aria-pressed="false"><span aria-hidden="true">✈</span> Aeroplane stick</button>
+    <button id="typeCyclic" type="button" aria-pressed="false"><span aria-hidden="true">🚁</span> Helicopter cyclic</button>
+   </div>
+   <p id="aircraftHint" class="hint">A wheel-type control column commands simulated pitch and roll. This is not a type-specific replica.</p>
+   <div class="scenario-controls">
+    <button type="button" id="startRunway" class="major">Runway takeoff</button>
+    <button type="button" id="startApproach">Set up final approach</button>
+    <button type="button" id="restartFlight">Reset scenario</button>
+    <button type="button" id="pauseFlight" aria-pressed="false">Pause simulation</button>
+   </div>
+   <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>
+   <div class="optional-feedback">
+    <div class="section-line"><strong>Optional phone vibration</strong><button id="hapticsToggle" type="button" aria-pressed="false">Enable vibration</button></div>
+    <p id="hapticsStatus" role="status" aria-live="polite">Off by default. Requires supported vibration hardware and browser permission after a user gesture.</p>
+    <label for="turbulence">Synthetic turbulence strength <output id="turbulenceValue">Light</output></label>
+    <input id="turbulence" type="range" min="0" max="3" step="1" value="1">
+    <p class="hint">Gentle, short cues can indicate runway rumble, turbulence, control movement, pitch changes, turns and touchdowns. They never reproduce actual aircraft forces.</p>
+   </div>
+  </section>
+  <section class="panel control-panel" aria-labelledby="controlTitle">
+   <span class="eyebrow">02 · FLY WITH TWO THUMBS</span>
+   <h2 id="controlTitle">Touchscreen flight controls</h2>
+   <p class="hint" id="controlHint">Drag inside the control area to move the yoke. Use another finger for the rudder or engine power.</p>
+   <div class="physical-controls">
+    <div class="control-assembly">
+     <div id="controlPad" class="control-pad yoke-mode" aria-label="Full joystick touch area">
+      <span class="control-guides" aria-hidden="true"></span>
+      <button id="flightGrip" type="button" class="flight-grip" aria-label="Drag the simulated yoke left and right to bank, or up and down to change pitch; use arrow keys on desktop">
+       <svg class="hardware-art hardware-yoke" viewBox="0 0 270 190" aria-hidden="true">
+        <defs><linearGradient id="wheelMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9fb7c6"/><stop offset=".48" stop-color="#263746"/><stop offset="1" stop-color="#101d29"/></linearGradient></defs>
+        <path d="M135 174 V102" stroke="#a8c9dc" stroke-width="21" stroke-linecap="round"/>
+        <path d="M135 110 C95 107 67 83 31 64 L20 89 C50 111 73 132 110 138 L160 138 C196 132 220 111 250 89 L239 64 C204 83 175 107 135 110Z" fill="url(#wheelMetal)" stroke="#d5e1e9" stroke-width="6"/>
+        <path d="M28 60 L9 54 Q0 57 7 75 L25 123 Q31 137 45 127 L57 119 L43 83Z" fill="#111a23" stroke="#93a9bb" stroke-width="5"/>
+        <path d="M242 60 L261 54 Q270 57 263 75 L245 123 Q239 137 225 127 L213 119 L227 83Z" fill="#111a23" stroke="#93a9bb" stroke-width="5"/>
+        <rect x="112" y="100" width="46" height="48" rx="13" fill="#142c3e" stroke="#cbd8dc" stroke-width="4"/>
+        <circle cx="135" cy="124" r="15" fill="#42677f" stroke="#e7c78f" stroke-width="3"/>
+        <path d="M119 124 H151 M135 108 V140" stroke="#d6effb" stroke-width="2"/>
+        <circle cx="36" cy="79" r="5" fill="#b3d5e4"/><circle cx="234" cy="79" r="5" fill="#b3d5e4"/>
+        <text x="135" y="185" text-anchor="middle" fill="#b6d0da" font-size="13" font-weight="800">TRAINER YOKE</text>
+       </svg>
+       <svg class="hardware-art hardware-stick" viewBox="0 0 270 190" aria-hidden="true">
+        <ellipse cx="135" cy="171" rx="76" ry="16" fill="#0c1824" stroke="#b8cdd6" stroke-width="3"/>
+        <path d="M117 164 L151 164 L146 141 L123 141Z" fill="#344b5b" stroke="#d2e8ef" stroke-width="3"/>
+        <path d="M135 146 L153 77" stroke="#9eb3c0" stroke-width="19" stroke-linecap="round"/>
+        <path d="M137 100 Q109 74 122 39 L139 23 L164 39 Q177 66 158 103 L147 126 L134 118Z" fill="#233d50" stroke="#afc9d8" stroke-width="5"/>
+        <path d="M126 50 L144 43 L145 61 L127 68Z" fill="#527d96"/>
+        <circle cx="145" cy="39" r="10" fill="#e4bf75" stroke="#cbe7f2" stroke-width="3"/>
+        <path d="M157 73 L176 78 L166 94 L157 88Z" fill="#111f2b" stroke="#d1e3e7" stroke-width="3"/>
+        <path d="M124 81 L133 83 L129 105" fill="none" stroke="#7f9ba9" stroke-width="5"/>
+        <text x="135" y="188" text-anchor="middle" fill="#b6d0da" font-size="13" font-weight="800">CONTROL STICK</text>
+       </svg>
+       <svg class="hardware-art hardware-cyclic" viewBox="0 0 270 190" aria-hidden="true">
+        <ellipse cx="135" cy="170" rx="72" ry="15" fill="#111b27" stroke="#97b1bf" stroke-width="3"/>
+        <path d="M135 158 Q154 110 128 57" fill="none" stroke="#9ab2be" stroke-width="14" stroke-linecap="round"/>
+        <path d="M108 26 Q127 16 156 28 L160 65 Q136 85 108 62Z" fill="#263e51" stroke="#c6dce5" stroke-width="5"/>
+        <circle cx="121" cy="38" r="6" fill="#d3b37b"/><circle cx="144" cy="38" r="6" fill="#83d2e9"/>
+        <rect x="112" y="47" width="45" height="12" rx="5" fill="#0b1c29"/>
+        <path d="M108 61 L95 77 L110 85 L125 68" fill="#0f2433" stroke="#abc3d3" stroke-width="3"/>
+        <text x="135" y="188" text-anchor="middle" fill="#b6d0da" font-size="13" font-weight="800">ROTORCRAFT CYCLIC</text>
+       </svg>
+      </button>
+     </div>
+     <div class="axis-values"><span>BANK <strong id="cmdBank">0%</strong></span><span>PITCH <strong id="cmdPitch">0%</strong></span></div>
+    </div>
+    <div class="side-controls">
+     <div id="powerPanel" class="lever-panel">
+      <label for="power" id="powerLabel">ENGINE THROTTLE <output id="powerValue">0%</output></label>
+      <div class="lever-track"><span class="track-ornament" aria-hidden="true"></span><input id="power" type="range" min="0" max="100" value="0" aria-label="Simulated engine throttle percentage"></div>
+     </div>
+     <div id="collectivePanel" class="lever-panel hidden">
+      <label for="collective">ROTORCRAFT COLLECTIVE <output id="collectiveValue">48%</output></label>
+      <div class="lever-track"><span class="track-ornament" aria-hidden="true"></span><input id="collective" type="range" min="0" max="100" value="48" aria-label="Simulated collective lever percentage"></div>
+      <p class="hint">Collective changes fictional vertical lift; cyclic controls horizontal movement.</p>
+     </div>
+     <div id="flapPanel" class="lever-panel">
+      <label for="flaps">FLAP SELECTOR</label>
+      <select id="flaps" aria-label="Fictional flap detent"><option value="0">0° · Retracted</option><option value="10" selected>10° · Initial</option><option value="20">20° · Extended</option><option value="30">30° · Full</option></select>
+     </div>
+    </div>
+   </div>
+   <div class="rudder-deck">
+    <div><span class="eyebrow">RUDDER PEDALS</span><p class="hint">Hold a pedal with a second finger to command yaw. Release to centre. <strong id="cmdRudder">RUDDER 0%</strong></p></div>
+    <div class="rudder-pedals" role="group" aria-label="Aircraft rudder pedal controls">
+     <button id="leftRudder" type="button" aria-label="Hold left rudder"><span class="pedal-icon" aria-hidden="true">▥</span>LEFT</button>
+     <button id="rightRudder" type="button" aria-label="Hold right rudder"><span class="pedal-icon" aria-hidden="true">▥</span>RIGHT</button>
+    </div>
+   </div>
+   <button id="brake" type="button" class="brake-button">Hold wheel brake during rollout</button>
+   <p class="hint shortcuts">Desktop: arrows = pitch/bank, A/D = rudder, W/S = power/collective, space = brake, R = reset. On phones, keep the outside view visible while using two fingers.</p>
+  </section>
+ </div>
+ <section class="instructions panel" aria-label="Learning tasks and limitations">
+  <span class="eyebrow">03 · PRACTISE THE SEQUENCE</span>
+  <h2>Three flight-learning scenarios</h2>
+  <div class="mission-cards">
+   <article><strong>01 · Runway takeoff</strong><p>Explore the relationship between a fictional throttle, airspeed, pitch and rotation. Continue climbing or experiment with turns once airborne.</p></article>
+   <article><strong>02 · Final approach and landing</strong><p>Use the setup button to place the imaginary aeroplane on a short final. Align with the runway, manage descent and practise a gentle touchdown and rollout.</p></article>
+   <article><strong>03 · Rotorcraft lift and landing</strong><p>Select helicopter cyclic, then use collective to lift, cyclic to translate and the rudder pedals to turn. Practise a gentle return to the marked helipad.</p></article>
+  </div>
+  <p class="disclaimer">These exercises use a deliberately simplified fictional flight model. The visual scenery and controls resemble aviation hardware but are not accurate aircraft type reproductions. Real helicopter flight requires specialised instruction. Phone vibration is optional, brief and dependent on browser/device support; it is not genuine force feedback.</p>
+ </section>
+ <footer>Aviation Ground School Academy · Educational technology demonstrator · No pilot licence, actual flight credit, real airfield/GPS, or safety-critical guidance.</footer>
+</main>
+</body>
+</html>

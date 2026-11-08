@@ -95,3 +95,9 @@ The [AI Instructor Studio](ai-instructor.html) includes eight **introductory, un
 ## Device-only module checkpoints — November 2026
 
 The public [Ground-School Module Practice](ground-school-modules.html) page groups the eight curated instructor lessons into four conceptual modules with 24 short self-check questions and two introductory pathway orders (Scouts/Air Scouts or aviation enthusiasts/aspiring pilots). Practice outcomes may be kept in the learner's browser, cleared or exported as **unverified** JSON. No secure student records, qualified instructor review, approved examination, certification, or credit are created. See [Module Practice Acceptance](docs/MODULE-PRACTICE-ACCEPTANCE.md).
+
+## Immersive Airfield Flight Simulator — November 2026
+
+[Immersive Flight Simulator](flight-sim.html) is a new phone/desktop **fictional teaching simulation** with local animated forward scenery (runway, fields, trees, clouds, hills, helipad), visually differentiated dual-handled **yoke**, **aeroplane stick** and **helicopter cyclic**, plus throttle, collective, flap selector, held wheel brake and independent rudder pedals. It supports conceptual runway takeoff, climbing and turns, a separate *repositioned* short-final landing exercise, and conceptual rotorcraft lift/helipad landing. Optional short phone-vibration cues are off by default, bounded, rate-limited and unavailable in some browsers. The public page requires no credentials or provider API and never requests real GPS.
+
+This is **not** an accurate aircraft-specific simulator, a certified aviation training device, real-world flight instruction, a recognised pilot training credit, or tested on physical Android/iOS devices. See [Immersive Flight Simulator Acceptance](docs/IMMERSIVE-FLIGHT-SIMULATOR.md). Test it alongside the existing [Cockpit V3 instruments](cockpit-v3.html) and [Ground-School Modules](ground-school-modules.html).
