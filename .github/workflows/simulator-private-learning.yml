@@ -1,0 +1,42 @@
+name: Private Flight Practice Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  private-learning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check private simulator module syntax
+        run: |
+          node --check flight-sim-recorder.js
+          node --check flight-sim-replay.js
+          node --check flight-sim-after-action.js
+          node --check flight-sim-playback.js
+          node --check flight-sim-moment-coach.js
+          node --check flight-sim-track.js
+          node --check simulator-trace-import.js
+          node --check flight-sim.js
+      - name: Execute private recorder, replay, debrief and learning-summary tests
+        run: |
+          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs tests/simulator-moment-coach.test.cjs tests/simulator-track.test.cjs
+
+  private-browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser-test dependencies
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
+          npx playwright install chromium
+      - name: Test opt-in replay and local debrief import
+        run: node scripts/test-flight-private-learning-browser.mjs

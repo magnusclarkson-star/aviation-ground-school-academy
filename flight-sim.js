@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice;
+ V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -18,13 +18,43 @@ const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
+const trace=R.makeRecorder();
+const playback=O.makePlayer();
+function pauseReplay(){
+ playback.pause();
+ $("tracePlayPause").textContent="Play recorded samples";
+ $("tracePlayPause").setAttribute("aria-pressed","false");
+}
+function refreshReplay(){
+ const rows=Q.prepare(trace.exportData().observations);
+ const panel=$("traceReplayPanel"),stateOfPlayer=playback.status();
+ $("traceReplay").disabled=trace.status().active||!rows.length;
+ $("tracePlayPause").disabled=panel.hidden||trace.status().active||rows.length<2;
+ if(panel.hidden)return;
+ if(!rows.length){panel.hidden=true;pauseReplay();return;}
+ const slider=$("traceReplayIndex");slider.max=String(rows.length-1);
+ const idx=Math.min(stateOfPlayer.index,rows.length-1);slider.value=String(idx);
+ Q.draw($("traceReplayCanvas"),rows,idx);
+ const position=B.draw($("traceTrackCanvas"),trace.exportData().observations,idx);
+ $("traceTrackDescription").textContent=position.description;
+ $("traceReplayDetail").textContent=Q.describe(rows,idx);
+ const moment=C.inspect(trace.exportData().observations,idx,$("traceMomentPathway").value);
+ $("traceMomentTitle").textContent=moment.title;
+ $("traceMomentFacts").textContent=moment.observations;
+ $("traceMomentQuestion").textContent=moment.question;
+ $("traceMomentNotice").textContent=moment.warning;
+ $("tracePlayPause").textContent=stateOfPlayer.playing?"Pause replay":"Play recorded samples";
+ $("tracePlayPause").setAttribute("aria-pressed",String(stateOfPlayer.playing));
+}
+function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;$("traceReplay").disabled=t.active||!t.samples;$("traceInsights").disabled=t.active||t.samples<2;}
+function clearTrace(){trace.clear();playback.load(0);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();}
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
 let hardware=null;
 let exerciseSession=X.begin("cgTransfer","trainer");
 let exerciseApplying=false;
 let instructorVoice=null;
-let paused=false,lastFrame=0,prevView=0,dragPointer=null;
+let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
 let lastPhase=state.phase;
@@ -294,6 +324,7 @@ function setMode(next){
   $("pauseFlight").textContent="Pause simulation";
   lastPhase=state.phase;
   practice=G.start(state);
+  clearTrace();
   systems=A.create(state.mode);
   A.step(systems,state,input,0);
  }
@@ -338,6 +369,7 @@ function reset(scenario){
  input.turbulence=intensity[Number($("turbulence").value)]??.14;
  lastPhase=state.phase;
  practice=G.start(state);
+ clearTrace();
  systems=A.create(state.mode);
  A.step(systems,state,input,0);
  reportEnvironment();
@@ -432,7 +464,7 @@ window.addEventListener("keyup",e=>{
 });
 window.addEventListener("blur",()=>{releaseControls();haptics.stop()});
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden){releaseControls();haptics.stop();}
+ if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();}
  lastFrame=0;
 });
 $("power").addEventListener("input",e=>{
@@ -533,6 +565,46 @@ $("hapticsToggle").addEventListener("click",()=>{
   haptics.supported?"Off. No vibration will be requested.":"This browser does not expose phone vibration. The simulator still works visually.";
  if(enabled)haptics.pulse("control");
 });
+$("traceStart").addEventListener("click",()=>{trace.start(state);playback.load(0);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();});
+$("traceStop").addEventListener("click",()=>{trace.stop();traceStatus();refreshReplay();});
+$("traceClear").addEventListener("click",clearTrace);
+$("traceInsights").addEventListener("click",()=>{
+ if(trace.status().active)return;
+ const analysis=Z.summarise(trace.exportData());
+ if(!analysis.available)return;
+ $("traceInsightsFacts").textContent=analysis.text;
+ $("traceInsightsPrompts").textContent=analysis.prompts.map((p,i)=>(i+1)+". "+p).join("\n\n");
+ $("traceInsightsWarning").textContent=analysis.warning;
+ $("traceInsightsPanel").hidden=false;
+});
+$("traceReplay").addEventListener("click",()=>{
+ if(trace.status().active)return;
+ const rows=Q.prepare(trace.exportData().observations);if(!rows.length)return;
+ playback.load(rows.length);
+ const recording=trace.exportData();
+ const kind=recording.mode==="helicopter"?"rotorcraft":recording.scenario==="approach"?"approach":"takeoff";
+ $("traceDebriefLink").setAttribute("href","simulator-debrief.html?scenario="+kind);
+ $("traceReplayPanel").hidden=false;
+ refreshReplay();
+});
+$("traceMomentPathway").addEventListener("change",refreshReplay);
+$("traceReplayIndex").addEventListener("input",()=>{
+ pauseReplay();
+ playback.seek(Number($("traceReplayIndex").value));
+ refreshReplay();
+});
+$("tracePlayPause").addEventListener("click",()=>{
+ if(trace.status().active)return;
+ if(playback.status().playing)pauseReplay();else playback.play();
+ refreshReplay();
+});
+$("traceDownload").addEventListener("click",()=>{
+ const data=trace.exportData();if(!data.observations.length||trace.status().active)return;
+ const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+ const a=document.createElement("a");a.href=url;a.download="academy-unsigned-synthetic-flight-trace.json";
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $("traceStatus").textContent="Unsigned synthetic trace downloaded locally. Review before sharing.";
+});
 function frame(now){
  const dt=lastFrame?Math.min(.08,Math.max(0,(now-lastFrame)/1000)):0;
  lastFrame=now;
@@ -542,6 +614,7 @@ function frame(now){
   const result=M.step(state,input,dt);
   A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
+  trace.sample(state,input,dt);
   // Prioritise distinctive events over routine rate-limited ambience.
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
@@ -552,8 +625,13 @@ function frame(now){
   }
   }
  }
+ if(!document.hidden&&playback.status().playing){
+  const before=playback.status(),after=playback.tick(dt);
+  if(after.index!==before.index||!after.playing)refreshReplay();
+ }
  drawScenery(now);
  if(now-prevView>42){updateReadouts();prevView=now;}
+ if(now-prevViewTrace>500){traceStatus();prevViewTrace=now;}
  requestAnimationFrame(frame);
 }
 if(!haptics.supported){
