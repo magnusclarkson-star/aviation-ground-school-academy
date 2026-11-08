@@ -264,3 +264,11 @@ An unobtrusive **VISUAL CUE** display now follows the fictional flight phases (r
 **Tecno / Android device checks:** First verify the phone itself vibrates for an ordinary incoming call or notification. Open Android **Settings → Sound & vibration** (or **Accessibility → Vibration & haptics**, depending on the phone's HiOS version) and enable vibration/haptic feedback, and check Do Not Disturb. Next use the simulator directly in Chrome rather than an in-app view, tap **Test stronger vibration**, and read **Browser & device diagnostics**. The browser API may report a request as accepted while nothing is felt; websites cannot force the phone's system settings or use Android's native vibrator service directly. If the phone vibrates in other applications but not this web page, a future dedicated Android build with a native haptics bridge may be necessary for more reliable feedback. Do not assume the hardware is faulty based on the website alone.
 
 Flight simulator: https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
+
+### Native Android haptics test companion (November 2026)
+
+Because a Tecno Camon 30 visibly vibrates for calls/notifications but the hosted Academy website fails to activate the motor, the repo now includes a **separate Android haptics engineering test** under [android/native-haptics](android/native-haptics/README.md). The normal web simulator, engine sounds, ATC scripts and flight controls remain the default and unchanged on browsers.
+
+The Android companion hosts only the exact Academy simulator URL inside a trusted HTTPS WebView and uses Android's **VIBRATE** permission with a restricted-origin WebMessageListener. The message bridge accepts bounded patterns and stops vibration when the app pauses. It does **not** expose a generic JavaScript interface, and does not request microphone, location, storage, camera or contacts permissions.
+
+The GitHub Actions workflow **Build Android Native Haptics Test APK** compiles a **debug-only APK** for inspection; this is not a production release or a Play Store installation. Its download is an Actions artifact after the build succeeds. The user has not installed it, and we cannot claim the physical Tecno motor was triggered until the device is tested. See the companion README before any installation.
