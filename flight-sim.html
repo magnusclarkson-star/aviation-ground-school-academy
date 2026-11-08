@@ -35,6 +35,7 @@
 <script src="flight-sim-after-action.js" defer></script>
 <script src="flight-sim-playback.js" defer></script>
 <script src="flight-sim-moment-coach.js" defer></script>
+<script src="flight-sim-track.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -417,6 +418,12 @@
     <label for="traceReplayIndex">Inspect recorded moment</label>
     <input type="range" id="traceReplayIndex" min="0" max="0" value="0" step="1" style="display:block;width:100%;max-width:720px">
     <p id="traceReplayDetail" role="status" aria-live="polite"></p>
+    <div id="traceTrackPanel" style="max-width:720px;margin:1rem 0">
+      <h4>Bird’s-eye synthetic flight path</h4>
+      <p>Shows local X/Z simulator coordinates, not geography, a surveyed runway, GPS tracking or real navigational performance. The selected replay moment appears on this illustration.</p>
+      <canvas id="traceTrackCanvas" width="720" height="360" style="display:block;width:100%;max-width:720px;height:auto;border:1px solid #b5c5d6;border-radius:8px;background:#f6faff" role="img" aria-label="Bird’s-eye synthetic X/Z track with start, end and selected replay moment">Synthetic flight path; description appears below.</canvas>
+      <p id="traceTrackDescription" role="status" aria-live="polite">No recorded synthetic position yet.</p>
+    </div>
     <div id="traceMomentPanel" style="background:#eef5fc;border:1px solid #a5bad2;padding:.9rem;border-radius:10px;max-width:720px">
       <h4>What can you learn from this recorded moment?</h4>
       <label for="traceMomentPathway">Learning pathway for reflection</label>
