@@ -256,10 +256,12 @@ const FRAGMENT=`#version 300 es
 precision mediump float;
 in vec3 vColor;
 in float vDistance,vLight;
+uniform vec3 uFogColor,uLightColor;
 out vec4 outColor;
 void main(){
  float fog=clamp((vDistance-1150.)/5000.,0.,.8);
- outColor=vec4(mix(vColor*vLight,vec3(.60,.76,.82),fog),1.);
+ vec3 shaded=clamp(vColor*vLight*uLightColor,0.,1.);
+ outColor=vec4(mix(shaded,uFogColor,fog),1.);
 }`;
 const SKY_VERTEX=`#version 300 es
 precision mediump float;
@@ -271,9 +273,10 @@ void main(){
 const SKY_FRAGMENT=`#version 300 es
 precision mediump float;
 in vec2 uv;
+uniform vec3 uSkyLow,uSkyHigh;
 out vec4 outColor;
 void main(){
- vec3 sky=mix(vec3(.68,.82,.87),vec3(.055,.25,.43),smoothstep(.0,.96,clamp(uv.y,0.,1.)));
+ vec3 sky=mix(uSkyLow,uSkyHigh,smoothstep(.0,.96,clamp(uv.y,0.,1.)));
  outColor=vec4(sky,1.);
 }`;
 function compile(gl,vsSource,fsSource){
@@ -305,9 +308,13 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   program=compile(gl,VERTEX,FRAGMENT);
   skyProgram=compile(gl,SKY_VERTEX,SKY_FRAGMENT);
   const uni={};
+  const skyUniforms={
+   low:gl.getUniformLocation(skyProgram,"uSkyLow"),
+   high:gl.getUniformLocation(skyProgram,"uSkyHigh")
+  };
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal",
-   "uPartPivot","uPartAngle","uPartAxis"])
+   "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -322,7 +329,11 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   const plane=upload(buildVehicle("airplane")),heli=upload(buildVehicle("helicopter"));
   const planeParts=buildMovingParts("airplane").map(part=>({...part,gpu:upload(part.mesh)}));
   const helicopterParts=buildMovingParts("helicopter").map(part=>({...part,gpu:upload(part.mesh)}));
-  function draw(state,{view="cockpit",animation={}}={}){
+  function draw(state,{view="cockpit",animation={},lighting="day"}={}){
+   const palette=root?.AGSAFlightLighting?.choose?.(lighting)||{
+    skyLow:[.68,.82,.87],skyHigh:[.055,.25,.43],
+    fog:[.60,.76,.82],light:[1,1,1]
+   };
    if(lost||disposed||!state)return false;
    const rect=canvas.getBoundingClientRect?.()||{width:960,height:540};
    const ratio=Math.min(1.25,typeof devicePixelRatio==="number"?devicePixelRatio:1);
@@ -334,9 +345,13 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    gl.clearColor(.45,.72,.84,1);gl.clearDepth(1);
    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
    gl.disable(gl.DEPTH_TEST);gl.useProgram(skyProgram);
+   gl.uniform3fv(skyUniforms.low,palette.skyLow);
+   gl.uniform3fv(skyUniforms.high,palette.skyHigh);
    gl.drawArrays(gl.TRIANGLES,0,3);
    gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);
    gl.useProgram(program);
+   gl.uniform3fv(uni.uFogColor,palette.fog);
+   gl.uniform3fv(uni.uLightColor,palette.light);
    const camera=cameraPose(state,view);
    gl.uniform3fv(uni.uEye,camera.eye);
    gl.uniform3fv(uni.uCraft,camera.craft);

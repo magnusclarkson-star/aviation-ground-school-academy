@@ -8,12 +8,14 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
+const lightingChoice=()=>L.choose($("lightingMode").value);
+const lightingId=()=>$("lightingMode").value;
 const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
@@ -72,7 +74,7 @@ function fallbackTo2D(message){
  $("cameraMode").disabled=true;
  visualMessage(message,"fallback");
  prev2D=0;
- S.draw(canvas,state,{reducedMotion:prefersLessMotion});
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});
 }
 // No private API, hidden service or remote rendering. When WebGL2 is not
 // available (including context loss), the original Canvas 2D keeps working.
@@ -93,7 +95,7 @@ function chooseVisual(){
  document.querySelector(".scene-shell").classList.add("three-dimensional");
  $("cameraMode").disabled=false;
  try{
-  if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})){
+  if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId()})){
    visualMessage("3D WebGL2 airfield active: real geometric terrain, runway, buildings, trees and optional chase aircraft. Fictional scenery, not a surveyed airport.","active");
    prev3D=0;return;
   }
@@ -103,19 +105,24 @@ function chooseVisual(){
 function drawScenery(now){
  if(renderer3D){
   if(now-prev3D>=33){
-   try{if(!renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})){
+   try{if(!renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId()})){
     fallbackTo2D("3D graphics context lost or became unavailable; switched safely to 2D scenery.");
    }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
    prev3D=now;
   }
   // Keep a warm 2D fallback without rendering it at full frame rate on phones.
   if(now-prev2D>=300){
-   S.draw(canvas,state,{reducedMotion:prefersLessMotion});prev2D=now;
+   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});prev2D=now;
   }
  }else if(now-prev2D>=42){
-  S.draw(canvas,state,{reducedMotion:prefersLessMotion});prev2D=now;
+  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});prev2D=now;
  }
 }
+$("lightingMode").addEventListener("change",()=>{
+ prev2D=0;prev3D=0;
+ $("lightingStatus").textContent=lightingChoice().label+" selected. Fictional outside light only; instruments and flight dynamics unchanged.";
+ if(!renderer3D)S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});
+});
 function setValues(){
  $("power").value=String(round(input.throttle*100));
  $("powerValue").textContent=round(input.throttle*100)+"%";
@@ -357,7 +364,7 @@ function setMode(next){
   "Drag fictional "+(type==="cyclic"?"cyclic":type==="yoke"?"yoke":"joystick")+" left/right for bank and up/down for pitch. Arrow keys on desktop.");
  releaseControls();
  hardware?.resetPower();
- setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion});
+ setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});
 }
 function reset(scenario){
  const newMode=type==="cyclic"?"helicopter":"airplane";
@@ -377,7 +384,7 @@ function reset(scenario){
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();hardware?.resetPower();setValues();updateReadouts();
  haptics.stop();
- S.draw(canvas,state,{reducedMotion:prefersLessMotion});
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
@@ -527,7 +534,7 @@ $("pauseFlight").addEventListener("click",()=>{
 });
 $("visualMode").addEventListener("change",chooseVisual);
 $("cameraMode").addEventListener("change",()=>{
- if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})}
+ if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId()})}
  catch{fallbackTo2D("3D camera unavailable; switched to 2D scenery.")}
 });
 $("instrumentToggle").addEventListener("click",()=>{

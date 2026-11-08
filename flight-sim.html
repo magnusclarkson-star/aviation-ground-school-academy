@@ -21,6 +21,7 @@
 <script src="flight-sim-aerodynamics.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
+<script src="flight-sim-lighting.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
 <script src="flight-sim-instruments.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
@@ -276,12 +277,20 @@
      <option value="3d" selected>3D airfield · WebGL2 when available</option>
      <option value="2d">Lightweight 2D · best compatibility</option>
     </select>
+    <label for="lightingMode">Illustrated outside lighting</label>
+    <select id="lightingMode">
+     <option value="day" selected>Daylight · standard view</option>
+     <option value="golden">Warm evening · golden light</option>
+     <option value="dusk">Dusk · dim illustrated scenery</option>
+    </select>
+    <p id="lightingStatus" role="status" aria-live="polite">Daylight selected. Lighting changes scenery only, not instruments or flight dynamics.</p>
     <label for="cameraMode">3D camera viewpoint</label>
     <select id="cameraMode">
      <option value="cockpit" selected>Forward pilot view</option>
      <option value="chase">Outside chase view · 3D aircraft</option>
     </select>
     <p id="visualStatus" class="visual-status" role="status" aria-live="polite">Checking 3D graphics support. The original 2D airfield remains available.</p>
+    <p class="hint">Lighting choices are artistic and cannot represent actual sunset, meteorological visibility, night-flying conditions or safe operating limits. They never change the moving aircraft, weather model, vibration or readable instruments.</p>
     <p class="hint">3D uses locally generated terrain, runway geometry, trees, hangars and stylised aircraft models. In chase view, the animated propeller, wing flaps, ailerons, elevator and rudder—or helicopter rotors—respond to simulator inputs. No satellite maps or real airports. Unsupported phones revert to 2D.</p>
    </div>
    <details id="hardwareController" class="hardware-panel">

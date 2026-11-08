@@ -21,11 +21,14 @@ jobs:
           node --check flight-sim-playback.js
           node --check flight-sim-moment-coach.js
           node --check flight-sim-track.js
+          node --check flight-sim-lighting.js
+          node --check flight-sim-scenery.js
+          node --check flight-sim-3d.js
           node --check simulator-trace-import.js
           node --check flight-sim.js
       - name: Execute private recorder, replay, debrief and learning-summary tests
         run: |
-          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs tests/simulator-moment-coach.test.cjs tests/simulator-track.test.cjs
+          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs tests/simulator-moment-coach.test.cjs tests/simulator-track.test.cjs tests/simulator-lighting.test.cjs
 
   private-browser:
     runs-on: ubuntu-24.04
@@ -40,3 +43,5 @@ jobs:
           npx playwright install chromium
       - name: Test opt-in replay and local debrief import
         run: node scripts/test-flight-private-learning-browser.mjs
+      - name: Test phone-friendly 2D and WebGL2 lighting presets
+        run: node scripts/test-flight-lighting-browser.mjs

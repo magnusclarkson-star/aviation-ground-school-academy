@@ -15,13 +15,17 @@ function project(state,x,y,z,width=960,height=540){
  const focal=height*1.2;
  return {x:width/2+lateral*focal/depth,y:height*.49-heightAxis*focal/depth,depth};
 }
-function draw(canvas,state,{reducedMotion=false}={}){
+function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
+ const palette=root?.AGSAFlightLighting?.choose?.(lighting)||{
+  sky2d:["#175784","#78c4e0","#dceaf0"],clouds:"#e0f4f4a1",
+  hills:"#587e85",grass:["#729576","#507c5c","#355f4b"]
+ };
  const ctx=canvas?.getContext?.("2d");
  if(!ctx)return false;
  const width=canvas.width||960,height=canvas.height||540;
  const w=width,h=height;
  const sky=ctx.createLinearGradient(0,0,0,h);
- sky.addColorStop(0,"#175784");sky.addColorStop(.55,"#78c4e0");sky.addColorStop(1,"#dceaf0");
+ sky.addColorStop(0,palette.sky2d[0]);sky.addColorStop(.55,palette.sky2d[1]);sky.addColorStop(1,palette.sky2d[2]);
  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
  ctx.save();
  ctx.translate(w/2,h/2);
@@ -34,14 +38,14 @@ function draw(canvas,state,{reducedMotion=false}={}){
  for(let i=-2;i<7;i++){
   const x=((i*227+138-cloudOffset)%(w+460)+w+460)%(w+460)-120;
   const y=horizon-130-(i%3)*33+(reducedMotion?0:Math.sin(state.time*.1+i)*4);
-  ctx.fillStyle="#e0f4f4a1";
+  ctx.fillStyle=palette.clouds;
   ctx.beginPath();
   ctx.ellipse(x,y,68,13,0,0,Math.PI*2);
   ctx.ellipse(x+32,y-11,42,18,0,0,Math.PI*2);
   ctx.ellipse(x-23,y-9,36,15,0,0,Math.PI*2);
   ctx.fill();
  }
- ctx.fillStyle="#587e85";
+ ctx.fillStyle=palette.hills;
  ctx.beginPath();ctx.moveTo(-w,horizon+30);
  for(let i=0;i<=24;i++){
   const x=-w+i*(3*w/24);
@@ -50,7 +54,7 @@ function draw(canvas,state,{reducedMotion=false}={}){
  }
  ctx.lineTo(w*3,h*2);ctx.lineTo(-w,h*2);ctx.fill();
  const grass=ctx.createLinearGradient(0,horizon,0,h*2);
- grass.addColorStop(0,"#729576");grass.addColorStop(.5,"#507c5c");grass.addColorStop(1,"#355f4b");
+ grass.addColorStop(0,palette.grass[0]);grass.addColorStop(.5,palette.grass[1]);grass.addColorStop(1,palette.grass[2]);
  ctx.fillStyle=grass;ctx.fillRect(-w,horizon,w*3,h*3);
  // Alternating foreground field bands and a few roadside features use
  // projection, making forward movement visually observable without photos.
@@ -180,6 +184,9 @@ function draw(canvas,state,{reducedMotion=false}={}){
   }
  }
  ctx.restore();
+ // Grade only the illustrated outside scenery. The cockpit PFD/controls remain
+ // outside this canvas, and the stationary white reference cue stays legible.
+ if(palette.overlay){ctx.fillStyle=palette.overlay;ctx.fillRect(0,0,w,h);}
  // Fixed airframe reference cue and non-certified horizon tick marks.
  ctx.strokeStyle="#ffffffc4";ctx.lineWidth=2;
  ctx.beginPath();ctx.moveTo(w*.43,h*.53);ctx.lineTo(w*.485,h*.53);
