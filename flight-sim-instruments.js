@@ -3,6 +3,8 @@
  * This is not a real PFD, compass, altimeter or aviation-certified display.
  */
 (function(root){"use strict";
+const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
+if(!E)throw Error("Fictional aircraft profiles unavailable");
 const finite=(v,fallback=0)=>Number.isFinite(v)?v:fallback;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,finite(v)));
 const round=v=>Math.round(finite(v));
@@ -18,7 +20,8 @@ function snapshot(state){
  const speed=Math.max(0,round(state.speedKt));
  const height=Math.max(0,round(state.altitudeM));
  const phase=String(state.phase||"ready");
- const lowSpeed=state.mode==="airplane"&&!state.onGround&&finite(state.speedKt)<43;
+ const lowSpeed=state.mode==="airplane"&&!state.onGround&&
+  finite(state.speedKt)<E.selectProfile(state.profileId||"trainer").stallKt+4;
  return {
   pitch,roll,
   // Positive nose-up pitch lowers the drawn horizon; positive bank inclines
