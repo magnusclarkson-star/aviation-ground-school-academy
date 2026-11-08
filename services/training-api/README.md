@@ -247,3 +247,16 @@ See [AI Instructor and Voice Engineering Guide](../../docs/AI-INSTRUCTOR-VOICE.m
 
 
 **Pilot eligibility/microphone permission:** see [VOICE-PILOT-SECURITY.md](./VOICE-PILOT-SECURITY.md). Unapproved accounts are denied before provider calls or reservations; age verification is not implemented. Backend call expiry is still best-effort.
+
+## V0.6 — Authenticated module self-check imports (private staging)
+
+The private portal now includes a **student-only module import** and **assigned-instructor read-only module overview**, separate from public browser-local self-study. Students can select one item from a small unsigned JSON export from `ground-school-modules.html`; the backend validates its module, content revision and claimed score, and stores only an **unverified** account-scoped receipt. Neither the public learner page nor the private backend claims the answers were observed or graded.
+
+Three new endpoints are available after migration `007_module_practice_claims.sql`:
+
+- `POST /api/v1/learning/module-claims` — student + CSRF + idempotency key; 24 new imports per student/UTC day.
+- `GET /api/v1/learning/module-claims` — student, own results only.
+- `GET /api/v1/instructor/assigned-module-claims` — instructor, read-only, current active same-organisation assignments only.
+
+The application DB role receives SELECT/INSERT (but not UPDATE/DELETE) to the new table. SQL constraints prevent "approved" or credit-bearing states. No real learners or children should be onboarded; there is no public enrolment or grade certification. See [Private Module Claim Import and Security](PRIVATE-MODULE-CLAIMS.md) for exact payload, deployment order, tests and remaining safeguarding requirements.
+

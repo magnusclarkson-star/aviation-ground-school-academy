@@ -74,6 +74,22 @@
      <div id="studentList" class="item-list"><p class="muted">No records loaded.</p></div>
     </div>
    </div>
+   <section class="panel" aria-labelledby="moduleClaimsStudentTitle">
+    <div class="section-line">
+     <h3 id="moduleClaimsStudentTitle">Imported module self-checks (unverified)</h3>
+     <button id="moduleRefreshStudent" type="button" class="subtle-button">Refresh</button>
+    </div>
+    <p class="muted">Import a local JSON summary downloaded from the public Ground-School Module Practice page. Only the selected module's claimed score is saved against your fictional staging account. The original file, answer choices and any personal claims are not uploaded.</p>
+    <form id="moduleImportForm">
+     <label for="moduleImportFile">Choose unsigned module-practice export (maximum 16 KB)</label>
+     <input id="moduleImportFile" type="file" accept=".json,application/json" required>
+     <label for="moduleClaimSelect">Select one practice result to import</label>
+     <select id="moduleClaimSelect" disabled><option value="">Choose a JSON file first</option></select>
+     <button id="moduleImportButton" class="primary" type="submit" disabled>Import one unverified self-check</button>
+    </form>
+    <p id="moduleImportStatus" role="status" class="status">No module self-check selected. These claims are not graded exams or approved training records.</p>
+    <div id="moduleStudentList" class="item-list"><p class="muted">No imported module self-checks.</p></div>
+   </section>
   </section>
   <section id="instructorPanel" class="hidden" aria-labelledby="instructorTitle">
    <div class="section-header"><div><span class="kicker">INSTRUCTOR AREA</span><h2 id="instructorTitle">Assigned practice review</h2><p>View only learners assigned to your current organisation. All feedback remains an unverified draft and cannot issue training credit.</p></div></div>
@@ -112,6 +128,15 @@
      </section>
     </div>
    </div>
+   <section class="panel" aria-labelledby="moduleClaimsInstructorTitle">
+    <div class="section-line">
+     <h3 id="moduleClaimsInstructorTitle">Assigned learners' self-reported module checks</h3>
+     <button id="moduleRefreshInstructor" type="button" class="subtle-button">Refresh</button>
+    </div>
+    <p class="muted">Read-only, unverified module counts from actively assigned fictional learners in your organisation. These are not instructor-signed grades or evidence of competence.</p>
+    <div id="moduleInstructorList" class="item-list"><p class="muted">No assigned module self-checks.</p></div>
+    <p id="moduleInstructorStatus" class="status hidden" role="status" aria-live="polite">No current assigned module checks.</p>
+   </section>
   </section>
   <section id="aiTutorSection" class="panel" aria-labelledby="aiTutorHeading">
    <div class="section-header">

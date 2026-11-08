@@ -4,7 +4,8 @@
  */
 (()=>{"use strict";
 const $=id=>document.getElementById(id);
-const state={user:null,attempts:[],assigned:[],drafts:[],selectedId:null,pendingUpload:null};
+const state={user:null,attempts:[],assigned:[],drafts:[],selectedId:null,pendingUpload:null,
+ moduleCandidates:[],pendingModuleImport:null};
 const csrfNames=["__Host-AGSA-CSRF","agsa_local_csrf"];
 let connectedAiEnabled=false,connectedVoiceEnabled=false,lastAiText="",activeAudio=null,activeAudioUrl=null;
 // A fragment token is not sent to the server by navigation. Remove it from
@@ -61,7 +62,10 @@ async function api(path,{method="GET",payload,key}={}){
 function resetSession(message){
  window.dispatchEvent(new Event("agsa:logout"));
  state.user=null;state.attempts=[];state.assigned=[];state.drafts=[];state.selectedId=null;
- state.pendingUpload=null;
+ state.pendingUpload=null;state.moduleCandidates=[];state.pendingModuleImport=null;
+ $("moduleImportFile").value="";
+ $("moduleClaimSelect").replaceChildren();$("moduleClaimSelect").disabled=true;
+ $("moduleImportButton").disabled=true;
  stopNarration();
  lastAiText="";connectedAiEnabled=false;connectedVoiceEnabled=false;
  $("aiQuestion").value="";$("aiConsent").checked=false;
@@ -69,8 +73,9 @@ function resetSession(message){
  show("aiAnswerPanel",false);
  $("password").value="";$("verificationCode").value="";
  $("reportFile").value="";
- removeAll("studentList");
- removeAll("assignedList");removeAll("feedbackList");
+ removeAll("studentList");removeAll("moduleStudentList");
+ removeAll("assignedList");removeAll("moduleInstructorList");removeAll("feedbackList");
+ show("moduleInstructorStatus",false);
  show("loadingPanel",false);show("loginPanel",true);show("workspace",false);
  show("studentPanel",false);show("instructorPanel",false);
  if(message)status("globalStatus",message);
@@ -120,6 +125,7 @@ async function refreshStudent(){
   if(!state.attempts.length)target.appendChild(one("p","No practice reports submitted yet.","muted"));
   for(const item of state.attempts)target.appendChild(populateAttemptCard(item));
  }catch(e){status("submissionStatus","Could not refresh your attempts: "+e.message,"error");}
+ await refreshModuleStudent();
 }
 async function submitPractice(event){
  event.preventDefault();
@@ -145,6 +151,99 @@ async function submitPractice(event){
   await refreshStudent();
  }catch(e){status("submissionStatus","Submission unsuccessful: "+e.message,"error");}
  finally{$("submitButton").disabled=false;}
+}
+const moduleTitles={
+ foundations:"Aircraft and forces",cockpit:"Controls and instruments",
+ operations:"Configuration and preparation",awareness:"Weather and communications"
+};
+const moduleRevision="2026-11-08.1";
+function moduleCard(item,includeStudent=false){
+ const card=one("article",undefined,"list-item");
+ card.appendChild(one("strong",moduleTitles[item.moduleId]||"Unknown module"));
+ card.appendChild(one("p",String(item.claimedCorrect)+"/6 self-reported · "+fmtTime(item.receivedAt),"meta"));
+ if(includeStudent)card.appendChild(one("p","Assigned student ID: "+String(item.studentId||""),"meta"));
+ card.appendChild(one("p","UNVERIFIED CLIENT SELF-CHECK · NO FLIGHT CREDIT","mark"));
+ return card;
+}
+async function refreshModuleStudent(){
+ if(state.user?.role!=="student")return;
+ try{
+  const result=await api("/api/v1/learning/module-claims?limit=30");
+  const container=removeAll("moduleStudentList");
+  if(!result.items?.length)container.appendChild(one("p","No module self-checks imported yet.","muted"));
+  else for(const item of result.items)container.appendChild(moduleCard(item));
+ }catch(error){status("moduleImportStatus","Could not load private module claims: "+error.message,"error");}
+}
+async function refreshModuleInstructor(){
+ if(state.user?.role!=="instructor")return;
+ try{
+  const result=await api("/api/v1/instructor/assigned-module-claims?limit=30");
+  const container=removeAll("moduleInstructorList");
+  show("moduleInstructorStatus",false);
+  if(!result.items?.length)container.appendChild(one("p","No assigned fictional learners' module claims.","muted"));
+  else for(const item of result.items)container.appendChild(moduleCard(item,true));
+ }catch(error){status("moduleInstructorStatus","Could not load assigned module claims: "+error.message,"error");}
+}
+async function parseModuleExport(){
+ const input=$("moduleImportFile"),select=$("moduleClaimSelect"),button=$("moduleImportButton");
+ select.replaceChildren();select.disabled=true;button.disabled=true;
+ state.moduleCandidates=[];state.pendingModuleImport=null;
+ const file=input.files?.[0];
+ if(!file){status("moduleImportStatus","Choose an unsigned module-practice JSON export first.","error");return;}
+ if(file.size<2||file.size>16384){status("moduleImportStatus","Only a module-practice JSON file of 16 KB or less is accepted.","error");return;}
+ try{
+  const raw=JSON.parse(await file.text());
+  if(raw?.schema!=="agsa.local-module-checkpoints.v1"||
+     raw.recordStatus!=="UNVERIFIED_DEVICE_ONLY"||
+     !Array.isArray(raw.attempts)||raw.attempts.length<1||raw.attempts.length>48)
+   throw Error("Choose the unsigned JSON exported by Ground-School Module Practice");
+  for(const value of raw.attempts){
+   if(!value||typeof value!=="object"||!(Object.hasOwn(moduleTitles,value.moduleId))||
+      value.revision!==moduleRevision||value.total!==6||
+      !Number.isInteger(value.correct)||value.correct<0||value.correct>6)
+    throw Error("Some entries use an obsolete or invalid module question set");
+   state.moduleCandidates.push({moduleId:value.moduleId,correct:value.correct,total:6,revision:moduleRevision});
+  }
+  state.moduleCandidates.forEach((item,i)=>{
+   const option=one("option",(i+1)+". "+moduleTitles[item.moduleId]+" · "+item.correct+"/6 (unverified)");
+   option.value=String(i);select.appendChild(option);
+  });
+  select.disabled=false;button.disabled=false;
+  status("moduleImportStatus",state.moduleCandidates.length+
+   " local self-checks found. Choose one. File content has not been independently authenticated.");
+ }catch(error){
+  input.value="";state.moduleCandidates=[];
+  status("moduleImportStatus","Cannot read that module export: "+error.message,"error");
+ }
+}
+async function submitModuleImport(event){
+ event.preventDefault();
+ if(state.user?.role!=="student")return;
+ const selected=Number($("moduleClaimSelect").value);
+ const item=state.moduleCandidates[selected];
+ if(!item){status("moduleImportStatus","Choose one eligible module self-check.","error");return;}
+ const file=$("moduleImportFile").files?.[0];
+ if(!file)return;
+ const fingerprint=file.name+":"+file.size+":"+file.lastModified+":"+selected;
+ if(!state.pendingModuleImport||state.pendingModuleImport.fingerprint!==fingerprint)
+  state.pendingModuleImport={fingerprint,key:crypto.randomUUID()};
+ $("moduleImportButton").disabled=true;
+ try{
+  const result=await api("/api/v1/learning/module-claims",{
+   method:"POST",key:state.pendingModuleImport.key,
+   payload:{schema:"agsa.private.module-practice-claim.v1",
+    moduleId:item.moduleId,revision:item.revision,correct:item.correct,total:6}
+  });
+  status("moduleImportStatus",(result.created?"Import received":"Previously received import found")+
+   ". This confirms only receipt of a claimed browser score, never a graded exam.","success");
+  state.pendingModuleImport=null;state.moduleCandidates=[];
+  $("moduleImportFile").value="";
+  $("moduleClaimSelect").replaceChildren();$("moduleClaimSelect").disabled=true;
+  await refreshModuleStudent();
+ }catch(error){
+  status("moduleImportStatus","Module import was not accepted: "+error.message,"error");
+  $("moduleImportButton").disabled=false;
+ }
 }
 function renderAssigned(){
  const target=removeAll("assignedList");
@@ -178,6 +277,7 @@ async function refreshInstructor(){
   else{state.selectedId=null;show("selectedAttempt",false);$("feedbackButton").disabled=true;}
   await refreshDrafts();
  }catch(e){status("feedbackStatus","Could not refresh assignments: "+e.message,"error");}
+ await refreshModuleInstructor();
 }
 async function refreshDrafts(){
  if(state.user?.role!=="instructor")return;
@@ -364,6 +464,11 @@ $("logoutButton").addEventListener("click",signOut);
 $("submissionForm").addEventListener("submit",submitPractice);
 $("feedbackForm").addEventListener("submit",submitFeedback);
 $("refreshStudent").addEventListener("click",refreshStudent);
+$("moduleImportFile").addEventListener("change",parseModuleExport);
+$("moduleClaimSelect").addEventListener("change",()=>{state.pendingModuleImport=null});
+$("moduleImportForm").addEventListener("submit",submitModuleImport);
+$("moduleRefreshStudent").addEventListener("click",refreshModuleStudent);
+$("moduleRefreshInstructor").addEventListener("click",refreshModuleInstructor);
 $("refreshInstructor").addEventListener("click",refreshInstructor);
 $("refreshFeedback").addEventListener("click",refreshDrafts);
 loadUser();

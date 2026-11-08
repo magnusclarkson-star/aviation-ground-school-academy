@@ -13,7 +13,7 @@ export function grantStatements(appRole,provisionRole){
  if(app===provision)throw Error("Application and provisioning roles must differ");
  const tables=[
   "organizations","users","memberships","instructor_assignments",
-  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges","ai_daily_usage","realtime_voice_calls"
+  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges","ai_daily_usage","realtime_voice_calls","module_practice_claims"
  ];
  const statements=[];
  // Revoke any direct privileges; database owners and role memberships need separate review.
@@ -26,7 +26,7 @@ export function grantStatements(appRole,provisionRole){
   statements.push(`GRANT SELECT ON public.${table} TO ${app}`);
  // Sessions and login throttles: no DELETE; expiry handled by an operator,
  // not web requests. Session token hashes are never returned by API.
- for(const table of ["sessions","practice_attempts","feedback_drafts","login_throttles"])
+ for(const table of ["sessions","practice_attempts","feedback_drafts","login_throttles","module_practice_claims"])
   statements.push(`GRANT SELECT,INSERT ON public.${table} TO ${app}`);
  statements.push(`GRANT SELECT ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT UPDATE(last_used_step) ON public.instructor_mfa TO ${app}`);

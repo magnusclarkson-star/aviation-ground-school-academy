@@ -27,6 +27,9 @@ test("role SQL uses escaped, distinct identifiers with narrow privileges",()=>{
  assert.ok(sql.includes('GRANT SELECT,INSERT ON public.realtime_voice_calls TO "ci_web"'));
  assert.ok(sql.includes('GRANT UPDATE(provider_call_id,state,updated_at,expires_at,next_attempt_at,claim_until,attempt_count,last_error_code,resolved_at) ON public.realtime_voice_calls TO "ci_web"'));
  assert.ok(!sql.includes('GRANT DELETE ON public.realtime_voice_calls'));
+ assert.ok(sql.includes('GRANT SELECT,INSERT ON public.module_practice_claims TO "ci_web"'));
+ assert.ok(!sql.includes('GRANT UPDATE ON public.module_practice_claims'));
+ assert.ok(!sql.includes('GRANT DELETE ON public.module_practice_claims'));
 });
 test("real PostgreSQL denies runtime audit changes, approvals and role escalation",async t=>{
  const uri=process.env.AGSA_TEST_DATABASE_URL;
@@ -57,13 +60,17 @@ test("real PostgreSQL denies runtime audit changes, approvals and role escalatio
   try{for(const sql of grantStatements(app,provision))await client.query(sql);
    await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e}
-  for(const table of ["practice_attempts","feedback_drafts"]){
+  for(const table of ["practice_attempts","feedback_drafts","module_practice_claims"]){
    assert.equal(await checkPrivilege(app,table,"SELECT"),true);
    assert.equal(await checkPrivilege(app,table,"INSERT"),true);
    assert.equal(await checkPrivilege(app,table,"UPDATE"),false);
    assert.equal(await checkPrivilege(app,table,"DELETE"),false);
   }
   assert.equal(await checkPrivilege(app,"audit_events","INSERT"),true);
+  assert.equal(await checkPrivilege(provision,"module_practice_claims","SELECT"),false);
+  await expectDenied(app,"UPDATE public.module_practice_claims SET claimed_correct=6 WHERE false");
+  await expectDenied(app,"UPDATE public.module_practice_claims SET source_status='APPROVED' WHERE false");
+  await expectDenied(app,"DELETE FROM public.module_practice_claims WHERE false");
   for(const action of ["SELECT","UPDATE","DELETE"])
    assert.equal(await checkPrivilege(app,"audit_events",action),false);
   assert.equal(await checkPrivilege(provision,"audit_events","INSERT"),true);
