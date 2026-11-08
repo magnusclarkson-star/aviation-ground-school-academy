@@ -33,3 +33,7 @@ The scene is actual 3D geometry, but it is **not photorealistic real terrain**, 
 Potential follow-up upgrades include 3D airfield LOD for mobile, adjustable atmospheric lighting, third-person aircraft animation, better runway markings and hangar geometry, 3D map minimap, validated aerodynamic profiles, specialist control hardware and professional instructor-signed curricula. A true regulated training simulator requires a fundamentally different qualification and safety-assurance process; adding graphics alone does not close that gap.
 
 **Do not use this app's imagined runway, winds, warnings or control responses as actual pilot instructions.**
+
+## Animated 3D aircraft systems
+
+The low-poly aircraft are no longer fully static in 3D chase view: separately pivoted propeller/rotor and control-surface meshes move from the existing local flight controls. A conceptual systems strip displays simulated engine/rotor motion, throttle/collective and flap/blade-pitch commands in both GPU and 2D fallback modes. Flight dynamics and the GPU terrain budget remain unchanged. See [Animated Aircraft Systems acceptance](ANIMATED-AIRCRAFT-SYSTEMS.md) for tests and limitations.
