@@ -43,7 +43,9 @@ try{
  await phone.locator('#tracePlayPause').click();
  assert.equal(await phone.locator('#tracePlayPause').getAttribute('aria-pressed'),'true');
  await phone.waitForFunction(()=>Number(document.querySelector('#traceReplayIndex').value)>=1,null,{timeout:4500});
- await phone.locator('#tracePlayPause').click();
+ // A two-sample recording may naturally reach its end before this check.
+ if((await phone.locator('#tracePlayPause').getAttribute('aria-pressed'))==='true')
+  await phone.locator('#tracePlayPause').click();
  assert.equal(await phone.locator('#tracePlayPause').getAttribute('aria-pressed'),'false');
  await phone.locator('#traceClear').click();
  assert.equal(await phone.locator('#traceReplayPanel').isVisible(),false);
