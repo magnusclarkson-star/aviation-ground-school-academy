@@ -16,7 +16,7 @@ try{
   {t:1,phase:'climb',speedKt:35,altitudeM:10,bankDeg:3,username:'private'}
  ]};
  await desktop.locator('#traceImport').setInputFiles({name:'synthetic-flight.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(trace))});
- await phone.waitForFunction(()=>Number((document.querySelector('#traceStatus')?.textContent||'').match(/[0-9]+ samples/)?.[0]?.split(' ')[0]||0)>=2,null,{timeout:12000});
+ await desktop.waitForFunction(()=>document.querySelector('#traceImportStatus').textContent.includes('Read 2 fictional samples.'));
  assert.equal(await desktop.locator('#traceImportSummary').isVisible(),true);
  const facts=await desktop.locator('#traceImportFacts').textContent();
  assert.match(facts,/Synthetic height range: 0 to 10 m/);
@@ -34,7 +34,7 @@ try{
  assert.equal(await phone.locator('#traceStart').isDisabled(),false);
  assert.equal(await phone.locator('#traceReplay').isDisabled(),true);
  await phone.locator('#traceStart').click();
- await phone.waitForFunction(()=>/\\b[2-9] samples\\b|\\b[1-9]\\d+ samples\\b/.test(document.querySelector('#traceStatus')?.textContent||''),null,{timeout:12000});
+ await phone.waitForFunction(()=>Number((document.querySelector('#traceStatus')?.textContent||'').match(/[0-9]+ samples/)?.[0]?.split(' ')[0]||0)>=2,null,{timeout:12000});
  await phone.locator('#traceStop').click();
  await phone.locator('#traceReplay').click();
  assert.equal(await phone.locator('#traceReplayPanel').isVisible(),true);
