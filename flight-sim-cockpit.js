@@ -222,15 +222,22 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  doc.addEventListener("keydown",event=>{if(event.key==="Escape"&&!zoomPanel.hidden)closeZoom();});
  const focusButton=$("cockpitControlFocusToggle");
  let focusExpanded=false;
- function setControlFocus(enabled){
+ let focusedControl="steering";
+ function setControlFocus(enabled,controlKind="steering"){
   focusExpanded=Boolean(enabled);
+  focusedControl=controlKind;
+  cockpitStation.dataset.controlTarget=focusExpanded?focusedControl:"none";
+  $("cockpitExtraHeading").textContent=focusedControl==="rudder"?
+   "Expanded rudder and pedal controls":focusedControl==="power"?
+   (byId(active).family==="rotor"?"Expanded collective controls":"Expanded throttle and flap controls"):
+   "Expanded yoke, stick or cyclic controls";
   cockpitStation.dataset.controlFocus=focusExpanded?"expanded":"normal";
   focusButton.setAttribute("aria-pressed",String(focusExpanded));
   focusButton.textContent=focusExpanded?"Return to normal controls":"Expand flight controls";
   focusButton.setAttribute("aria-label",focusExpanded?"Return to normal cockpit control size":"Enlarge the on-cockpit flight controls");
   return focusExpanded;
  }
- focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded));
+ focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded,focusedControl));
  // Expanded quick controls operate the original slider/select elements; there
  // are no parallel or unsynchronised flight-input values.
  function adjustPower(direction){
@@ -257,11 +264,12 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  // steering or rudder press cannot be shifted halfway through a manoeuvre.
  for(const id of ["controlPad","leftRudder","rightRudder","brake"]){
   $(id).addEventListener("pointerup",event=>{
-   if(event.pointerType!=="mouse"||event.button===0)setControlFocus(true);
+   if(event.pointerType!=="mouse"||event.button===0)
+    setControlFocus(true,id==="controlPad"?"steering":"rudder");
   });
  }
  for(const id of ["power","collective","flaps"]){
-  $(id).addEventListener("change",()=>setControlFocus(true));
+  $(id).addEventListener("change",()=>setControlFocus(true,"power"));
  }
  doc.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&focusExpanded)setControlFocus(false);
@@ -300,6 +308,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
+  if(focusExpanded)setControlFocus(true,focusedControl);
   closeZoom();
   setControlFocus(false);
   if(notify)onSelect(profile.control,profile.id);
