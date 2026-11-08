@@ -24,8 +24,10 @@ try{
  assert.match(await page.locator("#environmentStatus").textContent(),/Experimental energy dynamics/);
  assert.match(await page.locator("#physicsHint").textContent(),/invented forces/);
  assert.equal(await page.locator("#readSpeed").textContent(),"73");
- assert.ok((await numeric(page,"#aeroEnergy"))>1000,
-  "the fresh fictional final approach starts with physical-model kinetic and height energy");
+ // The first post-reset integration occurs on a subsequent animation
+ // frame, so initial display may legitimately show zero for one paint.
+ await page.waitForFunction(()=>Number.parseInt(
+  document.querySelector("#aeroEnergy").textContent,10)>1000,null,{timeout:2500});
  assert.equal(await page.locator("#coachElapsed").textContent(),"0 s",
   "switching physics resets the local practice clock rather than carrying a prior session");
  await page.waitForTimeout(1000);
