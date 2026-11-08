@@ -94,7 +94,8 @@ const aiEnv={
  OPENAI_API_KEY:"fake-provider-credentials-for-tests-only",
  AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
  AGSA_AI_TEXT_MODEL:"gpt-6-luna",
- AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1"
+ AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1",
+  AGSA_AI_REALTIME_ALLOWED_USER_IDS:student
 };
 let providerCalls=0;
 const aiRequest=async(url)=>{
@@ -267,6 +268,10 @@ try{
  assert.equal(await desktop.locator("#verificationCode").inputValue(),"","MFA code cleared after login");
  assert.equal(await desktop.locator("#studentPanel").isVisible(),false);
  assert.equal(await desktop.locator("#instructorPanel").isVisible(),true);
+ await desktop.waitForFunction(()=>document.querySelector("#realtimeStatus").textContent.includes("not enabled"));
+ await desktop.locator("#realtimeConsent").check();
+ assert.equal(await desktop.locator("#realtimeStart").isDisabled(),true,"unapproved instructor must not start voice");
+ await desktop.locator("#realtimeConsent").uncheck();
  assert.equal((await desktop.request.get(base+"/api/v1/practice-attempts")).status(),403);
  await desktop.locator("#assignedList .list-item").first().waitFor();
  assert.equal(await desktop.locator("#assignedList .list-item").count(),1);
