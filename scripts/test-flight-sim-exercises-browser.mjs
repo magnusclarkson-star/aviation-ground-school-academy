@@ -135,10 +135,10 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "interactive exercise comparison must not cause horizontal phone overflow");
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
- const scene=await phone.locator(".scene-panel").boundingBox();
+ const scene=await phone.locator(".scene-shell").boundingBox();
  const pad=await phone.locator("#controlPad").boundingBox();
  const pedal=await phone.locator("#rightRudder").boundingBox();
- assert.ok(scene&&scene.y>=-7&&scene.y<45,"flight view remains sticky while controls are used");
+ assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","windscreen remains sticky within the cockpit");
  assert.ok(pad&&pedal&&Math.abs(pad.y-pedal.y)<145,"two-thumb control layout remains intact");
  await phone.locator("#instrumentToggle").tap();
  assert.equal(await phone.locator("#miniAttitude").isVisible(),false);
