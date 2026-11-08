@@ -81,6 +81,27 @@ test("unapproved account must not reach the voice provider",async()=>{
   e=>e.status===403&&e.code==="realtime_not_approved");
  assert.equal(calls,0);
 });
+test("provider call identifier is persisted before SDP completes and failures request hangup",async()=>{
+ const events=[];
+ const good=await createRealtimeCall({sdp,consent:true},actor,{env,
+  onCallCreated:async id=>{events.push("record:"+id)},
+  request:async url=>{
+   if(url.endsWith("/hangup"))throw Error("unexpected");
+   return new Response(resSdp,{status:201,headers:{Location:"/v1/realtime/calls/rtc_early_123456"}});
+  }
+ });
+ assert.equal(good.callId,"rtc_early_123456");
+ assert.deepEqual(events,["record:rtc_early_123456"]);
+ let attempts=0;
+ await assert.rejects(createRealtimeCall({sdp,consent:true},actor,{env,
+  onCallCreated:async()=>{throw Error("database unavailable")},
+  request:async url=>{
+   if(url.endsWith("/hangup")){attempts++;return new Response("",{status:200})}
+   return new Response(resSdp,{status:201,headers:{Location:"/v1/realtime/calls/rtc_early_654321"}});
+  }
+ }),e=>e.status===502&&e.code==="realtime_registry_unavailable");
+ assert.equal(attempts,1,"failed durable association triggers provider hangup attempt");
+});
 test("realtime provider and malformed SDP failures never reveal upstream secrets",async()=>{
  await assert.rejects(createRealtimeCall({sdp,consent:true},actor,{env:{},request:async()=>{throw Error("should not call")}}),e=>e.status===503);
  await assert.rejects(createRealtimeCall({sdp,consent:true},actor,{env,request:async()=>{throw Error(env.OPENAI_API_KEY)}}),
