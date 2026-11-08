@@ -64,7 +64,8 @@ test('piston and rotor profiles are compact, mode-specific and safely clamped',(
 });
 test('engine texture setting adds an optional power-responsive oscillator without changing default',async()=>{
  const env=audioWorld(),engine=Engine.createEngine({windowLike:env.win,documentLike:env.doc});
- assert.equal(engine.status().texture,'smooth');
+ assert.equal(engine.status().texture,'textured');
+ assert.equal(engine.status().volume,100);
  assert.equal(engine.setTexture('textured',.3),'textured');
  assert.equal(engine.status().active,false,'texture selection is silent before consent');
  assert.equal(env.contexts.length,0);
