@@ -30,6 +30,7 @@
 <script src="flight-sim-aircraft-systems.js" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
+<script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -385,6 +386,17 @@
    <p class="hint shortcuts">Desktop: arrows = pitch/bank, A/D = rudder, W/S = power/collective, space = brake, R = reset. On phones, keep the outside view visible while using two fingers.</p>
   </section>
  </div>
+ <section class="instructions panel" aria-label="Optional local flight trace recorder">
+  <span class="eyebrow">PRIVATE TRAINING TRACE · OFF BY DEFAULT</span>
+  <h2>Record fictional flight indications</h2>
+  <p>Opt in to sample synthetic height, speed, heading, attitude, flight phases and control commands. Recording remains only in this open page and is cleared when you reset, change aircraft, or close the page. No microphone, GPS, identity, remote storage, or automatic sharing. At most 600 observations (about ten simulated minutes).</p>
+  <button id="traceStart" type="button">Start private recording</button>
+  <button id="traceStop" type="button" disabled>Stop recording</button>
+  <button id="traceDownload" type="button" disabled>Download unsigned trace JSON</button>
+  <button id="traceClear" type="button">Clear recording</button>
+  <p id="traceStatus" role="status" aria-live="polite">Recorder off. No flight trace collected.</p>
+  <p class="disclaimer">This is not a flight-data recorder, instructor assessment, real aircraft performance measurement or training-credit record. SME_REVIEW_REQUIRED.</p>
+ </section>
  <section class="instructions panel" aria-label="Practice reflection handoff">
   <span class="eyebrow">04 · REFLECT AFTER PRACTICE</span>
   <h2>Flight-practice debrief</h2>
