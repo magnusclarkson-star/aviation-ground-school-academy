@@ -246,11 +246,23 @@ function chooseVisual(){
  }catch{}
  fallbackTo2D("3D renderer could not draw. Automatically using 2D scenery.");
 }
+function syncCockpitFrame(){
+ const frame=$("cockpitFrame"),enabled=$("cockpitFrameToggle").value==="on";
+ const chase=renderer3D!==null&&$("cameraMode").value==="chase";
+ frame.dataset.aircraft=state.mode==="helicopter"?"helicopter":"airplane";
+ frame.dataset.view=chase?"chase":"cockpit";
+ frame.dataset.enabled=enabled?"on":"off";
+ $("cockpitFrameStatus").textContent=!enabled?
+  "Illustrated cockpit frame hidden; full outside scene available.":
+  chase?"Chase camera selected: windscreen hidden to show the outside aircraft.":
+  "Illustrated "+(state.mode==="helicopter"?"rotorcraft":"airplane")+
+  " windscreen visible. Instruments and touch controls remain unobstructed.";
+}
 function drawScenery(now){
  if(renderer3D){
   if(now-prev3D>=33){
    try{if(!renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId()})){
-    fallbackTo2D("3D graphics context lost or became unavailable; switched safely to 2D scenery.");
+    fallbackTo2D("3D graphics context lost or became unavailable; switched safely to 2D scenery.");syncCockpitFrame();
    }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
    prev3D=now;
   }
@@ -485,6 +497,7 @@ function setMode(next){
  $("controlPad").className="control-pad "+(type==="cyclic"?"cyclic-mode":type==="stick"?"stick-mode":"yoke-mode");
  for(const id of ["Yoke","Stick","Cyclic"])
   $("type"+id).setAttribute("aria-pressed",String(type===id.toLowerCase()));
+ syncCockpitFrame();
  $("sceneMode").textContent=type==="cyclic"?"ROTORCRAFT · CONCEPTUAL":"FIXED-WING · "+(type==="yoke"?"YOKE":"STICK");
  $("controlHint").textContent=type==="cyclic"?
   "Move the illustrated cyclic to command horizontal movement. Use another finger on the collective or a pedal.":
@@ -731,8 +744,10 @@ $("engineAudioVolume").addEventListener("input",()=>{
  const volume=engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
  $("engineAudioVolumeValue").textContent=volume+"%";
 });
-$("visualMode").addEventListener("change",chooseVisual);
+$("visualMode").addEventListener("change",()=>{chooseVisual();syncCockpitFrame();});
+$("cockpitFrameToggle").addEventListener("change",syncCockpitFrame);
 $("cameraMode").addEventListener("change",()=>{
+ syncCockpitFrame();
  if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId()})}
  catch{fallbackTo2D("3D camera unavailable; switched to 2D scenery.")}
 });
@@ -936,5 +951,6 @@ syncPhoneFeedbackUI();
 refreshPhoneDiagnostics();
 syncRadioToneUI();
 chooseVisual();
+syncCockpitFrame();
 requestAnimationFrame(frame);
 })();

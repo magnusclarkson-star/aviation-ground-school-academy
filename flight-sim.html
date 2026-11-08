@@ -72,6 +72,10 @@
   <div class="scene-shell">
    <canvas id="outsideView" width="960" height="540" aria-label="Illustrated 2D outside view of a synthetic runway or helipad; always available as a fallback">A synthetic airfield scene. Flight status is provided as text below.</canvas>
    <canvas id="outsideView3D" width="960" height="540" hidden aria-label="GPU-rendered 3D synthetic airfield with geometric runway, terrain, buildings, trees and fictional aircraft chase view">This browser does not support the 3D visual mode.</canvas>
+   <div id="cockpitFrame" class="cockpit-frame" data-aircraft="airplane" data-view="cockpit" aria-hidden="true">
+    <span class="cockpit-left-post"></span><span class="cockpit-right-post"></span>
+    <span class="cockpit-dashboard"></span><span class="cockpit-propeller"></span>
+   </div>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
    <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
@@ -374,6 +378,12 @@
      <option value="dusk">Dusk · dim illustrated scenery</option>
     </select>
     <p id="lightingStatus" role="status" aria-live="polite">Daylight selected. Lighting changes scenery only, not instruments or flight dynamics.</p>
+    <label for="cockpitFrameToggle">Illustrated cockpit windscreen</label>
+    <select id="cockpitFrameToggle">
+     <option value="on" selected>On · cockpit frame and subtle propeller cue</option>
+     <option value="off">Off · unobstructed outside view</option>
+    </select>
+    <p id="cockpitFrameStatus" class="hint" role="status">Cockpit framing is enabled. The fictional airfield remains visible, and instruments and touch controls are unaffected.</p>
     <label for="cameraMode">3D camera viewpoint</label>
     <select id="cameraMode">
      <option value="cockpit" selected>Forward pilot view</option>

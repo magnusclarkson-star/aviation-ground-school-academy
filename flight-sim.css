@@ -226,3 +226,35 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
 @media(max-width:740px){
  .flight-feedback-visual{top:32px;font-size:9px;padding:3px 7px;max-width:calc(100% - 16px)}
 }
+
+/* Illustrated windscreen framing over both scene renderers; purely visual.
+   Never intercepts touch input or covers the separate glass instrument panel. */
+.cockpit-frame{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;opacity:1}
+.cockpit-frame[data-view="chase"],.cockpit-frame[data-enabled="off"]{display:none}
+.cockpit-left-post,.cockpit-right-post{position:absolute;top:-8%;height:118%;width:2.4%;
+ background:linear-gradient(90deg,#111d27e8,#4d6274c9 48%,#13202bd9);
+ box-shadow:0 0 10px #05101a8c}
+.cockpit-left-post{left:3.8%;transform:skew(-11deg)}
+.cockpit-right-post{right:3.8%;transform:skew(11deg)}
+.cockpit-dashboard{position:absolute;bottom:-8%;left:-4%;width:108%;height:17%;
+ border-radius:45% 45% 0 0/70% 70% 0 0;
+ background:linear-gradient(180deg,#475766 0%,#23333f 24%,#101c28 65%);
+ box-shadow:0 -4px 13px #050d1788,inset 0 4px 3px #83919a7d;
+ border-top:2px solid #a2adb4b3}
+.cockpit-propeller{position:absolute;top:19%;left:49.6%;width:.8%;height:61%;
+ background:linear-gradient(180deg,transparent,#bdc6cb16 25%,#d6e1e824 50%,#bdc6cb16 75%,transparent);
+ filter:blur(6px);animation:agsa-propeller 130ms linear infinite}
+.cockpit-frame[data-aircraft="helicopter"] .cockpit-propeller{top:5%;left:15%;width:70%;height:3%;
+ background:linear-gradient(90deg,transparent,#a6c4d726 48%,transparent);
+ animation:agsa-rotor 180ms linear infinite}
+.cockpit-frame[data-aircraft="helicopter"] .cockpit-dashboard{height:12%}
+@keyframes agsa-propeller{0%{transform:scaleX(1)}50%{transform:scaleX(3.8)}100%{transform:scaleX(1)}}
+@keyframes agsa-rotor{0%{transform:scaleY(1)}50%{transform:scaleY(2.2)}100%{transform:scaleY(1)}}
+@media(max-width:740px){
+ .cockpit-left-post,.cockpit-right-post{width:1.7%}
+ .cockpit-dashboard{height:13%;bottom:-7%}
+ .cockpit-frame[data-aircraft="helicopter"] .cockpit-dashboard{height:9%}
+}
+@media(prefers-reduced-motion:reduce){
+ .cockpit-propeller{animation:none!important;opacity:.35}
+}

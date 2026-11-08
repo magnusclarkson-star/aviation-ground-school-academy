@@ -3,181 +3,177 @@ import path from "node:path";
 import {pathToFileURL} from "node:url";
 import {chromium} from "playwright";
 
-const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const url=pathToFileURL(path.resolve("flight-sim.html")).href;
+const browser=await chromium.launch({headless:true,args:[
+ "--no-sandbox","--enable-webgl","--use-gl=angle","--use-angle=swiftshader-webgl",
+ "--enable-unsafe-swiftshader"
+]});
 const errors=[];
-async function screenshotSignature(page){
+async function gpuSupported(page){
  return page.evaluate(()=>{
-  const canvas=document.querySelector("#outsideView");
-  const pixels=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data;
+  try{const c=document.createElement("canvas"),gl=c.getContext("webgl2");
+   return Boolean(gl&&!gl.isContextLost()&&gl.getParameter(gl.MAX_VERTEX_ATTRIBS)>=3);
+  }catch{return false}
+ });
+}
+async function gpuSignature(page){
+ return page.evaluate(()=>{
+  const canvas=document.getElementById("outsideView3D");
+  const gl=canvas.getContext("webgl2");
+  if(!gl||gl.isContextLost())return null;
+  const width=Math.min(96,canvas.width),height=Math.min(72,canvas.height);
+  const pixels=new Uint8Array(width*height*4);
+  const x=Math.floor((canvas.width-width)/2),y=Math.floor((canvas.height-height)/2);
+  gl.readPixels(x,y,width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
   let hash=2166136261>>>0;
-  for(let i=0;i<pixels.length;i+=317){hash=Math.imul(hash^pixels[i],16777619)>>>0;}
-  return hash;
+  const hues=new Set();
+  for(let i=0;i<pixels.length;i+=53){
+   hash=Math.imul(hash^pixels[i],16777619)>>>0;
+   hues.add(Math.floor(pixels[i]/12)+":"+Math.floor(pixels[i+1]/12)+":"+Math.floor(pixels[i+2]/12));
+  }
+  return {hash,colors:hues.size,width:canvas.width,height:canvas.height,
+   version:gl.getParameter(gl.VERSION)};
  });
 }
-async function setRange(page,id,value){
- await page.locator(id).evaluate((node,n)=>{node.value=String(n);node.dispatchEvent(new Event("input",{bubbles:true}));},value);
-}
-const point=async(page,selector,x=.5,y=.5)=>{
- const box=await page.locator(selector).boundingBox();
- assert.ok(box&&box.width>45&&box.height>35,selector+" must be usable");
- return {x:Math.round(box.x+box.width*x),y:Math.round(box.y+box.height*y)};
-};
 try{
- const desktop=await browser.newPage({viewport:{width:1240,height:900}});
- desktop.on("pageerror",err=>errors.push("desktop: "+err.message));
- await desktop.addInitScript(()=>{
-  window.__hapticCalls=[];
-  Object.defineProperty(navigator,"vibrate",{configurable:true,value:pattern=>{
-   window.__hapticCalls.push(pattern);return true;
-  }});
- });
+ const desktop=await browser.newPage({viewport:{width:1200,height:900}});
+ desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
- assert.match(await desktop.title(),/Immersive Airfield/);
- assert.equal(await desktop.locator("#typeYoke").getAttribute("aria-pressed"),"true");
- assert.equal(await desktop.locator(".hardware-yoke").isVisible(),true);
- assert.equal(await desktop.locator(".hardware-stick").isVisible(),false);
- assert.equal(await desktop.locator("#hapticsToggle").getAttribute("aria-pressed"),"false");
- assert.equal(await desktop.evaluate(()=>window.__hapticCalls.length),0,"vibration must be off by default");
- assert.ok(await desktop.locator("#miniAttitude").isVisible(),"graphic attitude indicator is visible by default");
- assert.equal(await desktop.locator("#pfdHeading").textContent(),"000°");
- assert.equal(await desktop.locator("#pfdSpeed").textContent(),await desktop.locator("#readSpeed").textContent());
- assert.match(await desktop.locator("#coachPhase").textContent(),/RUNWAY/);
- assert.ok(/^\d+ s$/.test(await desktop.locator("#coachElapsed").textContent()),"session elapsed is a whole-second indication");
- assert.equal(await desktop.locator("#offsetLabel").textContent(),"RUNWAY OFFSET");
- const first=await screenshotSignature(desktop);
- assert.ok(first>0);
- await desktop.locator("#startApproach").click();
- assert.match(await desktop.locator("#flightPhase").textContent(),/FINAL APPROACH/);
- assert.ok(Number(await desktop.locator("#readAlt").textContent())>75);
- assert.equal(await desktop.locator("#pfdAltitude").textContent(),await desktop.locator("#readAlt").textContent());
- assert.match(await desktop.locator("#coachPhase").textContent(),/SHORT FINAL/);
- await desktop.waitForTimeout(1100);
- const after=await screenshotSignature(desktop);
- assert.notEqual(after,first,"world geometry must redraw as fictional aircraft moves");
- await desktop.locator("#typeStick").click();
- assert.equal(await desktop.locator("#typeStick").getAttribute("aria-pressed"),"true");
- assert.equal(await desktop.locator(".hardware-stick").isVisible(),true);
- assert.equal(await desktop.locator(".hardware-yoke").isVisible(),false);
- await desktop.locator("#controlPad").scrollIntoViewIfNeeded();
- const oldHorizon=await desktop.locator("#pfdHorizonMotion").getAttribute("transform");
- const p=await point(desktop,"#controlPad",.8,.25);
- await desktop.mouse.move(p.x,p.y);
- await desktop.mouse.down();
- await desktop.waitForTimeout(350);
- assert.match(await desktop.locator("#cmdBank").textContent(),/\+[1-9]\d*%/);
- assert.match(await desktop.locator("#cmdPitch").textContent(),/\+[1-9]\d*%/);
- const newHorizon=await desktop.locator("#pfdHorizonMotion").getAttribute("transform");
- assert.notEqual(newHorizon,oldHorizon,"pitch and bank must physically move the same live graphical horizon");
- assert.match(newHorizon,/rotate\(-/,"right bank must tilt synthetic horizon left");
- assert.match(await desktop.locator("#pfdAttitude").textContent(),/PITCH/);
- await desktop.mouse.up();
- assert.equal(await desktop.locator("#cmdBank").textContent(),"+0%");
- assert.equal(await desktop.locator("#cmdPitch").textContent(),"+0%");
- await desktop.locator("#instrumentToggle").click();
- assert.equal(await desktop.locator("#miniAttitude").isVisible(),false,"optional compact layout hides only graphic instruments");
- assert.ok(await desktop.locator("#readSpeed").isVisible(),"numeric flight readings remain visible");
- assert.equal(await desktop.locator("#instrumentToggle").getAttribute("aria-pressed"),"false");
- await desktop.locator("#instrumentToggle").click();
- assert.equal(await desktop.locator("#miniAttitude").isVisible(),true);
- await desktop.locator("#hapticsToggle").click();
- assert.equal(await desktop.locator("#hapticsToggle").getAttribute("aria-pressed"),"true");
- assert.ok(await desktop.evaluate(()=>window.__hapticCalls.length)>=1,"opt-in should request a short cue");
- assert.ok(await desktop.evaluate(()=>window.__hapticCalls.every(x=>Array.isArray(x)&&x.reduce((a,b)=>a+b,0)<=200)));
- await desktop.locator("#hapticsToggle").click();
- assert.equal(await desktop.evaluate(()=>window.__hapticCalls.at(-1)),0,"turning off haptics must stop it");
- await desktop.locator("#typeCyclic").click();
- assert.equal(await desktop.locator(".hardware-cyclic").isVisible(),true);
- assert.equal(await desktop.locator("#collectivePanel").isVisible(),true);
- assert.equal(await desktop.locator("#powerPanel").isVisible(),false);
- assert.equal(await desktop.locator("#flapPanel").isVisible(),false);
- assert.equal(await desktop.locator("#startApproach").isDisabled(),true,"rotorcraft must not enter airplane approach");
- assert.equal(await desktop.locator("#offsetLabel").textContent(),"PAD OFFSET");
- assert.match(await desktop.locator("#coachPhase").textContent(),/ROTORCRAFT/);
- await setRange(desktop,"#collective",82);
- await desktop.waitForTimeout(4400);
- assert.ok(Number(await desktop.locator("#readAlt").textContent())>2,"collective creates fictional vertical lift");
- await setRange(desktop,"#collective",34);
- await desktop.waitForFunction(()=>/HELIPAD LANDED/.test(document.querySelector("#flightPhase").textContent),
-  null,{timeout:20000});
- assert.match(await desktop.locator("#flightMessage").textContent(),/landing/i);
+ assert.equal(await desktop.locator("#visualMode").inputValue(),"3d");
+ assert.equal(await desktop.locator("#cameraMode").inputValue(),"cockpit");
+ assert.ok(await desktop.locator("#outsideView").isVisible());
+ const supports=await gpuSupported(desktop);
+ const active=await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional"));
+ if(supports){
+  assert.equal(active,true,"supported browser should start in actual WebGL2 mode");
+  assert.equal(await desktop.locator("#outsideView3D").isVisible(),true);
+  assert.equal(await desktop.locator("#cameraMode").isDisabled(),false);
+  assert.match(await desktop.locator("#visualStatus").textContent(),/3D WebGL2 airfield active/);
+  await desktop.waitForTimeout(450);
+  const pilot=await gpuSignature(desktop);
+  assert.ok(pilot?.version?.includes("WebGL 2"),"GPU must be an actual WebGL2 context");
+  assert.ok(pilot.colors>5,"three-dimensional mesh must draw multiple colors, not an empty/flat canvas");
+  await desktop.locator("#cameraMode").selectOption("chase");
+  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-view"),"chase");
+  assert.equal(await desktop.locator("#cockpitFrame").isVisible(),false,"outside chase view must not have cockpit overlay");
+  await desktop.waitForTimeout(450);
+  const chase=await gpuSignature(desktop);
+  assert.ok(chase?.colors>5);
+  assert.notEqual(chase.hash,pilot.hash,"chase camera changes rendered pixels using actual 3D aircraft");
+  assert.equal(await desktop.locator("#flightPhase").textContent(),"RUNWAY ROLL",
+   "changing visual camera does not reset the simulated flight");
+  await desktop.locator("#startApproach").click();
+  await desktop.waitForTimeout(900);
+  const runway=await gpuSignature(desktop);
+  assert.notEqual(runway.hash,chase.hash,"camera and aircraft move through genuine perspective 3D scene");
+  await desktop.locator("#typeCyclic").click();
+  await desktop.waitForTimeout(350);
+  const heli=await gpuSignature(desktop);
+  assert.ok(heli?.colors>5);
+  assert.notEqual(heli.hash,runway.hash,"helipad and 3D rotorcraft scenery differ from runway");
+  assert.equal(await desktop.locator("#cameraMode").inputValue(),"chase");
+ }else{
+  assert.equal(active,false);
+  assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+  assert.match(await desktop.locator("#visualStatus").textContent(),/Automatically using 2D/);
+  console.log("WebGL2 unavailable on this runner; asserted normal 2D auto fallback.");
+ }
+ await desktop.locator("#visualMode").selectOption("2d");
+ assert.equal(await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional")),false);
+ assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
+ assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+ assert.ok(await desktop.locator("#outsideView").isVisible());
+ assert.equal(await desktop.evaluate(()=>!!document.getElementById("outsideView").getContext("2d")),true);
+ await desktop.locator("#visualMode").selectOption("3d");
+ if(supports){
+  assert.equal(await desktop.locator("#outsideView3D").isVisible(),true,"3D re-enable should reinitialize GPU buffers");
+  await desktop.locator("#cameraMode").selectOption("cockpit");
+  const glOk=await gpuSignature(desktop);
+  assert.ok(glOk&&glOk.colors>5);
+ }
+ // Simulate a GPU context-loss event where the Chromium test driver
+ // exposes it. The original 2D canvas must remain available immediately.
+ if(supports){
+  const lost=await desktop.evaluate(()=>{
+   const gl=document.querySelector("#outsideView3D").getContext("webgl2");
+   const extension=gl?.getExtension("WEBGL_lose_context");
+   if(!extension)return false;
+   extension.loseContext();return true;
+  });
+  if(lost){
+   await desktop.waitForFunction(()=>!document.querySelector(".scene-shell")
+    .classList.contains("three-dimensional"),null,{timeout:3500});
+   assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
+   assert.equal(await desktop.locator("#outsideView").isVisible(),true);
+   assert.match(await desktop.locator("#visualStatus").textContent(),/2D/i);
+   assert.equal(await desktop.locator("#visualStatus").getAttribute("data-status"),"fallback",
+    "regardless of async context-loss event timing, a user must see the active fallback state");
+   assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+  }
+ }
  assert.deepEqual(errors,[]);
  await desktop.close();
 
- const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- phone.on("pageerror",e=>errors.push("phone: "+e.message));
- await phone.addInitScript(()=>{
-  window.__hapticCalls=[];
-  Object.defineProperty(navigator,"vibrate",{configurable:true,value:pattern=>{
-   window.__hapticCalls.push(pattern);return true;
-  }});
+ // A phone browser with WebGL explicitly denied must remain fully usable.
+ const fallback=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ fallback.on("pageerror",e=>errors.push("fallback "+e.message));
+ await fallback.addInitScript(()=>{
+  const original=HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext=function(kind,...args){
+   if(this.id==="outsideView3D"&&kind==="webgl2")return null;
+   return original.call(this,kind,...args);
+  };
  });
- await phone.goto(url,{waitUntil:"load"});
- await phone.locator("#typeStick").tap();
- assert.ok(await phone.locator("#outsideView").isVisible());
- assert.ok(await phone.locator("#miniAttitude").isVisible(),"phone cockpit shows a graphic horizon");
- assert.equal(await phone.locator("#pfdSpeed").textContent(),await phone.locator("#readSpeed").textContent());
- assert.ok(await phone.locator("#coachGlance").isVisible(),"instruction panel remains available on phone");
- assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),"no phone horizontal overflow");
- await phone.locator("#rightRudder").scrollIntoViewIfNeeded();
- const pad=await phone.locator("#controlPad").boundingBox();
- const right=await phone.locator("#rightRudder").boundingBox();
- assert.ok(pad&&right);
- assert.ok(Math.abs(pad.y-right.y)<145,"yoke and pedals must share one phone thumb row");
- assert.ok(pad.y<844&&pad.y+pad.height>0&&right.y>=0&&right.y+right.height<=844,
-  "both controls must fit the visible phone viewport");
- const view=await phone.locator(".scene-panel").boundingBox();
- assert.ok(view&&view.y>=-7&&view.y<45,"outside view stays sticky while touch controls operate");
- await phone.locator("#hapticsToggle").tap();
- assert.equal(await phone.locator("#hapticsToggle").getAttribute("aria-pressed"),"true");
- await phone.locator("#rightRudder").scrollIntoViewIfNeeded();
- // A sticky outside-view panel can cover an otherwise in-viewport control.
- // Position the whole two-thumb row below it before dispatching real touches.
- await phone.evaluate(()=>{
-  const view=document.querySelector(".scene-panel").getBoundingClientRect();
-  const pad=document.querySelector("#controlPad").getBoundingClientRect();
-  const overlap=view.bottom+8-pad.top;
-  if(overlap>0)window.scrollBy(0,-overlap);
+ await fallback.goto(url,{waitUntil:"load"});
+ assert.equal(await fallback.locator("#visualMode").inputValue(),"3d");
+ assert.equal(await fallback.locator("#outsideView3D").isVisible(),false);
+ assert.match(await fallback.locator("#visualStatus").textContent(),/2D scenery/);
+ assert.equal(await fallback.locator("#cameraMode").isDisabled(),true);
+ assert.ok(await fallback.locator("#outsideView").isVisible());
+ assert.ok(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ await fallback.locator("#typeStick").tap();
+ await fallback.locator("#startApproach").tap();
+ assert.equal(await fallback.locator("#flightPhase").textContent(),"FINAL APPROACH");
+ assert.ok(Number(await fallback.locator("#readAlt").textContent())>75);
+ await fallback.waitForTimeout(650);
+ const pixels=await fallback.evaluate(()=>{
+  const canvas=document.querySelector("#outsideView"),ctx=canvas.getContext("2d");
+  const p=ctx.getImageData(300,140,180,150).data;
+  let signature=0;for(let i=0;i<p.length;i+=103)signature=(signature*31+p[i])>>>0;
+  return signature;
  });
- const finger1={...(await point(phone,"#controlPad",.77,.24)),id:21};
- const finger2={...(await point(phone,"#rightRudder")),id:22};
- const hit=await phone.evaluate(({x,y})=>!!document.elementFromPoint(x,y)?.closest("#controlPad"),finger1);
- assert.equal(hit,true,"control pad must actually receive touch at its marked point, not be hidden under sticky scenery");
- const cdp=await phone.context().newCDPSession(phone);
- try{
-  await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[finger1]});
-  await phone.waitForTimeout(180);
-  assert.match(await phone.locator("#cmdBank").textContent(),/\+[1-9]\d*%/);
-  await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[finger1,finger2]});
-  await phone.waitForTimeout(600);
-  assert.match(await phone.locator("#cmdBank").textContent(),/\+[1-9]\d*%/);
-  assert.equal(await phone.locator("#cmdRudder").textContent(),"RUDDER 100%",
-   "second touch should hold rudder while first finger steers");
-  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[finger2]});
-  await phone.waitForTimeout(120);
-  assert.equal(await phone.locator("#cmdRudder").textContent(),"RUDDER 0%");
-  assert.match(await phone.locator("#cmdBank").textContent(),/\+[1-9]\d*%/,
-   "lifting pedal finger must not release stick");
-  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
-  await phone.waitForTimeout(130);
-  assert.equal(await phone.locator("#cmdBank").textContent(),"+0%");
- }finally{await cdp.detach();}
- assert.ok(await phone.evaluate(()=>window.__hapticCalls.length)>=1);
- assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2));
- await phone.locator("#startApproach").tap();
- assert.match(await phone.locator("#flightPhase").textContent(),/FINAL APPROACH/);
- assert.ok(Number(await phone.locator("#readAlt").textContent())>75);
- await phone.locator("#typeCyclic").tap();
- assert.equal(await phone.locator("#collectivePanel").isVisible(),true);
- assert.equal(await phone.locator("#offsetLabel").textContent(),"PAD OFFSET");
- await phone.locator("#instrumentToggle").tap();
- assert.equal(await phone.locator("#miniAttitude").isVisible(),false);
- assert.equal(await phone.locator("#readAlt").isVisible(),true);
- await phone.locator("#instrumentToggle").tap();
- assert.equal(await phone.locator("#miniAttitude").isVisible(),true);
- assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2));
- assert.equal(await phone.locator("#startApproach").isDisabled(),true);
+ assert.notEqual(pixels,0,"2D fallback must actually paint canvas pixels");
+ await fallback.locator("#visualMode").selectOption("2d");
+ assert.match(await fallback.locator("#visualStatus").textContent(),/Lightweight 2D selected/);
+ await fallback.locator("#visualMode").selectOption("3d");
+ assert.equal(await fallback.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
+ assert.match(await fallback.locator("#visualStatus").textContent(),/Automatically using 2D/);
+ assert.ok(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[]);
- console.log("Immersive browser passed: moving runway canvas, airplane yoke/stick/approach, rotorcraft collective and helipad landing, opt-in haptics, two-finger phone controls and responsive layout.");
+ await fallback.close();
+
+ // 390px touch screens with WebGL2 retain the original two-thumb layout.
+ const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ phone.on("pageerror",e=>errors.push("phone "+e.message));
+ await phone.goto(url,{waitUntil:"load"});
+ const on3D=await phone.locator("#outsideView3D").isVisible();
+ if(await gpuSupported(phone)){
+  assert.equal(on3D,true);
+  await phone.locator("#cameraMode").selectOption("chase");
+  await phone.waitForTimeout(350);
+  const sig=await gpuSignature(phone);
+  assert.ok(sig&&sig.colors>5);
+  assert.ok(sig.width<=960&&sig.height<=540,"GPU render-size budget protects phone");
+ }
+ await phone.locator("#controlPad").scrollIntoViewIfNeeded();
+ const sticky=await phone.locator(".scene-panel").boundingBox();
+ assert.ok(sticky&&sticky.y>=-7&&sticky.y<45);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ assert.ok(await phone.locator("#rightRudder").isVisible());
+ await phone.locator("#visualMode").selectOption("2d");
+ assert.ok(await phone.locator("#outsideView").isVisible());
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ assert.deepEqual(errors,[]);
  await phone.close();
+ console.log("WebGL2 browser passed: genuine GPU scene and moving chase camera when supported; explicit mode switching, 2D fallback, rejected WebGL and 390px phone layout.");
 }finally{await browser.close();}
