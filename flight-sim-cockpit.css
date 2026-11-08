@@ -210,3 +210,37 @@
  .cockpit-station .control-panel .axis-values{margin-top:1px}
  .cockpit-station .control-panel .axis-values span{padding:1px;font-size:8px}
 }
+
+
+/* Reachable two-thumb control row. The old rotor pedals moved below the
+   yoke after the responsive refactor; this restores genuinely simultaneous
+   pitch/roll and yaw control at 390px without duplicating interactive IDs. */
+@media(max-width:740px){
+ .cockpit-main{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);align-items:start}
+ .cockpit-station .control-panel{
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);
+  column-gap:3px;row-gap:3px;align-items:start
+ }
+ .cockpit-station .control-panel>.physical-controls{display:contents}
+ .cockpit-station .control-panel .control-assembly{
+  grid-column:1;grid-row:1;order:0;min-width:0
+ }
+ .cockpit-station .control-panel>.rudder-deck{
+  grid-column:2;grid-row:1;order:0;padding:2px;gap:2px;min-width:0
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals{
+  display:flex;flex-direction:column;gap:3px;align-items:stretch
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals button{
+  min-height:43px;max-height:47px;padding:0 1px;font-size:8px
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals .pedal-icon{display:none}
+ .cockpit-station .control-panel .side-controls{
+  grid-column:1/-1;grid-row:2;order:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))
+ }
+ .cockpit-station .control-panel .side-controls #collectivePanel{grid-column:1/-1}
+ .cockpit-station .control-panel>.brake-button{grid-column:1/-1;grid-row:3;order:0}
+ .cockpit-station .control-panel>#controlHint{grid-column:1/-1}
+ .cockpit-station .control-panel .control-pad{height:96px}
+ .cockpit-station .control-panel .flight-grip{height:93px}
+}
