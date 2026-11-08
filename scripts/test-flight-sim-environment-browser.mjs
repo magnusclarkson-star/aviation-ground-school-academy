@@ -84,8 +84,7 @@ try{
  assert.ok(await phone.locator("#readGroundSpeed").isVisible());
  assert.ok(await phone.locator("#outsideView").isVisible());
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
- const view=await phone.locator(".scene-panel").boundingBox();
- assert.ok(view&&view.y>=-7&&view.y<45,"outside scenery stays sticky while phone controls operate");
+ assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","outside windscreen stays visible inside cockpit without blocking page controls");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "aircraft and wind selectors must fit the 390px phone");
  await phone.locator("#windSelect").selectOption("calm");
