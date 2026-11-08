@@ -57,16 +57,18 @@ try{
   const station=document.querySelector('#cockpitStation'),pad=document.querySelector('#controlPad'),
    pedals=document.querySelector('#rightRudder'),scene=document.querySelector('.scene-panel'),
    page=document.documentElement;
-  const a=pad.getBoundingClientRect(),b=pedals.getBoundingClientRect(),c=station.getBoundingClientRect();
+  const a=pad.getBoundingClientRect(),b=pedals.getBoundingClientRect(),c=station.getBoundingClientRect(),d=document.querySelector("#cockpitVisualPanel").getBoundingClientRect();
   return {sameCockpit:station.contains(pad)&&station.contains(pedals),
     noOverflow:page.scrollWidth<=innerWidth+2,scrollable:scene.scrollHeight>0,
     width:window.innerWidth,padX:a.x,pedalsX:b.x,stationX:c.x,
-    padWidth:a.width,pedalsWidth:b.width,stageHeight:scene.getBoundingClientRect().height};
+    padWidth:a.width,pedalsWidth:b.width,stageHeight:scene.getBoundingClientRect().height,
+    gaugeY:d.y,padY:a.y,stickyScene:getComputedStyle(document.querySelector(".scene-shell")).position};
  });
  assert.equal(value.sameCockpit,true,'gauge panel, yoke and pedals share the same cockpit');
  assert.equal(value.noOverflow,true,'mobile cockpit has no horizontal overflow');
  assert.ok(value.padWidth>50&&value.pedalsWidth>20,'touch targets remain large enough');
- assert.ok(value.stageHeight<=844,'cockpit constrained to screen height');
+ assert.ok(Math.abs(value.gaugeY-value.padY)<85,'instruments and control pad share the same glance row');
+ assert.equal(value.stickyScene,'sticky','small windscreen remains visible without covering other lessons');
  await phone.locator('#cockpitAircraftSelect').selectOption('f35');
  assert.equal(await phone.locator('#cockpitJetHud').isVisible(),true);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd').count(),3);
