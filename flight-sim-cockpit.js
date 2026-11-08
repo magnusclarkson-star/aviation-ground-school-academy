@@ -160,6 +160,18 @@ function buildPanel(doc,profile,holder){
   const grid=doc.createElement("div");grid.className="cockpit-sixpack";
   for(const [id,name,unit] of ANALOG[profile.family])grid.appendChild(makeAnalogFace(doc,id,name,unit));
   holder.appendChild(grid);
+  if(profile.id==="c172"){
+   const avionics=doc.createElement("div");
+   avionics.className="cockpit-avionics";
+   avionics.setAttribute("aria-hidden","true");
+   avionics.innerHTML=`<div class="avionics-topline">NAV / COM</div>
+    <div class="avionics-radio"><small>COM 1</small><span>118.000</span><i aria-hidden="true"></i></div>
+    <div class="avionics-radio"><small>NAV 1</small><span>110.300</span><i aria-hidden="true"></i></div>
+    <div class="avionics-screen"><span class="avionics-screen-label">MAP</span>
+     <div class="avionics-track"></div><span class="avionics-plane">✈</span>
+    </div><div class="avionics-buttons"><i></i><i></i><i></i><i></i><i></i></div>`;
+   holder.appendChild(avionics);
+  }
  }
 }
 function paint(holder,state,systems,input,profileId,doc){
@@ -207,6 +219,13 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  if(!wrap||!holder||!control)throw Error("Cockpit controls or panel missing");
  // Move, never duplicate: existing pointer events, IDs and instrument hooks survive.
  wrap.appendChild(control);
+ wrap.classList.add("cockpit-flightdeck");
+ const launch=doc.querySelector(".full-flight-launch");
+ const stationHeader=cockpitStation.querySelector(".cockpit-station-head");
+ if(launch&&stationHeader)stationHeader.appendChild(launch);
+ const about=doc.querySelector(".sim-about");
+ const main=doc.querySelector("main");
+ if(about&&main)main.appendChild(about);
  const select=$("cockpitAircraftSelect");
  select.replaceChildren();
  for(const frame of FRAMES){
