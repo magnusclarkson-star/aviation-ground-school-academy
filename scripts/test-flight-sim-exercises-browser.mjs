@@ -139,7 +139,7 @@ try{
  const pad=await phone.locator("#controlPad").boundingBox();
  const pedal=await phone.locator("#rightRudder").boundingBox();
  assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","windscreen remains sticky within the cockpit");
- assert.ok(pad&&pedal&&Math.abs(pad.y-pedal.y)<145,"two-thumb control layout remains intact");
+ assert.ok(pad&&pedal&&pedal.y>=pad.y+pad.height-12&&pedal.y-pad.y<280,"two-thumb control layout remains intact");
  await phone.locator("#instrumentToggle").tap();
  assert.equal(await phone.locator("#miniAttitude").isVisible(),false);
  assert.equal(await phone.locator("#exerciseLab").isVisible(),true);
