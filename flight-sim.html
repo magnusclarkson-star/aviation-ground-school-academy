@@ -33,6 +33,7 @@
 <script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim-replay.js" defer></script>
 <script src="flight-sim-after-action.js" defer></script>
+<script src="flight-sim-playback.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -410,9 +411,12 @@
     <h3>Simulated flight replay — height, airspeed and bank</h3>
     <p>Charts have separate vertical scales. They are teaching illustrations, not flight performance evaluations.</p>
     <canvas id="traceReplayCanvas" width="720" height="360" style="display:block;width:100%;max-width:720px;height:auto;border:1px solid #aebed0;border-radius:8px;background:#f9fbff" role="img" aria-label="Three fictional time series: height, indicated airspeed and bank, with a selected sample marker">Replay chart requires canvas support. Selected sample details appear below.</canvas>
+    <button id="tracePlayPause" type="button" aria-pressed="false" disabled>Play recorded samples</button>
+    <p class="disclaimer">Replay is off by default and advances through sampled data at approximately one sample per second. It does not move the simulated aircraft or claim real-time flight handling. Pause before changing the sample using the slider.</p>
     <label for="traceReplayIndex">Inspect recorded moment</label>
     <input type="range" id="traceReplayIndex" min="0" max="0" value="0" step="1" style="display:block;width:100%;max-width:720px">
     <p id="traceReplayDetail" role="status" aria-live="polite"></p>
+    <p><a href="simulator-debrief.html?scenario=turn">Open private learning debrief</a> (starts a separate worksheet; this recording is not transferred)</p>
   </div>
   <p id="traceStatus" role="status" aria-live="polite">Recorder off. No flight trace collected.</p>
   <p class="disclaimer">This is not a flight-data recorder, instructor assessment, real aircraft performance measurement or training-credit record. SME_REVIEW_REQUIRED.</p>
