@@ -66,7 +66,7 @@ function drawScenery(now){
  if(renderer3D){
   if(now-prev3D>=33){
    try{if(!renderer3D.draw(state,{view:$("cameraMode").value})){
-    fallbackTo2D("3D graphics became unavailable; switched to 2D scenery.");
+    fallbackTo2D("3D graphics context lost or became unavailable; switched safely to 2D scenery.");
    }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
    prev3D=now;
   }
