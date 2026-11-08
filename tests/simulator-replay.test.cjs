@@ -37,7 +37,7 @@ test('replay opt-in wiring, keyboard scrubber, and no external requests',()=>{
  assert.ok(html.includes('type="range" id="traceReplayIndex"'));
  assert.ok(app.includes('Q.draw($("traceReplayCanvas"),rows,idx)'));
  assert.ok(app.includes('trace.exportData().observations'));
- assert.ok(app.includes('traceReplayIndex").addEventListener("input",refreshReplay'));
+ assert.ok(app.includes('traceReplayIndex").addEventListener("input",()=>{'));
  assert.ok(app.includes('traceReplayPanel").hidden=true'));
  const code=fs.readFileSync(path.join(root,'flight-sim-replay.js'),'utf8');
  for(const term of ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'sendBeacon'])assert.ok(!code.includes(term));
