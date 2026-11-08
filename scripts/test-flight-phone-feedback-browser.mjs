@@ -90,7 +90,7 @@ try{
  await phone.waitForTimeout(350);
  const louder=await phone.evaluate(()=>window.__phoneProbe.contexts[1].oscillators[0].frequency.value);
  assert.ok(louder>engine,'simulated engine pitch responds to power change');
- assert.match(await phone.locator('#phoneFeedbackStatus').textContent(),/Engine: requested/);
+ assert.match(await phone.locator('#phoneFeedbackStatus').textContent(),/Full flight requested — engine ON/);
  await phone.locator('#phoneFeedbackStop').click();
  assert.equal(await phone.locator('#engineAudioToggle').getAttribute('aria-pressed'),'false');
  assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'false');
