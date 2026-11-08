@@ -1,0 +1,37 @@
+/* Module practice studio — shares Academy AI Instructor typography and dark theme. */
+.path-switch{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}
+.path-switch button{flex:1 1 230px;text-align:center}
+.path-switch button[aria-pressed="true"]{background:#236078;border-color:#8ee9ff;color:#fff}
+.module-progress{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:13px;padding:12px 14px;background:#0b2033;border:1px solid #3d6783;border-radius:11px;margin-top:12px}
+.module-progress strong{color:#f6e2b3;font-size:16px}
+.module-progress p{margin:4px 0 0}
+.module-progress progress{width:min(280px,100%);height:18px;accent-color:#6dd5c0}
+.module-workspace{display:grid;grid-template-columns:minmax(270px,.82fr) minmax(0,1.18fr);align-items:start;gap:16px;margin-top:17px}
+.module-sidebar{position:sticky;top:8px}
+.module-choices{display:grid;gap:9px;margin:12px 0 22px}
+.module-choices button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;font-size:13px;line-height:1.35;min-height:66px}
+.module-choices button[aria-pressed="true"]{border-color:#92e7f6;background:#22546b;outline:1px solid #71d9ec}
+.module-choices small{font-size:11px;color:#bedbe8;font-weight:500}
+.lesson-links{border-top:1px solid #406481;padding-top:13px}
+.lesson-links h3{font-size:15px;margin-bottom:10px}
+.lesson-card{padding:11px;border:1px solid #466e89;background:#0b2134;border-radius:10px;margin:8px 0}
+.lesson-card a{font-weight:750;font-size:13px}
+.lesson-card p{margin:7px 0 0;color:#bfd7e6;font-size:12px}
+.module-state{display:inline-block;font-size:12px;font-weight:750;background:#102e45;border:1px solid #577b94;padding:8px 12px;border-radius:9px;color:#e7f5ff}
+.assessment-questions{display:grid;gap:14px;margin:16px 0}
+.assessment-question{border:1px solid #436781;border-radius:12px;padding:13px;background:#0b2033;min-width:0}
+.assessment-question legend{font-weight:800;font-size:14px;line-height:1.5;padding:0 6px;color:#f3f8ff}
+.assessment-question label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:8px 0;padding:9px;border:1px solid #385e77;background:#122e45;border-radius:9px;font-size:13px;line-height:1.4}
+.assessment-question label:has(input:checked){border-color:#85dfea;background:#20485e}
+.assessment-question input[type="radio"]{margin-top:3px;min-width:18px;min-height:18px;accent-color:#79dff2}
+.assessment-question input:focus-visible{outline:3px solid #f8d69c;outline-offset:4px}
+.checkpoint-feedback{padding:13px;border:1px solid #4b7893;background:#0d2c42;border-radius:10px;margin:15px 0;font-size:13px;line-height:1.5}
+.checkpoint-feedback[data-result="target"]{border-color:#77ae99}
+.checkpoint-feedback[data-result="review"]{border-color:#c7a46b}
+.answer-explanations{padding-left:25px;display:grid;gap:10px;font-size:12px}
+.answer-explanations[hidden]{display:none}
+.answer-explanations li{padding:8px 10px;background:#102a3f;border:1px solid #375a72;border-radius:8px;line-height:1.5}
+.answer-explanations strong{display:block;color:#e8f2fc;font-size:13px}
+.answer-explanations span{display:block;color:#bed8e7;margin-top:4px}
+@media(max-width:850px){.module-workspace{grid-template-columns:1fr}.module-sidebar{position:static}}
+@media(max-width:520px){.path-switch{display:grid}.path-switch button{flex:auto}.assessment-question{padding:10px}.module-workspace{gap:11px;margin-top:11px}.module-progress{display:block}.module-progress progress{margin-top:10px;width:100%}.module-choices button{min-height:57px}}
