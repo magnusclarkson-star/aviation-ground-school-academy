@@ -7,9 +7,10 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
- W=window.AGSAFlightLoading,X=window.AGSAFlightExercises;
+ W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
+ V=window.AGSAFlightInstructorVoice;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -22,6 +23,7 @@ A.step(systems,state,input,0);
 let hardware=null;
 let exerciseSession=X.begin("cgTransfer","trainer");
 let exerciseApplying=false;
+let instructorVoice=null;
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -201,6 +203,7 @@ function renderExercise(){
  }
 }
 function startExercise(message){
+ instructorVoice?.stop("Exercise changed. Narration stopped; written material remains available.");
  exerciseSession=X.begin($("exerciseSelect").value,$("profileSelect").value);
  const d=X.get(exerciseSession.id),answer=$("exerciseAnswer");
  answer.replaceChildren();
@@ -232,6 +235,7 @@ function applyExercise(stage){
   $("exerciseFeedback").dataset.result="neutral";
   return;
  }
+ instructorVoice?.stop("Exercise configuration changed. Choose a spoken summary again when ready.");
  const goal=X.values(exerciseSession.id,stage,state.profileId);
  exerciseApplying=true;
  try{
@@ -458,6 +462,7 @@ $("exerciseSelect").addEventListener("change",()=>startExercise());
 $("exerciseReference").addEventListener("click",()=>applyExercise("reference"));
 $("exerciseComparison").addEventListener("click",()=>applyExercise("comparison"));
 $("exerciseCheck").addEventListener("click",()=>{
+ instructorVoice?.stop("Explanation updated. Select Hear feedback to listen to the new response.");
  const result=X.review(exerciseSession,$("exerciseAnswer").value);
  $("exerciseFeedback").dataset.result=result.status;
  $("exerciseFeedback").textContent=result.message;
@@ -557,6 +562,10 @@ if(!haptics.supported){
 }
 setMode("yoke");
 input.turbulence=.14;
+instructorVoice=V.attach({
+ documentLike:document,windowLike:window,exercises:X,
+ getSession:()=>exerciseSession
+});
 chooseVisual();
 requestAnimationFrame(frame);
 })();
