@@ -2,8 +2,11 @@
  * Never gives real-world aircraft operating limits or graded pilot feedback.
  */
 (function(root){"use strict";
+const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
+if(!E)throw Error("Fictional aircraft profiles unavailable");
 const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
 const round=x=>Math.round(Number.isFinite(x)?x:0);
+const lowEnergyKt=state=>E.selectProfile(state.profileId||"trainer").stallKt+4;
 function start(state){
  if(!state||!validPhase.has(state.phase))throw Error("Synthetic flight state required");
  return {
@@ -55,27 +58,34 @@ function guidance(state,input){
  if(phase==="roll"){
   if(state.speedKt<15)return {...base,tag:"RUNWAY · BUILDING MOTION",
    text:"Observe how increasing fictional throttle changes the speed indication and runway movement."};
-  if(state.speedKt<43)return {...base,tag:"RUNWAY · ACCELERATING",
+  if(state.speedKt<lowEnergyKt(state))return {...base,tag:"RUNWAY · ACCELERATING",
    text:"Watch the runway centreline and rising simulated airspeed. This model does not represent any aircraft's real rotation speed."};
   return {...base,tag:"RUNWAY · PITCH RESPONSE",
    text:"Explore how a gentle nose-up command changes the artificial horizon and simulated lift. Numbers are invented for this demonstration."};
  }
  if(phase==="climb"){
-  if(state.speedKt<43)return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
+  if(state.speedKt<lowEnergyKt(state))return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
    text:"The simplified model indicates low airspeed while airborne. Observe the power, attitude and speed relationships; this is not an actual stall-warning system."};
   return {...base,tag:"CLIMB · INSTRUMENT CROSS-CHECK",
    text:"Compare the outside horizon with the mini attitude indicator, simulated vertical rate and increasing height. Small bank inputs affect heading."};
  }
- if(phase==="flight")
+ if(phase==="flight"){
+  if(state.windId&&state.windId!=="calm")
+   return {...base,tag:"FREE FLIGHT · WIND AND TRACK",
+    text:"Compare the fictional nose heading with the path over the moving ground. The two indications need not agree when wind shifts the aircraft sideways."};
   return {...base,tag:"FREE FLIGHT · BANK AND LEVEL",
    text:"Try gentle bank changes and observe heading, pitch and the moving countryside. Use the separate final-approach setup to practise a landing scene."};
+ }
  if(phase==="approach"){
   if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
    text:"The imaginary aircraft is offset from the drawn runway. Compare the outside view with the lateral-offset marker and heading."};
   if(state.verticalMs<-3.4)return {...base,tag:"SHORT FINAL · RAPID DESCENT",level:"caution",
    text:"The model shows a relatively high descent rate. Observe the height and vertical-rate trends; reset the fictional approach rather than forcing a touchdown."};
-  if(state.speedKt<43)return {...base,tag:"SHORT FINAL · LOW ENERGY",level:"caution",
+  if(state.speedKt<lowEnergyKt(state))return {...base,tag:"SHORT FINAL · LOW ENERGY",level:"caution",
    text:"The model's simulated airspeed is low. Use the practice reset if you want to compare a different approach state. These are not aircraft-specific limits."};
+  if(state.windId&&state.windId!=="calm")
+   return {...base,tag:"SHORT FINAL · WIND AND GROUND TRACK",
+    text:"Compare simulated airspeed with ground speed, heading with actual track, and runway offset. This wind exercise is not an aircraft-specific crosswind landing technique."};
   return {...base,tag:"SHORT FINAL · THREE-POINT SCAN",
    text:"Scan runway alignment, artificial horizon and vertical-rate indication. Observe their relationship as the imaginary threshold approaches."};
  }
