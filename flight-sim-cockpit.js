@@ -42,6 +42,34 @@ const ANALOG={
  rotor:[["vsi","VERTICAL SPEED","FT/MIN"],["speed","AIRSPEED","KT"],["rpm","DUAL TACH","% · SIM"],
   ["attitude","ATTITUDE · OPT.","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],["power","MANIFOLD PROXY","POWER %"]]
 };
+const HELP=Object.freeze({
+ speed:{title:"Airspeed",text:"Shows airspeed in knots. Compare it with the attitude and height while flying."},
+ attitude:{title:"Attitude indicator",text:"Blue is sky, brown is ground. The horizon tilts with bank and moves with pitch."},
+ alt:{title:"Altimeter",text:"Shows height in feet above the simulated ground. Watch height during climb and descent."},
+ turn:{title:"Turn coordinator",text:"This exercise displays a simplified bank indication. Use the heading to see the turn develop."},
+ heading:{title:"Heading indicator",text:"Shows which compass direction the nose is pointing. A steady heading means a steady course in calm wind."},
+ vsi:{title:"Vertical speed",text:"Positive values indicate a climb; negative values indicate descent. Read in feet per minute."},
+ rpm:{title:"Dual tachometer",text:"Compares illustrated engine and rotor speed. Keep a close scan during helicopter practice."},
+ power:{title:"Power indication",text:"Watch the helicopter's simulated collective-power indication when changing lift."},
+ "mfd-pfd":{title:"Flight display",text:"Shows the artificial horizon, airspeed, height and heading together."},
+ "mfd-att":{title:"Attitude display",text:"Follow the horizon to see pitch and bank. The centre mark represents your reference."},
+ "mfd-nav":{title:"Navigation display",text:"Shows heading and ground speed. Compare heading with the outside view."},
+ "mfd-engine":{title:"Systems display",text:"Shows the training power, engine indication and vertical speed."},
+ panel:{title:"Flight instruments",text:"Tap any gauge or screen to enlarge its live reading. Tap the small ⓘ on a gauge for what it means."},
+ controls:{title:"Flight controls",text:"Yoke, stick or cyclic: drag left/right to bank and up/down to pitch. Hold a rudder pedal with another finger. Use throttle or collective to change power or lift."},
+ radio:{title:"Radio",text:"Listen to the controller, note the instruction, then respond in the radio training section. Radio audio starts after you tap its controls."}
+});
+function addInfoDot(doc,element,key,name){
+ const dot=doc.createElement("button");
+ dot.type="button";
+ dot.className="cockpit-info-dot";
+ dot.dataset.cockpitHelp=key;
+ dot.textContent="ⓘ";
+ dot.setAttribute("aria-label","Information about "+name);
+ dot.setAttribute("aria-controls","cockpitInfoPanel");
+ dot.setAttribute("aria-expanded","false");
+ element.appendChild(dot);
+}
 function makeAnalogFace(doc,id,label,unit){
  const face=doc.createElement("div");face.className="cockpit-gauge";face.dataset.gauge=id;
  const heading=doc.createElement("div");heading.className="cockpit-gauge-title";heading.textContent=label;
@@ -78,6 +106,7 @@ function makeAnalogFace(doc,id,label,unit){
  face.setAttribute("role","button");
  face.tabIndex=0;
  face.setAttribute("aria-label","Enlarge "+label+" simulated instrument");
+ addInfoDot(doc,face,id,label);
  return face;
 }
 function digitalScreen(doc,kind,index){
@@ -113,6 +142,7 @@ function digitalScreen(doc,kind,index){
  screen.setAttribute("role","button");
  screen.tabIndex=0;
  screen.setAttribute("aria-label","Enlarge "+header.textContent+" simulated display");
+ addInfoDot(doc,screen,"mfd-"+kind,header.textContent);
  return screen;
 }
 function buildPanel(doc,profile,holder){
@@ -170,10 +200,10 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  const $=id=>doc.getElementById(id);
  const wrap=$("cockpitMain"),holder=$("cockpitVisualPanel"),control=$("controlTitle")?.closest(".control-panel");
  const zoomPanel=$("cockpitZoomPanel"),zoomContent=$("cockpitZoomContent"),zoomTitle=$("cockpitZoomTitle");
+ const infoPanel=$("cockpitInfoPanel"),infoTitle=$("cockpitInfoTitle"),infoText=$("cockpitInfoText");
  const cockpitStation=$("cockpitStation");
- const touchSize=$("cockpitTouchScale"),sensitivity=$("cockpitTouchSensitivity");
  const win=root||null;
- if(!zoomPanel||!zoomContent||!zoomTitle||!touchSize||!sensitivity)throw Error("Instrument zoom or touch configuration missing");
+ if(!zoomPanel||!zoomContent||!zoomTitle||!infoPanel||!infoTitle||!infoText)throw Error("Cockpit info or zoom controls missing");
  if(!wrap||!holder||!control)throw Error("Cockpit controls or panel missing");
  // Move, never duplicate: existing pointer events, IDs and instrument hooks survive.
  wrap.appendChild(control);
@@ -184,13 +214,39 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   select.appendChild(option);
  }
  let active="c172";
+ function closeInfo(){
+  infoPanel.hidden=true;
+  for(const button of cockpitStation.querySelectorAll("[data-cockpit-help]"))button.setAttribute("aria-expanded","false");
+ }
+ function openInfo(key,trigger){
+  let selected=HELP[key];
+  if(key==="panel"){
+   selected=byId(active).family==="rotor"?
+    {title:"Helicopter instruments",text:"Scan rotor and engine indications, airspeed, attitude, height and vertical speed. Tap a gauge to enlarge it."}:
+    byId(active).family==="jet"?
+    {title:"Flight displays",text:"Primary display: horizon, speed and height. Navigation: heading and ground speed. Systems: power and climb."}:HELP.panel;
+  }
+  if(key==="controls"&&byId(active).family==="rotor"){
+   selected={title:"Helicopter controls",text:"Cyclic: move to change pitch and roll. Collective: change lift. Pedals: turn the nose. Keep them in view together."};
+  }
+  if(!selected)return false;
+  closeZoom();
+  closeInfo();
+  infoTitle.textContent=selected.title;
+  infoText.textContent=selected.text;
+  infoPanel.hidden=false;
+  trigger?.setAttribute("aria-expanded","true");
+  return true;
+ }
  function closeZoom(){
   zoomPanel.hidden=true;
   zoomContent.replaceChildren();
   zoomTitle.textContent="Instrument";
  }
  function openZoom(tile){
+  closeInfo();
   const clone=tile.cloneNode(true);
+  clone.querySelector(".cockpit-info-dot")?.remove();
   clone.removeAttribute("role");
   clone.removeAttribute("tabindex");
   clone.removeAttribute("aria-label");
@@ -209,71 +265,37 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   update();
  }
  holder.addEventListener("click",event=>{
+  const dot=event.target?.closest?.(".cockpit-info-dot");
+  if(dot){
+   event.preventDefault();
+   event.stopPropagation();
+   openInfo(dot.dataset.cockpitHelp,dot);
+   return;
+  }
   const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
   if(tile&&holder.contains(tile))openZoom(tile);
  });
  holder.addEventListener("keydown",event=>{
+  if(event.target?.closest?.(".cockpit-info-dot"))return;
   if(event.key!=="Enter"&&event.key!==" ")return;
   const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
   if(!tile||!holder.contains(tile))return;
   event.preventDefault();openZoom(tile);
  });
  $("cockpitZoomClose").addEventListener("click",closeZoom);
- doc.addEventListener("keydown",event=>{if(event.key==="Escape"&&!zoomPanel.hidden)closeZoom();});
- const focusButton=$("cockpitControlFocusToggle");
- let focusExpanded=false;
- function setControlFocus(enabled){
-  focusExpanded=Boolean(enabled);
-  cockpitStation.dataset.controlFocus=focusExpanded?"expanded":"normal";
-  focusButton.setAttribute("aria-pressed",String(focusExpanded));
-  focusButton.textContent=focusExpanded?"Return to normal controls":"Expand flight controls";
-  focusButton.setAttribute("aria-label",focusExpanded?"Return to normal cockpit control size":"Enlarge the on-cockpit flight controls");
-  return focusExpanded;
- }
- focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded));
- // Expanded quick controls operate the original slider/select elements; there
- // are no parallel or unsynchronised flight-input values.
- function adjustPower(direction){
-  const control=byId(active).family==="rotor"?$("collective"):$("power");
-  const next=clamp(Number(control.value)+direction*5,0,100);
-  control.value=String(next);
-  control.dispatchEvent(new win.Event("input",{bubbles:true}));
-  $("cockpitExtraStatus").textContent=(byId(active).family==="rotor"?"Collective":"Power")+" adjusted to "+next+"% (fictional).";
- }
- function adjustFlaps(direction){
-  if(byId(active).family==="rotor")return;
-  const control=$("flaps"),steps=[...control.options].map(o=>Number(o.value));
-  const current=Math.max(0,steps.indexOf(Number(control.value)));
-  const next=steps[clamp(current+direction,0,steps.length-1)];
-  control.value=String(next);
-  control.dispatchEvent(new win.Event("change",{bubbles:true}));
-  $("cockpitExtraStatus").textContent="Flaps set to "+next+"° (fictional).";
- }
- $("cockpitPowerDown").addEventListener("click",()=>adjustPower(-1));
- $("cockpitPowerUp").addEventListener("click",()=>adjustPower(1));
- $("cockpitFlapsDown").addEventListener("click",()=>adjustFlaps(-1));
- $("cockpitFlapsUp").addEventListener("click",()=>adjustFlaps(1));
- // Expand only once the touch gesture finishes, so an active two-finger
- // steering or rudder press cannot be shifted halfway through a manoeuvre.
- for(const id of ["controlPad","leftRudder","rightRudder","brake"]){
-  $(id).addEventListener("pointerup",event=>{
-   if(event.pointerType!=="mouse"||event.button===0)setControlFocus(true);
+ $("cockpitInfoClose").addEventListener("click",closeInfo);
+ for(const button of cockpitStation.querySelectorAll(".cockpit-info-toolbar [data-cockpit-help]")){
+  button.addEventListener("click",()=>{
+   const key=button.dataset.cockpitHelp;
+   if(!infoPanel.hidden&&button.getAttribute("aria-expanded")==="true")closeInfo();
+   else openInfo(key,button);
   });
  }
- for(const id of ["power","collective","flaps"]){
-  $(id).addEventListener("change",()=>setControlFocus(true));
- }
  doc.addEventListener("keydown",event=>{
-  if(event.key==="Escape"&&focusExpanded)setControlFocus(false);
+  if(event.key!=="Escape")return;
+  if(!zoomPanel.hidden)closeZoom();
+  if(!infoPanel.hidden)closeInfo();
  });
- setControlFocus(false);
- const sizes=new Set(["compact","standard","large"]);
- function resizeControls(){
-  const size=sizes.has(touchSize.value)?touchSize.value:"standard";
-  cockpitStation.dataset.touchSize=size;
- }
- touchSize.addEventListener("change",resizeControls);
- resizeControls();
  function refreshOrientation(){
   const landscape=Boolean(win&&win.innerWidth>win.innerHeight&&win.innerHeight<=620);
   const mobile=Boolean(win&&win.innerWidth<=740&&win.innerHeight>win.innerWidth);
@@ -292,16 +314,12 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   deck.dataset.airframe=profile.id;deck.dataset.family=profile.family;
   $("cockpitAircraftLabel").textContent=profile.title;
   $("cockpitAircraftCaption").textContent=profile.caption+" · "+profile.pilot;
-  $("cockpitAircraftNotice").textContent=profile.family==="jet"?
-   "Military cockpit familiarisation only. All five jets reuse the fictional trainer flight model; no jet-specific aerodynamics, avionics, weapons or operational limits.":
-   profile.family==="rotor"?
-    "R44-inspired later analogue layout. Dual-tach and manifold indications are invented proxies; no certified rotorcraft performance.":
-    "C172-style traditional T six-pack. Gauges show invented trainer values, not an approved Cessna instrument installation.";
+  $("cockpitAircraftNotice").textContent=profile.family==="jet"?"FLIGHT DISPLAYS":profile.family==="rotor"?"ROTORCRAFT INSTRUMENTS":"PRIMARY FLIGHT INSTRUMENTS";
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
   closeZoom();
-  setControlFocus(false);
+  closeInfo();
   if(notify)onSelect(profile.control,profile.id);
   update();
   return profile;
@@ -322,11 +340,11 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   });
  }
  choose("c172");
- return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,setControlFocus,
-  sensitivity:()=>clamp(sensitivity.value,.5,1.5),
+ return Object.freeze({choose,update,openZoom,closeZoom,openInfo,closeInfo,refreshOrientation,
+  sensitivity:()=>1,
   getProfile:()=>byId(active),profiles:FRAMES});
 }
-const api=Object.freeze({FRAMES,byId,snapshot,attach,paint,buildPanel});
+const api=Object.freeze({FRAMES,HELP,byId,snapshot,attach,paint,buildPanel});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACockpitIntegrated=api;
 })(typeof window!=="undefined"?window:null);

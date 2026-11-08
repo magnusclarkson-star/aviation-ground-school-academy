@@ -374,3 +374,51 @@
  .cockpit-extra-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
  .cockpit-station[data-family="rotor"] .cockpit-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Minimal cockpit help: no learning text appears until the ⓘ is selected.
+   Instrument tiles still enlarge independently when their faces are tapped. */
+.cockpit-info-toolbar{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 7px}
+.cockpit-info-button{min-height:36px;border:1px solid #728c99;border-radius:18px;
+ background:#172c37;color:#d5e9f1;font:600 11px/1.2 system-ui,sans-serif;padding:5px 12px}
+.cockpit-info-button[aria-expanded="true"]{border-color:#f0d08a;color:#ffebbc}
+.cockpit-instrument-well{min-width:0}
+.cockpit-info-panel{padding:9px 10px;margin-top:5px;background:#0a202d;
+ border:1px solid #8eacb9;border-radius:8px;color:#e5f1f4}
+.cockpit-info-panel[hidden]{display:none!important}
+.cockpit-info-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cockpit-info-head strong{font-size:13px;color:#f5dba2}
+.cockpit-info-head button{min-width:35px;min-height:35px;padding:4px 8px}
+.cockpit-info-panel p{margin:6px 0 2px;font-size:12px;line-height:1.5;color:#e1f0f5}
+.cockpit-gauge,.cockpit-mfd{position:relative}
+.cockpit-info-dot{position:absolute;right:3px;top:3px;z-index:2;display:grid;place-items:center;
+ min-width:27px;min-height:27px;width:27px;height:27px;padding:0;
+ border-radius:50%;border:1px solid #95b4bd;background:#142e3cf0;
+ color:#f5e6b6;font-size:16px;font-weight:800;line-height:1;touch-action:manipulation}
+.cockpit-info-dot:focus-visible,.cockpit-info-button:focus-visible{outline:2px solid #ffde88;outline-offset:2px}
+.cockpit-zoom-content .cockpit-info-dot{display:none}
+.cockpit-grip-caption{display:none}
+@media(max-width:740px){
+ .cockpit-info-toolbar{gap:4px;margin:3px 0 4px}
+ .cockpit-info-button{min-height:33px;padding:4px 9px;font-size:10px}
+ .cockpit-info-dot{width:24px;height:24px;min-width:24px;min-height:24px;
+  font-size:13px;top:2px;right:2px}
+ .cockpit-info-panel{padding:7px}
+ .cockpit-info-panel p{font-size:11px}
+}
+
+
+/* Keep the visual flight deck clean. Context is behind the ⓘ buttons;
+   status and descriptive copy remain available to assistive technology. */
+.cockpit-station #cockpitAircraftCaption,
+.cockpit-station #cockpitAircraftNotice,
+.cockpit-station #cockpitRotationStatus{
+ position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;
+ clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important
+}
+.cockpit-station .control-panel>.eyebrow,
+.cockpit-station .control-panel>h2,
+.cockpit-station .control-panel>#controlHint,
+.cockpit-station .control-panel>.shortcuts{display:none!important}
+.cockpit-station .control-panel #collectivePanel>.hint{display:none!important}
