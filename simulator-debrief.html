@@ -55,5 +55,11 @@ byId('scenario').addEventListener('change',updateBriefing);byId('pathway').addEv
 byId('preview').addEventListener('click',()=>{const d=collect();render(d);byId('notice').textContent='Prepared on this device only. No instructor review has occurred.';});
 byId('export').addEventListener('click',()=>{const d=collect();render(d);const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='academy-unsigned-flight-debrief.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);byId('notice').textContent='Unsigned JSON generated locally. It contains your written answers; review before sharing.';});
 byId('reset').addEventListener('click',()=>{for(const id of ['observation','comparison','uncertainty','nextstep'])byId(id).value='';document.querySelectorAll('input[name="instrument"]').forEach(x=>x.checked=false);byId('selfcheck').selectedIndex=0;byId('scenario').selectedIndex=0;byId('pathway').selectedIndex=0;updateBriefing();byId('notice').textContent='Debrief fields cleared.';});
+// Optional handoff uses a strict public scenario allowlist; never read flight state or identity.
+const handoff=new URLSearchParams(window.location.search).get('scenario');
+if(handoff && Object.prototype.hasOwnProperty.call(scenarios,handoff)){
+  byId('scenario').value=handoff;
+  byId('notice').textContent='Scenario preselected from the simulator link. No telemetry or student data was transferred.';
+}
 updateBriefing();
 </script></body></html>
