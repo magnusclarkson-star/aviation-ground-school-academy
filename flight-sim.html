@@ -31,6 +31,7 @@
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
+<script src="flight-sim-replay.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -394,6 +395,15 @@
   <button id="traceStop" type="button" disabled>Stop recording</button>
   <button id="traceDownload" type="button" disabled>Download unsigned trace JSON</button>
   <button id="traceClear" type="button">Clear recording</button>
+  <button id="traceReplay" type="button" disabled>View recorded flight</button>
+  <div id="traceReplayPanel" hidden style="margin-top:1rem">
+    <h3>Simulated flight replay — height, airspeed and bank</h3>
+    <p>Charts have separate vertical scales. They are teaching illustrations, not flight performance evaluations.</p>
+    <canvas id="traceReplayCanvas" width="720" height="360" style="display:block;width:100%;max-width:720px;height:auto;border:1px solid #aebed0;border-radius:8px;background:#f9fbff" role="img" aria-label="Three fictional time series: height, indicated airspeed and bank, with a selected sample marker">Replay chart requires canvas support. Selected sample details appear below.</canvas>
+    <label for="traceReplayIndex">Inspect recorded moment</label>
+    <input type="range" id="traceReplayIndex" min="0" max="0" value="0" step="1" style="display:block;width:100%;max-width:720px">
+    <p id="traceReplayDetail" role="status" aria-live="polite"></p>
+  </div>
   <p id="traceStatus" role="status" aria-live="polite">Recorder off. No flight trace collected.</p>
   <p class="disclaimer">This is not a flight-data recorder, instructor assessment, real aircraft performance measurement or training-credit record. SME_REVIEW_REQUIRED.</p>
  </section>
