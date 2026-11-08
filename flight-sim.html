@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="flight-sim.css">
 <link rel="stylesheet" href="flight-sim-instruments.css">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
+<link rel="stylesheet" href="flight-sim-environment.css">
+<script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
@@ -80,6 +82,11 @@
    <div><small>PITCH / BANK</small><strong id="readAttitude">0° / 0°</strong><span>degrees</span></div>
    <div><small>RUNWAY OFFSET</small><strong id="readOffset">0</strong><span>metres · illustrative</span></div>
   </div>
+   <div class="wind-readouts" aria-label="Fictional wind and ground track information">
+    <span>GROUND SPEED <strong id="readGroundSpeed">0 kt</strong></span>
+    <span>TRACK <strong id="readTrack">000°</strong></span>
+    <span>ILLUSTRATIVE WIND <strong id="readWind">Calm conditions</strong></span>
+   </div>
    <div class="alignment-widget" aria-label="Lateral offset from the imaginary runway or helipad">
     <span id="offsetLabel">RUNWAY OFFSET</span>
     <div class="alignment-track" aria-hidden="true"><span class="alignment-centre"></span><span id="alignmentMarker" class="alignment-marker"></span></div>
@@ -103,6 +110,28 @@
     <button id="typeCyclic" type="button" aria-pressed="false"><span aria-hidden="true">🚁</span> Helicopter cyclic</button>
    </div>
    <p id="aircraftHint" class="hint">A wheel-type control column commands simulated pitch and roll. This is not a type-specific replica.</p>
+   <div class="environment-controls" aria-label="Fictional flight profiles and conditions">
+    <div id="profileWrap">
+     <label for="profileSelect">Fictional airframe response</label>
+     <select id="profileSelect" aria-describedby="profileHint">
+      <option value="trainer" selected>Basic trainer · stable</option>
+      <option value="sport">Sport trainer · responsive</option>
+      <option value="touring">Touring trainer · steady</option>
+     </select>
+     <p id="profileHint" class="hint">Three imaginary handling profiles for comparing control response; no model recreates a real aircraft.</p>
+    </div>
+    <div>
+     <label for="windSelect">Illustrative wind environment</label>
+     <select id="windSelect" aria-describedby="windHint">
+      <option value="calm" selected>Calm conditions</option>
+      <option value="crosswind">Left crosswind · illustrative</option>
+      <option value="headwind">Headwind · illustrative</option>
+      <option value="gusts">Gusty crosswind · illustrative</option>
+     </select>
+     <p id="windHint" class="hint">Wind affects fictional airborne movement and ground track, not real weather or approved performance.</p>
+    </div>
+    <p id="environmentStatus" class="environment-status" role="status" aria-live="polite">Basic trainer with calm conditions. Choose another scenario to compare the same exercise.</p>
+   </div>
    <div class="scenario-controls">
     <button type="button" id="startRunway" class="major">Runway takeoff</button>
     <button type="button" id="startApproach">Set up final approach</button>
