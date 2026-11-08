@@ -97,7 +97,7 @@ function attach({windowLike,documentLike,getAirport=()=>"gfll",getSituation=()=>
  if(!doc?.getElementById)throw Error("Readback practice needs a page");
  const el=id=>doc.getElementById(id),synth=win?.speechSynthesis,Utter=win?.SpeechSynthesisUtterance;
  const supported=typeof synth?.speak==="function"&&typeof synth?.cancel==="function"&&typeof Utter==="function";
- let index=0,attempts=0,correct=0,checked=false,playing=false,serial=0;
+ let index=0,attempts=0,correct=0,checked=false,countedCorrect=false,playing=false,serial=0;
  let activeAirport="",activeSituation="",drill;
  const status=message=>{el("atcDrillStatus").textContent=message;};
  function stop(){
@@ -112,7 +112,7 @@ function attach({windowLike,documentLike,getAirport=()=>"gfll",getSituation=()=>
   activeAirport=getAirport();activeSituation=getSituation();
   const types=sequenceFor(activeAirport,activeSituation);
   drill=makeDrill(activeAirport,types[index%types.length]);
-  checked=false;
+  checked=false;countedCorrect=false;
   el("atcDrillName").textContent=drill.title+" · "+World.getAirport(activeAirport).name;
   el("atcDrillInstruction").textContent=drill.instruction;
   el("atcDrillLesson").textContent=drill.lesson;
@@ -155,7 +155,8 @@ function attach({windowLike,documentLike,getAirport=()=>"gfll",getSituation=()=>
   const response=el("atcDrillResponse").value.trim();
   if(!response){status("Enter your readback first. You can use the keyboard on your phone.");return null;}
   const outcome=evaluate(drill,response);
-  if(!checked){attempts++;if(outcome.passed)correct++;checked=true;}
+  if(!checked){attempts++;checked=true;}
+  if(outcome.passed&&!countedCorrect){correct++;countedCorrect=true;}
   el("atcDrillFeedback").dataset.result=outcome.passed?"complete":"review";
   el("atcDrillFeedback").textContent=outcome.passed?
    "All key items detected in this practice readback. This is an automated text check, not a pilot qualification.":
