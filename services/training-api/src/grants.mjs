@@ -13,7 +13,7 @@ export function grantStatements(appRole,provisionRole){
  if(app===provision)throw Error("Application and provisioning roles must differ");
  const tables=[
   "organizations","users","memberships","instructor_assignments",
-  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges","ai_daily_usage"
+  "sessions","practice_attempts","feedback_drafts","login_throttles","audit_events","instructor_mfa","email_verification_challenges","ai_daily_usage","realtime_voice_calls"
  ];
  const statements=[];
  // Revoke any direct privileges; database owners and role memberships need separate review.
@@ -31,6 +31,10 @@ export function grantStatements(appRole,provisionRole){
  statements.push(`GRANT SELECT ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT UPDATE(last_used_step) ON public.instructor_mfa TO ${app}`);
  statements.push(`GRANT EXECUTE ON FUNCTION public.consume_email_challenge(char(64)) TO ${app}`);
+ // Durable recovery worker can progress call lifecycle but may neither
+ // reassign account ownership nor delete unresolved provider call evidence.
+ statements.push(`GRANT SELECT,INSERT ON public.realtime_voice_calls TO ${app}`);
+ statements.push(`GRANT UPDATE(provider_call_id,state,updated_at,expires_at,next_attempt_at,claim_until,attempt_count,last_error_code,resolved_at) ON public.realtime_voice_calls TO ${app}`);
  statements.push(`GRANT SELECT,INSERT ON public.ai_daily_usage TO ${app}`);
  statements.push(`GRANT UPDATE(request_count) ON public.ai_daily_usage TO ${app}`);
  statements.push(`GRANT UPDATE(revoked_at) ON public.sessions TO ${app}`);
