@@ -12,6 +12,7 @@ const DEFINITIONS=Object.freeze({
  cgTransfer:Object.freeze({
   id:"cgTransfer",title:"01 · Moving a load aft",
   goal:"Compare two imaginary loadouts with exactly the same total mass.",
+  rationale:"The same mass moved to a larger imaginary station arm creates a greater total moment. Therefore the calculated centre of gravity moves aft despite unchanged mass.",
   question:"A 40 kg fictional load moves from the rear occupant station to the farther-aft baggage station. What happens to centre of gravity?",
   prompt:"Apply Reference, then Comparison. Examine total mass, moment and CG before selecting an explanation.",
   options:Object.freeze([
@@ -26,6 +27,7 @@ const DEFINITIONS=Object.freeze({
  massIncrease:Object.freeze({
   id:"massIncrease",title:"02 · Mass and wing loading",
   goal:"Keep the fictional wing area unchanged and compare a heavier load.",
+  rationale:"Wing loading is mass divided by wing area in this model. When the imaginary mass rises and the fictional wing area stays fixed, its kg/m² rises; this alone does not establish safe aircraft performance.",
   question:"When extra imaginary occupants and baggage increase the mass without changing wing area, what happens to wing loading?",
   prompt:"Apply both conditions. Compare the total mass and mass-per-wing-area values.",
   options:Object.freeze([
@@ -40,6 +42,7 @@ const DEFINITIONS=Object.freeze({
  fuelShift:Object.freeze({
   id:"fuelShift",title:"03 · Changing imaginary fuel load",
   goal:"Explore a change in mass forward of the initial imaginary CG.",
+  rationale:"The imaginary fuel station lies forward of the initial CG. Removing mass there lowers total mass but moves the remaining model's weighted-average position aft. No real in-flight fuel burn is simulated.",
   question:"The model loses 50 kg of imaginary fuel from a forward-of-CG station. Which trend appears?",
   prompt:"Compare the fuel figures, mass and CG. This model has no fuel burn in flight; each setup is restarted.",
   options:Object.freeze([
@@ -54,6 +57,7 @@ const DEFINITIONS=Object.freeze({
  flapTrade:Object.freeze({
   id:"flapTrade",title:"04 · Fictional flap lift–drag comparison",
   goal:"Compare invented lift and drag coefficients at one common angle of attack.",
+  rationale:"At the same arbitrary 4° angle of attack, the invented flap-coefficient formula increases both CL and CD. That is a comparison of these fabricated parameters, not a real flap performance guarantee.",
   question:"At the same invented 4° angle of attack, what happens when flap selection changes from 0° to 30°?",
   prompt:"Use Reference and Comparison to see the flap selector change. The coefficient figures are a fixed-angle illustration, not a real-aircraft performance claim.",
   options:Object.freeze([
@@ -156,7 +160,9 @@ function review(session,answer){
  const message=correct?
   "Your selected explanation matches this fictional model's calculated comparison. It is a practice self-check, not an instructor assessment.":
   "That explanation does not match the invented comparison figures. Recheck the direction of the change and try again.";
- const result={status:correct?"matches-model":"revisit",message,evidence:evidence(session),
+ const result={status:correct?"matches-model":"revisit",
+  message:message+" Model explanation: "+d.rationale,
+  evidence:evidence(session),
   reviewStatus:STATUS,assessed:false,trainingCredit:false};
  session.feedback=result;
  return result;
