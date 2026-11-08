@@ -110,5 +110,24 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
  .rudder-pedals button{min-height:70px}.rudder-pedals{gap:7px}
  .mission-cards{grid-template-columns:1fr}
 }
+/* Narrow phone: keep cyclic/yoke and rudder pedals in one working row,
+   while the outside view remains sticky immediately above the controls. */
+@media(max-width:740px){
+ .control-panel{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);column-gap:7px}
+ .control-panel>.eyebrow,.control-panel>h2,.control-panel>#controlHint,
+ .control-panel>.brake-button,.control-panel>.shortcuts{grid-column:1/-1}
+ .control-panel>.physical-controls{grid-column:1;display:block;min-width:0;align-self:start}
+ .control-panel>.rudder-deck{grid-column:2;display:flex;flex-direction:column;justify-content:start;
+  align-items:stretch;gap:6px;align-self:start;margin:0;padding:7px 5px;min-width:0}
+ .control-panel>.rudder-deck .eyebrow{font-size:8px;letter-spacing:.07em}
+ .control-panel>.rudder-deck .hint{font-size:9px}
+ .control-panel>.rudder-deck .rudder-pedals{width:100%;gap:3px}
+ .control-panel>.rudder-deck .rudder-pedals button{padding:3px 1px;min-width:0;
+  border-width:3px;min-height:68px;font-size:9px}
+ .control-panel .control-pad{height:174px}
+ .control-panel .flight-grip{height:160px}
+ .control-panel .side-controls{margin-top:10px}
+ .control-panel>.brake-button{margin-top:8px}
+}
 @media(max-width:365px){.scene-top .screen-chip{display:none}.control-pad{height:168px}.flight-grip{height:145px}.axis-values span{font-size:9px;padding:6px 4px}.readouts strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
