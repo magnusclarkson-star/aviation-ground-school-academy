@@ -94,10 +94,26 @@ test('sound default is stronger yet amplitude remains low and safe',()=>{
  assert.ok(idle.primaryHz>=100&&idle.primaryHz<=250,"idle fundamental must be usable on a typical phone speaker");
  assert.ok(idle.harmonicHz>=250,"sound needs audible upper harmonics on small speakers");
 });
+test('full settings are ready at maximum before browser gesture, and complete activation is explicit',()=>{
+ const html=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
+ const js=fs.readFileSync(path.join(root,'flight-sim.js'),'utf8');
+ assert.ok(html.indexOf('id="fullFlightLaunch"')<html.indexOf('class="scene-panel"'));
+ assert.ok(html.includes('id="engineAudioVolume" type="range" min="0" max="100" step="1" value="100"'));
+ assert.ok(html.includes('<option value="textured" selected>'));
+ assert.ok(html.includes('<option value="noticeable" selected>'));
+ assert.ok(js.includes('const engineStart=engineAudio.start(state.mode,audioPower())'));
+ assert.ok(js.includes('const cueStarted=radioTone.enable(true)'));
+ assert.ok(js.includes('const radioArmed=atcRadio?.arm(true)===true'));
+ assert.ok(js.includes('haptics.setEnabled(true)'));
+ assert.ok(js.includes('for(const id of ["fullFlightLaunch","phoneFeedbackStart"])'));
+ assert.ok(js.includes('if(fullFlightWanted)void startFullFlight()'),'reset must preserve chosen effects');
+ assert.ok(js.includes('if(changed&&fullFlightWanted)void startFullFlight()'),'aircraft change restores chosen effects');
+ assert.ok(js.includes('}else if(fullFlightWanted){void startFullFlight();}'),'resume restores chosen effects');
+});
 test('mobile UI is visible near the outside view and keeps original controls',()=>{
  const h=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
  const j=fs.readFileSync(path.join(root,'flight-sim.js'),'utf8');
- for(const id of ['phoneFeedbackStart','phoneFeedbackStop','phoneSoundTest','phoneVibrationTest','phoneFeedbackStatus','hapticsStrength'])
+ for(const id of ['fullFlightLaunch','fullFlightLaunchStatus','phoneFeedbackStart','phoneFeedbackStop','phoneSoundTest','phoneVibrationTest','phoneFeedbackStatus','hapticsStrength'])
   assert.ok(h.includes('id="'+id+'"'),id);
  assert.ok(h.indexOf('id="phoneFeedbackStart"')<h.indexOf('class="lab-grid"'));
  assert.ok(h.includes('src="flight-sim-phone-probe.js"'));
