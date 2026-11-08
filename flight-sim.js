@@ -30,7 +30,7 @@ function refreshReplay(){
  Q.draw($("traceReplayCanvas"),rows,idx);
  $("traceReplayDetail").textContent=Q.describe(rows,idx);
 }
-function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;}
+function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;$("traceReplay").disabled=t.active||!t.samples;}
 function clearTrace(){trace.clear();$("traceReplayPanel").hidden=true;traceStatus();refreshReplay();}
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
