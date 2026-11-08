@@ -7,6 +7,7 @@
 <meta name="description" content="Immersive fictional airfield flight simulator with scrolling runway scenery, yoke, joystick, helicopter cyclic, optional haptics, takeoff and landing practice. Not a certified simulator.">
 <title>Immersive Airfield Flight Simulator | Aviation Ground School Academy</title>
 <link rel="stylesheet" href="flight-sim.css">
+<link rel="stylesheet" href="flight-sim-atc-practice.css">
 <link rel="stylesheet" href="flight-sim-instruments.css">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
 <link rel="stylesheet" href="flight-sim-environment.css">
@@ -39,6 +40,7 @@
 <script src="flight-sim-atc-world.js" defer></script>
 <script src="flight-sim-radio-effects.js" defer></script>
 <script src="flight-sim-atc-radio.js" defer></script>
+<script src="flight-sim-atc-practice.js" defer></script>
 <script src="flight-sim-radio-tone.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim-replay.js" defer></script>
@@ -279,6 +281,29 @@
      <p id="atcStatus" role="status" aria-live="polite">Radio is off until you select a dialogue.</p>
      <h4>Written radio transcript</h4>
      <ol id="atcTranscript" class="atc-transcript" aria-label="Fictional tower and pilot radio script"></ol>
+      <section class="atc-readback-lab" aria-labelledby="atcDrillHeading">
+       <span class="readback-eyebrow">INTERACTIVE RADIO PRACTICE · NEW</span>
+       <h4 id="atcDrillHeading">Your turn to answer ATC</h4>
+       <p>Listen to one controller call with radio clicks and static, then enter the readback you would give. Practise the words aloud before typing them. No microphone is requested or recorded.</p>
+       <strong id="atcDrillName">Taxi and runway hold-short readback</strong>
+       <p id="atcDrillInstruction" class="readback-instruction" aria-label="Fictional ATC training instruction"></p>
+       <p id="atcDrillLesson" class="readback-meta"></p>
+       <div class="readback-buttons">
+        <button id="atcDrillHear" type="button">▶ Hear ATC instruction</button>
+        <button id="atcDrillNext" type="button">Next radio situation</button>
+       </div>
+       <label for="atcDrillResponse">Your pilot readback</label>
+       <textarea id="atcDrillResponse" rows="3" maxlength="600" spellcheck="false" placeholder="Example: Hold short of runway..., Academy Four Two One"></textarea>
+       <div class="readback-buttons">
+        <button id="atcDrillCheck" type="button">Check my readback</button>
+        <button id="atcDrillReveal" type="button">Reveal example answer</button>
+       </div>
+       <p id="atcDrillFeedback" class="readback-feedback" data-result="waiting" role="status" aria-live="polite">Your training feedback will appear here.</p>
+       <p id="atcDrillAnswer" class="readback-answer" hidden></p>
+       <p id="atcDrillProgress" class="readback-meta" aria-live="off">Practice attempts: 0 · Complete readbacks: 0</p>
+       <p id="atcDrillStatus" class="readback-meta" role="status" aria-live="polite">Choose Hear ATC instruction when ready.</p>
+       <p class="hint">Automated keyword feedback is for self-checking only. It cannot verify a pilot's understanding, suitability to fly, or real ATC phraseology. Scenarios, runways and facility names are illustrative.</p>
+      </section>
      <p class="hint">Start ALL flight effects also enables phase-linked radio and the cue tone, with no extra switches required. Phase-linked radio plays at most one before, during and after exchange per practice session. The browser may restrict speech when a flight phase changes; the written transcript still updates. The optional short radio cue tone does not change or filter device voices.</p>
      <p class="hint">Each spoken call uses synthetic push-to-talk clicks, receiver squelch and narrow-band static where supported. The device voice itself cannot be filtered by Web Audio in this browser, and voices may sound alike. These are scripted, location-inspired educational scenarios, not live communications, airport-operating instructions or approved ATC training.</p>
     </div>
