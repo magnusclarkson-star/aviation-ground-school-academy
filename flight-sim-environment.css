@@ -1,0 +1,25 @@
+/* Fictional aircraft handling and wind comparison controls.
+ * Compact on mobile so the flight view + instruments retain priority. */
+.environment-controls{border-top:1px solid #476b80;margin-top:14px;padding-top:13px;display:grid;gap:9px}
+.environment-controls label{display:block;font-size:12px;font-weight:850;color:#e1f3fc;margin-bottom:5px}
+.environment-controls select{display:block;width:100%;border:1px solid #7191a4;color:#f5fafc;
+ background:#122e40;min-height:44px;border-radius:9px;padding:8px 9px;font-size:12px;font:inherit}
+.environment-controls .hint{font-size:11px;line-height:1.4;margin:5px 0}
+.environment-status{font-size:11px!important;color:#f2d7a4!important;border-left:3px solid #dfb975;
+ background:#26312e;padding:8px 11px;border-radius:6px;margin:5px 0 1px}
+.wind-readouts{display:flex;align-items:center;justify-content:space-around;gap:6px;flex-wrap:wrap;
+ padding:6px 9px;background:#132d3a;border-top:1px solid #375b6e}
+.wind-readouts span{font-size:9px;font-weight:700;letter-spacing:.03em;color:#b9dce6;display:flex;align-items:center;gap:5px}
+.wind-readouts strong{font-size:11px;font-variant-numeric:tabular-nums;color:#f4dba7}
+@media(max-width:740px){
+ .environment-controls{padding-top:10px;margin-top:10px;gap:7px}
+ .environment-controls select{font-size:11px;min-height:42px}
+ .environment-controls .hint{font-size:10px}
+ .wind-readouts{padding:4px 5px;gap:3px;justify-content:space-between}
+ .wind-readouts span{font-size:7px;gap:2px}
+ .wind-readouts strong{font-size:9px}
+}
+@media(max-width:360px){
+ .wind-readouts{display:grid;grid-template-columns:1fr 1fr}
+ .wind-readouts span:last-child{grid-column:1 / -1}
+}

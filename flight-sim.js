@@ -4,9 +4,10 @@
 (()=>{"use strict";
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
- P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI;
+ P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
+ E=window.AGSAFlightEnvironment;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),haptics=H.createHaptics();
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 const intensity=[0,.14,.37,.75];
@@ -46,6 +47,9 @@ function updateReadouts(){
  $("readHeading").textContent=String(round(n.headingDeg)%360).padStart(3,"0")+"°";
  $("readAttitude").textContent=round(n.pitchDeg)+"° / "+round(n.rollDeg)+"°";
  $("readOffset").textContent=round(n.xM);
+ $("readGroundSpeed").textContent=round(n.groundSpeedKt)+" kt";
+ $("readTrack").textContent=String(round(n.trackDeg??n.headingDeg)%360).padStart(3,"0")+"°";
+ $("readWind").textContent=E.describeWind(n.windId||"calm");
  $("sceneSpeed").textContent=round(n.speedKt)+" KT";
  $("sceneHeight").textContent=round(n.altitudeM)+" M AGL";
  const phase={
@@ -65,13 +69,29 @@ function updateReadouts(){
  $("coachMaxHeight").textContent=stats.maxHeightM+" m";
  $("coachLandings").textContent=String(stats.touchdowns);
 }
+function reportEnvironment(){
+ const profile=state.mode==="airplane"?E.selectProfile(state.profileId):null;
+ const wind=E.selectWind(state.windId);
+ $("profileHint").textContent=profile?profile.description:
+  "Helicopter cyclic is a separate conceptual model with no aircraft-type-specific profile.";
+ $("windHint").textContent=wind.description+
+  " Wind changes the fictional airborne ground track, not real airworthiness or flight limits.";
+ $("environmentStatus").textContent=(profile?profile.name:"Conceptual rotorcraft")+" · "+
+  wind.name+". Changing either selection restarts this fictional scenario.";
+}
+function makeConfiguredState(mode,scenario="runway"){
+ return M.makeState(mode,scenario,{
+  profileId:$("profileSelect").value,
+  windId:$("windSelect").value
+ });
+}
 function setMode(next){
  const newType=["yoke","stick","cyclic"].includes(next)?next:"yoke";
  const newMode=newType==="cyclic"?"helicopter":"airplane";
  const oldMode=state.mode;
  type=newType;
  if(newMode!==oldMode){
-  state=M.makeState(newMode);
+  state=makeConfiguredState(newMode);
   input=M.makeInput(newMode);
   paused=false;$("pauseFlight").setAttribute("aria-pressed","false");
   $("pauseFlight").textContent="Pause simulation";
@@ -90,6 +110,8 @@ function setMode(next){
   type==="stick"?"A shaped centre-stick style grip represents pitch and roll control for a generic fictional aeroplane.":
   "A dual-handled yoke on a simulated control column represents pitch and roll for a fictional light aeroplane.";
  show("collectivePanel",newMode==="helicopter");
+ show("profileWrap",newMode==="airplane");
+ reportEnvironment();
  show("powerPanel",newMode==="airplane");
  show("flapPanel",newMode==="airplane");
  show("brake",newMode==="airplane");
@@ -107,7 +129,7 @@ function setMode(next){
 }
 function reset(scenario){
  const newMode=type==="cyclic"?"helicopter":"airplane";
- state=M.makeState(newMode,scenario==="approach"?"approach":"runway");
+ state=makeConfiguredState(newMode,scenario==="approach"?"approach":"runway");
  input=M.makeInput(newMode);
  if(newMode==="airplane"&&scenario==="approach"){
   input.throttle=.49;input.flaps=20;input.pitch=.22;
@@ -115,6 +137,7 @@ function reset(scenario){
  input.turbulence=intensity[Number($("turbulence").value)]??.14;
  lastPhase=state.phase;
  practice=G.start(state);
+ reportEnvironment();
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();hardware?.resetPower();setValues();updateReadouts();
@@ -220,6 +243,8 @@ $("collective").addEventListener("input",e=>{
  hardware?.resetPower();haptics.pulse("control");
 });
 $("flaps").addEventListener("change",e=>{input.flaps=Number(e.target.value);haptics.pulse("flap")});
+$("profileSelect").addEventListener("change",()=>reset(state.scenario));
+$("windSelect").addEventListener("change",()=>reset(state.scenario));
 $("turbulence").addEventListener("input",e=>{
  input.turbulence=intensity[Number(e.target.value)]??.14;
  $("turbulenceValue").textContent=intensityNames[Number(e.target.value)]??"Light";

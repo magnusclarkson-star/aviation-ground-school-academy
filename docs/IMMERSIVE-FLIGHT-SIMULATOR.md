@@ -57,3 +57,7 @@ A new deterministic, phase-aware practice cue explains what a novice should *obs
 **Display limitations:** This is not an approved PFD, certified instrument layout, aircraft-specific speed/height system, real compass, slip/skid instrument, flight director or validated aircraft model. The graphical horizon and simple coaching cues are driven by the invented model, not physics suitable for live operations. Numerical units are explicitly shown (fictional knots, metres AGL, metres per second). Any real training use would require professional review and dedicated simulator/device qualification.
 
 CI validates that model changes correctly propagate to the outside view and instrument horizon, that scenario prompts reflect state, and that a 390px touchscreen retains working flight controls and the optional instrument layout. Physical mobile-device verification remains outstanding.
+
+## Fictional aircraft profiles and moving wind vectors
+
+The current simulator adds three *fictional* fixed-wing handling profiles and four synthetic wind scenarios. Airborne wind affects ground-relative movement without necessarily changing nose heading, allowing a conceptual comparison of heading versus track and airspeed versus ground speed. Ground roll does not apply wind physics; neither profile models a real aircraft. Procedural windsocks and shaded airfield buildings improve 2.5D visual depth. Read the [Airframe & Wind Exercises](AIRFRAME-WIND-EXERCISES.md) acceptance criteria before applying the software to any real student lesson.

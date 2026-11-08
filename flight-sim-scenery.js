@@ -144,9 +144,39 @@ function draw(canvas,state,{reducedMotion=false}={}){
     ctx.fillStyle="#4d7d4f7a";ctx.beginPath();ctx.arc(p.x-crown*.3,p.y-heightPx,crown*.55,0,Math.PI*2);ctx.fill();
    }
   }
-  for(const z of [410,1130,1720]){
-   poly([[125,0,z],[175,0,z],[175,0,z+70],[125,0,z+70]],"#777775");
-   poly([[125,0,z],[175,0,z],[175,9,z],[125,9,z]],"#bbc9c9");
+  // Simple shaded buildings provide a 3D depth cue beside the runway.
+  // The positions are synthetic and unrelated to any real-world airport.
+  for(const [x,z,top] of [[125,410,11],[-185,960,14],[125,1510,9]]){
+   const x2=x+53,z2=z+78;
+   poly([[x,0,z],[x2,0,z],[x2,top,z],[x,top,z]],"#536778");
+   poly([[x2,0,z],[x2,0,z2],[x2,top,z2],[x2,top,z]],"#364e5e");
+   poly([[x,top,z],[x2,top,z],[x2,top,z2],[x,top,z2]],"#b5c7d0");
+   poly([[x,top,z],[x2,top,z],[x2,top+4,z+28],[x,top+4,z+28]],"#c2d0d3");
+  }
+  // Procedural windsocks point *downwind*. Their physical geometry is an
+  // educational illustration, not a meteorological measurement.
+  for(const [x,z] of [[55,170],[-58,1000]]){
+   const windX=Number.isFinite(state.windXMps)?state.windXMps:0;
+   const windZ=Number.isFinite(state.windZMps)?state.windZMps:0;
+   const strength=Math.hypot(windX,windZ),scale=strength>.25?7/strength:0;
+   const endX=x+windX*scale,endZ=z+windZ*scale;
+   const peak=12;
+   line([x,0,z],[x,peak,z],"#e1e2da",3);
+   // Staggered triangular fabric sections approximate a windsock in depth.
+   if(strength>.25){
+    for(let i=0;i<4;i++){
+     const k=i/4,n=(i+1)/4;
+     const wide=Math.max(.3,1.4*(1-k));
+     const narrow=Math.max(.15,1.4*(1-n));
+     const x0=x+(endX-x)*k,z0=z+(endZ-z)*k;
+     const x1=x+(endX-x)*n,z1=z+(endZ-z)*n;
+     poly([[x0,peak+wide,z0],[x0,peak-wide,z0],
+      [x1,peak-narrow,z1],[x1,peak+narrow,z1]],
+      i%2?"#f9e5df":"#dd644e");
+    }
+   }else{
+    line([x,peak,z],[x+.6,peak-4,z+1],"#df6652",4);
+   }
   }
  }
  ctx.restore();

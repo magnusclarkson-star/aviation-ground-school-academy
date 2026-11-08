@@ -7,6 +7,10 @@ on:
       - 'flight-sim.css'
       - 'flight-sim.js'
       - 'flight-sim-model.js'
+      - 'flight-sim-environment.js'
+      - 'flight-sim-environment.css'
+      - 'scripts/test-flight-sim-environment.mjs'
+      - 'scripts/test-flight-sim-environment-browser.mjs'
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-instruments.js'
@@ -29,6 +33,10 @@ on:
       - 'flight-sim.css'
       - 'flight-sim.js'
       - 'flight-sim-model.js'
+      - 'flight-sim-environment.js'
+      - 'flight-sim-environment.css'
+      - 'scripts/test-flight-sim-environment.mjs'
+      - 'scripts/test-flight-sim-environment-browser.mjs'
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-instruments.js'
@@ -61,6 +69,7 @@ jobs:
         run: |
           node --check flight-sim.js
           node --check flight-sim-model.js
+          node --check flight-sim-environment.js
           node --check flight-sim-haptics.js
           node --check flight-sim-scenery.js
           node --check flight-sim-instruments.js
@@ -68,7 +77,9 @@ jobs:
           node --check flight-sim-gamepad.js
           node --check flight-sim-gamepad-ui.js
       - name: Test deterministic flight model
-        run: node scripts/test-flight-sim-model.mjs
+        run: |
+          node scripts/test-flight-sim-model.mjs
+          node scripts/test-flight-sim-environment.mjs
       - name: Test optional vibration
         run: node scripts/test-flight-sim-haptics.mjs
       - name: Test integrated glass instruments and guidance
@@ -85,3 +96,4 @@ jobs:
         run: |
           node scripts/test-flight-sim-browser.mjs
           node scripts/test-flight-sim-gamepad-browser.mjs
+          node scripts/test-flight-sim-environment-browser.mjs
