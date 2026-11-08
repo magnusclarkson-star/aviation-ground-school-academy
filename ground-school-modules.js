@@ -51,7 +51,7 @@ const extras={
  ],
  weather:[
   ["What does a TAF commonly provide?",["A flight clearance","A forecast for a designated aerodrome","An aircraft maintenance approval"],1,"A TAF is an aerodrome forecast, subject to relevant local rules and updates."],
-  ["What is a METAR?",["An aerodrome weather observation report","A certificate of airworthiness","A clearance readback"],0,"METAR is a standard aviation routine weather observation report."]
+  ["What kind of information does a METAR normally contain?",["An aerodrome weather observation report","A certificate of airworthiness","A clearance readback"],0,"METAR is a standard aviation routine weather observation report."]
  ],
  radio:[
   ["Why is the aviation spelling alphabet useful?",["To replace ATC instructions","To describe weather radar","To communicate letters clearly"],2,"Standardised spelling words improve clarity, especially for callsigns and ambiguous letters."],
