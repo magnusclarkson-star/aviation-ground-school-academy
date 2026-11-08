@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b2b">
+<meta name="description" content="Aviation Ground School Academy introductory self-study modules for Scouts and aspiring pilots: 24 fictional practice questions, device-only progress, no certification.">
+<title>Ground-School Module Practice | Aviation Ground School Academy</title>
+<link rel="stylesheet" href="ai-instructor.css">
+<link rel="stylesheet" href="ground-school-modules.css">
+<script src="ai-instructor-lessons.js" defer></script>
+<script src="ai-instructor-curriculum.js" defer></script>
+<script src="ground-school-modules.js" defer></script>
+<script src="ground-school-modules-ui.js" defer></script>
+</head>
+<body>
+<header class="site-head">
+ <a class="brand" href="index.html"><span class="logo">✈</span><span>AVIATION GROUND SCHOOL ACADEMY<small>MODULE PRACTICE STUDIO</small></span></a>
+ <nav aria-label="Academy navigation"><a href="index.html">Academy home</a><a href="ai-instructor.html">AI Instructor lessons</a><a href="cockpit-v3.html?mode=skills">Simulated cockpit</a><a href="curriculum-review.html">Curriculum drafts</a></nav>
+</header>
+<main>
+ <section class="hero">
+  <div>
+   <div class="eyebrow">FOUR BEGINNER MODULES · 24 HUMAN-WRITTEN QUESTIONS</div>
+   <h1>Learn, practise and revise</h1>
+   <p>Choose an introductory pathway, study the two lessons in each module and check your understanding with six short questions. The modules are available in any order.</p>
+   <div class="hero-tags"><span>Two learning pathways</span><span>Eight introductory lessons</span><span>Device-only revision</span></div>
+  </div>
+  <div class="hero-icon" aria-hidden="true">📘</div>
+ </section>
+ <div class="notice" role="note">
+  <strong>Educational practice only.</strong> Scores and targets on this page are fictional, self-checked and editable in your browser. They are not verified assessments, school enrolment records, training hours, instructor approvals or certificates. This content has not undergone qualified subject-matter approval and cannot replace a pilot training programme. For younger learners, this page does not connect to generative AI or create personal accounts.
+ </div>
+ <section class="panel" aria-label="Choose a learning pathway">
+  <div class="eyebrow">YOUR LEARNING ROUTE</div>
+  <div class="path-switch" role="group" aria-label="Learning pathway">
+   <button id="pathScouts" type="button" aria-pressed="true">Scouts &amp; Air Scouts</button>
+   <button id="pathPilots" type="button" aria-pressed="false">Aviation enthusiasts &amp; aspiring pilots</button>
+  </div>
+  <p class="tiny" id="pathDescription">Choose a study route above.</p>
+  <div class="module-progress">
+   <div><strong id="progressSummary">0 of 4 modules practised</strong><p class="tiny" id="progressDetail">No checks recorded on this device.</p></div>
+   <progress id="moduleProgress" value="0" max="4" aria-label="Modules with recorded practice">0 of 4</progress>
+  </div>
+  <p class="tiny">Both paths share the same introductory lessons but suggest a different study order. Results remain in this browser, not in an Academy database. Anyone using this device may see or clear them.</p>
+  <div class="buttons">
+   <button id="nextModule" type="button" class="primary">Continue suggested module</button>
+   <button id="exportModules" type="button">Export unsigned practice summary</button>
+   <button id="clearModules" type="button">Clear local practice</button>
+  </div>
+  <p id="storageStatus" class="tiny" role="status" aria-live="polite">Practice record: this device only.</p>
+ </section>
+ <div class="module-workspace">
+  <section class="panel module-sidebar" aria-label="Module choices and lesson readings">
+   <div class="eyebrow">FOUR MODULES</div><h2>Choose your study module</h2>
+   <div id="moduleChoices" class="module-choices" role="group" aria-label="Select study module"></div>
+   <div class="lesson-links">
+    <h3>Study these two lessons first</h3>
+    <div id="moduleLessons"></div>
+    <p class="tiny">Lesson reading and narrated explanations are available in the public AI Instructor Studio. External speech playback depends on your browser.</p>
+   </div>
+  </section>
+  <section class="panel" aria-label="Module practice checkpoint">
+   <div class="eyebrow">SIX-QUESTION SELF-CHECK · NOT AN EXAM</div>
+   <h2 id="currentModuleTitle">Choose a module</h2>
+   <p id="currentModuleSummary" class="tiny"></p>
+   <p id="currentModuleStatus" class="module-state">Ready for an introductory practice check.</p>
+   <p class="tiny">Complete all six answers. A self-check score of at least five out of six marks the local <em>practice target</em>; it does not establish competence or award credit.</p>
+   <form id="assessmentForm">
+    <div id="assessmentQuestions" class="assessment-questions"></div>
+    <div class="buttons">
+     <button id="submitCheckpoint" type="submit" class="primary">Check my six answers</button>
+     <button id="retryCheckpoint" type="button">Try module again</button>
+    </div>
+   </form>
+   <div id="checkpointFeedback" class="checkpoint-feedback" role="status" aria-live="polite">No answer check completed.</div>
+   <ol id="answerExplanations" class="answer-explanations" aria-label="Question explanations" hidden></ol>
+  </section>
+ </div>
+ <footer>Four unaccredited introductory modules · No identity verification, grade authentication, flight training approval, certificate, or regulated instruction. Confirm real flight information with qualified instructors and current approved sources.</footer>
+</main>
+</body></html>
