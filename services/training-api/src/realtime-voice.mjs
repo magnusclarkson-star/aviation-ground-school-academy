@@ -125,7 +125,7 @@ export class RealtimeCallRegistry{
   await Promise.allSettled([...this.active.keys()].map(h=>this.stop(h)));
  }
 }
-export async function createRealtimeCall(input,actor,{env=process.env,request=fetch}={}){
+export async function createRealtimeCall(input,actor,{env=process.env,request=fetch,onCallCreated=null}={}){
  if(!realtimeEnabled(env))
   throw new ClientError(503,"realtime_unavailable","Two-way AI voice is not enabled on this staging service");
  if(!realtimeAllowed(actor,env))
@@ -150,6 +150,18 @@ export async function createRealtimeCall(input,actor,{env=process.env,request=fe
  if(!response?.ok)throw new ClientError(502,"realtime_provider_failed","Could not establish a protected voice connection");
  const callId=callIdFromLocation(response.headers?.get?.("location"));
  if(!callId)throw new ClientError(502,"realtime_provider_failed","Voice provider returned no controllable call identifier");
+ // Record the provider identifier as soon as the handshake returns it, before
+ // reading the SDP body. This narrows, but cannot eliminate, the crash window.
+ if(typeof onCallCreated==="function"){
+  try{await onCallCreated(callId)}
+  catch{
+   try{await request("https://api.openai.com/v1/realtime/calls/"+callId+"/hangup",{
+    method:"POST",headers:{Authorization:"Bearer "+env.OPENAI_API_KEY},
+    signal:AbortSignal.timeout(4000)
+   })}catch{}
+   throw new ClientError(502,"realtime_registry_unavailable","Could not securely record the new voice call");
+  }
+ }
  let sdp;
  try{sdp=await response.text()}catch{throw new ClientError(502,"realtime_provider_failed","Could not read voice connection answer")}
  if(typeof sdp!=="string"||sdp.length<70||sdp.length>100000||!sdp.startsWith("v=0")){
