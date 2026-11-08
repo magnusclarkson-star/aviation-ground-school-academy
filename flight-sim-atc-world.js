@@ -107,13 +107,12 @@ function dialogue(stage,mode="airplane",scenario="runway",airportId="gfll",situa
   C(id+", "+a.tower+", runway "+r+", cleared to land."),
   P("Runway "+r+", cleared to land, "+id+".")
  ]);
- return Object.freeze([
+ if(stage==="during")return Object.freeze([
   P(a.approach+", "+id+", passing one thousand feet, climbing two thousand feet."),
   C(id+", "+a.approach+", continue climb to two thousand feet, report level."),
   P("Climb to two thousand feet, will report level, "+id+"."),
-  C(id+", roger. Remain within the published training scenario, no live traffic information is supplied.")
+  C(id+", roger. This is a fictional training scenario, no live traffic information is supplied.")
  ]);
- }
  return Object.freeze([
   P(a.tower+", "+id+", runway vacated after the simulated landing."),
   C(id+", "+a.tower+", roger, contact "+a.ground+" for taxi."),
