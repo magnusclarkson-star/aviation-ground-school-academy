@@ -1,0 +1,25 @@
+/* Real WebGL2 geometry is layered over a continuously available 2D canvas.
+ * Visual quality is an optional display preference, not a flight physics mode.
+ */
+.scene-shell{isolation:isolate}
+#outsideView3D{position:absolute;inset:0;width:100%;height:100%;
+ display:none;pointer-events:none;background:#739eb1}
+.scene-shell.three-dimensional #outsideView3D{display:block}
+.visual-options{border:1px solid #597f93;border-radius:12px;background:#102d40;
+ padding:12px;margin:14px 0 8px;display:grid;grid-template-columns:1fr 1fr;gap:7px 11px}
+.visual-options label{display:block;font-size:11px;font-weight:800;color:#e2f1f7;grid-row:auto}
+.visual-options select{min-width:0;width:100%;height:44px;background:#0f2434;
+ color:#eff9fd;border:1px solid #7099ac;border-radius:8px;padding:7px;font-size:11px}
+.visual-options select:disabled{opacity:.65}
+.visual-options .visual-status{grid-column:1/-1;border-left:3px solid #a7cfe1;border-radius:5px;
+ background:#193849;padding:8px 10px;font-size:11px;color:#d7eefa;margin:3px 0 0;line-height:1.5}
+.visual-options .visual-status[data-status="fallback"]{border-left-color:#f4c988;color:#f4d7a8}
+.visual-options .visual-status[data-status="active"]{border-left-color:#7edbbf;color:#ccf3e5}
+.visual-options .hint{grid-column:1/-1;font-size:10px;margin:0;color:#aecbd9}
+@media(max-width:740px){
+ .visual-options{padding:9px;margin-top:11px;gap:5px 8px}
+ .visual-options select{font-size:10px}
+ .visual-options .visual-status{font-size:10px}
+}
+@media(max-width:350px){.visual-options{grid-template-columns:1fr}.visual-options .hint,
+ .visual-options .visual-status{grid-column:1}}

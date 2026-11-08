@@ -61,3 +61,7 @@ CI validates that model changes correctly propagate to the outside view and inst
 ## Fictional aircraft profiles and moving wind vectors
 
 The current simulator adds three *fictional* fixed-wing handling profiles and four synthetic wind scenarios. Airborne wind affects ground-relative movement without necessarily changing nose heading, allowing a conceptual comparison of heading versus track and airspeed versus ground speed. Ground roll does not apply wind physics; neither profile models a real aircraft. Procedural windsocks and shaded airfield buildings improve 2.5D visual depth. Read the [Airframe & Wind Exercises](AIRFRAME-WIND-EXERCISES.md) acceptance criteria before applying the software to any real student lesson.
+
+## True 3D rendering upgrade
+
+A new optional, GPU-rendered WebGL2 scene now complements the original flat Canvas scenery. It includes three-dimensional procedural hills, airfield structures, runway or helipad surfaces, trees, clouds, perspective depth and optional third-person fictional aircraft meshes in **Outside chase view**. The default tries WebGL2 and automatically returns to the original 2D runway view if unavailable. Users may choose **Lightweight 2D** deliberately. This improves visual depth without changing the simplified aircraft physics. See [WebGL2 Airfield Acceptance](WEBGL3D-AIRFIELD-ACCEPTANCE.md) for exact supported behaviour, mobile performance constraints and physical-device tests still required.

@@ -5,10 +5,11 @@
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
- E=window.AGSAFlightEnvironment;
+ E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
-const canvas=$("outsideView"),haptics=H.createHaptics();
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
+let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
@@ -21,6 +22,62 @@ const keys=new Set();
 let lastPhase=state.phase;
 const round=x=>Math.round(Number(x)||0);
 function show(id,value){$(id).classList.toggle("hidden",!value)}
+function visualMessage(message,status){
+ $("visualStatus").textContent=message;
+ $("visualStatus").dataset.status=status;
+}
+function fallbackTo2D(message){
+ if(renderer3D){renderer3D.destroy();renderer3D=null}
+ canvas3D.hidden=true;
+ document.querySelector(".scene-shell")?.classList?.remove("three-dimensional");
+ $("cameraMode").value="cockpit";
+ $("cameraMode").disabled=true;
+ visualMessage(message,"fallback");
+ prev2D=0;
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion});
+}
+// No private API, hidden service or remote rendering. When WebGL2 is not
+// available (including context loss), the original Canvas 2D keeps working.
+function chooseVisual(){
+ if($("visualMode").value==="2d"){
+  fallbackTo2D("Lightweight 2D selected. The original runway view remains fully functional.");
+  return;
+ }
+ if(!renderer3D){
+  renderer3D=T.createRenderer(canvas3D,{onLost:()=>fallbackTo2D(
+   "3D graphics context lost. Switched safely to 2D; you may retry 3D.")});
+ }
+ if(!renderer3D){
+  fallbackTo2D("3D graphics unavailable on this browser/device. Automatically using 2D scenery.");
+  return;
+ }
+ canvas3D.hidden=false;
+ document.querySelector(".scene-shell").classList.add("three-dimensional");
+ $("cameraMode").disabled=false;
+ try{
+  if(renderer3D.draw(state,{view:$("cameraMode").value})){
+   visualMessage("3D WebGL2 airfield active: real geometric terrain, runway, buildings, trees and optional chase aircraft. Fictional scenery, not a surveyed airport.","active");
+   prev3D=0;return;
+  }
+ }catch{}
+ fallbackTo2D("3D renderer could not draw. Automatically using 2D scenery.");
+}
+function drawScenery(now){
+ if(renderer3D){
+  if(now-prev3D>=33){
+   try{if(!renderer3D.draw(state,{view:$("cameraMode").value})){
+    fallbackTo2D("3D graphics became unavailable; switched to 2D scenery.");
+   }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
+   prev3D=now;
+  }
+  // Keep a warm 2D fallback without rendering it at full frame rate on phones.
+  if(now-prev2D>=300){
+   S.draw(canvas,state,{reducedMotion:prefersLessMotion});prev2D=now;
+  }
+ }else if(now-prev2D>=42){
+  S.draw(canvas,state,{reducedMotion:prefersLessMotion});prev2D=now;
+ }
+}
 function setValues(){
  $("power").value=String(round(input.throttle*100));
  $("powerValue").textContent=round(input.throttle*100)+"%";
@@ -259,6 +316,11 @@ $("pauseFlight").addEventListener("click",()=>{
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
 });
+$("visualMode").addEventListener("change",chooseVisual);
+$("cameraMode").addEventListener("change",()=>{
+ if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value})}
+ catch{fallbackTo2D("3D camera unavailable; switched to 2D scenery.")}
+});
 $("instrumentToggle").addEventListener("click",()=>{
  const isCompact=$("flightInstruments").classList.toggle("compact");
  $("instrumentToggle").setAttribute("aria-pressed",String(!isCompact));
@@ -312,10 +374,8 @@ function frame(now){
   }
   }
  }
- if(now-prevView>42){
-  S.draw(canvas,state,{reducedMotion:prefersLessMotion});
-  updateReadouts();prevView=now;
- }
+ drawScenery(now);
+ if(now-prevView>42){updateReadouts();prevView=now;}
  requestAnimationFrame(frame);
 }
 if(!haptics.supported){
@@ -324,5 +384,6 @@ if(!haptics.supported){
 }
 setMode("yoke");
 input.turbulence=.14;
+chooseVisual();
 requestAnimationFrame(frame);
 })();
