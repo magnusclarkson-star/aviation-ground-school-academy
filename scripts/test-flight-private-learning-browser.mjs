@@ -38,6 +38,9 @@ try{
  await phone.locator('#traceStop').click();
  await phone.locator('#traceReplay').click();
  assert.equal(await phone.locator('#traceReplayPanel').isVisible(),true);
+ assert.equal(await phone.locator('#traceTrackCanvas').isVisible(),true);
+ assert.match(await phone.locator('#traceTrackDescription').textContent(),/fictional position, sample/i);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),'new track must not cause horizontal phone overflow');
  const scoutQuestion=await phone.locator('#traceMomentQuestion').textContent();
  assert.ok(scoutQuestion.includes('qualified aviation instructor'));
  await phone.locator('#traceMomentPathway').selectOption('pilots');
