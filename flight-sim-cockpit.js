@@ -171,9 +171,8 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  const wrap=$("cockpitMain"),holder=$("cockpitVisualPanel"),control=$("controlTitle")?.closest(".control-panel");
  const zoomPanel=$("cockpitZoomPanel"),zoomContent=$("cockpitZoomContent"),zoomTitle=$("cockpitZoomTitle");
  const cockpitStation=$("cockpitStation");
- const touchSize=$("cockpitTouchScale"),sensitivity=$("cockpitTouchSensitivity");
  const win=root||null;
- if(!zoomPanel||!zoomContent||!zoomTitle||!touchSize||!sensitivity)throw Error("Instrument zoom or touch configuration missing");
+ if(!zoomPanel||!zoomContent||!zoomTitle)throw Error("Instrument zoom controls missing");
  if(!wrap||!holder||!control)throw Error("Cockpit controls or panel missing");
  // Move, never duplicate: existing pointer events, IDs and instrument hooks survive.
  wrap.appendChild(control);
@@ -220,60 +219,6 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  });
  $("cockpitZoomClose").addEventListener("click",closeZoom);
  doc.addEventListener("keydown",event=>{if(event.key==="Escape"&&!zoomPanel.hidden)closeZoom();});
- const focusButton=$("cockpitControlFocusToggle");
- let focusExpanded=false;
- function setControlFocus(enabled){
-  focusExpanded=Boolean(enabled);
-  cockpitStation.dataset.controlFocus=focusExpanded?"expanded":"normal";
-  focusButton.setAttribute("aria-pressed",String(focusExpanded));
-  focusButton.textContent=focusExpanded?"Return to normal controls":"Expand flight controls";
-  focusButton.setAttribute("aria-label",focusExpanded?"Return to normal cockpit control size":"Enlarge the on-cockpit flight controls");
-  return focusExpanded;
- }
- focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded));
- // Expanded quick controls operate the original slider/select elements; there
- // are no parallel or unsynchronised flight-input values.
- function adjustPower(direction){
-  const control=byId(active).family==="rotor"?$("collective"):$("power");
-  const next=clamp(Number(control.value)+direction*5,0,100);
-  control.value=String(next);
-  control.dispatchEvent(new win.Event("input",{bubbles:true}));
-  $("cockpitExtraStatus").textContent=(byId(active).family==="rotor"?"Collective":"Power")+" adjusted to "+next+"% (fictional).";
- }
- function adjustFlaps(direction){
-  if(byId(active).family==="rotor")return;
-  const control=$("flaps"),steps=[...control.options].map(o=>Number(o.value));
-  const current=Math.max(0,steps.indexOf(Number(control.value)));
-  const next=steps[clamp(current+direction,0,steps.length-1)];
-  control.value=String(next);
-  control.dispatchEvent(new win.Event("change",{bubbles:true}));
-  $("cockpitExtraStatus").textContent="Flaps set to "+next+"° (fictional).";
- }
- $("cockpitPowerDown").addEventListener("click",()=>adjustPower(-1));
- $("cockpitPowerUp").addEventListener("click",()=>adjustPower(1));
- $("cockpitFlapsDown").addEventListener("click",()=>adjustFlaps(-1));
- $("cockpitFlapsUp").addEventListener("click",()=>adjustFlaps(1));
- // Expand only once the touch gesture finishes, so an active two-finger
- // steering or rudder press cannot be shifted halfway through a manoeuvre.
- for(const id of ["controlPad","leftRudder","rightRudder","brake"]){
-  $(id).addEventListener("pointerup",event=>{
-   if(event.pointerType!=="mouse"||event.button===0)setControlFocus(true);
-  });
- }
- for(const id of ["power","collective","flaps"]){
-  $(id).addEventListener("change",()=>setControlFocus(true));
- }
- doc.addEventListener("keydown",event=>{
-  if(event.key==="Escape"&&focusExpanded)setControlFocus(false);
- });
- setControlFocus(false);
- const sizes=new Set(["compact","standard","large"]);
- function resizeControls(){
-  const size=sizes.has(touchSize.value)?touchSize.value:"standard";
-  cockpitStation.dataset.touchSize=size;
- }
- touchSize.addEventListener("change",resizeControls);
- resizeControls();
  function refreshOrientation(){
   const landscape=Boolean(win&&win.innerWidth>win.innerHeight&&win.innerHeight<=620);
   const mobile=Boolean(win&&win.innerWidth<=740&&win.innerHeight>win.innerWidth);
@@ -292,16 +237,11 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   deck.dataset.airframe=profile.id;deck.dataset.family=profile.family;
   $("cockpitAircraftLabel").textContent=profile.title;
   $("cockpitAircraftCaption").textContent=profile.caption+" · "+profile.pilot;
-  $("cockpitAircraftNotice").textContent=profile.family==="jet"?
-   "Military cockpit familiarisation only. All five jets reuse the fictional trainer flight model; no jet-specific aerodynamics, avionics, weapons or operational limits.":
-   profile.family==="rotor"?
-    "R44-inspired later analogue layout. Dual-tach and manifold indications are invented proxies; no certified rotorcraft performance.":
-    "C172-style traditional T six-pack. Gauges show invented trainer values, not an approved Cessna instrument installation.";
+  $("cockpitAircraftNotice").textContent=profile.family==="jet"?"FLIGHT DISPLAYS":profile.family==="rotor"?"ROTORCRAFT INSTRUMENTS":"PRIMARY FLIGHT INSTRUMENTS";
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
   closeZoom();
-  setControlFocus(false);
   if(notify)onSelect(profile.control,profile.id);
   update();
   return profile;
@@ -322,8 +262,8 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   });
  }
  choose("c172");
- return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,setControlFocus,
-  sensitivity:()=>clamp(sensitivity.value,.5,1.5),
+ return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,
+  sensitivity:()=>1,
   getProfile:()=>byId(active),profiles:FRAMES});
 }
 const api=Object.freeze({FRAMES,byId,snapshot,attach,paint,buildPanel});
