@@ -374,3 +374,31 @@
  .cockpit-extra-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
  .cockpit-station[data-family="rotor"] .cockpit-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Control-specific touch expansion: retain other controls and live instruments.
+   Touching a steering pad, rudder pedal or power lever selects that region. */
+.cockpit-station[data-control-focus="expanded"][data-control-target="steering"] .control-panel .control-pad{
+ outline:2px solid #e9ce8d;outline-offset:2px
+}
+.cockpit-station[data-control-focus="expanded"][data-control-target="rudder"] .control-panel .rudder-pedals button{
+ min-height:74px;border-color:#e9ce8d
+}
+.cockpit-station[data-control-focus="expanded"][data-control-target="power"] .control-panel .side-controls .lever-panel{
+ border:2px solid #e9ce8d
+}
+.cockpit-station[data-control-focus="expanded"][data-control-target="power"] .cockpit-extra-grid button{
+ min-height:56px
+}
+@media(max-width:740px){
+ .cockpit-station[data-control-focus="expanded"][data-control-target="rudder"] .control-panel .rudder-pedals button{
+  min-height:68px;max-height:none
+ }
+ .cockpit-station[data-control-focus="expanded"][data-control-target="power"] .control-panel .side-controls input[type=range]{
+  height:46px
+ }
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ .cockpit-station[data-control-focus="expanded"][data-control-target="rudder"] .control-panel .rudder-pedals button{
+  min-height:52px
+ }
+}
