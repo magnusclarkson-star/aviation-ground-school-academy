@@ -1,0 +1,58 @@
+/* In-context guided flight observation lessons, collapsed by default.
+ * Avoids placing a separate tutor page between the scenery and two-thumb controls.
+ */
+.guided-exercise{margin:15px 0;border:1px solid #5c91a4;border-radius:12px;
+ background:#102b3c;color:#e0f0f7;min-width:0}
+.guided-exercise>summary{cursor:pointer;padding:13px 14px;font-size:13px;font-weight:850;
+ color:#f1dfa6;line-height:1.45}
+.guided-exercise>summary:focus-visible{outline:3px solid #f9db93;outline-offset:4px}
+.guided-exercise[open]>summary{border-bottom:1px solid #527a8b}
+.exercise-content{padding:12px;min-width:0}
+.exercise-content>.hint{font-size:11px;line-height:1.55;margin:0 0 10px;color:#c5dfec}
+.exercise-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.exercise-choice-grid label{font-size:11px;font-weight:800;min-width:0;color:#e8e8d3}
+.exercise-choice-grid select{width:100%;display:block;min-width:0;min-height:44px;
+ padding:8px 7px;margin-top:6px;border:1px solid #7ba1b1;border-radius:8px;
+ background:#091f30;color:#e8f4fa;font-size:11px}
+.exercise-actions{display:flex;flex-wrap:wrap;gap:8px;margin:11px 0}
+.exercise-actions button{flex:1 1 140px;min-height:42px;font-size:11px;
+ border-radius:8px}
+.exercise-state{background:#182f3e;border-left:3px solid #81b8cc;
+ border-radius:6px;color:#cde6f2;font-size:11px;line-height:1.5;
+ margin:7px 0;padding:8px 10px}
+.exercise-live{border-top:1px solid #4d7184;margin-top:10px;padding-top:10px}
+.exercise-live[hidden],.exercise-question[hidden],#exerciseRecord[hidden]{display:none!important}
+.exercise-live .eyebrow{font-size:8px;color:#c8e4ed}
+.exercise-objective{font-size:12px;color:#dfebef;line-height:1.5;margin:5px 0 8px}
+.exercise-step{display:block;font-size:12px;font-weight:800;color:#f1d5a6;margin:8px 0 5px}
+.exercise-prompt{font-size:12px;line-height:1.55;color:#eef4f9;
+ border-left:3px solid #80bdc8;padding-left:10px;margin:7px 0 10px}
+#exerciseRecord{min-height:42px;font-size:11px}
+.exercise-question{border:1px solid #547d91;border-radius:9px;
+ padding:10px;margin:10px 0;min-width:0}
+.exercise-question legend{font-size:12px;font-weight:850;color:#f0d9a1;padding:0 6px}
+.exercise-option{display:flex;gap:10px;align-items:flex-start;
+ padding:9px 5px;border-bottom:1px solid #355b6d;
+ cursor:pointer;font-size:11px;line-height:1.45;color:#e3f0f5}
+.exercise-option:last-child{border-bottom:0}
+.exercise-option input{width:17px;height:17px;flex:none;accent-color:#80d9d0;margin-top:1px}
+.exercise-question button{margin-top:10px;min-height:42px;font-size:11px}
+.exercise-feedback{font-size:11px;line-height:1.5;color:#d5e9ef;background:#123347;
+ border-left:3px solid #8fbecc;border-radius:5px;padding:9px;margin:9px 0}
+.exercise-feedback[data-status="complete"]{border-left-color:#7bd1a4;color:#d5f3dc}
+.exercise-feedback[data-status="interrupted"]{border-left-color:#e9b87b;color:#fae2ba}
+.exercise-voice{border:1px solid #4f6f7e;border-radius:9px;background:#0d2636;
+ padding:10px;margin:10px 0}
+.exercise-voice>strong{font-size:11px;color:#e9d9ad}
+.exercise-voice .exercise-actions{margin:6px 0}
+.exercise-voice .exercise-actions button{min-height:42px}
+#exerciseVoiceStatus{font-size:10px;line-height:1.5;color:#bed8e4;margin:0}
+@media(max-width:740px){
+ .guided-exercise{margin:11px 0}
+ .guided-exercise>summary{padding:10px 11px;font-size:12px}
+ .exercise-content{padding:9px}
+ .exercise-choice-grid{grid-template-columns:1fr;gap:7px}
+ .exercise-choice-grid label,.exercise-content>.hint{font-size:10px}
+ .exercise-choice-grid select{font-size:11px}
+ .exercise-option{font-size:11px}
+}
