@@ -1,0 +1,24 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const {cue,shouldSpeak}=require("../cockpit-v3-live-coach.js");
+
+const model={pitch:0,roll:0,speed:95,verticalSpeed:0,turnRate:0,slip:0,flaps:0,dragIndex:1};
+assert.equal(cue("level",model,{}).key,"level-ok");
+assert.equal(cue("level",{...model,pitch:8},{}).key,"pitch");
+assert.equal(cue("climb",{...model,pitch:9,verticalSpeed:600},{throttle:30}).key,"power");
+assert.equal(cue("turn",{...model,roll:17,slip:.6,turnRate:2},{}).key,"slip");
+assert.equal(cue("turn",{...model,roll:17,slip:0,turnRate:2},{}).key,"turn-ok");
+assert.equal(cue("descent",{...model,pitch:-7,verticalSpeed:-500},{}).key,"descent-ok");
+assert.equal(cue("flap",{...model,flaps:20,dragIndex:1.5},{flaps:20}).key,"flap-ok");
+assert.equal(cue("flap",{...model,flaps:0,dragIndex:1},{flaps:20}).key,"travel");
+assert.equal(cue("flap",{...model,flaps:20,dragIndex:1.5},{flaps:10}).key,"selection");
+assert.equal(cue("missing",model,{}).key,"unknown");
+assert.equal(shouldSpeak({enabled:false,elapsed:8,key:"bank",lastAt:-100}),false);
+assert.equal(shouldSpeak({enabled:true,elapsed:.5,key:"bank",lastAt:-100}),false);
+assert.equal(shouldSpeak({enabled:true,elapsed:1,key:"bank",lastAt:-100}),true);
+assert.equal(shouldSpeak({enabled:true,elapsed:4,key:"slip",lastKey:"bank",lastAt:1}),false);
+assert.equal(shouldSpeak({enabled:true,elapsed:5,key:"slip",lastKey:"bank",lastAt:1}),true);
+assert.equal(shouldSpeak({enabled:true,elapsed:6,key:"bank",lastKey:"bank",lastAt:1}),false);
+assert.equal(shouldSpeak({enabled:true,elapsed:9,key:"bank",lastKey:"bank",lastAt:1}),true);
+console.log("Live cockpit coaching: all task cues, explicit voice consent and pacing passed.");
