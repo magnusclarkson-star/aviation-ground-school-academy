@@ -1,0 +1,18 @@
+/* Small-screen-first fictional ATC readback trainer. */
+.atc-readback-lab{margin-top:16px;padding:15px;border:1px solid #7398af;border-radius:12px;background:linear-gradient(140deg,#153a4e,#102b3c)}
+.atc-readback-lab h4{font-size:16px;margin:5px 0 8px;color:#f5e2b8}
+.atc-readback-lab .readback-eyebrow{font-size:10px;letter-spacing:.1em;font-weight:850;color:#9ee5e8}
+.atc-readback-lab p{line-height:1.5}
+.atc-readback-lab .readback-instruction{border-left:3px solid #e5c583;background:#071e2d;border-radius:7px;margin:10px 0;padding:11px 13px;color:#f1f9ff;font-size:14px;line-height:1.55;overflow-wrap:anywhere}
+.atc-readback-lab label{display:block;margin:10px 0 6px;color:#cce4ef;font-weight:750;font-size:12px}
+.atc-readback-lab textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;min-height:83px;resize:vertical;background:#091c2b;color:#effaff;border:1px solid #8babbf;border-radius:8px;padding:11px;font:14px/1.5 system-ui,sans-serif}
+.atc-readback-lab .readback-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:11px 0}
+.atc-readback-lab .readback-buttons button{min-height:48px;line-height:1.25}
+#atcDrillHear{background:#355e6c;border-color:#9ddbe1}
+#atcDrillCheck{background:#78602e;border-color:#f0ce7d;color:#fff5df}
+.atc-readback-lab .readback-feedback{background:#0b2433;border:1px solid #7194a8;padding:10px;border-radius:8px;color:#d9edf6;font-size:12px}
+.atc-readback-lab .readback-feedback[data-result="complete"]{border-color:#85ccae;color:#d1f5dc}
+.atc-readback-lab .readback-feedback[data-result="review"]{border-color:#f3be7a;color:#ffe0aa}
+.atc-readback-lab .readback-answer{background:#182f38;border:1px solid #6b9a9a;padding:10px;border-radius:8px;color:#d8f6ee;font-size:12px}
+.atc-readback-lab .readback-meta{font-size:11px;color:#afd5e5;margin:8px 0}
+@media(max-width:430px){.atc-readback-lab{padding:11px}.atc-readback-lab .readback-buttons button{font-size:11px;padding:9px 6px}}
