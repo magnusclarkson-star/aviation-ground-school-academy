@@ -9,7 +9,7 @@ const simulator=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
 const debrief=fs.readFileSync(path.join(root,'simulator-debrief.html'),'utf8');
 const keys=['takeoff','approach','turn','rotorcraft','loading'];
 test('each practice exercise links to its corresponding reflection',()=>{
-  for(const key of keys) assert.match(simulator,new RegExp('simulator-debrief\\.html\\?scenario='+key+'["\\']'));
+  for(const key of keys) assert.ok(simulator.includes('simulator-debrief.html?scenario='+key+'"'));
 });
 test('handoff strictly permits known scenario keys',()=>{
   assert.match(debrief,/new URLSearchParams\(window\.location\.search\)\.get\('scenario'\)/);
