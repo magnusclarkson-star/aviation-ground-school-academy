@@ -112,6 +112,34 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
 .digital-control-grid .hardware .actions{gap:5px}
 .digital-control-grid .hardware .actions button{font-size:12px;padding:7px 10px;min-height:40px}
 .digital-control-grid .pedal{min-width:75px}
+/* Pair yoke and rudder in one phone row for genuine simultaneous touches. */
+@media(max-width:740px){
+ .digital-control-grid.simultaneous-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .digital-control-grid.simultaneous-controls #control-yoke,
+ .digital-control-grid.simultaneous-controls #control-rudder{grid-row:1}
+ .digital-control-grid.simultaneous-controls #control-yoke{grid-column:1;display:flex;flex-direction:column}
+ /* Prioritize the actual touch pad, not its optional selector/buttons, so
+    both thumbs reach the yoke and rudder on the same horizontal band. */
+ .digital-control-grid.simultaneous-controls #control-yoke>h3{order:0}
+ .digital-control-grid.simultaneous-controls #control-yoke>p.note{order:1}
+ .digital-control-grid.simultaneous-controls #control-yoke>#controlPad{order:2}
+ .digital-control-grid.simultaneous-controls #control-yoke>.control-style-choice{order:3}
+ .digital-control-grid.simultaneous-controls #control-yoke>#controlStyleHint{order:4}
+ .digital-control-grid.simultaneous-controls #control-yoke>.actions{order:5}
+ .digital-control-grid.simultaneous-controls #control-rudder{grid-column:2}
+ .digital-control-grid.simultaneous-controls .hardware{padding:6px}
+ .digital-control-grid.simultaneous-controls .hardware h3{font-size:12px}
+ .digital-control-grid.simultaneous-controls .hardware p.note{font-size:10px;line-height:1.2}
+ .digital-control-grid.simultaneous-controls .control-pad{width:100%;height:138px;margin:5px auto}
+ .digital-control-grid.simultaneous-controls .grip{width:82px;height:72px;border-width:9px;font-size:9px}
+ .digital-control-grid.simultaneous-controls .control-pad.joystick-layout .grip{width:70px;height:93px}
+ .digital-control-grid.simultaneous-controls .pedals{gap:4px;margin:8px 0}
+ .digital-control-grid.simultaneous-controls .pedal{min-width:0;width:50%;min-height:68px!important;padding:4px 2px;font-size:10px;border-width:3px!important}
+ .digital-control-grid.simultaneous-controls #control-yoke .actions button{padding:6px;min-height:38px}
+}
+.touch-input-status{background:#163349;color:#d7f1fc;padding:5px 9px;border-radius:8px;border:1px solid #53788e;
+ font-variant-numeric:tabular-nums;font-size:11px;font-weight:700;line-height:1.35;margin:5px 0}
+@media(max-width:480px){.touch-input-status{font-size:10px;padding:4px 7px}}
 .digital-screen-column .glass-panel{max-width:none;min-height:0;border-width:7px;padding:9px}
 .digital-screen-column .pfd-body{grid-template-columns:minmax(0,1fr) minmax(125px,.4fr)}
 .digital-screen-column .pfd-side{grid-template-columns:1fr;gap:5px}
@@ -401,6 +429,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  <div id="missionMiniStatus" class="mission-mini hidden"><strong id="missionMiniPhase">Takeoff roll</strong><span id="missionMiniHint">Observe the selected flight instruments</span></div>
  <div id="skillsMiniStatus" class="mission-mini hidden"><strong id="skillsMiniPhase">Skill check ready</strong><span id="skillsMiniHint">Watch the PFD while using the controls</span></div>
  <div id="skillsLiveCue" class="skills-live-cue hidden" role="status" aria-live="polite">Select a practice objective, then start the observation to see guidance.</div>
+ <div id="activeControlInput" class="touch-input-status" aria-label="Current simulated control commands" aria-live="off">BANK 0% · PITCH 0% · RUDDER 0% · FLAPS 0°</div>
  <div class="glass-panel">
   <div class="pfd-top"><span>AGSA · DIGITAL TRAINER</span><div class="pfd-modes"><button id="pfdTab" aria-pressed="true">PFD</button><button id="mapTab" aria-pressed="false">NAV MAP</button><button id="engineTab" aria-pressed="false">ENGINE</button></div><span id="digitalClock">SIM</span></div>
   <div class="pfd-body">
@@ -425,7 +454,7 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  </div>
  <div class="digital-control-column">
   <h3 id="digitalControlsTitle">Touch controls for your selected instrument</h3>
-  <p id="digitalControlsHint" class="note">Select a reading, then operate the matching flight controls here while watching the touchscreen display.</p><p class="flap-status" aria-label="Current flap selector setting">FLAPS SELECTED <strong id="digitalFlapsState">0°</strong></p>
+  <p id="digitalControlsHint" class="note">Select a reading, then operate its matching flight controls while watching the touchscreen. When both yoke and rudder appear, you can use one finger on each control.</p><p class="flap-status" aria-label="Current flap selector setting">FLAPS SELECTED <strong id="digitalFlapsState">0°</strong></p>
   <div class="digital-focus-selector" id="digitalFocusSelector" role="group" aria-label="Select digital flight instrument"></div>
   <div id="digitalControlDock" class="digital-control-grid"></div>
   <p class="digital-hint">The digital indications cannot be dragged directly. Adjust the aircraft controls to see their effect in real time.</p>
