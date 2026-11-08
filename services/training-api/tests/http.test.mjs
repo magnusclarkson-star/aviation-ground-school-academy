@@ -100,7 +100,8 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   OPENAI_API_KEY:"fake-testing-provider-key-value-not-live",
   AGSA_AI_ENABLED:"1",AGSA_AI_VOICE_ENABLED:"1",
   AGSA_AI_TEXT_MODEL:"gpt-6-luna",
-  AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1"
+  AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1",
+   AGSA_AI_REALTIME_ALLOWED_USER_IDS:studentA+","+instructorA
  };
  let providerCalls=0;
  const aiRequest=async(url,opts)=>{
@@ -143,6 +144,16 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   assert.equal(cookies.includes(password),false);
   return {cookies,csrf};
  }
+ await t.test("only the private portal document permits same-origin microphone opt-in",async()=>{
+  const html=await fetch(root+"/portal/");
+  assert.equal(html.status,200);
+  assert.match(html.headers.get("permissions-policy"),/microphone=\(self\)/);
+  const asset=await fetch(root+"/portal/realtime.js");
+  assert.equal(asset.status,200);
+  assert.match(asset.headers.get("permissions-policy"),/microphone=\(\)/);
+  const publicJson=await fetch(root+"/api/v1/health");
+  assert.match(publicJson.headers.get("permissions-policy"),/microphone=\(\)/);
+ });
  await t.test("public probes do not reveal private data",async()=>{
   assert.equal((await ask("GET","/api/v1/health")).body.status,"ok");
   assert.equal((await ask("GET","/api/v1/ready")).body.status,"ready");
@@ -303,6 +314,10 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   const status=await ask("GET","/api/v1/ai/status",undefined,s1);
   assert.equal(status.body.realtimeEnabled,true);
   assert.equal(status.body.limits.realtime,2);
+  assert.equal((await ask("GET","/api/v1/ai/status",undefined,s2)).body.realtimeEnabled,false);
+  const beforeUnapproved=providerCalls;
+  assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,s2)).status,403);
+  assert.equal(providerCalls,beforeUnapproved,"unapproved accounts must not call the provider or spend quota");
   assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts)).status,401);
   assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,{cookies:s1.cookies})).status,403);
   assert.equal((await ask("POST","/api/v1/ai/realtime-connect",{...opts,consent:false},s1)).status,400);
@@ -321,9 +336,9 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   assert.equal(second.status,200);
   assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:second.body.handle},s1)).status,200);
   assert.equal((await ask("POST","/api/v1/ai/realtime-connect",opts,s1)).status,429);
-  const separate=await ask("POST","/api/v1/ai/realtime-connect",opts,s2);
+  const separate=await ask("POST","/api/v1/ai/realtime-connect",opts,t1);
   assert.equal(separate.status,200);
-  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:separate.body.handle},s2)).status,200);
+  assert.equal((await ask("POST","/api/v1/ai/realtime-end",{handle:separate.body.handle},t1)).status,200);
  });
  await t.test("logout revokes session and clears cookies",async()=>{
   assert.equal((await ask("POST","/api/v1/auth/logout",{},s1)).status,200);

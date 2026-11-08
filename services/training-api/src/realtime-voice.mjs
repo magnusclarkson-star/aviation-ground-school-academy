@@ -14,10 +14,27 @@ const styles=new Set(["mentor","scouts","exam"]);
 const voices=new Set(["coral","marin","cedar","sage"]);
 const MODEL="gpt-realtime-2.1-mini";
 function bad(message){throw new ClientError(400,"invalid_realtime_request",message)}
+// An operator-managed pilot allowlist is mandatory, not an optional UI toggle.
+// Only manually vetted fictional adult staging accounts may be listed. This
+// allowlist is NOT an age/identity verification system or guardian consent.
+const accountId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function pilotAccountIds(env={}){
+ const raw=env.AGSA_AI_REALTIME_ALLOWED_USER_IDS;
+ if(typeof raw!=="string"||!raw.trim()||raw.length>2048)return null;
+ const ids=raw.split(",").map(v=>v.trim().toLowerCase());
+ if(ids.length>20||ids.some(id=>!accountId.test(id))||new Set(ids).size!==ids.length)return null;
+ return new Set(ids);
+}
 export function realtimeEnabled(env={}){
  return env.AGSA_AI_ENABLED==="1"&&env.AGSA_AI_REALTIME_ENABLED==="1"&&
   env.AGSA_AI_REALTIME_STAGING_APPROVED==="1"&&
-  typeof env.OPENAI_API_KEY==="string"&&env.OPENAI_API_KEY.length>=20;
+  typeof env.OPENAI_API_KEY==="string"&&env.OPENAI_API_KEY.length>=20&&
+  pilotAccountIds(env)!==null;
+}
+export function realtimeAllowed(actor,env={}){
+ return realtimeEnabled(env)&&
+  !!actor&&["student","instructor"].includes(actor.role)&&
+  typeof actor.userId==="string"&&pilotAccountIds(env).has(actor.userId.toLowerCase());
 }
 export function validateRealtimeRequest(data){
  if(!data||typeof data!=="object"||Array.isArray(data))bad("Voice session configuration required");
@@ -111,6 +128,8 @@ export class RealtimeCallRegistry{
 export async function createRealtimeCall(input,actor,{env=process.env,request=fetch}={}){
  if(!realtimeEnabled(env))
   throw new ClientError(503,"realtime_unavailable","Two-way AI voice is not enabled on this staging service");
+ if(!realtimeAllowed(actor,env))
+  throw new ClientError(403,"realtime_not_approved","This account is not approved for adult-only private voice pilot testing");
  const chosen=validateRealtimeRequest(input);
  const form=new FormData();
  form.set("sdp",chosen.sdp);

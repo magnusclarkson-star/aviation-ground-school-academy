@@ -76,7 +76,7 @@ A later release can add optional low-latency two-way spoken tutoring using the p
 
 ## Next upgrade — Two-way WebRTC AI flight-theory tutoring
 
-The separate private staging dashboard now contains a **start/mute/end two-way voice tutor** using a microphone, an AI-generated voice and optional response transcript. The public `ai-instructor.html` stays curated and works with browser speech even when no provider account exists.
+The separate private staging dashboard now contains a **start/mute/end two-way voice tutor** using a microphone, an AI-generated voice and optional response transcript. A separate operator-managed adult pilot UUID allowlist is mandatory, and its browser document must permit same-origin microphone access while requiring consent. This does not constitute age verification. See [private voice pilot security](../services/training-api/VOICE-PILOT-SECURITY.md). The public `ai-instructor.html` stays curated and works with browser speech even when no provider account exists.
 
 **Backend flow:**
 1. A fictional, verified staging account explicitly agrees to external voice processing and presses Start. Only then does the browser request microphone permission.

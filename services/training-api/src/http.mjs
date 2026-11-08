@@ -2,7 +2,7 @@ import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordC
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
 import {isPortalPath,servePortal} from "./portal.mjs";
 import {verifyTokenFormat} from "./invites.mjs";
-import {REALTIME_LIMITS,realtimeEnabled,validateRealtimeRequest,createRealtimeCall,RealtimeCallRegistry} from "./realtime-voice.mjs";
+import {REALTIME_LIMITS,realtimeEnabled,realtimeAllowed,validateRealtimeRequest,createRealtimeCall,RealtimeCallRegistry} from "./realtime-voice.mjs";
 import {validateTutorRequest,validateVoiceRequest,askTutor,synthesizeTutorSpeech,aiFlags,AI_LIMITS} from "./ai-tutor.mjs";
 const MAX_JSON_BYTES=32*1024;
 const SESSION_MS=6*60*60*1000;
@@ -184,10 +184,10 @@ export function createHandler(store,config={}){
    if(method==="GET"&&pathname==="/api/v1/ai/status"){
     json(res,200,{
      ...aiFlags(config.aiEnv||{}),
-     realtimeEnabled:realtimeEnabled(config.aiEnv||{}),
+     realtimeEnabled:realtimeAllowed(actor,config.aiEnv||{}),
      realtimeMaxSeconds:REALTIME_LIMITS.maxSeconds,
      limits:{...AI_LIMITS,realtime:REALTIME_LIMITS.dailyCalls},
-     availableTo:"verified staging accounts only",
+     availableTo:"operator-approved adult fictional staging pilot accounts only",
      voiceDisclosure:"Synthetic AI voice; not a human instructor.",
      note:"No accredited flight training or operational advice. No public AI service is active until privately configured."
     });return;
@@ -226,6 +226,8 @@ export function createHandler(store,config={}){
     const input=validateRealtimeRequest(await bodyJson(req));
     if(!realtimeEnabled(config.aiEnv||{}))
      throw requestError(503,"realtime_unavailable","Two-way AI voice is not enabled for this private staging service");
+    if(!realtimeAllowed(actor,config.aiEnv||{}))
+     throw requestError(403,"realtime_not_approved","This account is not approved for the private adult-only voice pilot");
     const handle=realtimeRegistry.reserve(actor);
     try{
      if(!await store.reserveAiUsage(actor,"realtime",REALTIME_LIMITS.dailyCalls))
