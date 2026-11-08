@@ -35,6 +35,10 @@ jobs:
       - run: node --check instructor-review-model.js
       - run: node --check instructor-review.js
       - run: node scripts/test-instructor-review.mjs
+      - run: node --check ai-instructor-curriculum.js
+      - run: node --check curriculum-review-model.js
+      - run: node --check curriculum-review.js
+      - run: node scripts/test-curriculum.mjs
       - run: node --check ai-instructor-lessons.js
       - run: node --check ai-instructor.js
       - run: node --check ai-instructor-progress.js
