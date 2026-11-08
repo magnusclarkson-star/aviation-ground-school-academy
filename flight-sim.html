@@ -33,6 +33,7 @@
 <script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim-engine-audio.js" defer></script>
 <script src="flight-sim-atc-radio.js" defer></script>
+<script src="flight-sim-radio-tone.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim-replay.js" defer></script>
 <script src="flight-sim-after-action.js" defer></script>
@@ -173,6 +174,11 @@
     <div class="audio-block">
      <h3>Aircraft engine / rotor sound</h3>
      <button id="engineAudioToggle" type="button" aria-pressed="false">Enable engine sound</button>
+     <label for="engineAudioTexture">Engine sound character</label>
+     <select id="engineAudioTexture">
+      <option value="smooth" selected>Gentle tone · lighter processing</option>
+      <option value="textured">Detailed tone · stronger engine/rotor pulse</option>
+     </select>
      <label for="engineAudioVolume">Engine volume</label>
      <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="32">
      <output id="engineAudioVolumeValue" for="engineAudioVolume">32%</output>
@@ -188,9 +194,16 @@
       <button id="atcAll" type="button">Play complete exchange</button>
       <button id="atcStop" type="button">Stop radio</button>
      </div>
+     <div class="atc-automatic" aria-label="Optional phase-linked tower cue controls">
+      <button id="atcAutoToggle" type="button" aria-pressed="false">Enable phase-linked radio</button>
+      <p id="atcAutoStatus" role="status" aria-live="polite">Phase-linked radio off. It will not speak automatically.</p>
+      <button id="radioToneToggle" type="button" aria-pressed="false">Enable radio cue tone</button>
+      <p id="radioToneStatus" role="status" aria-live="polite">Radio cue tone off. No additional audio is generated.</p>
+     </div>
      <p id="atcStatus" role="status" aria-live="polite">Radio is off until you select a dialogue.</p>
      <h4>Written radio transcript</h4>
      <ol id="atcTranscript" class="atc-transcript" aria-label="Fictional tower and pilot radio script"></ol>
+     <p class="hint">Phase-linked radio is opt-in and plays at most one before, during and after exchange per practice session. The browser may restrict speech when a flight phase changes; the written transcript still updates. The optional short radio cue tone does not change or filter device voices.</p>
      <p class="hint">Device voices may be unavailable or sound alike; the transcript always works. This is scripted text-to-speech, not live AI, a real ATC recording, actual radio phraseology training, a clearance, or a substitute for a qualified instructor.</p>
     </div>
    </div>
