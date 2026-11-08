@@ -27,7 +27,7 @@ function createEngine({windowLike,documentLike}={}){
  function level(power=0){
   if(!gain)return;
   const amount=clamp(volume,0,100)/100;
-  setTarget(gain.gain,(duck?.19:1)*amount*model(mode,power).engineLevel);
+  setTarget(gain.gain,(duck?.42:1)*amount*model(mode,power).engineLevel);
  }
  function stop(){
   active=false;
