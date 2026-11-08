@@ -48,7 +48,7 @@ function sample(state,input){
  const weight=c.massKg*G;
  return {...aero,speedKt,v,gamma,bank,liftN:lift,dragN:drag,thrustN:thrust,
   loadFactor,weightN:weight,massKg:c.massKg,
-  effectiveStall:clamp(aero.stalled||(state.speedKt<E.selectProfile(state.profileId||"trainer").stallKt-3),false,true)};
+  effectiveStall:aero.stalled||(state.speedKt<E.selectProfile(state.profileId||"trainer").stallKt-3)};
 }
 function prepare(state){
  if(!state||state.mode!=="airplane"||state.physicsId!=="aero")
@@ -82,7 +82,7 @@ function step(state,input,dt,events=[],wind){
   // Simplified straight ground roll and fictional drag, not real tire/wind
   // handling or differential braking.
   const rolling=.08*f.weightN;
-  const brake=input.brake===true?.94*f.weightN:0;
+  const brake=input.brake===true ? .94*f.weightN : 0;
   const accel=(f.thrustN-f.dragN-rolling-brake)/c.massKg;
   const v=Math.max(0,state.speedKt*KNOT+clamp(accel,-12,6)*dt);
   state.speedKt=clamp(v/KNOT,0,115);
@@ -125,7 +125,6 @@ function step(state,input,dt,events=[],wind){
   state.verticalMs=smooth(state.verticalMs,vertical,5,dt);
   state.flightPathDeg=nextGamma/DEG;
   state.speedKt=nextV/KNOT;
-  const turnRate=clamp(G*Math.tan(f.bank)/(v*KNOT)*KNOT/Math.max(v,4)/DEG,-5,5);
   // For a shallow point-mass turn, omega ~ g*tan(bank)/speed. Rudder
   // provides only a small teaching aid, not realistic slip/skid physics.
   const omega=clamp(G*Math.tan(f.bank)/v/DEG+rudder*.45,-5,5);
