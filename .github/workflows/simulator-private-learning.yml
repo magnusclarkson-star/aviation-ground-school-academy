@@ -24,6 +24,7 @@ jobs:
           node --check flight-sim-lighting.js
           node --check flight-sim-scenery.js
           node --check flight-sim-3d.js
+          node --check flight-sim-airport-detail.js
           node --check flight-sim-engine-audio.js
           node --check flight-sim-haptics.js
           node --check flight-sim-phone-probe.js

@@ -9,6 +9,10 @@ const limit=(v,a,b)=>Math.max(a,Math.min(b,Number.isFinite(v)?v:0));
 const tint=(c,f)=>c.map(x=>limit(x*f,0,1));
 const noise=n=>{const v=Math.sin(n*127.1+78.233)*43758.5453;return v-Math.floor(v)};
 const grass=rgb(84,130,83),tarmac=rgb(68,81,89),white=rgb(237,242,229);
+const Airport=root?.AGSAFlightAirportDetail||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-airport-detail.js"):null);
+
 class Mesh{
  constructor(){this.p=[];this.c=[];this.n=[];this.triangles=0}
  tri(a,b,c,color){
@@ -110,10 +114,62 @@ function airfield(mesh){
   mesh.cloud(x,y,z,s);mesh.cloud(x+s*.6,y+9,z+s*.15,s*.65);
  }
 }
+function airportDetails(mesh){
+ if(!Airport)return;
+ const {config,strip,aircraftFootprint}=Airport;
+ const yellow=rgb(238,197,80),blue=rgb(73,134,185),gold=rgb(230,181,97),
+  apron=rgb(87,95,99),truck=rgb(205,207,197);
+ // Reflective apron markings are on top of the existing airfield surface.
+ const a=config.apron;
+ mesh.quad([a.left,.145,a.near],[a.right,.145,a.near],
+  [a.right,.145,a.far],[a.left,.145,a.far],tint(apron,.93));
+ // Asphalt taxiway corridors and a visibly continuous centreline curve.
+ for(const segment of config.taxiway){
+  const {ax,az,bx,bz,widthM}=segment;
+  const road=strip(ax,az,bx,bz,widthM/2,.155);
+  if(road.length===4)mesh.quad(...road,tint(tarmac,1.04));
+  const centre=strip(ax,az,bx,bz,.36,.21);
+  if(centre.length===4)mesh.quad(...centre,yellow);
+ }
+ // A transverse yellow waiting marker is deliberately only decorative.
+ const hold=config.holdLine;
+ const holding=strip(hold.ax,hold.az,hold.bx,hold.bz,.65,.24);
+ if(holding.length===4)mesh.quad(...holding,yellow);
+ // Parked trainers are static aircraft-shaped apron props, NOT traffic.
+ for(const p of config.parkedTrainers){
+  const shape=aircraftFootprint(p.x,p.z,p.headingDeg);
+  if(!shape)continue;
+  const color=p.paint==="gold"?gold:blue;
+  const [a,b]=shape.spine,[wl,wr]=shape.wings,[tl,tr]=shape.tail;
+  const hull=strip(a[0],a[2],b[0],b[2],.78,1.05);
+  const wing=strip(wl[0],wl[2],wr[0],wr[2],.73,1.15);
+  const tail=strip(tl[0],tl[2],tr[0],tr[2],.42,1.22);
+  if(hull.length===4)mesh.quad(...hull,rgb(224,233,229));
+  if(wing.length===4)mesh.quad(...wing,color);
+  if(tail.length===4)mesh.quad(...tail,color);
+  mesh.box(p.x-.55,.18,p.z-.7,1.1,.82,1.4,rgb(67,95,113));
+ }
+ for(const p of config.serviceVehicles){
+  const color=p.paint==="yellow"?gold:truck;
+  mesh.box(p.x-2,.2,p.z-3,4,2.7,6,color);
+  mesh.box(p.x-1.7,2.7,p.z,3.4,1.3,2.5,rgb(66,92,110));
+  for(const x of [-1.2,1.2])for(const z of [-2,1.9])
+   mesh.box(p.x+x-.33,.1,p.z+z-.4,.65,.75,.8,rgb(32,38,43));
+ }
+ // Light fixtures are dim visual points in a fictional scenery, not
+ // real approach aids or aerodrome lighting specifications.
+ for(const p of config.approachLights){
+  mesh.box(p.x-.52,.01,p.z-.52,1.04,.31,1.04,rgb(248,223,175));
+ }
+ for(const p of config.rampLights){
+  mesh.box(p.x-.28,0,p.z-.28,.56,12,.56,rgb(110,128,136));
+  mesh.box(p.x-1.7,12,p.z-1,3.4,.8,2,rgb(252,226,161));
+ }
+}
 function buildWorld(mode="airplane"){
  if(!["airplane","helicopter"].includes(mode))throw Error("Unknown 3D airfield mode");
  const m=new Mesh();ground(m);
- if(mode==="airplane")runway(m);else helipad(m);
+ if(mode==="airplane"){runway(m);airportDetails(m);}else helipad(m);
  airfield(m);
  const out=m.finish();
  if(out.vertices>130000)throw Error("3D mesh exceeds mobile geometry budget");
@@ -401,7 +457,7 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,buildVehicle,buildMovingParts,cameraPose,createRenderer};
+const api={Mesh,buildWorld,airportDetails,buildVehicle,buildMovingParts,cameraPose,createRenderer};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);

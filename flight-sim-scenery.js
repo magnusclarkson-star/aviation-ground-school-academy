@@ -4,6 +4,10 @@
  */
 (function(root){"use strict";
 const RAD=Math.PI/180;
+const Airport=root?.AGSAFlightAirportDetail||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-airport-detail.js"):null);
+
 function project(state,x,y,z,width=960,height=540){
  const dx=x-state.xM,dz=z-state.zM,yaw=state.headingDeg*RAD;
  const lateral=dx*Math.cos(yaw)-dz*Math.sin(yaw);
@@ -56,6 +60,54 @@ function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
  const grass=ctx.createLinearGradient(0,horizon,0,h*2);
  grass.addColorStop(0,palette.grass[0]);grass.addColorStop(.5,palette.grass[1]);grass.addColorStop(1,palette.grass[2]);
  ctx.fillStyle=grass;ctx.fillRect(-w,horizon,w*3,h*3);
+ // Shared fictitious airport detail draws on the same local X/Z axes as 3D.
+ // Buildings and parked vehicles do not move, but the view changes as the
+ // learner flies, creating parallax and depth without any live location data.
+ function drawAirportDetails(){
+  if(!Airport)return false;
+  const {config,strip,aircraftFootprint}=Airport;
+  const a=config.apron;
+  poly([[a.left,.1,a.near],[a.right,.1,a.near],
+   [a.right,.1,a.far],[a.left,.1,a.far]],"#65737a");
+  for(const road of config.taxiway){
+   const {ax,az,bx,bz,widthM}=road;
+   const surface=strip(ax,az,bx,bz,widthM/2,.18);
+   if(surface.length===4)poly(surface,"#57636c");
+   const lineShape=strip(ax,az,bx,bz,.38,.22);
+   if(lineShape.length===4)poly(lineShape,"#f0d470");
+  }
+  const mark=config.holdLine;
+  const hold=strip(mark.ax,mark.az,mark.bx,mark.bz,.7,.24);
+  if(hold.length===4)poly(hold,"#f1ca5b");
+  for(const parked of config.parkedTrainers){
+   const shape=aircraftFootprint(parked.x,parked.z,parked.headingDeg);
+   if(!shape)continue;
+   const color=parked.paint==="gold"?"#e8bd73":"#89c1e7";
+   const [a,b]=shape.spine,[wl,wr]=shape.wings,[tl,tr]=shape.tail;
+   poly(strip(a[0],a[2],b[0],b[2],.8,.9),"#f3f2e8");
+   poly(strip(wl[0],wl[2],wr[0],wr[2],.75,1.0),color);
+   poly(strip(tl[0],tl[2],tr[0],tr[2],.4,1.1),color);
+  }
+  for(const truck of config.serviceVehicles){
+   const color=truck.paint==="yellow"?"#e8bb70":"#e7e9e2";
+   const x=truck.x,z=truck.z;
+   poly([[x-2,1.3,z-3],[x+2,1.3,z-3],[x+2,1.3,z+3],[x-2,1.3,z+3]],color);
+   poly([[x-1.7,3,z],[x+1.7,3,z],[x+1.7,3,z+2.3],[x-1.7,3,z+2.3]],"#9bb4c3");
+  }
+  for(const light of config.approachLights){
+   const p=project(state,light.x,.18,light.z,w,h);
+   if(!p||p.depth>2100||p.x<0||p.x>w||p.y<0||p.y>h)continue;
+   const r=Math.max(1,Math.min(4,170/p.depth+1));
+   ctx.fillStyle="#ffe8b6";ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+  }
+  for(const light of config.rampLights){
+   line([light.x,0,light.z],[light.x,12,light.z],"#9fb5bd",2);
+   const p=project(state,light.x,12,light.z,w,h);
+   if(!p||p.depth>1800||p.x<0||p.x>w||p.y<0||p.y>h)continue;
+   ctx.fillStyle="#ffe6ad";ctx.beginPath();ctx.arc(p.x,p.y,Math.min(5,260/p.depth+1),0,Math.PI*2);ctx.fill();
+  }
+  return true;
+ }
  // Alternating foreground field bands and a few roadside features use
  // projection, making forward movement visually observable without photos.
  function poly(points,color,stroke=null,lineWidth=1){
@@ -124,6 +176,7 @@ function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
      [x+1.4,.2,threshold+25],[x-1.4,.2,threshold+25]],"#eaf4dd");
    }
   }
+  drawAirportDetails();
   for(let z=1800;z>=0;z-=120){
    for(const x of [-24,24]){
     const p=project(state,x,.4,z,w,h);

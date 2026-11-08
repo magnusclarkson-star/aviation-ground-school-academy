@@ -241,3 +241,14 @@ Because browsers restrict sound autoplay and vibration before user interaction, 
 Browsers may accept vibration requests while never moving the physical motor. Some Android browsers may block scripted speech despite a user tap; the written fictional ATC transcript is always available. The simulator is an educational prototype, not an accredited trainer or a source of operational ATC procedures. Tests include phone/desktop consent, volume/texture defaults, complete activation, speaker fallback, radio and haptic stop, and restored effects after resume.
 
 Live simulator: https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html (new features require merge and GitHub Pages deployment).
+
+### Fictional airport scenery and movement detail (2026-11-08)
+
+The immersive simulator's previously flat-looking airfield has a richer **shared 2D / WebGL2 fictional airport environment**. New locally generated features include curved taxiway segments with centreline stripes, a marked apron, two aircraft-shaped stationary parked trainers, two ground-service vehicle silhouettes, short synthetic approach-light fixtures, ramp light poles and a decorative hold-line marker. The runway and airport landmarks now share the same local synthetic X/Z coordinates in the 2D canvas and 3D geometry; forward movement, turns, climbs and approach change the apparent positions of the landmarks through projection.
+
+The module `flight-sim-airport-detail.js` contains only frozen static fictitious coordinates. It fetches no real airports, GPS, imagery, aeronautical chart data, real airport signage, live ATC, navigation aids or textures. Markings are **illustrative and not operationally accurate or for real-world navigation**. Parked aircraft and vehicles are decorative and stationary rather than live traffic or collision obstacles. The 3D scenes remain within the established phone geometry budget with the same WebGL2-to-2D fallback. Flight controls, instruments, one-tap full sensory profile, haptics, engine audio, recording and replay are unchanged.
+
+The Academy CI adds deterministic geometry and coordinate-sharing checks, 2D drawing tests and a mobile Chromium scenario that verifies parallax, instrument and control visibility, and no sideways overflow. Physical Android testing and aviation instructor review are still needed.
+
+**Simulator:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
+**Academy:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/
