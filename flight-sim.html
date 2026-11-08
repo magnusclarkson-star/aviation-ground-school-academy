@@ -33,6 +33,7 @@
 <script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim-engine-audio.js" defer></script>
 <script src="flight-sim-phone-probe.js" defer></script>
+<script src="flight-sim-audio-fallback.js" defer></script>
 <script src="flight-sim-atc-radio.js" defer></script>
 <script src="flight-sim-radio-tone.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
@@ -153,9 +154,18 @@
    <button id="phoneFeedbackStart" type="button">Start engine sound + vibration</button>
    <button id="phoneFeedbackStop" type="button">Stop both</button>
    <button id="phoneSoundTest" type="button">Test speaker</button>
+   <button id="phoneAudioBackup" type="button">Try backup sound</button>
    <button id="phoneVibrationTest" type="button">Test vibration</button>
   </div>
   <p id="phoneFeedbackStatus" role="status" aria-live="polite">Both off. Tap Start to enable sound and vibration. You can test each separately first.</p>
+  <details id="phoneDiagnostics" class="phone-diagnostics">
+   <summary>Browser &amp; device diagnostics — share the report if tests fail</summary>
+   <p>Only browser feature availability and results from this page. No device identifiers, microphone audio, location or personal files are collected.</p>
+   <button id="phoneRefreshDiagnostics" type="button">Refresh diagnostics</button>
+   <button id="phoneCopyDiagnostics" type="button">Copy diagnostics</button>
+   <textarea id="phoneDiagnosticsText" readonly rows="8" aria-label="Technical browser feature diagnostic report"></textarea>
+   <p id="phoneDiagnosticsStatus" role="status" aria-live="polite">Diagnostics are kept on this device unless you choose to share them.</p>
+  </details>
   <p class="hint">On Android: open this page directly in Chrome, increase <strong>Media volume</strong>, and enable system vibration. If the test still stays silent, check Silent/Do Not Disturb and browser support. The simulator cannot override phone settings.</p>
  </section>
  <div class="lab-grid">

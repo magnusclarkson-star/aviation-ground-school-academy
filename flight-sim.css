@@ -175,3 +175,12 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
  .phone-feedback-buttons button{font-size:11px;min-height:44px}
  .phone-feedback-heading strong{font-size:14px}
 }
+
+/* Explicitly invoked Android audio backup and no-identifier diagnostics. */
+.phone-diagnostics{margin:10px 0;border:1px solid #6b94a6;border-radius:9px;background:#0b273b;padding:8px 10px;max-width:100%}
+.phone-diagnostics summary{cursor:pointer;font-weight:750;color:#e3eef9;font-size:12px;min-height:32px}
+.phone-diagnostics p{font-size:11px;line-height:1.5}
+.phone-diagnostics button{margin:5px 6px 5px 0;min-height:42px}
+.phone-diagnostics textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;background:#071825;color:#d9ecf7;border:1px solid #7e98ab;border-radius:7px;padding:10px;font:12px/1.55 ui-monospace,SFMono-Regular,monospace;resize:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
+.phone-feedback-buttons #phoneAudioBackup{border-color:#7bbec8}
+@media(max-width:740px){.phone-diagnostics{padding:9px}.phone-diagnostics button{font-size:11px;max-width:100%}}
