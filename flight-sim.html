@@ -34,6 +34,7 @@
 <script src="flight-sim-replay.js" defer></script>
 <script src="flight-sim-after-action.js" defer></script>
 <script src="flight-sim-playback.js" defer></script>
+<script src="flight-sim-moment-coach.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -416,6 +417,18 @@
     <label for="traceReplayIndex">Inspect recorded moment</label>
     <input type="range" id="traceReplayIndex" min="0" max="0" value="0" step="1" style="display:block;width:100%;max-width:720px">
     <p id="traceReplayDetail" role="status" aria-live="polite"></p>
+    <div id="traceMomentPanel" style="background:#eef5fc;border:1px solid #a5bad2;padding:.9rem;border-radius:10px;max-width:720px">
+      <h4>What can you learn from this recorded moment?</h4>
+      <label for="traceMomentPathway">Learning pathway for reflection</label>
+      <select id="traceMomentPathway" aria-label="Choose which type of learner guidance to show">
+        <option value="scouts">Scouts / Air Scouts — introductory questions</option>
+        <option value="pilots">Aviation enthusiasts / aspiring pilots — deeper comparisons</option>
+      </select>
+      <p id="traceMomentTitle" aria-live="off"></p>
+      <p id="traceMomentFacts" style="white-space:pre-wrap"></p>
+      <p id="traceMomentQuestion" role="status" aria-live="polite"></p>
+      <p class="disclaimer" id="traceMomentNotice">SME_REVIEW_REQUIRED · Fictional teaching observations, not a graded flight assessment.</p>
+    </div>
     <p><a id="traceDebriefLink" href="simulator-debrief.html?scenario=takeoff">Open private learning debrief</a> (starts a separate worksheet; this recording is not transferred)</p>
   </div>
   <p id="traceStatus" role="status" aria-live="polite">Recorder off. No flight trace collected.</p>
