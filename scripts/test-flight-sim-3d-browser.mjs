@@ -103,7 +103,9 @@ try{
     .classList.contains("three-dimensional"),null,{timeout:3500});
    assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
    assert.equal(await desktop.locator("#outsideView").isVisible(),true);
-   assert.match(await desktop.locator("#visualStatus").textContent(),/context lost/i);
+   assert.match(await desktop.locator("#visualStatus").textContent(),/2D/i);
+   assert.equal(await desktop.locator("#visualStatus").getAttribute("data-status"),"fallback",
+    "regardless of async context-loss event timing, a user must see the active fallback state");
    assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
   }
  }
