@@ -45,6 +45,7 @@ on:
       - 'flight-sim-cockpit.css'
       - 'scripts/test-flight-sim-cockpit.mjs'
       - 'scripts/test-flight-integrated-cockpit-browser.mjs'
+      - 'scripts/test-flight-cockpit-zoom-browser.mjs'
       - 'flight-sim-guidance.js'
       - 'flight-sim-gamepad.js'
       - 'flight-sim-gamepad-ui.js'
@@ -102,6 +103,7 @@ on:
       - 'flight-sim-cockpit.css'
       - 'scripts/test-flight-sim-cockpit.mjs'
       - 'scripts/test-flight-integrated-cockpit-browser.mjs'
+      - 'scripts/test-flight-cockpit-zoom-browser.mjs'
       - 'flight-sim-guidance.js'
       - 'flight-sim-gamepad.js'
       - 'flight-sim-gamepad-ui.js'
@@ -174,6 +176,7 @@ jobs:
         run: |
           node scripts/test-flight-sim-browser.mjs
           node scripts/test-flight-integrated-cockpit-browser.mjs
+          node scripts/test-flight-cockpit-zoom-browser.mjs
           node scripts/test-flight-sim-gamepad-browser.mjs
           node scripts/test-flight-sim-environment-browser.mjs
           node scripts/test-flight-sim-3d-browser.mjs
