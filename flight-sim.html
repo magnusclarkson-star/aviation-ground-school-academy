@@ -115,14 +115,15 @@
     <button type="button" class="cockpit-info-button" data-cockpit-help="controls" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Controls</button>
     <button type="button" class="cockpit-info-button" data-cockpit-help="radio" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Radio</button>
    </div>
+   <section id="cockpitInfoPanel" class="cockpit-info-panel" aria-label="Cockpit learning information" aria-live="polite" hidden>
+    <div class="cockpit-info-head"><strong id="cockpitInfoTitle">Cockpit</strong><button type="button" id="cockpitInfoClose" aria-label="Close cockpit information">✕</button></div>
+    <p id="cockpitInfoText"></p>
+   </section>
    <p id="cockpitRotationStatus" class="cockpit-rotation-status" role="status" aria-live="polite">Cockpit automatically adapts to portrait and landscape rotation.</p>
    <div id="cockpitMain" class="cockpit-main">
     <div id="cockpitInstrumentWell" class="cockpit-instrument-well">
      <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Tap individual live aircraft-style instruments to enlarge"></div>
-     <section id="cockpitInfoPanel" class="cockpit-info-panel" aria-label="Cockpit learning information" aria-live="polite" hidden>
-      <div class="cockpit-info-head"><strong id="cockpitInfoTitle">Cockpit</strong><button type="button" id="cockpitInfoClose" aria-label="Close cockpit information">✕</button></div>
-      <p id="cockpitInfoText"></p>
-     </section>
+
      <section id="cockpitZoomPanel" class="cockpit-zoom-panel" aria-label="Enlarged live cockpit instrument" hidden>
       <div class="cockpit-zoom-head"><strong id="cockpitZoomTitle">Instrument</strong><button type="button" id="cockpitZoomClose">Close ✕</button></div>
       <div id="cockpitZoomContent" class="cockpit-zoom-content"></div>
