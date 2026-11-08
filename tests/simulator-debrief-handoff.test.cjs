@@ -25,10 +25,10 @@ test('debrief remains unsigned, ungraded and learner-controlled',()=>{
   assert.doesNotMatch(debrief,/localStorage\.|sessionStorage\.|fetch\(|XMLHttpRequest|sendBeacon/);
 });
 
-test('reflection prompts are explicit, local, scenario-specific, and never grading',()=>{
-  assert.match(debrief,/function learningPrompts\\(d\\)/);
-  assert.match(debrief,/byId\\('coach'\\)\\.addEventListener\\('click'/);
-  assert.match(debrief,/No real flight competency determination/);
-  for(const key of keys) assert.ok(debrief.includes(key+":'Consider"));
-  assert.doesNotMatch(debrief,/fetch\\(|XMLHttpRequest|sendBeacon|eval\\(/);
+test('reflection prompts remain local and ungraded',()=>{
+ assert.ok(debrief.includes('function learningPrompts(d)'));
+ assert.ok(debrief.includes("byId('coach').addEventListener('click'"));
+ assert.ok(debrief.includes('No real flight competency determination'));
+ for(const key of keys) assert.ok(debrief.includes(key+":'Consider"));
+ for(const forbidden of ['fetch(', 'XMLHttpRequest', 'sendBeacon', 'eval(']) assert.ok(!debrief.includes(forbidden));
 });
