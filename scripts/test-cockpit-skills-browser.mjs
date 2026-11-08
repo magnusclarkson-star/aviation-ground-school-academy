@@ -9,6 +9,13 @@ const errors=[];
 try{
  const desktop=await browser.newPage({viewport:{width:1280,height:900},acceptDownloads:true});
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
+ await desktop.addInitScript(()=>{
+  Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{
+   cancel:()=>{window.__coachCancelled=(window.__coachCancelled||0)+1;},
+   speak:utterance=>{window.__coachSpoken=utterance.text;utterance.onstart?.();}
+  }});
+  window.SpeechSynthesisUtterance=class{constructor(text){this.text=text}};
+ });
  await desktop.goto(url,{waitUntil:"load"});
  await desktop.locator("#skillsPanel").waitFor({state:"visible"});
  assert.equal(await desktop.locator("#skillsMode").getAttribute("aria-pressed"),"true");
@@ -39,6 +46,15 @@ try{
  assert.match(await desktop.locator("#coachHeadline").textContent(),/fictional practice target/i);
  assert.ok((await desktop.locator("#coachCriteria .coach-criterion").count())>=4,"criteria breakdown available");
  assert.match(await desktop.locator("#coachNextSteps").textContent(),/Repeat/);
+ assert.equal(await desktop.locator("#coachSpeak").isEnabled(),true);
+ assert.equal(await desktop.evaluate(()=>window.__coachSpoken),undefined,"coaching is never narrated automatically");
+ await desktop.locator("#coachSpeak").click();
+ assert.match(await desktop.evaluate(()=>window.__coachSpoken),/Academy simulated practice review/i);
+ assert.match(await desktop.evaluate(()=>window.__coachSpoken),/not a human instructor assessment or licence credit/i);
+ assert.match(await desktop.locator("#coachVoiceStatus").textContent(),/synthetic browser speech/i);
+ await desktop.locator("#coachStop").click();
+ assert.match(await desktop.locator("#coachVoiceStatus").textContent(),/stopped/i);
+ assert.ok(await desktop.evaluate(()=>window.__coachCancelled>0),"stop sends cancel to voice engine");
  const downloadPromise=desktop.waitForEvent("download");
  await desktop.locator("#skillsExport").click();
  const download=await downloadPromise;
@@ -83,6 +99,7 @@ try{
  assert.equal(await phone.locator("#skillsMiniStatus").isVisible(),true);
  await phone.locator("#skillsEnd").tap();
  assert.equal(await phone.locator("#skillsExport").isDisabled(),false);
+ assert.equal(await phone.locator("#coachSpeak").count(),1,"touchscreen has optional spoken review");
  await phone.locator("#skillsRetry").tap();
  assert.equal(await phone.locator("#skillsStage").textContent(),"READY");
  await phone.close();
