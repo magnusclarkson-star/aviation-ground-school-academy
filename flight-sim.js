@@ -953,7 +953,7 @@ atcRadio=F.attach({
  },
  onTransmissionStart:()=>{radioFx.begin();$("radioFxStatus").textContent="RADIO RECEIVING · push-to-talk and squelch active on the simulated training channel.";},
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
- onFinish:()=>{radioFx.end();engineAudio.setDuck(false,audioPower());}
+ onFinish:()=>engineAudio.setDuck(false,audioPower())
 });
 // Do not allow radio and instructor narration to cancel each other mid-speech.
 document.addEventListener("click",event=>{
