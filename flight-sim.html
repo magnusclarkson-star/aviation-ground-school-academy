@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="flight-sim-aircraft-systems.css">
 <link rel="stylesheet" href="flight-sim-aerodynamics.css">
 <link rel="stylesheet" href="flight-sim-loading.css">
+<link rel="stylesheet" href="flight-sim-exercises.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -26,6 +27,8 @@
 <script src="flight-sim-gamepad-ui.js" defer></script>
 <script src="flight-sim-3d.js" defer></script>
 <script src="flight-sim-aircraft-systems.js" defer></script>
+<script src="flight-sim-exercises.js" defer></script>
+<script src="flight-sim-exercises-ui.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -200,6 +203,54 @@
     <button type="button" id="pauseFlight" aria-pressed="false">Pause simulation</button>
    </div>
    <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>
+   <details id="guidedExercisePanel" class="guided-exercise">
+    <summary>Guided flight-simulator lessons · optional spoken instructor</summary>
+    <div class="exercise-content">
+     <p class="hint">Three scripted, in-browser exercises for Air Scouts, aviation enthusiasts and beginner pilots. All lesson content is <strong>SME_REVIEW_REQUIRED</strong> and not approved, graded or accredited. No session or voice data is uploaded or saved.</p>
+     <div class="exercise-choice-grid">
+      <label for="exercisePath">Learning path
+       <select id="exercisePath">
+        <option value="scouts" selected>Air Scouts &amp; first-time learners</option>
+        <option value="pilots">Aviation enthusiasts &amp; pilot learners</option>
+       </select>
+      </label>
+      <label for="exerciseSelect">Choose an observational exercise
+       <select id="exerciseSelect">
+        <option value="cg-shift" selected>01 · Fictional CG and rear baggage</option>
+        <option value="wind-track">02 · Heading versus track</option>
+        <option value="energy-flaps">03 · Flaps, drag and energy</option>
+       </select>
+      </label>
+     </div>
+     <div class="exercise-actions">
+      <button id="exerciseStart" type="button" class="major">Start guided exercise</button>
+      <button id="exerciseStop" type="button" disabled>Leave guided exercise</button>
+     </div>
+     <p id="exerciseState" class="exercise-state" role="status" aria-live="polite">No guided exercise active. Free flight controls remain available.</p>
+     <div id="exerciseLive" class="exercise-live" hidden>
+      <p class="eyebrow">SIMULATED PRACTICE · UNGRADED</p>
+      <p id="exerciseObjective" class="exercise-objective"></p>
+      <strong id="exerciseStep" class="exercise-step">Observation 1 of 3</strong>
+      <p id="exercisePrompt" class="exercise-prompt"></p>
+      <button id="exerciseRecord" type="button" hidden>Record observed baseline</button>
+      <fieldset id="exerciseQuestionWrap" class="exercise-question" hidden>
+       <legend id="exerciseQuestion">Choose the explanation that matches the illustration</legend>
+       <div id="exerciseChoices"></div>
+       <button id="exerciseAnswer" type="button">Check my explanation</button>
+      </fieldset>
+      <p id="exerciseFeedback" class="exercise-feedback" role="status" aria-live="polite">Local ungraded practice, no record saved.</p>
+      <div class="exercise-voice">
+       <strong>Spoken instructor · device voice, not live AI</strong>
+       <div class="exercise-actions">
+        <button id="exerciseSpeak" type="button">Read current prompt aloud</button>
+        <button id="exerciseStopVoice" type="button">Stop voice</button>
+       </div>
+       <p id="exerciseVoiceStatus" role="status" aria-live="polite">Device narration is optional and off.</p>
+      </div>
+     </div>
+     <p class="hint"><strong>Instructor-review notice:</strong> Scripted learning activities have not been signed off by an aviation subject-matter expert. Completion provides no flight-training credit, assessment grade or certificate. For real aircraft, use the approved aircraft documentation and a qualified instructor.</p>
+    </div>
+   </details>
    <div class="visual-options" aria-label="Flight scenery display settings">
     <label for="visualMode">Outside visual environment</label>
     <select id="visualMode">
