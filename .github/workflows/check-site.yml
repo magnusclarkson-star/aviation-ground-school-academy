@@ -47,3 +47,9 @@ jobs:
       - run: node --check ground-school-modules.js
       - run: node --check ground-school-modules-ui.js
       - run: node scripts/test-ground-school-modules.mjs
+      - run: node --check flight-sim-model.js
+      - run: node --check flight-sim-haptics.js
+      - run: node --check flight-sim-scenery.js
+      - run: node --check flight-sim.js
+      - run: node scripts/test-flight-sim-model.mjs
+      - run: node scripts/test-flight-sim-haptics.mjs
