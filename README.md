@@ -170,3 +170,11 @@ The immersive simulator now shows a **What can you learn from this recorded mome
 ### Bird's-eye fictional flight track — November 2026
 
 The opt-in recorder now also captures the synthetic simulator's forward X/Z coordinate (`forwardM` for local Z alongside the existing `lateralM` for local X). When playback is opened, a new **Bird's-eye synthetic flight path** canvas plots local relative movement, start/end positions, and the selected replay moment. It uses no GPS, external map tiles, geolocation or network requests. **This is not a geographic map, surveyed airfield, validated aircraft path, real pilot assessment or flight training credit.** Older recordings without forward position are handled as unavailable, not reconstructed. Existing debrief import remains separately learner controlled. New path tests and mobile visual acceptance checks run in the private-learning workflow; qualified instructor review and physical-device testing remain required.
+
+### Replay aircraft heading marker and phase explanations (2026-11-08)
+
+The optional fictional flight-path replay now draws a small aircraft-shaped glyph at the selected recorded position. Its nose rotates using the **recorded synthetic heading**, where 0° points toward the simulator's positive-forward local Z direction (top of the bird's-eye view). The glyph advances as the replay slider/playback changes samples; it does not move or alter the live simulation. Missing/invalid headings gracefully fall back to a dot, and legacy traces without synthetic forward position show an unavailable message.
+
+Beside the path, an accessible text description now states the selected synthetic heading and explains the recorded phase (runway roll, climb, free flight, approach, rollout, conceptual helicopter lift/hover, etc.). It is rule-based reflection, **not** real-world aircraft navigation, operational instruction, validated aircraft dynamics, grading, or accredited training. Browser and regression checks run through GitHub Actions; qualified instructor review and testing on physical phones remain necessary.
+
+Published-viewing URLs: https://magnusclarkson-star.github.io/aviation-ground-school-academy/ and https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html .
