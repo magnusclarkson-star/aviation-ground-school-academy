@@ -37,7 +37,9 @@ assert.throws(()=>Three.buildWorld("submarine"),/Unknown 3D/);
 assert.throws(()=>Three.buildVehicle("balloon"),/Unknown 3D/);
 const airplane=Three.buildVehicle("airplane"),helicopter=Three.buildVehicle("helicopter");
 assert.ok(airplane.vertices>50&&helicopter.vertices>50);
-assert.notEqual(airplane.vertices,helicopter.vertices,"aircraft models must differ");
+assert.notDeepEqual(Array.from(airplane.positions.slice(0,36)),
+ Array.from(helicopter.positions.slice(0,36)),
+ "aircraft models must have different actual fuselage geometry, even if triangle counts happen to match");
 assert.ok(Math.min(...airplane.positions)>-100,"airplane model is local to aircraft");
 assert.ok(Math.max(...helicopter.positions)<100,"helicopter model is local to aircraft");
 

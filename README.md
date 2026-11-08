@@ -118,3 +118,7 @@ The [Immersive Simulator](flight-sim.html) now supports three **invented** fixed
 ### WebGL2 3D airfield and chase camera
 
 The [Immersive Flight Simulator](flight-sim.html) now offers a **real browser WebGL2 3D world**: three-dimensional terrain/hills, runway/helipad geometry, trees, hangars, clouds and simple chase-view airplane/helicopter meshes, with depth testing and perspective changes from the same local aircraft state as the controls and instruments. A forward pilot view or outside chase camera can be selected in 3D. **Unsupported browsers safely use the original 2D scene**, which can also be selected deliberately to reduce graphics load. No external scenery/3D engine, GPS or private Academy API is required. This is not a validated aircraft model or a certified training device. See [3D Airfield Acceptance and Safety](docs/WEBGL3D-AIRFIELD-ACCEPTANCE.md).
+
+### Animated control surfaces, propeller and rotors (November 2026)
+
+The [Immersive Simulator](flight-sim.html) now animates its own **3D propeller, opposing ailerons, elevators, rudder and wing flaps** from the existing yoke, joystick, rudder pedals and flap selector. The **helicopter main and tail rotors** now animate in chase view. A compact illustrative engine/rotor and control-surface strip remains available even when 2D fallback scenery is used. All outputs are fictional and do not reproduce real aircraft mechanical systems. [Acceptance and limitations](docs/ANIMATED-AIRCRAFT-SYSTEMS.md).

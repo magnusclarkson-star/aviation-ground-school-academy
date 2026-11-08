@@ -136,11 +136,61 @@ function buildVehicle(mode="airplane"){
   m.box(-.32,.05,-8,.64,.65,6.4,blue);
   m.box(-.3,.2,-8.5,.6,2,1,blue);
   m.box(-.2,1,-.4,.4,2,.4,rgb(190,198,202));
-  m.box(-8.3,2.9,-.35,16.6,.1,.7,rgb(183,197,203));
-  m.box(-.38,2.9,-8,.76,.1,16,rgb(183,197,203));
+  // Main/tail rotor meshes are drawn separately and animated around their
+  // physical-looking illustrated hubs, not baked into the helicopter body.
+  m.box(-.46,2.75,-.4,.92,.4,.92,rgb(183,197,203));
   for(const x of [-1.6,1.6])m.box(x-.1,-1.45,-2.2,.2,.25,5.0,dark);
  }
  return m.finish();
+}
+/* Animated parts have separate GPU vertex arrays. Part rotations are applied
+ * around local hinge/hub pivots before the existing whole-aircraft transform.
+ * This is a drawing model, not real hinge geometry or rotor dynamics. */
+function buildMovingParts(mode="airplane"){
+ if(!["airplane","helicopter"].includes(mode))throw Error("Unknown animated craft mode");
+ const pale=rgb(211,237,241),yellow=rgb(234,183,107),
+  blue=rgb(75,137,174),metal=rgb(173,191,205);
+ const result=[];
+ const add=(name,pivot,axis,draw)=>{
+  const m=new Mesh();draw(m);result.push({name,pivot,axis,mesh:m.finish()});
+ };
+ if(mode==="airplane"){
+  add("propeller",[0,0,6.05],3,m=>{
+   m.box(-.13,-2.15,6.04,.26,4.30,.16,metal);
+   m.box(-2.15,-.13,6.04,4.30,.26,.16,tint(metal,.84));
+   m.box(-.31,-.31,6.14,.62,.62,.28,yellow);
+  });
+  for(const [name,x,bankSign] of [
+   ["leftAileron",-6.25,-1],["rightAileron",4.55,1]]){
+   add(name,[x+ .85,.1,-1.7],1,m=>{
+    m.box(x,-.06,-2.18,1.7,.21,.55,bankSign>0?blue:yellow);
+   });
+  }
+  for(const [name,x] of [["leftFlap",-3.9],["rightFlap",1.4]]){
+   add(name,[x+1.1,.1,-1.68],1,m=>{
+    m.box(x,-.07,-2.22,2.2,.22,.62,blue);
+   });
+  }
+  for(const [name,x] of [["elevatorLeft",-2.5],["elevatorRight",.38]]){
+   add(name,[x+1.04,.81,-5.55],1,m=>{
+    m.box(x,.79,-6.08,2.12,.16,.65,pale);
+   });
+  }
+  add("rudder",[0,1.4,-5.65],2,m=>{
+   m.box(-.12,1.2,-6.12,.24,1.65,.55,yellow);
+  });
+ }else{
+  add("mainRotor",[0,2.96,-.4],2,m=>{
+   m.box(-8.9,2.93,-.79,17.8,.11,.77,metal);
+   m.box(-.38,2.93,-8.7,.77,.11,16.6,tint(metal,.88));
+   m.box(-.58,2.95,-.98,1.16,.18,1.16,yellow);
+  });
+  add("tailRotor",[-.29,1.22,-8.4],1,m=>{
+   m.box(-.37,.08,-8.57,.17,2.35,.3,metal);
+   m.box(-.37,1.12,-9.55,.17,.3,2.32,yellow);
+  });
+ }
+ return result;
 }
 function cameraPose(state,view="cockpit"){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
@@ -163,11 +213,24 @@ uniform vec3 uEye;
 uniform vec3 uCraft;
 uniform float uYaw,uPitch,uRoll,uCraftYaw,uCraftPitch,uCraftRoll;
 uniform float uActor,uAspect,uFocal;
+uniform vec3 uPartPivot;
+uniform float uPartAngle;
+uniform int uPartAxis;
 out vec3 vColor;
 out float vDistance,vLight;
 void main(){
  vec3 p=aPosition;
  if(uActor>.5){
+  // Rotate illustrated flap/aileron/elevator surfaces around their hinges,
+  // or propeller/rotor parts around their hub. Static body/world have axis 0.
+  if(uPartAxis>0){
+   vec3 q=p-uPartPivot;
+   float ca=cos(uPartAngle),sa=sin(uPartAngle);
+   if(uPartAxis==1)q=vec3(q.x,q.y*ca-q.z*sa,q.y*sa+q.z*ca);
+   else if(uPartAxis==2)q=vec3(q.x*ca+q.z*sa,q.y,-q.x*sa+q.z*ca);
+   else if(uPartAxis==3)q=vec3(q.x*ca-q.y*sa,q.x*sa+q.y*ca,q.z);
+   p=q+uPartPivot;
+  }
   float c=cos(uCraftRoll),s=sin(uCraftRoll);
   p=vec3(p.x*c+p.y*s,-p.x*s+p.y*c,p.z);
   c=cos(uCraftPitch);s=sin(uCraftPitch);
@@ -243,7 +306,8 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   skyProgram=compile(gl,SKY_VERTEX,SKY_FRAGMENT);
   const uni={};
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
-   "uCraftRoll","uActor","uAspect","uFocal"])
+   "uCraftRoll","uActor","uAspect","uFocal",
+   "uPartPivot","uPartAngle","uPartAxis"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -256,7 +320,9 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   };
   const worldPlane=upload(buildWorld("airplane")),worldHeli=upload(buildWorld("helicopter"));
   const plane=upload(buildVehicle("airplane")),heli=upload(buildVehicle("helicopter"));
-  function draw(state,{view="cockpit"}={}){
+  const planeParts=buildMovingParts("airplane").map(part=>({...part,gpu:upload(part.mesh)}));
+  const helicopterParts=buildMovingParts("helicopter").map(part=>({...part,gpu:upload(part.mesh)}));
+  function draw(state,{view="cockpit",animation={}}={}){
    if(lost||disposed||!state)return false;
    const rect=canvas.getBoundingClientRect?.()||{width:960,height:540};
    const ratio=Math.min(1.25,typeof devicePixelRatio==="number"?devicePixelRatio:1);
@@ -282,12 +348,24 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    gl.uniform1f(uni.uCraftRoll,(state.rollDeg||0)*RAD);
    gl.uniform1f(uni.uAspect,w/h);gl.uniform1f(uni.uFocal,1.65);
    const world=state.mode==="helicopter"?worldHeli:worldPlane;
-   gl.uniform1f(uni.uActor,0);gl.bindVertexArray(world.vao);
+   gl.uniform1f(uni.uActor,0);
+   gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+   gl.uniform3fv(uni.uPartPivot,[0,0,0]);
+   gl.bindVertexArray(world.vao);
    gl.drawArrays(gl.TRIANGLES,0,world.count);
    if(view==="chase"){
     const vehicle=state.mode==="helicopter"?heli:plane;
     gl.uniform1f(uni.uActor,1);gl.bindVertexArray(vehicle.vao);
     gl.drawArrays(gl.TRIANGLES,0,vehicle.count);
+    for(const part of (state.mode==="helicopter"?helicopterParts:planeParts)){
+     gl.uniform1i(uni.uPartAxis,part.axis);
+     gl.uniform3fv(uni.uPartPivot,part.pivot);
+     const angle=animation?.[part.name];
+     gl.uniform1f(uni.uPartAngle,Number.isFinite(angle)?angle:0);
+     gl.bindVertexArray(part.gpu.vao);
+     gl.drawArrays(gl.TRIANGLES,0,part.gpu.count);
+    }
+    gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
    }
    gl.bindVertexArray(null);
    return !gl.isContextLost();
@@ -308,7 +386,7 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,buildVehicle,cameraPose,createRenderer};
+const api={Mesh,buildWorld,buildVehicle,buildMovingParts,cameraPose,createRenderer};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
