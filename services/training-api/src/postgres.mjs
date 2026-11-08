@@ -147,6 +147,82 @@ export class PgStore{
   }catch(e){await client.query("ROLLBACK").catch(()=>{});throw e}
   finally{client.release()}
  }
+ async createModuleClaim(actor,key,digest,claim){
+  // Serialise a student's module self-check submissions so multiple concurrent
+  // requests cannot bypass the small UTC-day limit or duplicate an audit event.
+  const client=await this.pool.connect();
+  try{
+   await client.query("BEGIN");
+   await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
+    [actor.organizationId+":"+actor.userId+":module-self-check"]);
+   const member=await client.query(`
+    SELECT 1 FROM memberships WHERE user_id=$1 AND organization_id=$2
+      AND role='student' AND status='active' FOR SHARE`,
+    [actor.userId,actor.organizationId]);
+   if(!member.rowCount)throw new ClientError(403,"forbidden","Active student membership is required");
+   const prior=await client.query(`
+    SELECT id,payload_sha256,received_at AS "receivedAt"
+    FROM module_practice_claims WHERE organization_id=$1 AND student_id=$2 AND idempotency_key=$3`,
+    [actor.organizationId,actor.userId,key]);
+   if(prior.rowCount){
+    await client.query("COMMIT");
+    const row=prior.rows[0];
+    return {created:false,conflict:row.payload_sha256!==digest,
+     id:row.id,receivedAt:row.receivedAt};
+   }
+   const total=await client.query(`
+    SELECT COUNT(*)::integer AS count FROM module_practice_claims
+    WHERE organization_id=$1 AND student_id=$2
+      AND received_at >= (date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC')`,
+    [actor.organizationId,actor.userId]);
+   if(total.rows[0].count>=24)
+    throw new ClientError(429,"module_daily_limit","Daily private module import limit reached");
+   const inserted=await client.query(`
+    INSERT INTO module_practice_claims
+      (organization_id,student_id,idempotency_key,payload_sha256,
+       module_id,assessment_revision,claimed_correct,question_count)
+    VALUES($1,$2,$3,$4,$5,$6,$7,6)
+    RETURNING id,received_at AS "receivedAt"`,
+    [actor.organizationId,actor.userId,key,digest,claim.moduleId,claim.revision,claim.correct]);
+   const row=inserted.rows[0];
+   await client.query(`
+    INSERT INTO audit_events(actor_user_id,organization_id,action,target_type,target_id,metadata)
+    VALUES($1,$2,'module.self_check.import','module_practice_claim',$3,$4::jsonb)`,
+    [actor.userId,actor.organizationId,row.id,
+     JSON.stringify({moduleId:claim.moduleId,sourceStatus:"UNVERIFIED_CLIENT_SELF_CHECK"})]);
+   await client.query("COMMIT");
+   return {created:true,conflict:false,id:row.id,receivedAt:row.receivedAt};
+  }catch(error){
+   await client.query("ROLLBACK").catch(()=>{});
+   throw error;
+  }finally{client.release()}
+ }
+ async listOwnModuleClaims(actor,limit){
+  const r=await this.pool.query(`
+   SELECT id,module_id AS "moduleId",assessment_revision AS revision,
+     claimed_correct AS "claimedCorrect",question_count AS total,
+     source_status AS "sourceStatus",received_at AS "receivedAt"
+   FROM module_practice_claims WHERE organization_id=$1 AND student_id=$2
+   ORDER BY received_at DESC,id DESC LIMIT $3`,
+   [actor.organizationId,actor.userId,limit]);
+  return r.rows;
+ }
+ async listAssignedModuleClaims(actor,limit){
+  const r=await this.pool.query(`
+   SELECT c.id,c.student_id AS "studentId",c.module_id AS "moduleId",
+     c.assessment_revision AS revision,c.claimed_correct AS "claimedCorrect",
+     c.question_count AS total,c.source_status AS "sourceStatus",
+     c.received_at AS "receivedAt"
+   FROM module_practice_claims c
+   JOIN instructor_assignments ia ON ia.organization_id=c.organization_id
+     AND ia.student_id=c.student_id AND ia.instructor_id=$2 AND ia.active=true
+   JOIN memberships sm ON sm.organization_id=ia.organization_id
+     AND sm.user_id=ia.student_id AND sm.role='student' AND sm.status='active'
+   WHERE c.organization_id=$1
+   ORDER BY c.received_at DESC,c.id DESC LIMIT $3`,
+   [actor.organizationId,actor.userId,limit]);
+  return r.rows;
+ }
  async reserveAiUsage(actor,kind,maxCount){
   if(!["text","voice","realtime"].includes(kind)||!Number.isInteger(maxCount)||maxCount<1||maxCount>100)
    throw Error("Invalid AI usage reservation");
