@@ -41,6 +41,10 @@ on:
       - 'scripts/test-flight-sim-3d.mjs'
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
+      - 'flight-sim-cockpit.js'
+      - 'flight-sim-cockpit.css'
+      - 'scripts/test-flight-sim-cockpit.mjs'
+      - 'scripts/test-flight-integrated-cockpit-browser.mjs'
       - 'flight-sim-guidance.js'
       - 'flight-sim-gamepad.js'
       - 'flight-sim-gamepad-ui.js'
@@ -94,6 +98,10 @@ on:
       - 'scripts/test-flight-sim-3d.mjs'
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
+      - 'flight-sim-cockpit.js'
+      - 'flight-sim-cockpit.css'
+      - 'scripts/test-flight-sim-cockpit.mjs'
+      - 'scripts/test-flight-integrated-cockpit-browser.mjs'
       - 'flight-sim-guidance.js'
       - 'flight-sim-gamepad.js'
       - 'flight-sim-gamepad-ui.js'
@@ -134,6 +142,7 @@ jobs:
           node --check flight-sim-airport-detail.js
           node --check flight-sim-aircraft-systems.js
           node --check flight-sim-instruments.js
+          node --check flight-sim-cockpit.js
           node --check flight-sim-guidance.js
           node --check flight-sim-gamepad.js
           node --check flight-sim-gamepad-ui.js
@@ -153,6 +162,7 @@ jobs:
       - name: Test integrated glass instruments and guidance
         run: |
           node scripts/test-flight-sim-instruments.mjs
+          node scripts/test-flight-sim-cockpit.mjs
           node scripts/test-flight-sim-guidance.mjs
       - name: Test optional physical controller mapping
         run: node scripts/test-flight-sim-gamepad.mjs
@@ -163,6 +173,7 @@ jobs:
       - name: Test desktop and simultaneous touch controls
         run: |
           node scripts/test-flight-sim-browser.mjs
+          node scripts/test-flight-integrated-cockpit-browser.mjs
           node scripts/test-flight-sim-gamepad-browser.mjs
           node scripts/test-flight-sim-environment-browser.mjs
           node scripts/test-flight-sim-3d-browser.mjs
