@@ -77,6 +77,11 @@ function dock(index,instruments){
  highlight(index,instruments);
  update();
 }
+function updateMultiTouchLayout(keys){
+ // Keep yoke and rudder in the same phone row whenever both are relevant.
+ const paired=keys.includes("yoke")&&keys.includes("rudder");
+ $("digitalControlDock").classList.toggle("simultaneous-controls",paired);
+}
 function dockDigital(index,instruments,page){
  if(!initialized)return;
  const chosenId=instruments[index][0];
@@ -99,6 +104,7 @@ function dockDigital(index,instruments,page){
  restore();
  const target=$("digitalControlDock");
  for(const key of keys)target.appendChild($("control-"+key));
+ updateMultiTouchLayout(keys);
  $("digitalControlsTitle").textContent=title;
  $("digitalControlsHint").textContent=hint+" Flaps remain selectable on every digital page; their primary model effect is on airspeed.";
  $("digitalFocusSelector").classList.toggle("hidden",page!=="pfd");
@@ -120,6 +126,7 @@ function dockMission(phase){
  restore();
  const target=$("digitalControlDock");
  for(const key of keys)target.appendChild($("control-"+key));
+ updateMultiTouchLayout(keys);
  $("digitalControlsTitle").textContent="Working controls — guided flight";
  $("digitalControlsHint").textContent="Operate the actual yoke, throttle, flaps or rudder below while watching the live touchscreen. The lesson instructions remain just above.";
  $("digitalFocusSelector").classList.add("hidden");
@@ -131,7 +138,11 @@ function dockSkills(taskId){
  const task=skills.tasks[taskId];
  restore();
  const target=$("digitalControlDock");
- for(const key of task.keys)target.appendChild($("control-"+key));
+ const keys=task.keys.includes("yoke")&&task.keys.includes("rudder")
+  ?["yoke","rudder",...task.keys.filter(key=>key!=="yoke"&&key!=="rudder")]
+  :task.keys;
+ for(const key of keys)target.appendChild($("control-"+key));
+ updateMultiTouchLayout(keys);
  $("digitalControlsTitle").textContent="Working controls — "+task.title;
  $("digitalControlsHint").textContent="Operate the actual controls for this example task while watching the PFD. The scoring only observes instrument indications during the practice window.";
  $("digitalFocusSelector").classList.add("hidden");
