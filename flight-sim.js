@@ -562,8 +562,9 @@ function reset(scenario){
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
- const dx=(event.clientX-(box.left+box.width/2))/(box.width*.35);
- const dy=(event.clientY-(box.top+box.height/2))/(box.height*.39);
+ const sensitivity=cockpit?.sensitivity()??1;
+ const dx=(event.clientX-(box.left+box.width/2))/(box.width*.35)*sensitivity;
+ const dy=(event.clientY-(box.top+box.height/2))/(box.height*.39)*sensitivity;
  input.bank=M.clamp(dx,-1,1);
  input.pitch=M.clamp(dy,-1,1);
  gripTransform();
