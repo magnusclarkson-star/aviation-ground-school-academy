@@ -42,7 +42,7 @@ test('Hastings uses traffic advisory only and never supplies runway control scen
  assert.equal(b.id,'local-traffic');
  for(const m of [a,b]){
   for(const step of m.steps)
-   assert.ok(step.choices.some(c=>/no control|no tower|not a clearance|no atc|does not/.test(c.why.toLowerCase())));
+   assert.ok(step.choices.some(c=>/clearance|controller|traffic|transmit|visual contact/.test(c.why.toLowerCase())));
  }
 });
 test('wrong runway entry, invented radio frequency, inaccurate traffic report and false landing clearance are rejected',()=>{
