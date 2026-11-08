@@ -186,3 +186,14 @@ The immersive flight simulator offers an **Illustrated outside lighting** select
 These are **artistic lighting presets**, not measured times of day, night-flying lessons, meteorological visibility simulation, operational safety limits or accredited pilot instruction. Tests include module privacy/invariance checks and a Chromium phone viewport that compares daylight/evening/dusk 2D pixels and optional WebGL2 sky pixels.
 
 **App preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/ and https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html . Changes on a feature branch are not live until merged and GitHub Pages deployment succeeds.
+
+### Fictional aircraft sounds and tower–pilot radio (2026-11-08)
+
+The simulator includes a clearly opt-in **Aircraft sounds & pilot–tower conversations** panel. The engine control starts a small, bounded Web Audio oscillator model only after a user click. Airplane pitch responds to synthetic engine power; a fictional helicopter uses a lower, rotor-like rhythmic tone. The sound is stopped on pause, aircraft change, scenario reset, hidden tabs and page closure; volume is adjustable, and radio narration briefly ducks the engine level. This is **not** a validated engine sound recording, audio simulation of a particular aircraft or precise rotor-frequency model. There are no audio files, network requests, microphone or audio uploads.
+
+**Before departure**, **During flight**, **After landing** and **Play complete exchange** show device-only scripted Academy Tower/Student Pilot dialogues, with separate rotorcraft and fixed-wing examples and a runway-approach alternative. Speech uses the browser's built-in speech synthesis (English voice availability varies) only after button activation; the full written transcript remains accessible without synthesized voice. The roles use alternate voice pitches and different available device voices where possible. The audio is fictional classroom material, not real ATC, current phraseology training, a frequency, real traffic separation, operational clearance, a certified instructor or flight credit. The separate AI-instructor scripted narration stops when radio starts and vice versa.
+
+Automated checks include Node privacy/behavior tests, a mobile Chromium opt-in audio and dialogue test, and the existing simulator and Academy site workflows. **Physical Android/iOS sound and browser tests and an aviation subject-matter expert review remain required.**
+
+**Academy preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/ 
+**Simulator preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
