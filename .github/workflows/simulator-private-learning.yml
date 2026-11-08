@@ -58,3 +58,5 @@ jobs:
         run: node scripts/test-flight-audio-browser.mjs
       - name: Test phone audio and vibration activation and diagnostics
         run: node scripts/test-flight-phone-feedback-browser.mjs
+      - name: Test simulated native Android vibration bridge
+        run: node scripts/test-flight-native-haptics-browser.mjs
