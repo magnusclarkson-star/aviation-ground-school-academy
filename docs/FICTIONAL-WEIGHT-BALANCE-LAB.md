@@ -36,3 +36,7 @@ There is no genuine aircraft specific POH, equipment list, arm table, centre-of-
 - **Physical device acceptance not yet performed:** Verify actual Android Chrome, iOS Safari, external gamepad/yoke/pedals, landscape/portrait use, thermal performance and accessibility. Consult aviation subject matter experts before presenting this as part of an independently reviewed course.
 
 Nothing from this exercise is saved to the student's private learning record, transmitted to a server, or treated as a verified grade or loggable flight time.
+
+## Four guided learning self-checks
+
+The browser weight-and-balance lab now includes four reference-versus-comparison exercises: moving an equal mass aft, increasing fictional wing loading, reducing an imaginary forward fuel load, and comparing fictional flap lift/drag coefficients at a constant invented 4° AoA. The checks are generated from the same source modules and require both observations; manually changing loading or flaps clears old evidence. **None is instructor approved or a graded assessment.** See [Simulator Exercise SME Review](SIMULATOR-EXERCISE-SME-REVIEW.md) before using the text in a formal course.
