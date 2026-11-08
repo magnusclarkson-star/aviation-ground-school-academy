@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 import path from "node:path";
 import {chromium} from "playwright";
 const root=process.cwd();
-const allowed=new Set(["ai-instructor.html","ai-instructor.js","ai-instructor-lessons.js","ai-instructor.css"]);
+const allowed=new Set(["ai-instructor.html","ai-instructor.js","ai-instructor-lessons.js","ai-instructor-progress.js","ai-instructor.css"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -51,6 +51,8 @@ try{
  assert.match(new URL(p.url()).search,/lesson=flaps/);
  await p.locator("#quizAnswers button").nth(1).click();
  assert.match(await p.locator("#quizResult").textContent(),/Correct/);
+ assert.match(await p.locator("#practiceSummary").textContent(),/1 checkpoints/);
+ assert.match(await p.locator("#practiceRecommendation").textContent(),/Suggested next lesson/);
  assert.equal(await p.locator("#quizAnswers button").nth(1).getAttribute("aria-pressed"),"true");
  await p.locator("#questionInput").fill("What does the PFD horizon show?");
  await p.locator("#questionButton").click();
