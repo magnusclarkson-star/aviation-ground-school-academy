@@ -2,7 +2,7 @@
  * Flight logic and visual renderer are local-only. Device vibration is opt-in.
  */
 (()=>{"use strict";
-const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
+const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,NH=window.AGSAFlightNativeHaptics,
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
@@ -10,8 +10,10 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
  V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
-const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
+if(!M||!S||!H||!NH||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+const canvas=$("outsideView"),canvas3D=$("outsideView3D");
+const hapticsDriver=NH.adapt(navigator,window.AGSAHapticsNative);
+const haptics=H.createHaptics({navigatorLike:hapticsDriver.navigatorLike});
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
 const audioFallback=J.createFallback({windowLike:window,documentLike:document});
@@ -29,6 +31,7 @@ function refreshPhoneDiagnostics(){
   "HTML audio backup: "+(htmlAudio.supported?"available":"unavailable"),
   "Engine: "+(engine.active?"active":"inactive"),
   "Engine audio context: "+engine.audioState,
+  "Vibration path: "+(hapticsDriver.native?"Android app native bridge":"Website Vibration API"),
   "Website vibration API: "+(vibration.supported?"available":"unavailable"),
   "Flight vibration armed: "+(vibration.enabled?"yes":"no"),
   "Last vibration request: "+vibration.lastResult,
