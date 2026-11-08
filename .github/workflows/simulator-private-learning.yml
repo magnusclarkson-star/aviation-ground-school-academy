@@ -1,0 +1,24 @@
+name: Private Flight Practice Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  private-learning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check private simulator module syntax
+        run: |
+          node --check flight-sim-recorder.js
+          node --check flight-sim-replay.js
+          node --check flight-sim-after-action.js
+          node --check flight-sim.js
+      - name: Execute private recorder, replay, debrief and learning-summary tests
+        run: |
+          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs
