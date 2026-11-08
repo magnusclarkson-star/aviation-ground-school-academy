@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="flight-sim-atc-practice.css">
 <link rel="stylesheet" href="flight-sim-atc-missions.css">
 <link rel="stylesheet" href="flight-sim-instruments.css">
+<link rel="stylesheet" href="flight-sim-cockpit.css">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
 <link rel="stylesheet" href="flight-sim-environment.css">
 <link rel="stylesheet" href="flight-sim-3d.css">
@@ -28,6 +29,7 @@
 <script src="flight-sim-airport-detail.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
 <script src="flight-sim-instruments.js" defer></script>
+<script src="flight-sim-cockpit.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
@@ -84,9 +86,35 @@
    </div>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
    <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
+   <div id="cockpitJetHud" class="cockpit-jet-hud" hidden aria-label="Non-tactical fictional fighter head-up flight indications">
+    <div class="hud-top"><span>IAS <strong id="cockpitHudSpeed">0</strong> KT</span><span>FT <strong id="cockpitHudAlt">0</strong></span></div>
+    <div class="hud-centre" aria-hidden="true">⌜ ─ ✚ ─ ⌝</div>
+    <div class="hud-bottom"><span>HDG <strong id="cockpitHudHeading">000</strong>°</span><span>PITCH <strong id="cockpitHudPitch">0</strong>°</span></div>
+   </div>
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
    <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
   </div>
+  <section id="cockpitStation" class="cockpit-station" data-airframe="c172" data-family="trainer" aria-label="Integrated cockpit instruments and hands-on flight controls">
+   <div class="cockpit-station-head">
+    <div><strong id="cockpitAircraftLabel">Cessna 172 · Classic</strong><p id="cockpitAircraftCaption">Traditional six-pack and yoke · training simulation</p></div>
+    <label for="cockpitAircraftSelect">Choose aircraft cockpit
+     <select id="cockpitAircraftSelect" aria-label="Switch Cessna, Robinson and five fighter cockpit styles">
+      <option value="c172" selected>Cessna 172 · Classic</option>
+      <option value="r44">Robinson R44 · Raven</option>
+      <option value="fa18">F/A-18 · Super Hornet</option>
+      <option value="f22">F-22 · Raptor</option>
+      <option value="f35">F-35 · Lightning II</option>
+      <option value="typhoon">Eurofighter · Typhoon</option>
+      <option value="su37">Su-37 · Concept</option>
+     </select>
+    </label>
+   </div>
+   <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
+   <div id="cockpitMain" class="cockpit-main">
+    <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Dynamic aircraft-style cockpit instruments"></div>
+   </div>
+   <p class="cockpit-note">Flight control: <strong id="cockpitGripLabel">Yoke</strong>. Instruments and yoke, stick, cyclic, throttle, collective and pedals are in the same cockpit area. Hold two fingers to steer and use a pedal.</p>
+  </section>
   <div class="instruments-layout" id="flightInstruments" aria-label="Compact simulated glass instruments and numeric flight indications">
    <div class="mini-pfd" aria-label="Synthetic attitude, simulated airspeed, height, heading and vertical rate">
     <div class="mini-pfd-top"><span>AGSA · SIM PFD</span><span id="pfdSpeedStatus">SIMULATED AIRSPEED</span></div>
@@ -508,8 +536,8 @@
    </div>
   </section>
   <section class="panel control-panel" aria-labelledby="controlTitle">
-   <span class="eyebrow">02 · FLY WITH TWO THUMBS</span>
-   <h2 id="controlTitle">Touchscreen flight controls</h2>
+   <span class="eyebrow">02 · ON-COCKPIT CONTROLS</span>
+   <h2 id="controlTitle">Flight controls on your instrument panel</h2>
    <p class="hint" id="controlHint">Drag inside the control area to move the yoke. Use another finger for the rudder or engine power.</p>
    <div class="physical-controls">
     <div class="control-assembly">
