@@ -42,7 +42,7 @@ function createEngine({windowLike,documentLike}={}){
   try{
    // All oscillators are created only within the user's click handler.
    ctx=new Audio();mode=nextMode==="helicopter"?"helicopter":"airplane";
-   const primary=ctx.createOscillator(),harmonic=ctx.createOscillator(),grain=ctx.createOscillator();
+   const primary=ctx.createOscillator(),harmonic=ctx.createOscillator(),lfo=ctx.createOscillator(),grain=ctx.createOscillator();
    primary.type="triangle";harmonic.type="sawtooth";grain.type="triangle";
    const pGain=ctx.createGain(),hGain=ctx.createGain();
    grainGain=ctx.createGain();
@@ -52,7 +52,7 @@ function createEngine({windowLike,documentLike}={}){
    gain=ctx.createGain();gain.gain.value=0;
    primary.connect(pGain);harmonic.connect(hGain);
     pGain.connect(filter);hGain.connect(filter);grain.connect(grainGain);grainGain.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
-   const lfo=ctx.createOscillator();lfo.type="sine";
+   lfo.type="sine";
    chopGain=ctx.createGain();chopGain.gain.value=0;
    lfo.connect(chopGain);chopGain.connect(gain.gain);
    osc=[primary,harmonic,lfo,grain];nodes=[pGain,hGain,grainGain,filter,gain,chopGain];
