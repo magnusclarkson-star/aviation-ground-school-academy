@@ -10,7 +10,7 @@ try{
  phone.on('pageerror',error=>errors.push(error.message));
  await phone.addInitScript(()=>{
   window.__audioTrial={contexts:[],spoken:[],cancelled:0};
-  class Param{constructor(){this.value=0;}setTargetAtTime(value){this.value=value;}}
+  class Param{constructor(){this.value=0;}setTargetAtTime(value){this.value=value;}setValueAtTime(value){this.value=value;}exponentialRampToValueAtTime(value){this.value=value;}}
   class Node{connect(node){return node;}disconnect(){}}
   class Osc extends Node{constructor(){super();this.frequency=new Param();this.started=false;this.stopped=false;}
    start(){this.started=true;}stop(){this.stopped=true;}}
@@ -35,6 +35,8 @@ try{
  });
  await phone.goto(file,{waitUntil:'load'});
  assert.equal(await phone.locator('#engineAudioToggle').getAttribute('aria-pressed'),'false');
+ assert.equal(await phone.locator('#atcAutoToggle').getAttribute('aria-pressed'),'false');
+ assert.equal(await phone.locator('#radioToneToggle').getAttribute('aria-pressed'),'false');
  assert.equal(await phone.evaluate(()=>window.__audioTrial.contexts.length),0,'no automatic audio context');
  assert.equal(await phone.evaluate(()=>window.__audioTrial.spoken.length),0,'no automatic voice playback');
  assert.equal(await phone.locator('#atcTranscript li').count(),5,'written before-departure transcript exists');
@@ -48,9 +50,16 @@ try{
  assert.equal(await phone.locator('#atcTranscript li').count(),13);
  assert.equal(await phone.evaluate(()=>window.__audioTrial.spoken.length),17);
  await phone.locator('#atcStop').click();
+ await phone.locator('#atcAutoToggle').click();
+ assert.equal(await phone.locator('#atcAutoToggle').getAttribute('aria-pressed'),'true');
+ assert.equal(await phone.evaluate(()=>window.__audioTrial.spoken.length),22,'explicit arming voices the before stage once');
+ await phone.locator('#atcAutoToggle').click();
+ assert.equal(await phone.locator('#atcAutoToggle').getAttribute('aria-pressed'),'false');
+ await phone.locator('#engineAudioTexture').selectOption('textured');
  await phone.locator('#engineAudioToggle').click();
  await phone.waitForFunction(()=>document.querySelector('#engineAudioToggle').getAttribute('aria-pressed')==='true');
  assert.equal(await phone.evaluate(()=>window.__audioTrial.contexts.length),1);
+ assert.equal(await phone.evaluate(()=>window.__audioTrial.contexts[0].oscillators.length),4,'detailed engine uses a bounded extra harmonic');
  const first=await phone.evaluate(()=>window.__audioTrial.contexts[0].oscillators[0].frequency.value);
  await phone.locator('#power').evaluate(e=>{e.value='95';e.dispatchEvent(new Event('input',{bubbles:true}));});
  await phone.waitForTimeout(350);
@@ -69,6 +78,15 @@ try{
  assert.ok(chop>=12&&chop<=20,'rotor-like pulse selected for conceptual helicopter');
  await phone.locator('#engineAudioToggle').click();
  assert.equal(await phone.locator('#engineAudioToggle').getAttribute('aria-pressed'),'false');
+ await phone.locator('#radioToneToggle').click();
+ assert.equal(await phone.locator('#radioToneToggle').getAttribute('aria-pressed'),'true');
+ const countBefore=await phone.evaluate(()=>window.__audioTrial.contexts.at(-1).oscillators.length);
+ await phone.locator('#atcDuring').click();
+ const countAfter=await phone.evaluate(()=>window.__audioTrial.contexts.at(-1).oscillators.length);
+ assert.equal(countAfter,countBefore+1,'radio cue chirp starts only on chosen fictional dialogue');
+ await phone.locator('#atcStop').click();
+ await phone.locator('#radioToneToggle').click();
+ assert.equal(await phone.locator('#radioToneToggle').getAttribute('aria-pressed'),'false');
  assert.equal(await phone.locator('#flightInstruments').isVisible(),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[]);
