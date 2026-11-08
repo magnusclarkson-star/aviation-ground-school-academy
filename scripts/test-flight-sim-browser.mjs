@@ -107,8 +107,18 @@ try{
  await phone.locator("#hapticsToggle").tap();
  assert.equal(await phone.locator("#hapticsToggle").getAttribute("aria-pressed"),"true");
  await phone.locator("#rightRudder").scrollIntoViewIfNeeded();
+ // A sticky outside-view panel can cover an otherwise in-viewport control.
+ // Position the whole two-thumb row below it before dispatching real touches.
+ await phone.evaluate(()=>{
+  const view=document.querySelector(".scene-panel").getBoundingClientRect();
+  const pad=document.querySelector("#controlPad").getBoundingClientRect();
+  const overlap=view.bottom+8-pad.top;
+  if(overlap>0)window.scrollBy(0,-overlap);
+ });
  const finger1={...(await point(phone,"#controlPad",.77,.24)),id:21};
  const finger2={...(await point(phone,"#rightRudder")),id:22};
+ const hit=await phone.evaluate(({x,y})=>!!document.elementFromPoint(x,y)?.closest("#controlPad"),finger1);
+ assert.equal(hit,true,"control pad must actually receive touch at its marked point, not be hidden under sticky scenery");
  const cdp=await phone.context().newCDPSession(phone);
  try{
   await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[finger1]});
