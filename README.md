@@ -126,3 +126,7 @@ The [Immersive Simulator](flight-sim.html) now animates its own **3D propeller, 
 ### Optional experimental aerodynamics and energy lab
 
 The [Immersive Simulator](flight-sim.html) now has an optional **Experimental · lift, drag and energy** teaching model for the fictional fixed-wing trainer. It preserves **Classic** as the default, and does not change the conceptual helicopter. Experimental mode offers invented aerodynamic coefficients, angle-of-attack, simulated lift/drag and bank loading, fictional engine lag, flight-path/energy indications and stall cues. It is **not** validated aircraft flight physics or an accredited flight simulator. [Read experimental aerodynamics and acceptance notes](docs/EXPERIMENTAL-AERODYNAMICS.md).
+
+### Fictional weight-and-balance and centre-of-gravity lab
+
+The [Immersive Flight Simulator](flight-sim.html) now includes a browser-only interactive **fictional weight & balance lab** when **Experimental · lift, drag and energy** is selected. Adjust imaginary front/rear occupants, baggage and fuel to see calculated total mass, moment, CG percentage and wing loading. In the experimental model only, mass affects forces/acceleration and CG modestly changes fictional pitch responsiveness. Changing a slider resets the active exercise after release; **Classic** and helicopter modes remain unchanged. The coloured CG reference band is **invented, not a safe/approved loading envelope**. See the [loading acceptance notes](docs/FICTIONAL-WEIGHT-BALANCE-LAB.md).
