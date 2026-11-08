@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flight Practice Debrief | Aviation Ground School Academy</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color-scheme:light;background:#f3f6fc;color:#142842}
+*{box-sizing:border-box}body{margin:0;line-height:1.55}header{background:#102c50;color:white;padding:1.1rem max(1rem,calc((100vw - 940px)/2))}header a{color:#d5e7ff}
+main{max-width:940px;margin:auto;padding:1rem}.intro{background:#e4eefb;padding:1rem;border-left:5px solid #295c96}
+h1{margin:.2rem 0}h2{margin-top:0;font-size:1.2rem}.card{background:white;border:1px solid #cbd6e5;border-radius:12px;padding:1.1rem;margin:1rem 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}@media(max-width:650px){.grid{grid-template-columns:1fr}}
+label{display:block;font-weight:650;margin:.7rem 0 .25rem}select,textarea,button{font:inherit}select,textarea{width:100%;border:1px solid #758ba3;border-radius:7px;padding:.6rem;background:white;color:#142842}textarea{min-height:6rem}
+fieldset{border:1px solid #b6c7d8;border-radius:8px;margin:1rem 0}legend{font-weight:700}fieldset label{font-weight:450;display:flex;gap:.5rem;align-items:flex-start;cursor:pointer}input[type=checkbox]{margin-top:.35rem;min-width:1rem;min-height:1rem}
+button,.linkbutton{display:inline-block;padding:.7rem 1rem;background:#164c84;color:white;border:0;border-radius:8px;margin:.3rem .3rem .3rem 0;cursor:pointer}
+button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #c16b16;outline-offset:3px}
+button.secondary{background:#44586d}.warning{color:#803a15;font-weight:650}.muted{color:#42556b;font-size:.92rem}
+#summary{white-space:pre-wrap;border:1px solid #b7c6d6;border-radius:8px;padding:1rem;background:#f8fbff}footer{max-width:940px;margin:2rem auto;padding:1rem;color:#42556b}
+</style></head><body>
+<header><a href="index.html">Academy home</a> · <a href="flight-sim.html">Immersive simulator</a><h1>Flight Practice Debrief</h1><p>Reflect on a fictional simulator session · ungraded · device-only</p></header>
+<main><p class="intro"><strong>Learning exercise, not a flight assessment.</strong> This page does not track live simulator data, verify an instructor, award pilot training credit or certify safe performance. Use the simulator separately, then record what you observed. Do not enter names, contact details or private learner information. Qualified aviation review of these prompts is pending (<code>SME_REVIEW_REQUIRED</code>).</p>
+<div class="card"><h2>1. Choose your learning scenario</h2><div class="grid"><div><label for="pathway">Learning pathway</label><select id="pathway"><option value="scouts">Scouts / Air Scouts (introductory)</option><option value="pilots">Aviation enthusiasts / aspiring pilots</option></select></div><div><label for="scenario">Simulator exercise</label><select id="scenario"><option value="takeoff">Fixed-wing runway departure</option><option value="turn">Straight and level / gentle turn</option><option value="approach">Fixed-wing approach and landing</option><option value="rotorcraft">Conceptual helicopter hover and helipad landing</option><option value="loading">Experimental weight and balance / lift-drag comparison</option></select></div></div><div id="briefing" role="status" aria-live="polite"></div></div>
+<div class="card"><h2>2. Observe and reflect</h2>
+<fieldset><legend>Which indications did you inspect? (Select what you actually checked)</legend>
+<label><input type="checkbox" name="instrument" value="attitude"> Attitude / horizon</label>
+<label><input type="checkbox" name="instrument" value="airspeed"> Synthetic airspeed and ground speed</label>
+<label><input type="checkbox" name="instrument" value="altitude"> Synthetic height / vertical trend</label>
+<label><input type="checkbox" name="instrument" value="heading"> Heading / ground track</label>
+<label><input type="checkbox" name="instrument" value="controls"> Control positions, flaps or power</label>
+<label><input type="checkbox" name="instrument" value="forces"> Fictional lift / drag / loadout indications</label>
+</fieldset>
+<label for="observation">What did you observe when you changed a control or load?</label><textarea id="observation" maxlength="1600" placeholder="Describe a specific simulated input and the instrument or scenery change you noticed."></textarea>
+<label for="comparison">What changed between your reference and comparison, or between the beginning and end of practice?</label><textarea id="comparison" maxlength="1600" placeholder="Compare two observations without guessing real aircraft performance."></textarea>
+<label for="uncertainty">What remains uncertain, or what would you ask a qualified instructor?</label><textarea id="uncertainty" maxlength="1600" placeholder="Identify where the fictional model may be misleading."></textarea>
+</div>
+<div class="card"><h2>3. Self-check and next practice</h2>
+<label for="selfcheck">How confident are you explaining this fictional exercise?</label><select id="selfcheck"><option value="not-yet">Not yet — I need another demonstration</option><option value="developing">Developing — I can describe some changes</option><option value="explain">I can explain the observations with model limitations</option></select>
+<label for="nextstep">My next practice goal</label><textarea id="nextstep" maxlength="700" placeholder="One safe, conceptual learning objective for next time."></textarea>
+<p class="muted">There is no score or pass/fail result. A self-check is not an instructor endorsement.</p>
+<button id="preview" type="button">Prepare debrief</button><button id="export" type="button">Export unsigned JSON</button><button id="reset" class="secondary" type="button">Clear everything</button>
+<h2>Debrief preview</h2><div id="summary" aria-live="polite">Choose a scenario, record your observations and select Prepare debrief.</div>
+<p id="notice" role="status"></p></div>
+</main><footer>Academy prototype · no account, storage, external requests or telemetry from this page · Reviewer status: <code>SME_REVIEW_REQUIRED</code></footer>
+<script>
+'use strict';
+const scenarios={
+ takeoff:{title:'Runway departure',scouts:'Notice how moving the yoke and changing power affects the imaginary runway view and indications.',pilots:'Compare control input, rotation cue, synthetic speed and climb trend. Do not treat values as aircraft operating speeds.',prompt:'Which changes indicated a transition from ground roll to the fictional climb?'},
+ turn:{title:'Gentle turn',scouts:'Look for the difference between a banked horizon and a turn along the scenery.',pilots:'Compare synthetic bank, heading and ground track with the selected invented wind.',prompt:'Did bank and heading/track change together? What might explain a difference?'},
+ approach:{title:'Approach and landing',scouts:'Watch how runway alignment and the indicated descent change when you move controls.',pilots:'Compare synthetic alignment, energy trend, power, flaps and touchdown cue. This is not real landing guidance.',prompt:'What changed as the runway grew nearer in the fictional approach?'},
+ rotorcraft:{title:'Conceptual helicopter practice',scouts:'Compare cyclic, collective and pedals with the illustrated helipad movement.',pilots:'Compare the fictional collective/pedal indications and scenery; these are not validated helicopter or R44 procedures.',prompt:'Which input affected the conceptual helicopter movement most?'},
+ loading:{title:'Fictional loading / aerodynamic comparison',scouts:'Compare an imaginary loading change with its synthetic balance indicator.',pilots:'Record the exact invented reference and comparison, including CG, wing loading or coefficient changes.',prompt:'What changed numerically, and why should those values never be used for real loading?'}
+};
+const byId=id=>document.getElementById(id);
+function updateBriefing(){const s=scenarios[byId('scenario').value],p=byId('pathway').value;byId('briefing').replaceChildren();const h=document.createElement('h3'),a=document.createElement('p'),b=document.createElement('p');h.textContent=s.title;a.textContent=s[p];b.textContent='Reflection question: '+s.prompt;byId('briefing').append(h,a,b);byId('summary').textContent='Scenario changed. Prepare a new debrief after your practice.';}
+function collect(){const s=byId('scenario').value;return {schema:'academy.debrief.v1',reviewStatus:'SME_REVIEW_REQUIRED',trainingCredit:false,instructorVerified:false,simulatorTelemetry:false,createdAt:new Date().toISOString(),pathway:byId('pathway').value,scenario:s,scenarioTitle:scenarios[s].title,indications:[...document.querySelectorAll('input[name="instrument"]:checked')].map(x=>x.value),observation:byId('observation').value.trim(),comparison:byId('comparison').value.trim(),uncertainty:byId('uncertainty').value.trim(),selfcheck:byId('selfcheck').value,nextstep:byId('nextstep').value.trim()};}
+function render(data){const lines=['UNSIGNED EDUCATIONAL DEBRIEF — NOT A GRADE OR TRAINING CREDIT','Review: SME_REVIEW_REQUIRED','Pathway: '+(data.pathway==='scouts'?'Scouts / Air Scouts':'Aviation enthusiasts / aspiring pilots'),'Scenario: '+data.scenarioTitle,'Indications inspected: '+(data.indications.join(', ')||'None selected'),'Observation: '+(data.observation||'Not recorded'),'Comparison: '+(data.comparison||'Not recorded'),'Questions / limitations: '+(data.uncertainty||'Not recorded'),'Self-check: '+data.selfcheck,'Next practice goal: '+(data.nextstep||'Not recorded')];byId('summary').textContent=lines.join('\n\n');}
+byId('scenario').addEventListener('change',updateBriefing);byId('pathway').addEventListener('change',updateBriefing);
+byId('preview').addEventListener('click',()=>{const d=collect();render(d);byId('notice').textContent='Prepared on this device only. No instructor review has occurred.';});
+byId('export').addEventListener('click',()=>{const d=collect();render(d);const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='academy-unsigned-flight-debrief.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);byId('notice').textContent='Unsigned JSON generated locally. It contains your written answers; review before sharing.';});
+byId('reset').addEventListener('click',()=>{for(const id of ['observation','comparison','uncertainty','nextstep'])byId(id).value='';document.querySelectorAll('input[name="instrument"]').forEach(x=>x.checked=false);byId('selfcheck').selectedIndex=0;byId('scenario').selectedIndex=0;byId('pathway').selectedIndex=0;updateBriefing();byId('notice').textContent='Debrief fields cleared.';});
+updateBriefing();
+</script></body></html>
