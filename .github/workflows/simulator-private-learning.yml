@@ -61,5 +61,7 @@ jobs:
         run: node scripts/test-flight-lighting-browser.mjs
       - name: Test optional audio and fictional ATC on phone
         run: node scripts/test-flight-audio-browser.mjs
+      - name: Test branching international ATC missions on a phone
+        run: node scripts/test-flight-atc-missions-browser.mjs
       - name: Test phone audio and vibration activation and diagnostics
         run: node scripts/test-flight-phone-feedback-browser.mjs
