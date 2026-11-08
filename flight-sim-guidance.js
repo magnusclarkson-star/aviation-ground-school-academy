@@ -1,0 +1,104 @@
+/* Contextual fictional simulator practice cues and session observations.
+ * Never gives real-world aircraft operating limits or graded pilot feedback.
+ */
+(function(root){"use strict";
+const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
+const round=x=>Math.round(Number.isFinite(x)?x:0);
+function start(state){
+ if(!state||!validPhase.has(state.phase))throw Error("Synthetic flight state required");
+ return {
+  scenario:state.scenario,mode:state.mode,lastPhase:state.phase,
+  startAt:state.time,elapsed:0,maxHeight:Math.max(0,state.altitudeM),
+  maxOffset:Math.abs(state.xM),minVertical:Math.min(0,state.verticalMs),
+  phaseVisits:[state.phase],landings:0,hardContacts:0,liftoffs:0
+ };
+}
+function observe(progress,state,events=[]){
+ if(!progress||progress.mode!==state.mode||progress.scenario!==state.scenario)
+  throw Error("Start a new practice session after switching aircraft or scenario");
+ if(!Array.isArray(events))throw Error("Simulation events must be a list");
+ progress.elapsed=Math.max(progress.elapsed,state.time-progress.startAt);
+ progress.maxHeight=Math.max(progress.maxHeight,Math.max(0,state.altitudeM));
+ progress.maxOffset=Math.max(progress.maxOffset,Math.abs(state.xM));
+ progress.minVertical=Math.min(progress.minVertical,state.verticalMs);
+ if(progress.lastPhase!==state.phase){
+  progress.lastPhase=state.phase;
+  if(!progress.phaseVisits.includes(state.phase))progress.phaseVisits.push(state.phase);
+ }
+ for(const event of events){
+  if(event==="liftoff")progress.liftoffs++;
+  if(event==="touchdown")progress.landings++;
+  if(event==="hardLanding")progress.hardContacts++;
+ }
+ return progress;
+}
+function guidance(state,input){
+ if(!state||!input)throw Error("Synthetic aircraft data required");
+ const phase=state.phase;
+ const heli=state.mode==="helicopter";
+ const base={tag:"LEARNING CUE",level:"normal",text:"Observe the fictional scenery and instruments together.",complete:false};
+ if(phase==="halted")return {...base,tag:"SIMULATION STOPPED",level:"caution",complete:true,
+  text:"The imaginary aircraft contacted terrain outside this exercise's gentle-landing conditions. Reset and compare the controls, runway alignment and height trend."};
+ if(phase==="complete"||phase==="landed")
+  return {...base,tag:"PRACTICE SEQUENCE COMPLETE",level:"positive",complete:true,
+   text:"The fictional exercise finished. Review your session observations or reset to practise again; this is not a recorded flying qualification."};
+ if(heli){
+  if(phase==="pad")return {...base,tag:"ROTORCRAFT · BEFORE LIFT",
+   text:"Observe the helipad and use the collective to explore simulated vertical lift. Cyclic and pedal inputs affect horizontal movement and turning."};
+  if(phase==="lift")return {...base,tag:"ROTORCRAFT · LIFT",
+   text:"Observe the height indication rising and compare small cyclic changes with scene motion. This does not model actual helicopter aerodynamics."};
+  if(phase==="hover")return {...base,tag:"ROTORCRAFT · STATIONARY PRACTICE",
+   text:"Compare horizontal displacement and vertical rate with small, fictional collective/cyclic inputs; aim to observe rather than imitate real helicopter procedures."};
+  return {...base,tag:"ROTORCRAFT · MOVEMENT",
+   text:"Notice the helipad moving in the visual scene. Explore the effect of collective on height and cyclic on direction in this simplified exercise."};
+ }
+ if(phase==="roll"){
+  if(state.speedKt<15)return {...base,tag:"RUNWAY · BUILDING MOTION",
+   text:"Observe how increasing fictional throttle changes the speed indication and runway movement."};
+  if(state.speedKt<43)return {...base,tag:"RUNWAY · ACCELERATING",
+   text:"Watch the runway centreline and rising simulated airspeed. This model does not represent any aircraft's real rotation speed."};
+  return {...base,tag:"RUNWAY · PITCH RESPONSE",
+   text:"Explore how a gentle nose-up command changes the artificial horizon and simulated lift. Numbers are invented for this demonstration."};
+ }
+ if(phase==="climb"){
+  if(state.speedKt<43)return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
+   text:"The simplified model indicates low airspeed while airborne. Observe the power, attitude and speed relationships; this is not an actual stall-warning system."};
+  return {...base,tag:"CLIMB · INSTRUMENT CROSS-CHECK",
+   text:"Compare the outside horizon with the mini attitude indicator, simulated vertical rate and increasing height. Small bank inputs affect heading."};
+ }
+ if(phase==="flight")
+  return {...base,tag:"FREE FLIGHT · BANK AND LEVEL",
+   text:"Try gentle bank changes and observe heading, pitch and the moving countryside. Use the separate final-approach setup to practise a landing scene."};
+ if(phase==="approach"){
+  if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
+   text:"The imaginary aircraft is offset from the drawn runway. Compare the outside view with the lateral-offset marker and heading."};
+  if(state.verticalMs<-3.4)return {...base,tag:"SHORT FINAL · RAPID DESCENT",level:"caution",
+   text:"The model shows a relatively high descent rate. Observe the height and vertical-rate trends; reset the fictional approach rather than forcing a touchdown."};
+  if(state.speedKt<43)return {...base,tag:"SHORT FINAL · LOW ENERGY",level:"caution",
+   text:"The model's simulated airspeed is low. Use the practice reset if you want to compare a different approach state. These are not aircraft-specific limits."};
+  return {...base,tag:"SHORT FINAL · THREE-POINT SCAN",
+   text:"Scan runway alignment, artificial horizon and vertical-rate indication. Observe their relationship as the imaginary threshold approaches."};
+ }
+ if(phase==="rollout")return {...base,tag:"AFTER TOUCHDOWN · ROLLOUT",
+  text:"Observe the fictional speed decreasing as power is reduced and the wheel-brake control is held. This is not an aircraft operating procedure."};
+ return base;
+}
+function summary(progress,state){
+ if(!progress||!state)throw Error("Practice session required");
+ const complete=["complete","landed"].includes(state.phase);
+ const stopped=state.phase==="halted";
+ return {
+  outcome:complete?"Fictional exercise completed":stopped?"Fictional exercise stopped":"Practice in progress",
+  seconds:round(progress.elapsed),
+  maxHeightM:round(progress.maxHeight),
+  maxLateralOffsetM:round(progress.maxOffset),
+  peakDescentMs:Number(progress.minVertical.toFixed(1)),
+  liftoffs:progress.liftoffs,touchdowns:progress.landings,
+  stopEvents:progress.hardContacts,
+  warning:"Session-only, fictional observations; not assessed or independently verified. No training credit."
+ };
+}
+const api={start,observe,guidance,summary};
+if(typeof module!=="undefined"&&module.exports)module.exports=api;
+if(root)root.AGSAFlightGuidance=api;
+})(typeof window!=="undefined"?window:null);
