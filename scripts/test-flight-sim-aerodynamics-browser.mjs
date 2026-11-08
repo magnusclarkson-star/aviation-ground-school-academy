@@ -51,6 +51,9 @@ try{
   "experimental model should still use synthetic wind ground drift");
  assert.match(await page.locator("#coachPhase").textContent(),/EXPERIMENTAL|SHORT FINAL/);
  await page.locator("#pauseFlight").click();
+ // Allow the final in-flight render to catch up with the click handler
+ // before capturing a frozen display value.
+ await page.waitForTimeout(130);
  const energy=await page.locator("#aeroEnergy").textContent();
  await page.waitForTimeout(350);
  assert.equal(await page.locator("#aeroEnergy").textContent(),energy,
