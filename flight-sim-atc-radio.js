@@ -100,7 +100,7 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
     const entry=entries[i],utter=new Utter(entry.text);
     utter.lang="en-GB";utter.rate=entry.speaker==="Tower"?.86:.94;
     utter.pitch=entry.speaker==="Tower"?.78:1.17;
-    utter.volume=.95;
+    utter.volume=1;
     if(voices.length){utter.voice=voices[entry.speaker==="Tower"&&voices.length>1?1:0];}
     if(i===entries.length-1){
      utter.onend=()=>{if(sequence!==generation)return;playing=false;onFinish();

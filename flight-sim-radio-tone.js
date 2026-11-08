@@ -28,7 +28,7 @@ function createTone({windowLike,documentLike}={}){
    const now=context.currentTime,osc=context.createOscillator(),vol=context.createGain();
    osc.type="sine";osc.frequency.value=720;
    vol.gain.setValueAtTime(.0001,now);
-   vol.gain.exponentialRampToValueAtTime(.012,now+.012);
+   vol.gain.exponentialRampToValueAtTime(.035,now+.012);
    vol.gain.exponentialRampToValueAtTime(.0001,now+.09);
    osc.connect(vol);vol.connect(context.destination);
    osc.start(now);osc.stop(now+.1);

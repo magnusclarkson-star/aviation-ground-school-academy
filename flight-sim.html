@@ -58,6 +58,14 @@
   <div class="type-tag">PERSONAL PRACTICE<br><strong>NOT CERTIFIED</strong></div>
  </section>
  <section class="notice" role="note"><strong>Educational simulation only.</strong> The aircraft models, takeoff/landing speeds, helipad behaviour, terrain, cues and weather are fictional simplifications—not a qualified flight simulator or usable flight instruction. No real navigation, ATC clearance, flight-hour credit, or aircraft operating procedures. Use a qualified instructor and approved aircraft manuals for real flight training.</section>
+ <section class="full-flight-launch" aria-labelledby="fullFlightLaunchHeading">
+  <div>
+   <strong id="fullFlightLaunchHeading">FULL FLIGHT EXPERIENCE · READY</strong>
+   <p>Maximum in-app engine volume, detailed aircraft tone, noticeable vibration, tower conversations and radio cue are prepared. Android requires one tap to activate audio. Turn your phone's media volume down first if needed.</p>
+   <p id="fullFlightLaunchStatus" role="status" aria-live="polite">Sound and vibration are not playing yet. Tap the button to enable all effects together.</p>
+  </div>
+  <button id="fullFlightLaunch" type="button">START FLIGHT WITH ALL EFFECTS</button>
+ </section>
  <section class="scene-panel" aria-label="Animated simulated airfield view and flight instruments">
   <div class="scene-shell">
    <canvas id="outsideView" width="960" height="540" aria-label="Illustrated 2D outside view of a synthetic runway or helipad; always available as a fallback">A synthetic airfield scene. Flight status is provided as text below.</canvas>
@@ -144,20 +152,20 @@
   <div class="phone-feedback-heading">
    <div>
     <strong id="phoneFeedbackTitle">Sound &amp; vibration while flying</strong>
-    <p>Quick phone controls. Off until you tap Start. A browser can accept vibration without the motor actually moving.</p>
+    <p>All effects are set to their fullest in-app option. Use the large Start button above or below to activate sound, vibration and fictional tower radio together. A browser can still block vibration.</p>
    </div>
    <label for="hapticsStrength">Vibration strength
     <select id="hapticsStrength"><option value="noticeable" selected>Noticeable short cues</option><option value="gentle">Gentle short cues</option></select>
    </label>
   </div>
   <div class="phone-feedback-buttons">
-   <button id="phoneFeedbackStart" type="button">Start engine sound + vibration</button>
-   <button id="phoneFeedbackStop" type="button">Stop both</button>
+   <button id="phoneFeedbackStart" type="button">Start ALL flight effects</button>
+   <button id="phoneFeedbackStop" type="button">Stop ALL effects</button>
    <button id="phoneSoundTest" type="button">Test speaker</button>
    <button id="phoneAudioBackup" type="button">Try backup sound</button>
    <button id="phoneVibrationTest" type="button">Test vibration</button>
   </div>
-  <p id="phoneFeedbackStatus" role="status" aria-live="polite">Both off. Tap Start to enable sound and vibration. You can test each separately first.</p>
+  <p id="phoneFeedbackStatus" role="status" aria-live="polite">All effects prepared at maximum app settings. Tap Start ALL flight effects once to activate them in your browser.</p>
   <details id="phoneDiagnostics" class="phone-diagnostics">
    <summary>Browser &amp; device diagnostics — share the report if tests fail</summary>
    <p>Only browser feature availability and results from this page. No device identifiers, microphone audio, location or personal files are collected.</p>
@@ -206,14 +214,14 @@
      <button id="engineAudioToggle" type="button" aria-pressed="false">Enable engine sound</button>
      <label for="engineAudioTexture">Engine sound character</label>
      <select id="engineAudioTexture">
-      <option value="smooth" selected>Gentle tone · lighter processing</option>
-      <option value="textured">Detailed tone · stronger engine/rotor pulse</option>
+      <option value="smooth">Gentle tone · lighter processing</option>
+      <option value="textured" selected>Detailed tone · stronger engine/rotor pulse</option>
      </select>
      <label for="engineAudioVolume">Engine volume</label>
-     <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="58">
-     <output id="engineAudioVolumeValue" for="engineAudioVolume">58%</output>
+     <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="100">
+     <output id="engineAudioVolumeValue" for="engineAudioVolume">100%</output>
      <p id="engineAudioStatus" role="status" aria-live="polite">Engine sound is off. Tap Enable to start locally synthesized audio.</p>
-     <p class="hint">The imaginary piston engine changes pitch with simulated power; the conceptual helicopter uses a steady rotor-like pulse. Use a comfortable volume. Pause, change aircraft or leave the page to stop the sound.</p>
+     <p class="hint">The imaginary piston engine changes pitch with simulated power; the conceptual helicopter uses a steady rotor-like pulse. The in-app slider starts at 100%; lower your phone media volume or this slider if it is too loud. Pause, change aircraft or leave the page to stop the sound.</p>
     </div>
     <div class="audio-block">
      <h3>Academy Tower &amp; Student Pilot</h3>
@@ -233,7 +241,7 @@
      <p id="atcStatus" role="status" aria-live="polite">Radio is off until you select a dialogue.</p>
      <h4>Written radio transcript</h4>
      <ol id="atcTranscript" class="atc-transcript" aria-label="Fictional tower and pilot radio script"></ol>
-     <p class="hint">Phase-linked radio is opt-in and plays at most one before, during and after exchange per practice session. The browser may restrict speech when a flight phase changes; the written transcript still updates. The optional short radio cue tone does not change or filter device voices.</p>
+     <p class="hint">Start ALL flight effects also enables phase-linked radio and the cue tone, with no extra switches required. Phase-linked radio plays at most one before, during and after exchange per practice session. The browser may restrict speech when a flight phase changes; the written transcript still updates. The optional short radio cue tone does not change or filter device voices.</p>
      <p class="hint">Device voices may be unavailable or sound alike; the transcript always works. This is scripted text-to-speech, not live AI, a real ATC recording, actual radio phraseology training, a clearance, or a substitute for a qualified instructor.</p>
     </div>
    </div>
@@ -397,8 +405,8 @@
    <div class="optional-feedback">
     <div class="section-line"><strong>Flight-display layout</strong><button id="instrumentToggle" type="button" aria-pressed="true">Hide glass instruments</button></div>
     <p class="hint">You can collapse the graphical attitude indicator for a larger outside view on smaller phones. Numeric indications remain available.</p>
-    <div class="section-line"><strong>Optional phone vibration</strong><button id="hapticsToggle" type="button" aria-pressed="false">Enable vibration</button></div>
-    <p id="hapticsStatus" role="status" aria-live="polite">Off by default. Requires supported vibration hardware and browser permission after a user gesture.</p>
+    <div class="section-line"><strong>Phone vibration · prepared at noticeable strength</strong><button id="hapticsToggle" type="button" aria-pressed="false">Enable vibration</button></div>
+    <p id="hapticsStatus" role="status" aria-live="polite">Noticeable cues selected. Use Start ALL flight effects to activate browser vibration.</p>
     <label for="turbulence">Synthetic turbulence strength <output id="turbulenceValue">Light</output></label>
     <input id="turbulence" type="range" min="0" max="3" step="1" value="1">
     <p class="hint">Short but more noticeable cues can indicate runway rumble, turbulence, control movement, pitch changes, turns and touchdowns. They never reproduce actual aircraft forces.</p>

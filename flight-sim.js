@@ -52,7 +52,7 @@ function syncRadioToneUI(message){
   info.supported?"Radio cue tone off; voice and transcript work without it.":
   "Web Audio not supported on this device. Written transcripts remain available.");
 }
-let atcRadio=null,lastEngineAudioFrame=0;
+let atcRadio=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false;
 function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
   Math.max(0,Math.min(1,(systems?.powerPct??0)/100));
@@ -76,11 +76,72 @@ function syncHapticsUI(message){
   haptics.supported?"Vibration is off. No flight cues are requested.":"This browser does not expose the phone vibration API.");
 }
 function syncPhoneFeedbackUI(message){
- const engineOn=engineAudio.status().active,vibrationOn=haptics.isEnabled();
+ const engineOn=engineAudio.status().active,vibrationOn=haptics.isEnabled(),
+  towerOn=atcRadio?.isArmed()===true,toneOn=radioTone.status().enabled;
  $("phoneFeedbackStatus").textContent=message||(
-  "Engine: "+(engineOn?"enabled":"off")+" · Vibration: "+(vibrationOn?"enabled":"off")+
-  ". Use Test speaker and Test vibration to check your browser and device.");
- $("phoneFeedbackStop").disabled=!engineOn&&!vibrationOn;
+  "Engine: "+(engineOn?"on":"off")+" · Vibration: "+(vibrationOn?"on":"off")+
+  " · Tower radio: "+(towerOn?"on":"off")+" · Radio cue: "+(toneOn?"on":"off")+
+  ". Use the full-flight Start button to enable all supported effects.");
+ const allActive=engineOn||vibrationOn||towerOn||toneOn;
+ $("phoneFeedbackStop").disabled=!allActive&&!fullFlightWanted;
+ $("fullFlightLaunch").disabled=fullFlightBusy;
+ $("fullFlightLaunch").textContent=fullFlightBusy?"ACTIVATING FULL FLIGHT EFFECTS…":
+  (allActive?"RESTART FULL FLIGHT EFFECTS":"START FLIGHT WITH ALL EFFECTS");
+ $("fullFlightLaunchStatus").textContent=fullFlightBusy?"Activating selected sound and vibration…":
+  fullFlightWanted?(allActive?
+   "Full flight mode requested. Engine "+(engineOn?"on":"unavailable")+
+   ", vibration "+(vibrationOn?"armed":"unavailable")+
+   ", tower radio "+(towerOn?"on":"off")+". Adjust individual settings below.":
+   "Flight effects were stopped by the browser or flight controls. Tap Start to reactivate.") :
+  "All sound, vibration and radio settings are prepared. Tap Start once to activate them.";
+}
+async function startFullFlight(){
+ if(fullFlightBusy||document.hidden)return;
+ fullFlightBusy=true;fullFlightWanted=true;
+ if(paused){
+  paused=false;lastFrame=0;
+  $("pauseFlight").setAttribute("aria-pressed","false");
+  $("pauseFlight").textContent="Pause simulation";
+ }
+ haptics.setStrength($("hapticsStrength").value);
+ const vibSupported=haptics.setEnabled(true);
+ const vibTest=vibSupported?haptics.test():{accepted:false};
+ // Web Audio and speech must be initiated before any await: mobile browsers
+ // require an actual tap, and playing during page load is not dependable.
+ const engineStart=engineAudio.start(state.mode,audioPower());
+ engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
+ engineAudio.setTexture($("engineAudioTexture").value,audioPower());
+ const cueStarted=radioTone.enable(true);
+ const radioArmed=atcRadio?.arm(true)===true;
+ syncPhoneFeedbackUI();
+ let engineStarted=false;
+ try{engineStarted=await engineStart;}catch{engineStarted=false;}
+ fullFlightBusy=false;
+ syncEngineAudioUI(engineStarted?
+  "Fictional engine sound playing. In-app volume "+$("engineAudioVolume").value+"%. Phone Media volume still applies.":
+  "Engine audio blocked or unsupported; use Test speaker and Try backup sound.");
+ syncHapticsUI(vibSupported?
+  (vibTest.accepted?"Flight haptics armed; browser accepted the initial cue (not proof of physical vibration).":
+  "Haptics armed but the vibration request was rejected. Check Android/browser support."):
+  "This browser does not expose website vibration.");
+ syncRadioToneUI();
+ syncPhoneFeedbackUI("Full flight requested — engine "+(engineStarted?"ON":"unavailable")+
+  ", vibration "+(vibSupported?"ON (hardware dependent)":"unsupported")+
+  ", tower dialogue "+(radioArmed?"ON":"unavailable")+
+  ", radio cue "+(cueStarted?"ON":"unavailable")+
+  ". Lower your media volume if too loud.");
+ refreshPhoneDiagnostics();
+}
+function stopFullFlight(){
+ fullFlightWanted=false;
+ engineAudio.stop();phoneProbe.stop();audioFallback.stop();
+ haptics.setEnabled(false);
+ atcRadio?.disarm("Full flight effects stopped by learner.");
+ radioTone.stop();
+ syncEngineAudioUI("Engine stopped.");syncHapticsUI("Flight vibration off.");
+ syncRadioToneUI("Radio cue off.");
+ syncPhoneFeedbackUI("All flight effects off. Tap Start to restore the full experience.");
+ refreshPhoneDiagnostics();
 }
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -602,17 +663,26 @@ $("turbulence").addEventListener("input",e=>{
  $("turbulenceValue").textContent=intensityNames[Number(e.target.value)]??"Light";
 });
 for(const [id,typeValue] of [["typeYoke","yoke"],["typeStick","stick"],["typeCyclic","cyclic"]])
- $(id).addEventListener("click",()=>setMode(typeValue));
-$("startRunway").addEventListener("click",()=>reset("runway"));
-$("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")reset("approach")});
-$("restartFlight").addEventListener("click",()=>reset(state.scenario));
+ $(id).addEventListener("click",()=>{
+  const changed=(typeValue==="cyclic")!==(state.mode==="helicopter");
+  setMode(typeValue);
+  if(changed&&fullFlightWanted)void startFullFlight();
+ });
+function resetFromUserGesture(scenario){
+ reset(scenario);
+ if(fullFlightWanted)void startFullFlight();
+}
+$("startRunway").addEventListener("click",()=>resetFromUserGesture("runway"));
+$("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")resetFromUserGesture("approach")});
+$("restartFlight").addEventListener("click",()=>resetFromUserGesture(state.scenario));
 $("pauseFlight").addEventListener("click",()=>{
  paused=!paused;lastFrame=0;releaseControls();haptics.stop();
  if(paused){
   engineAudio.stop();syncEngineAudioUI("Simulation paused; engine sound stopped until re-enabled.");
   atcRadio?.disarm("Simulation paused: phase-linked radio and speech stopped.");
   radioTone.stop();syncRadioToneUI("Simulation paused: radio cue tone stopped.");
- }
+ }else if(fullFlightWanted){void startFullFlight();}
+ syncPhoneFeedbackUI();
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
 });
@@ -690,33 +760,9 @@ $("hapticsStrength").addEventListener("change",()=>{
  haptics.setStrength($("hapticsStrength").value);
  syncHapticsUI();
 });
-$("phoneFeedbackStart").addEventListener("click",async()=>{
- if(paused){
-  syncPhoneFeedbackUI("Simulation is paused. Resume the flight, then tap Start engine sound + vibration.");
-  return;
- }
- haptics.setStrength($("hapticsStrength").value);
- const enabled=haptics.setEnabled(true);
- const vibrationTest=enabled?haptics.test():{accepted:false,reason:"unsupported"};
- // Start the Web Audio context while the user's button gesture is active.
- $("phoneFeedbackStart").disabled=true;
- const audible=await engineAudio.start(state.mode,audioPower());
- engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
- engineAudio.setTexture($("engineAudioTexture").value,audioPower());
- $("phoneFeedbackStart").disabled=false;
- syncEngineAudioUI();
- syncHapticsUI();
- syncPhoneFeedbackUI(
-  "Engine: "+(audible?"requested":"blocked or unsupported")+
-  ". Vibration: "+(vibrationTest.accepted?"browser accepted request":"unavailable or rejected")+
-  ". If you hear or feel nothing, test each separately, increase MEDIA volume, and check Android vibration settings.");
-});
-$("phoneFeedbackStop").addEventListener("click",()=>{
- engineAudio.stop();phoneProbe.stop();audioFallback.stop();haptics.setEnabled(false);
- syncEngineAudioUI("Engine stopped.");syncHapticsUI("Flight vibration turned off.");
- syncPhoneFeedbackUI("Engine and vibration are both off.");
- refreshPhoneDiagnostics();
-});
+for(const id of ["fullFlightLaunch","phoneFeedbackStart"])
+ $(id).addEventListener("click",()=>{void startFullFlight();});
+$("phoneFeedbackStop").addEventListener("click",stopFullFlight);
 $("phoneSoundTest").addEventListener("click",async()=>{
  $("phoneSoundTest").disabled=true;
  const report=await phoneProbe.testSpeaker();

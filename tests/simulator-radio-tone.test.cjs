@@ -42,7 +42,7 @@ test('radio cue is silent by default and one opt-in enables tiny bounded chirps'
  assert.equal(mock.oscillators[0].frequency.value,720);
  assert.equal(mock.oscillators[0].stopped,true);
  assert.ok(mock.oscillators[0].stopAt<=.11);
- assert.ok(mock.envelopes[0].events.some(([v])=>v===.012));
+ assert.ok(mock.envelopes[0].events.some(([v])=>v===.035));
  tone.stop();assert.equal(tone.status().enabled,false);
  assert.equal(tone.pulse(),false);assert.equal(mock.counts().closed,1);
 });
