@@ -2,7 +2,7 @@ import http from "node:http";
 import {createPool,PgStore} from "./postgres.mjs";
 import {createHandler} from "./http.mjs";
 import {parseEncryptionKey} from "./mfa.mjs";
-import {RealtimeCallRegistry} from "./realtime-voice.mjs";
+import {DurableRealtimeCallRegistry} from "./realtime-durable.mjs";
 
 const env=process.env;
 const port=Number(env.PORT||3100);
@@ -17,7 +17,10 @@ const mfaKey=parseEncryptionKey(env.AGSA_MFA_ENCRYPTION_KEY);
 const pool=createPool(env);
 const store=new PgStore(pool);
 await store.ping();
-const realtimeRegistry=new RealtimeCallRegistry({env});
+const realtimeRegistry=new DurableRealtimeCallRegistry({
+ pool,env,onWorkerError:e=>console.error("[training-api] voice cleanup retry pending",e?.code||e?.name||"unknown")
+});
+await realtimeRegistry.start();
 const server=http.createServer(createHandler(store,{
  nodeEnv:env.NODE_ENV,
  allowInsecureLocal:insecureLocal,
