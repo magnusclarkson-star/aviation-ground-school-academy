@@ -8,12 +8,13 @@
 <link rel="stylesheet" href="ai-instructor.css">
 <script src="ai-instructor-lessons.js" defer></script>
 <script src="ai-instructor-progress.js" defer></script>
+<script src="ai-instructor-curriculum.js" defer></script>
 <script src="ai-instructor.js" defer></script>
 </head>
 <body>
 <header class="site-head">
  <a href="index.html" class="brand"><span class="logo">✈</span><span>AVIATION GROUND SCHOOL ACADEMY<small>AI INSTRUCTOR STUDIO</small></span></a>
- <nav aria-label="Academy navigation"><a href="cockpit-v3.html">Cockpit V3</a><a href="study-lab.html">Study Lab</a><a href="standards-readiness.html">Training standards</a></nav>
+ <nav aria-label="Academy navigation"><a href="cockpit-v3.html">Cockpit V3</a><a href="study-lab.html">Study Lab</a><a href="curriculum-review.html">Curriculum review drafts</a><a href="standards-readiness.html">Training standards</a></nav>
 </header>
 <main>
 <section class="hero">
@@ -48,6 +49,18 @@
    <h2 id="lessonTitle">The four forces of flight</h2>
    <p id="lessonIntro"></p>
    <p id="lessonBody"></p>
+   <section class="lesson-outline" aria-label="Learning objectives and further reading">
+    <div class="eyebrow">LEARNING OBJECTIVES · CURRICULUM DRAFT</div>
+    <p id="lessonRevision" class="tiny">Editorial draft awaiting qualified subject-matter review.</p>
+    <h3>By the end of this lesson, you should be able to</h3>
+    <ul id="lessonObjectives"></ul>
+    <h3>Practice activity</h3>
+    <p id="lessonActivity"></p>
+    <p id="lessonScope" class="scope-note"></p>
+    <h3>Further reading from official publishers</h3>
+    <ul id="lessonReferences" class="reference-list"></ul>
+    <p class="tiny">These are publisher reference pointers, not endorsements, approvals or a verified FAA/EASA syllabus mapping. Check current editions and local rules with a qualified instructor.</p>
+   </section>
    <div class="buttons">
     <button id="readLesson" class="primary" type="button"><span aria-hidden="true">▶</span> Play spoken lesson</button>
     <button id="stopVoice" type="button">Stop voice</button>
@@ -58,6 +71,7 @@
    <div class="eyebrow">YOUR PRIVATE STUDY PLAN · THIS DEVICE ONLY</div>
    <h3>Practice and revise</h3>
    <p id="practiceSummary" role="status" aria-live="polite">No recorded practice yet.</p>
+   <p class="tiny">A checkpoint is recorded only once per lesson selection. Re-select a lesson to attempt it again.</p>
    <p id="practiceRecommendation">Complete a lesson checkpoint to see what to revise next.</p>
    <div class="buttons"><button type="button" id="practiceNext" class="primary">Study recommended lesson</button><button type="button" id="practiceReset">Clear practice history</button></div>
    <p class="tiny" id="practiceStorageNote">Scores remain in this browser only. They are not shared with an instructor or Academy server, and do not count towards certification.</p>

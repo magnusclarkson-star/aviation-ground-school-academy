@@ -46,7 +46,21 @@ const lessons=[
   question:"What is the appropriate use of this AI Instructor for radio training?",
   options:["Practising concepts and sample phraseology","Obtaining real air traffic clearance","Replacing current charts and procedures"],correct:0,
   explanation:"Use the tool only for educational exercises. Real clearances and operational procedures come from authorised services and training sources.",
-  terms:["radio","communication","atc","alphabet","clearance","phonetic","phraseology"]}
+  terms:["radio","communication","atc","alphabet","clearance","phonetic","phraseology"]},
+ {id:"anatomy",group:"Aircraft foundations",name:"Recognise aircraft parts and systems",time:"6 min",
+  intro:"Learn the names and broad functions of an aeroplane's major components without assuming every aircraft is built alike.",
+  body:"The fuselage carries people, payload and equipment; the wings produce most lift on a conventional aeroplane; the empennage generally contains horizontal and vertical stabilising surfaces. Ailerons typically affect roll, elevators pitch and the rudder yaw. An aeroplane may use a fixed or retractable undercarriage and a range of engine, electrical and fuel systems. Aircraft types differ substantially, so accurate identification and system checks must come from the specific approved flight manual and an instructor.",
+  question:"Which component usually houses passengers and most onboard equipment?",
+  options:["Fuselage","Aileron","Rudder"],correct:0,
+  explanation:"The fuselage is the central body of a conventional aeroplane. It typically contains occupants, cargo and many systems.",
+  terms:["aircraft parts","aircraft anatomy","fuselage","wing","tail","empennage","landing gear","aircraft systems"]},
+ {id:"preflight",group:"Safety",name:"Preflight preparation and responsible decisions",time:"7 min",
+  intro:"Before an actual flight, a pilot and instructor must plan, assess risks and use procedures approved for the aircraft and location.",
+  body:"Ground-school students learn why pilots review weather and NOTAM information, aircraft documents, loading and performance, personal readiness, airspace, fuel planning and known aircraft limitations. They also learn what an aircraft-specific exterior inspection is intended to reveal. This Academy cannot determine airworthiness or flight readiness and does not supply a usable checklist, weather briefing or clearance. Use the current approved aircraft flight manual, authorised information sources and qualified instructor supervision for real preflight preparation.",
+  question:"Which source provides the correct aircraft-specific inspection and limitations?",
+  options:["A generic practice app","An unrelated online checklist","The applicable approved aircraft flight manual and procedures"],correct:2,
+  explanation:"Aircraft-specific limitations and procedures come from the applicable approved documents, interpreted with proper training and local requirements.",
+  terms:["preflight","walk around","walk-around","flight manual","checklist","airworthiness","risk","inspection","fuel planning","personal readiness"]}
 ];
 function lessonById(id){return lessons.find(x=>x.id===id)||lessons[0]}
 function evaluateQuiz(id,index){

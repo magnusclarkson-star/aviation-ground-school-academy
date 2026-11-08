@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const L=require("../ai-instructor-lessons.js");
-assert.equal(L.lessons.length,6,"Public tutor has six editorially curated lessons");
-assert.deepEqual(L.lessons.map(x=>x.id),["forces","instruments","controls","flaps","weather","radio"]);
+assert.equal(L.lessons.length,8,"Public tutor has eight editorially curated lessons");
+assert.deepEqual(L.lessons.map(x=>x.id),["forces","instruments","controls","flaps","weather","radio","anatomy","preflight"]);
 for(const lesson of L.lessons){
  assert.ok(lesson.name.length>6);
  assert.ok(lesson.intro.length>40&&lesson.body.length>120);
@@ -22,10 +22,12 @@ assert.equal(L.localAnswer("How do rudder pedals work?","forces").lessonId,"cont
 assert.equal(L.localAnswer("Does a flap increase drag?","forces").lessonId,"flaps");
 assert.equal(L.localAnswer("What is a TAF?","forces").lessonId,"weather");
 assert.equal(L.localAnswer("How should I study radio phraseology?","forces").lessonId,"radio");
+assert.equal(L.localAnswer("Which part is the fuselage?","forces").lessonId,"anatomy");
+assert.equal(L.localAnswer("What is a preflight inspection?","forces").lessonId,"preflight");
 const unknown=L.localAnswer("Something I am curious about","forces");
 assert.equal(unknown.mode,"CURATED_GUIDANCE");
 assert.equal(unknown.lessonId,"forces");
 assert.match(unknown.text,/not a live AI answer/);
 assert.throws(()=>L.localAnswer(" "),"Enter a question");
 assert.throws(()=>L.evaluateQuiz("forces",99),/valid response/);
-console.log("Public instructor lesson tests passed: 6 lessons, answer matching, quiz scoring, three teaching personas and no false AI claims.");
+console.log("Public instructor lesson tests passed: 8 lessons, answer matching, quiz scoring, three teaching personas and no false AI claims.");

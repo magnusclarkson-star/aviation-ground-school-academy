@@ -3,8 +3,8 @@
  * The browser's speech engine is optional and never contacts the Academy API.
  */
 (()=>{"use strict";
-const L=window.AGSAAIInstructorLessons,P=window.AGSAInstructorProgress,$=id=>document.getElementById(id);
-if(!L){document.body.insertAdjacentText("afterbegin","Lessons unavailable.");return}
+const L=window.AGSAAIInstructorLessons,C=window.AGSACurriculum,P=window.AGSAInstructorProgress,$=id=>document.getElementById(id);
+if(!L||!C){document.body.insertAdjacentText("afterbegin","Curated lessons are unavailable. Try again later.");return}
 let lessonId="forces",style="mentor",answered=false,lastSpoken="",voices=[],recognition=null;
 const lessonIds=L?L.lessons.map(l=>l.id):[];
 let practiceHistory=P?P.load(window.localStorage,lessonIds):[];
@@ -71,8 +71,32 @@ function setStyle(next){
   button.setAttribute("aria-pressed",active?"true":"false");
  });
 }
+function renderCurriculum(id){
+ const record=C.get(id);
+ if(!record)throw Error("Lesson objectives are missing");
+ $("lessonRevision").textContent="Draft version "+record.version+" · Qualified subject-matter review required";
+ $("lessonActivity").textContent=record.activity;
+ $("lessonScope").textContent="Safety boundary: "+record.scope;
+ const objectives=$("lessonObjectives");
+ objectives.replaceChildren();
+ for(const goal of record.objectives)objectives.appendChild(text("li",goal));
+ const links=$("lessonReferences");
+ links.replaceChildren();
+ for(const source of record.references){
+  const item=document.createElement("li");
+  const link=document.createElement("a");
+  link.href=source.url;
+  link.target="_blank";
+  link.rel="noopener noreferrer";
+  link.textContent=source.publisher+" · "+source.title;
+  item.appendChild(link);
+  item.appendChild(text("span"," — Suggested topic: "+source.topic));
+  links.appendChild(item);
+ }
+}
 function selectLesson(id){
  const lesson=L.lessonById(id);
+ renderCurriculum(lesson.id);
  lessonId=lesson.id;
  $("lessonSelect").value=lesson.id;
  $("lessonTitle").textContent=lesson.name;
@@ -96,6 +120,7 @@ function selectLesson(id){
  window.history.replaceState(null,"",currentUrl.pathname+currentUrl.search);
 }
 function selectAnswer(index){
+ if(answered)return; // Prevent repeat presses from inflating browser-local quiz history.
  const evaluation=L.evaluateQuiz(lessonId,index);
  answered=true;
  if(P){practiceHistory=P.record(practiceHistory,lessonId,evaluation.correct,lessonIds);storePractice();}
@@ -104,6 +129,7 @@ function selectAnswer(index){
   button.classList.toggle("correct",idx===evaluation.correctIndex);
   button.classList.toggle("incorrect",idx===index&&!evaluation.correct);
   button.setAttribute("aria-pressed",idx===index?"true":"false");
+  button.disabled=true;
  });
  $("quizResult").textContent=(evaluation.correct?"Correct. ":"Not quite. ")+evaluation.explanation;
 }
@@ -140,6 +166,7 @@ function startMicrophone(){
  }
 }
 function initialise(){
+ C.validate(lessonIds);
  if(P){
   renderPractice();
   $("practiceNext").addEventListener("click",()=>selectLesson($("practiceNext").dataset.lesson));

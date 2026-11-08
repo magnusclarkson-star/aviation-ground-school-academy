@@ -27,4 +27,11 @@ button.primary{background:#65d3ed;border-color:#95eafb;color:#06283a}button:disa
 footer{color:#a1bfce;font-size:12px;line-height:1.6;border-top:1px solid #36556b;margin-top:24px;padding:17px 0}
 @media(max-width:840px){.layout{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.linked{grid-column:1/-1}}
 @media(max-width:540px){main{padding:13px 10px 35px}.hero{padding:18px}.hero-icon{display:none}.panel{padding:13px}.side-stack{grid-template-columns:1fr}.instructors{gap:6px}.instructor{padding:9px 4px}.instructor strong{font-size:11px}.instructor small{font-size:10px}.lesson-copy h2{font-size:21px}}
+.lesson-outline{background:#0b2d41;border:1px solid #476b83;padding:13px;border-radius:10px;margin:15px 0}
+.lesson-outline h3{font-size:14px;margin:12px 0 6px;color:#daf1fc}
+.lesson-outline li{font-size:13px;color:#c7e5f2;line-height:1.5;margin:5px 0}
+.lesson-outline ul{margin:6px 0 12px;padding-left:21px}
+.lesson-outline .scope-note{padding:8px 10px;background:#302b1f;border-left:3px solid #f3cf92;font-size:12px;line-height:1.5;color:#ffe7b5}
+.lesson-outline .reference-list li{overflow-wrap:anywhere}
+.lesson-outline .reference-list span{font-size:12px;color:#b6d1df}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

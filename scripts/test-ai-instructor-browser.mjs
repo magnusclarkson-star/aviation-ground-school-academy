@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 import path from "node:path";
 import {chromium} from "playwright";
 const root=process.cwd();
-const allowed=new Set(["ai-instructor.html","ai-instructor.js","ai-instructor-lessons.js","ai-instructor-progress.js","ai-instructor.css"]);
+const allowed=new Set(["ai-instructor.html","ai-instructor.js","ai-instructor-lessons.js","ai-instructor-progress.js","ai-instructor-curriculum.js","ai-instructor.css","curriculum-review.html","curriculum-review.js","curriculum-review-model.js"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -38,7 +38,10 @@ async function buildPage(mobile){
 }
 try{
  const p=await buildPage(false);
- assert.equal(await p.locator("#lessonSelect option").count(),6);
+ assert.equal(await p.locator("#lessonSelect option").count(),8);
+ assert.equal(await p.locator("#lessonObjectives li").count(),3);
+ assert.match(await p.locator("#lessonRevision").textContent(),/Qualified subject-matter review required/);
+ assert.equal(await p.locator("#lessonReferences a[href^='https://www.faa.gov/']").count(),1);
  assert.equal(await p.locator(".instructor").count(),3);
  assert.match(await p.locator("#voiceStatus").textContent(),/device\/browser voices detected/);
  await p.locator("#instructorScouts").click();
@@ -52,6 +55,7 @@ try{
  await p.locator("#quizAnswers button").nth(1).click();
  assert.match(await p.locator("#quizResult").textContent(),/Correct/);
  assert.match(await p.locator("#practiceSummary").textContent(),/1 checkpoints/);
+ assert.equal(await p.locator("#quizAnswers button").nth(1).isDisabled(),true,"repeat quiz presses must not inflate progress");
  assert.match(await p.locator("#practiceRecommendation").textContent(),/Suggested next lesson/);
  assert.equal(await p.locator("#quizAnswers button").nth(1).getAttribute("aria-pressed"),"true");
  await p.locator("#questionInput").fill("What does the PFD horizon show?");
@@ -82,7 +86,39 @@ try{
   "no horizontal overflow on 390px touchscreen");
  assert.deepEqual(failures,[]);
  await phone.close();
- console.log("Public AI Instructor passed: desktop, touch, lessons, quiz, narrated voice, style, safe curated question and no public provider keys.");
+ const review=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,acceptDownloads:true});
+ review.on("pageerror",e=>failures.push("curriculum: "+e.message));
+ await review.goto(base.replace("ai-instructor.html","curriculum-review.html?lesson=preflight"),{waitUntil:"load"});
+ assert.equal(await review.locator("#reviewLesson option").count(),8);
+ assert.equal(await review.locator("#reviewLesson").inputValue(),"preflight");
+ assert.match(await review.locator("#reviewTitle").textContent(),/Preflight/);
+ assert.equal(await review.locator("#reviewObjectives li").count(),3);
+ assert.equal(await review.locator("#reviewSources a").count(),2);
+ assert.equal(await review.locator(".review-fieldset").count(),6);
+ assert.match(await review.locator("#reviewRevision").textContent(),/SME REVIEW REQUIRED/);
+ assert.equal(await review.locator("html").getAttribute("lang"),"en");
+ assert.equal(await review.locator("#reviewSources img").count(),0);
+ await review.locator("#reviewComments").fill("Review the source-to-claim mapping for airworthiness guidance.");
+ await review.locator("#factualAccuracy").selectOption("needs-edits");
+ const downloadPromise=review.waitForEvent("download");
+ await review.locator("#reviewDownload").click();
+ const download=await downloadPromise;
+ assert.match(download.suggestedFilename(),/preflight-UNSIGNED\.json$/);
+ const payload=JSON.parse(await readFile(await download.path(),"utf8"));
+ assert.equal(payload.recordStatus,"UNVERIFIED_DRAFT_ONLY");
+ assert.equal(payload.createsCourseApproval,false);
+ assert.equal(payload.authenticatesReviewer,false);
+ assert.equal(payload.snapshot.lessonId,"preflight");
+ assert.equal(payload.snapshot.referencePointers.length,2);
+ assert.equal(payload.observations.judgements.factualAccuracy,"needs-edits");
+ await review.locator("#reviewClear").click();
+ assert.match(await review.locator("#reviewStatus").textContent(),/cleared locally/);
+ assert.equal(await review.locator("#reviewComments").inputValue(),"");
+ assert.ok(await review.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+  "curriculum worksheet should not overflow 390px phone screen");
+ assert.deepEqual(failures,[]);
+ await review.close();
+ console.log("Public AI Instructor passed: 8 lessons, objectives, official reading links, quiz protection, desktop/mobile voice, and unsigned curriculum review JSON.");
 }finally{
  await browser.close();
  await new Promise(resolve=>server.close(resolve));

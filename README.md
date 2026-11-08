@@ -87,3 +87,7 @@ Open `focused-flight-lab.html` for one-control-at-a-time lessons for fixed-wing,
 
 ## V2.3 Guided Practical Lab
 Open `guided-practical-lab.html` for separate fixed-wing, R44 conceptual and general military aviation lessons. Each lesson has a draggable visual control, read-only gauge, correlated illustrative aircraft response, narrated explanation, quiz and browser-local progress. No remote services or live account features. Aircraft response is conceptual, not a validated simulator.
+
+## Instructor Studio curriculum expansion — November 2026
+
+The [AI Instructor Studio](ai-instructor.html) includes eight **introductory, unreviewed** guided lessons: the four forces, instruments, flight controls, flaps, weather, radio, aircraft anatomy and preflight safety. Each has three learning objectives, a fictional practice activity, a versioned draft label, boundaries on operational use and an official FAA reference pointer. The [curriculum review worksheet](curriculum-review.html) can export local **unsigned draft** feedback for a qualified aviation reviewer to consider; it cannot approve lessons, authenticate instructors or confer training credit. See [Curriculum Review Governance](docs/CURRICULUM-REVIEW-GOVERNANCE.md).

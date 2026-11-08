@@ -8,6 +8,11 @@ on:
       - 'ai-instructor.js'
       - 'ai-instructor-lessons.js'
       - 'ai-instructor-progress.js'
+      - 'ai-instructor-curriculum.js'
+      - 'curriculum-review.html'
+      - 'curriculum-review.js'
+      - 'curriculum-review-model.js'
+      - 'scripts/test-curriculum.mjs'
       - 'scripts/test-ai-instructor-progress.mjs'
       - 'scripts/test-ai-instructor.mjs'
       - 'scripts/test-ai-instructor-browser.mjs'
@@ -19,6 +24,11 @@ on:
       - 'ai-instructor.js'
       - 'ai-instructor-lessons.js'
       - 'ai-instructor-progress.js'
+      - 'ai-instructor-curriculum.js'
+      - 'curriculum-review.html'
+      - 'curriculum-review.js'
+      - 'curriculum-review-model.js'
+      - 'scripts/test-curriculum.mjs'
       - 'scripts/test-ai-instructor-progress.mjs'
       - 'scripts/test-ai-instructor.mjs'
       - 'scripts/test-ai-instructor-browser.mjs'
@@ -35,6 +45,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --check ai-instructor-curriculum.js
+      - run: node --check curriculum-review-model.js
+      - run: node --check curriculum-review.js
+      - run: node scripts/test-curriculum.mjs
       - run: node --check ai-instructor-lessons.js
       - run: node --check ai-instructor.js
       - run: node --check ai-instructor-progress.js
