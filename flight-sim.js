@@ -203,7 +203,7 @@ function renderExercise(){
  }
 }
 function startExercise(message){
- instructorVoice?.stop("Exercise changed. Narration stopped; written material remains available.");
+ if(instructorVoice?.isSpeaking())instructorVoice.stop("Exercise changed. Narration stopped; written material remains available.");
  exerciseSession=X.begin($("exerciseSelect").value,$("profileSelect").value);
  const d=X.get(exerciseSession.id),answer=$("exerciseAnswer");
  answer.replaceChildren();
@@ -235,7 +235,7 @@ function applyExercise(stage){
   $("exerciseFeedback").dataset.result="neutral";
   return;
  }
- instructorVoice?.stop("Exercise configuration changed. Choose a spoken summary again when ready.");
+ if(instructorVoice?.isSpeaking())instructorVoice.stop("Exercise configuration changed. Choose a spoken summary again when ready.");
  const goal=X.values(exerciseSession.id,stage,state.profileId);
  exerciseApplying=true;
  try{
@@ -462,7 +462,7 @@ $("exerciseSelect").addEventListener("change",()=>startExercise());
 $("exerciseReference").addEventListener("click",()=>applyExercise("reference"));
 $("exerciseComparison").addEventListener("click",()=>applyExercise("comparison"));
 $("exerciseCheck").addEventListener("click",()=>{
- instructorVoice?.stop("Explanation updated. Select Hear feedback to listen to the new response.");
+ if(instructorVoice?.isSpeaking())instructorVoice.stop("Explanation updated. Select Hear feedback to listen to the new response.");
  const result=X.review(exerciseSession,$("exerciseAnswer").value);
  $("exerciseFeedback").dataset.result=result.status;
  $("exerciseFeedback").textContent=result.message;
