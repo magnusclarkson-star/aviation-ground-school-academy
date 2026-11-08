@@ -91,6 +91,8 @@ test('sound default is stronger yet amplitude remains low and safe',()=>{
  const idle=Engine.model('airplane',0),full=Engine.model('airplane',1);
  assert.ok(idle.engineLevel>=.1&&idle.engineLevel<.2);
  assert.ok(full.engineLevel>idle.engineLevel&&full.engineLevel<.3);
+ assert.ok(idle.primaryHz>=100&&idle.primaryHz<=250,"idle fundamental must be usable on a typical phone speaker");
+ assert.ok(idle.harmonicHz>=250,"sound needs audible upper harmonics on small speakers");
 });
 test('mobile UI is visible near the outside view and keeps original controls',()=>{
  const h=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
