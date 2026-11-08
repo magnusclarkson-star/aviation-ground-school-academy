@@ -249,3 +249,15 @@ main{padding-top:8px}
 @media(prefers-reduced-motion:reduce){
  #cockpitMain .control-panel .flight-grip{transition:none}
 }
+
+
+/* The legacy full-flight button had a 245px minimum width; it must fit the
+   narrow dashboard header rather than pushing the entire cockpit sideways. */
+#cockpitStation.cockpit-station .full-flight-launch{display:block;flex:0 0 155px;
+ min-width:0!important;max-width:155px!important;width:155px;padding:0!important;gap:0}
+#cockpitStation.cockpit-station #fullFlightLaunch{min-width:0!important;max-width:100%!important;
+ min-height:37px!important;width:100%;font-size:10px;box-shadow:0 2px 5px #0008}
+@media(max-width:740px){
+ #cockpitStation.cockpit-station .full-flight-launch{flex:0 0 85px;width:85px;max-width:85px!important}
+ #cockpitStation.cockpit-station #fullFlightLaunch{font-size:8px;min-height:33px!important;padding:4px 2px}
+}
