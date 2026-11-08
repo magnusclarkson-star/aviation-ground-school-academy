@@ -131,3 +131,25 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
 }
 @media(max-width:365px){.scene-top .screen-chip{display:none}.control-pad{height:168px}.flight-grip{height:145px}.axis-values span{font-size:9px;padding:6px 4px}.readouts strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Optional fictional engine and radio audio controls; never overlay flight controls. */
+.audio-lab{margin-block:16px}
+.audio-lab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.audio-block{min-width:0;border:1px solid #49697a;border-radius:12px;background:#0c2436;padding:14px}
+.audio-block h3,.audio-block h4{margin-top:0;color:#e5f4fc}
+.audio-block label{display:block;margin:10px 0 4px;color:#d8eef5}
+.audio-block input[type="range"]{width:min(100%,360px)}
+.audio-block output{font-variant-numeric:tabular-nums;padding-inline:8px}
+.audio-block button{min-height:42px}
+.audio-block [role="status"]{overflow-wrap:anywhere}
+.atc-buttons{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.atc-transcript{max-height:265px;overflow-y:auto;display:grid;gap:8px;padding:10px 10px 10px 30px;
+ background:#071b29;border:1px solid #486778;border-radius:8px}
+.atc-transcript li{line-height:1.5;color:#eaf4f8;padding:4px 8px;border-left:3px solid #518fb7}
+.atc-transcript li.atc-pilot{border-left-color:#cfb66a}
+.atc-transcript strong{color:#ffe5a1}
+@media(max-width:740px){
+ .audio-lab-grid{grid-template-columns:minmax(0,1fr)}
+ .audio-block{padding:10px}
+ .atc-buttons button{flex:1 1 125px;max-width:100%;min-height:44px}
+}
