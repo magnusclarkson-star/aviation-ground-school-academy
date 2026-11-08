@@ -9,6 +9,12 @@ on:
       - 'ai-instructor-lessons.js'
       - 'ai-instructor-progress.js'
       - 'ai-instructor-curriculum.js'
+      - 'ground-school-modules.html'
+      - 'ground-school-modules.css'
+      - 'ground-school-modules.js'
+      - 'ground-school-modules-ui.js'
+      - 'scripts/test-ground-school-modules.mjs'
+      - 'scripts/test-ground-school-modules-browser.mjs'
       - 'curriculum-review.html'
       - 'curriculum-review.js'
       - 'curriculum-review-model.js'
@@ -25,6 +31,12 @@ on:
       - 'ai-instructor-lessons.js'
       - 'ai-instructor-progress.js'
       - 'ai-instructor-curriculum.js'
+      - 'ground-school-modules.html'
+      - 'ground-school-modules.css'
+      - 'ground-school-modules.js'
+      - 'ground-school-modules-ui.js'
+      - 'scripts/test-ground-school-modules.mjs'
+      - 'scripts/test-ground-school-modules-browser.mjs'
       - 'curriculum-review.html'
       - 'curriculum-review.js'
       - 'curriculum-review-model.js'
@@ -54,6 +66,10 @@ jobs:
       - run: node --check ai-instructor-progress.js
       - run: node scripts/test-ai-instructor-progress.mjs
       - run: node scripts/test-ai-instructor.mjs
+      - run: node --check ground-school-modules.js
+      - run: node --check ground-school-modules-ui.js
+      - run: node scripts/test-ground-school-modules.mjs
       - run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
       - run: npx playwright install chromium
       - run: node scripts/test-ai-instructor-browser.mjs
+      - run: node scripts/test-ground-school-modules-browser.mjs

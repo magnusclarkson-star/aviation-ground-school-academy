@@ -24,7 +24,7 @@ for(const item of publicCuratedPaths){
  await copyFile(source,target);
  count++;
 }
-for(const required of ["index.html","cockpit-v3.html","standards-readiness.html"]){
+for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
 }
 console.log("Built public Academy bundle ("+count+" files). Backend, tests, docs, repository configuration, credentials and private portal assets are excluded.");
