@@ -85,7 +85,7 @@ byId('traceImport').addEventListener('change',async()=>{
  if(file.size>window.AGSATraceImport.MAX_FILE_BYTES){
   byId('traceImportStatus').textContent='File too large; choose a synthetic JSON trace at most 512 KB.';return;
  }
- if(!/\\.json$/i.test(file.name)||file.type&&!['application/json','text/plain',''].includes(file.type)){
+ if(!/\.json$/i.test(file.name)||file.type&&!['application/json','text/plain',''].includes(file.type)){
   byId('traceImportStatus').textContent='Please choose a JSON trace file, not another file type.';return;
  }
  try{
@@ -96,7 +96,7 @@ byId('traceImport').addEventListener('change',async()=>{
   const report=window.AGSAFlightAfterAction.summarise(checked.trace);
   if(!report.available){byId('traceImportStatus').textContent='This file contains too few usable observations.';return;}
   byId('traceImportFacts').textContent=report.text;
-  byId('traceImportPrompts').textContent=report.prompts.map((p,i)=>(i+1)+'. '+p).join('\\n\\n');
+  byId('traceImportPrompts').textContent=report.prompts.map((p,i)=>(i+1)+'. '+p).join('\n\n');
   byId('traceImportSummary').hidden=false;
   byId('traceImportStatus').textContent='Read '+report.observedSamples+' fictional samples from your chosen local file. Nothing was uploaded or added to your written report.';
  }catch{
