@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="flight-sim-aerodynamics.css">
 <link rel="stylesheet" href="flight-sim-loading.css">
 <link rel="stylesheet" href="flight-sim-exercises.css">
+<link rel="stylesheet" href="flight-sim-instructor-voice.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -28,6 +29,7 @@
 <script src="flight-sim-3d.js" defer></script>
 <script src="flight-sim-aircraft-systems.js" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
+<script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -215,6 +217,32 @@
       <button id="exerciseClear" type="button">Clear this exercise</button>
      </div>
      <p id="exerciseFeedback" class="exercise-feedback" role="status" aria-live="polite">Start with the Reference setup. A qualified instructor has not approved this exercise.</p>
+     <details id="exerciseSpokenInstructor" class="exercise-spoken">
+      <summary>Optional spoken instructor · your device voice</summary>
+      <p class="hint">Listen to the existing scripted lesson, the calculated comparison, or the conceptual feedback. This is <strong>not live generative AI</strong>, a human flight instructor, or accredited tuition. No microphone or audio upload is used, and nothing speaks automatically.</p>
+      <div class="exercise-voice-options">
+       <label for="exerciseVoiceAudience">Learning path
+        <select id="exerciseVoiceAudience">
+         <option value="scouts" selected>Air Scouts &amp; first-time learners</option>
+         <option value="pilots">Aviation enthusiasts &amp; aspiring pilots</option>
+        </select>
+       </label>
+       <label for="exerciseVoiceRate">Narration pace
+        <select id="exerciseVoiceRate">
+         <option value="0.80">Slower · 80%</option>
+         <option value="0.94" selected>Clear · 94%</option>
+         <option value="1.00">Normal · 100%</option>
+        </select>
+       </label>
+      </div>
+      <div class="exercise-actions exercise-voice-actions">
+       <button id="exerciseSpeakLesson" type="button">Hear lesson</button>
+       <button id="exerciseSpeakComparison" type="button">Hear comparison</button>
+       <button id="exerciseSpeakFeedback" type="button">Hear feedback</button>
+       <button id="exerciseStopSpeech" type="button">Stop voice</button>
+      </div>
+      <p id="exerciseSpeechStatus" class="exercise-speech-status" role="status" aria-live="polite">Device narration is optional and off.</p>
+     </details>
      <p class="exercise-disclaimer">Review state: <code>SME_REVIEW_REQUIRED</code>. Feedback checks only the locally calculated fictional figures. It does not award a grade, certificate, pilot-training credit or endorsement.</p>
     </section>
     <div>
