@@ -197,3 +197,15 @@ Automated checks include Node privacy/behavior tests, a mobile Chromium opt-in a
 
 **Academy preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/ 
 **Simulator preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
+
+### More textured engine sound and consent-based phase radio (2026-11-08)
+
+The immersive practice simulator now offers a **Gentle** or **Detailed** fictional engine/rotor tone, powered by low-level browser Web Audio oscillators. The default is Gentle, and neither setting affects flight physics or aircraft performance. Learners must explicitly click **Enable engine sound** and can disable it at any time. The sound stops on pause, reset, hidden tab, or aircraft type change.
+
+The Academy Tower/Student Pilot script now has an **Enable phase-linked radio** button, off by default. When deliberately armed, it presents the **before** transcript on the runway/helipad, the **during** transcript when the fictional state first becomes climb/flight/approach/lift/hover, and the **after** transcript on rollout/landed/complete. Each stage is presented at most once per armed session. Speech synthesis is attempted only when available, but mobile browsers may refuse to start voices without a fresh gesture on a phase transition; in that case, the written transcript remains visible. Turning the feature off, manually selecting dialogue, changing mode, resetting, pausing, hiding or leaving the page disarms phase-linked speech.
+
+A separate **Enable radio cue tone** button, also off by default, creates a tiny 100 ms synthetic chirp when a scripted exchange begins. It does not process the OS speech voices, play genuine radio static or connect to an ATC radio frequency. It opens a local Web Audio context only after a user click, closes on disable/page hide, and requests no microphone access.
+
+These are fictional demonstrations of *the idea* of aviation communications, not approved ATC phraseology, actual flight clearances, a real training flight, certified aircraft performance, human instructor assessment, air-traffic service or flight-hour credit. Qualified aviation subject-matter review and testing on real Android/iOS phones are still required. The phone-browser test and Node regression suite are run in GitHub Actions.
+
+Viewing links (live main only after merge and Pages deployment): https://magnusclarkson-star.github.io/aviation-ground-school-academy/ and https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html .
