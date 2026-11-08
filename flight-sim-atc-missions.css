@@ -1,0 +1,23 @@
+/* Branching ATC challenge: readable on 390px phones without shifting the cockpit. */
+.atc-mission-lab{margin-top:16px;padding:15px;border:1px solid #6b91a8;border-radius:12px;background:linear-gradient(125deg,#102e42,#0c2435)}
+.atc-mission-lab .eyebrow{color:#b6d7ec}
+.atc-mission-lab h4{font-size:17px;margin:6px 0;color:#ffe6b1}
+.atc-mission-lab h5{font-size:14px;margin:12px 0;color:#eff8ff}
+.atc-mission-lab label{display:block;font-size:12px;font-weight:750;margin:12px 0 5px;color:#d5e6ef}
+.atc-mission-lab select{display:block;width:100%;min-height:45px;padding:7px 9px;background:#0a2031;border:1px solid #8eb5c9;border-radius:8px;color:#f3faff}
+.atc-mission-lab .mission-call{background:#061b2a;border-left:4px solid #ebc579;border-radius:6px;padding:11px;color:#f3f9ff;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.atc-mission-lab .mission-controls{display:flex;gap:9px;flex-wrap:wrap;margin:11px 0}
+.atc-mission-lab .mission-controls button{flex:1 1 145px}
+.atc-mission-lab .mission-choices{display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0}
+.atc-mission-lab .mission-choices button{min-height:48px;text-align:left;border:1px solid #7ba8b5;background:#183a4b;font-size:13px;line-height:1.35;padding:11px 13px}
+.atc-mission-lab .mission-choices button:disabled{opacity:.65;cursor:default}
+.atc-mission-lab #atcMissionHear{border-color:#cbe8ea;background:#226178}
+.atc-mission-lab #atcMissionNext{background:#7c6031;border-color:#e4bd80;color:#fff6e4}
+.atc-mission-lab .mission-feedback{padding:12px;border:1px solid #7399a8;background:#082234;color:#ddedf8;border-radius:8px;font-size:12px;line-height:1.5}
+.atc-mission-lab .mission-feedback[data-result="complete"]{border-color:#7bc19e;color:#cef5dd}
+.atc-mission-lab .mission-feedback[data-result="review"]{border-color:#e6bb79;color:#ffe1a8}
+.atc-mission-lab .mission-transcript{margin:10px 0 0;padding:10px 10px 10px 28px;background:#081e2b;border:1px solid #496d81;border-radius:9px;max-height:270px;overflow-y:auto}
+.atc-mission-lab .mission-transcript li{margin:7px 0;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.atc-mission-lab .mission-transcript strong{color:#f2daa9}
+.atc-mission-lab .mission-meta{font-size:11px;color:#b4d4e5;line-height:1.5}
+@media(max-width:500px){.atc-mission-lab{padding:11px}.atc-mission-lab .mission-controls button{flex:1 1 48%;font-size:11px;padding:8px}.atc-mission-lab .mission-transcript{max-height:220px}}
