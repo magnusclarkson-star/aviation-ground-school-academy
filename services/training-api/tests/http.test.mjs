@@ -29,6 +29,7 @@ class FakeStore{
   ])this.byEmail.set(u.slug+"|"+u.email,{...u,passwordHash});
   this.sessions=new Map();
   this.attempts=[];
+  this.moduleClaims=[];
   this.feedback=[];
   this.assignments=new Set([orgA+"|"+instructorA+"|"+studentA]);
   this.allowLogin=true;
@@ -61,6 +62,26 @@ class FakeStore{
   return actor&&this.verified.has(actor.userId)?actor:null;
  }
  async revokeSession(hash){this.sessions.delete(hash)}
+ async createModuleClaim(actor,key,digest,claim){
+  const existing=this.moduleClaims.find(x=>x.studentId===actor.userId&&x.organizationId===actor.organizationId&&x.key===key);
+  if(existing)return {created:false,conflict:existing.digest!==digest,id:existing.id,receivedAt:existing.receivedAt};
+  const row={id:randomUUID(),organizationId:actor.organizationId,studentId:actor.userId,
+   key,digest,moduleId:claim.moduleId,revision:claim.revision,claimedCorrect:claim.correct,total:6,
+   sourceStatus:claim.sourceStatus,receivedAt:new Date().toISOString()};
+  this.moduleClaims.push(row);
+  return {created:true,conflict:false,id:row.id,receivedAt:row.receivedAt};
+ }
+ async listOwnModuleClaims(actor,limit){
+  return this.moduleClaims.filter(x=>x.organizationId===actor.organizationId&&x.studentId===actor.userId)
+   .slice(-limit).map(({id,moduleId,revision,claimedCorrect,total,sourceStatus,receivedAt})=>
+    ({id,moduleId,revision,claimedCorrect,total,sourceStatus,receivedAt}));
+ }
+ async listAssignedModuleClaims(actor,limit){
+  return this.moduleClaims.filter(x=>x.organizationId===actor.organizationId&&
+    this.assignments.has(actor.organizationId+"|"+actor.userId+"|"+x.studentId)).slice(-limit)
+   .map(({id,studentId,moduleId,revision,claimedCorrect,total,sourceStatus,receivedAt})=>
+    ({id,studentId,moduleId,revision,claimedCorrect,total,sourceStatus,receivedAt}));
+ }
  async reserveAiUsage(actor,kind,maxCount){
   const key=actor.organizationId+"|"+actor.userId+"|"+kind;
   const used=this.aiCalls.get(key)||0;
@@ -245,6 +266,53 @@ test("private staging API enforces cookies, CSRF, tenant boundaries, role assign
   assert.equal(theirs.body.items.length,0);
   assert.equal((await ask("GET","/api/v1/practice-attempts?limit=999",undefined,s1)).status,400);
   assert.equal((await ask("POST","/api/v1/practice-attempts",validReport(),s1)).status,400);
+ });
+ await t.test("module claims remain unverified and require student session, CSRF and assigned instructor",async()=>{
+  const path="/api/v1/learning/module-claims";
+  const payload={schema:"agsa.private.module-practice-claim.v1",moduleId:"foundations",
+   revision:"2026-11-08.1",correct:5,total:6};
+  const key="module_unique_0012";
+  assert.equal((await ask("POST",path,payload)).status,401);
+  assert.equal((await ask("GET",path)).status,401);
+  assert.equal((await ask("POST",path,payload,{cookies:s1.cookies},{"Idempotency-Key":key})).status,403);
+  assert.equal((await ask("POST",path,payload,s1,{"Idempotency-Key":key,Origin:"https://attacker.example"})).status,403);
+  assert.equal((await ask("POST",path,payload,t1,{"Idempotency-Key":key})).status,403);
+  assert.equal((await ask("GET",path,undefined,t1)).status,403);
+  assert.equal((await ask("GET","/api/v1/instructor/assigned-module-claims",undefined,s1)).status,403);
+  assert.equal((await ask("POST",path,payload,s1)).status,400);
+  const hostile={...payload,organizationId:orgB,studentId:studentB,approved:true};
+  assert.equal((await ask("POST",path,hostile,s1,{"Idempotency-Key":key})).status,400);
+  assert.equal((await ask("POST",path,{...payload,correct:7},s1,{"Idempotency-Key":key})).status,400);
+  assert.equal((await ask("POST",path,{...payload,revision:"obsolete"},s1,{"Idempotency-Key":key})).status,400);
+  const first=await ask("POST",path,payload,s1,{"Idempotency-Key":key});
+  assert.equal(first.status,201,JSON.stringify(first.body));
+  assert.equal(first.body.created,true);
+  assert.equal(first.body.sourceStatus,"UNVERIFIED_CLIENT_SELF_CHECK");
+  assert.equal(first.body.flightCredit,false);
+  assert.equal(first.body.certificateEligible,false);
+  assert.equal(store.moduleClaims.length,1);
+  const replay=await ask("POST",path,payload,s1,{"Idempotency-Key":key});
+  assert.equal(replay.status,200);
+  assert.equal(replay.body.id,first.body.id);
+  assert.equal(replay.body.created,false);
+  assert.equal(store.moduleClaims.length,1);
+  const conflict=await ask("POST",path,{...payload,correct:1},s1,{"Idempotency-Key":key});
+  assert.equal(conflict.status,409);
+  assert.equal(conflict.body.error,"idempotency_conflict");
+  assert.equal((await ask("GET",path+"?limit=51",undefined,s1)).status,400);
+  const own=await ask("GET",path,undefined,s1);
+  assert.equal(own.body.items.length,1);
+  assert.equal(own.body.items[0].moduleId,"foundations");
+  assert.equal(own.body.items[0].claimedCorrect,5);
+  assert.equal((await ask("GET",path,undefined,s2)).body.items.length,0);
+  const assigned=await ask("GET","/api/v1/instructor/assigned-module-claims",undefined,t1);
+  assert.equal(assigned.body.items.length,1);
+  assert.equal(assigned.body.items[0].studentId,studentA);
+  assert.equal(assigned.body.officialAssessment,false);
+  assert.equal((await ask("GET","/api/v1/instructor/assigned-module-claims",undefined,t2)).body.items.length,0);
+  assert.equal((await ask("GET","/api/v1/instructor/assigned-module-claims",undefined,other)).body.items.length,0);
+  assert.equal((await ask("POST",path,{...payload,moduleId:"weather"},s1,{"Idempotency-Key":"module_unique_0013"})).status,400);
+  assert.equal((await ask("POST",path,{...payload,correct:2},s2,{"Idempotency-Key":key})).status,201);
  });
  await t.test("only an assigned instructor in the same organization may draft feedback",async()=>{
   const assigned=await ask("GET","/api/v1/instructor/assigned-attempts",undefined,t1);
