@@ -5,9 +5,10 @@
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
- E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D;
+ E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
+ A=window.AGSAFlightSystems;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -15,6 +16,8 @@ const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
+let systems=A.create(state.mode);
+A.step(systems,state,input,0);
 let hardware=null;
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
@@ -55,7 +58,7 @@ function chooseVisual(){
  document.querySelector(".scene-shell").classList.add("three-dimensional");
  $("cameraMode").disabled=false;
  try{
-  if(renderer3D.draw(state,{view:$("cameraMode").value})){
+  if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})){
    visualMessage("3D WebGL2 airfield active: real geometric terrain, runway, buildings, trees and optional chase aircraft. Fictional scenery, not a surveyed airport.","active");
    prev3D=0;return;
   }
@@ -65,7 +68,7 @@ function chooseVisual(){
 function drawScenery(now){
  if(renderer3D){
   if(now-prev3D>=33){
-   try{if(!renderer3D.draw(state,{view:$("cameraMode").value})){
+   try{if(!renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})){
     fallbackTo2D("3D graphics context lost or became unavailable; switched safely to 2D scenery.");
    }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
    prev3D=now;
@@ -125,6 +128,17 @@ function updateReadouts(){
  $("coachElapsed").textContent=stats.seconds+" s";
  $("coachMaxHeight").textContent=stats.maxHeightM+" m";
  $("coachLandings").textContent=String(stats.touchdowns);
+ const systemReadout=A.snapshot(systems);
+ for(const [id,value] of [
+  ["systemsEngineLabel",systemReadout.engineLabel],
+  ["systemsEngineValue",systemReadout.engineValue],
+  ["systemsPowerLabel",systemReadout.powerLabel],
+  ["systemsPowerValue",systemReadout.powerValue],
+  ["systemsFlapLabel",systemReadout.flapLabel],
+  ["systemsFlapValue",systemReadout.flapValue],
+  ["systemsMotionLabel",systemReadout.movingPartLabel],
+  ["systemsMotionValue",systemReadout.motionValue]
+ ])$(id).textContent=value;
 }
 function reportEnvironment(){
  const profile=state.mode==="airplane"?E.selectProfile(state.profileId):null;
@@ -154,6 +168,8 @@ function setMode(next){
   $("pauseFlight").textContent="Pause simulation";
   lastPhase=state.phase;
   practice=G.start(state);
+  systems=A.create(state.mode);
+  A.step(systems,state,input,0);
  }
  $("controlPad").className="control-pad "+(type==="cyclic"?"cyclic-mode":type==="stick"?"stick-mode":"yoke-mode");
  for(const id of ["Yoke","Stick","Cyclic"])
@@ -194,6 +210,8 @@ function reset(scenario){
  input.turbulence=intensity[Number($("turbulence").value)]??.14;
  lastPhase=state.phase;
  practice=G.start(state);
+ systems=A.create(state.mode);
+ A.step(systems,state,input,0);
  reportEnvironment();
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
@@ -318,7 +336,7 @@ $("pauseFlight").addEventListener("click",()=>{
 });
 $("visualMode").addEventListener("change",chooseVisual);
 $("cameraMode").addEventListener("change",()=>{
- if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value})}
+ if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts})}
  catch{fallbackTo2D("3D camera unavailable; switched to 2D scenery.")}
 });
 $("instrumentToggle").addEventListener("click",()=>{
@@ -363,6 +381,7 @@ function frame(now){
   hardware?.poll(dt,{input,mode:state.mode,dragActive:dragPointer!==null,keyboard:keys,pointers,paused});
   if(!paused){
   const result=M.step(state,input,dt);
+  A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
   // Prioritise distinctive events over routine rate-limited ambience.
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
