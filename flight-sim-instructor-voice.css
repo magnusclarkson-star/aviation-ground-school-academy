@@ -1,0 +1,30 @@
+/* Optional device speech controls for the existing four local study exercises.
+ * Collapsed by default; never overlays flight instruments or touchscreen.
+ */
+.exercise-spoken{background:#0e2939;border:1px solid #5a8298;
+ border-radius:10px;margin:11px 0;padding:0;min-width:0}
+.exercise-spoken>summary{cursor:pointer;padding:11px 12px;font-size:12px;
+ font-weight:850;color:#f1dba9;line-height:1.5}
+.exercise-spoken>summary:focus-visible{outline:3px solid #f7d99b;outline-offset:3px}
+.exercise-spoken[open]>summary{border-bottom:1px solid #4f7185}
+.exercise-spoken>.hint{font-size:11px;line-height:1.6;margin:9px 12px;
+ color:#c6dfea}
+.exercise-voice-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px;padding:0 12px}
+.exercise-voice-options label{display:block;margin:5px 0;font-size:11px;
+ font-weight:750;color:#e0ebf1;min-width:0}
+.exercise-voice-options select{display:block;width:100%;min-width:0;
+ min-height:44px;border:1px solid #7297a9;border-radius:7px;background:#102f40;
+ color:#f2f7f9;font-size:11px;margin-top:5px;padding:7px}
+.exercise-voice-actions{margin:8px 12px!important;gap:7px}
+.exercise-voice-actions button{min-height:44px;flex:1 1 120px;font-size:11px}
+.exercise-speech-status{font-size:10px;line-height:1.5;color:#c2dae6;
+ margin:8px 12px 12px;padding:7px 9px;border-left:3px solid #8cb8c7;background:#102b3c}
+@media(max-width:740px){
+ .exercise-spoken>summary{padding:10px;font-size:11px}
+ .exercise-voice-options{grid-template-columns:1fr;gap:3px;padding:0 10px}
+ .exercise-voice-options label{font-size:10px}
+ .exercise-spoken>.hint{font-size:10px;margin:7px 10px}
+ .exercise-voice-actions{margin:7px 10px!important}
+ .exercise-speech-status{margin:7px 10px 10px}
+}
