@@ -53,6 +53,7 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
  // not arm automatic flight vibration or promise that hardware moved.
  function test(){
   const accepted=request([80,35,80]);
+  if(accepted){lastGlobal=now();last.control=lastGlobal;last.airflow=lastGlobal;last.runwayRumble=lastGlobal;}
   return {supported,accepted,reason:lastResult};
  }
  function ambience(state,input){
