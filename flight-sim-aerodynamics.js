@@ -25,7 +25,9 @@ function coefficients(aoaDeg,flapDeg=0,profileId="trainer"){
  const cl=exceeded?
   clamp(clMax*(1-.075*(aoa-c.stallAoADeg)),.12,clMax):
   clamp(preStall,-.72,clMax);
- const cd=c.cd0+c.induced*cl*cl+flaps/30*.052+(exceeded?.10:0);
+ // Separation drag rises sharply even as wing lift collapses beyond the
+ // imaginary stall threshold. This is an invented qualitative effect.
+ const cd=c.cd0+c.induced*cl*cl+flaps/30*.052+(exceeded?.25:0);
  return {cl,cd,stalled:exceeded,aoaDeg:aoa,clMax,flapDeg:flaps};
 }
 function sample(state,input){
