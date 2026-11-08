@@ -630,6 +630,16 @@
     </div>
    </div>
    <button id="brake" type="button" class="brake-button">Hold wheel brake during rollout</button>
+   <div id="cockpitExtraControls" class="cockpit-extra-controls" aria-label="Extra controls available in enlarged cockpit mode">
+    <strong>Additional touch controls</strong>
+    <div class="cockpit-extra-grid">
+     <button id="cockpitPowerDown" type="button" aria-label="Reduce engine power or helicopter collective by five percent">− Power / collective</button>
+     <button id="cockpitPowerUp" type="button" aria-label="Increase engine power or helicopter collective by five percent">+ Power / collective</button>
+     <button id="cockpitFlapsDown" type="button" class="cockpit-extra-flap" aria-label="Retract flaps by one detent">Flaps −</button>
+     <button id="cockpitFlapsUp" type="button" class="cockpit-extra-flap" aria-label="Extend flaps by one detent">Flaps +</button>
+    </div>
+    <p id="cockpitExtraStatus" role="status" aria-live="polite">Step controls use the same simulator inputs. Not real aircraft procedures.</p>
+   </div>
    <p class="hint shortcuts">Desktop: arrows = pitch/bank, A/D = rudder, W/S = power/collective, space = brake, R = reset. On phones, keep the outside view visible while using two fingers.</p>
   </section>
  </div>
