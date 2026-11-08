@@ -9,7 +9,15 @@ try{
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push(e.message));
  await phone.addInitScript(()=>{
-  window.__phoneProbe={contexts:[],vibrations:[]};
+  window.__phoneProbe={contexts:[],vibrations:[],htmlAudio:[]};
+  class BackupAudio{
+   constructor(){window.__phoneProbe.htmlAudio.push(this);this.volume=1;}
+   play(){this.played=true;return Promise.resolve();}
+   pause(){this.paused=true;}
+   load(){}
+   removeAttribute(){}
+  }
+  Object.defineProperty(window,'Audio',{configurable:true,value:BackupAudio});
   class Param{
    constructor(){this.value=0;}
    setTargetAtTime(v){this.value=v;}
@@ -52,6 +60,18 @@ try{
  assert.equal(await phone.evaluate(()=>window.__phoneProbe.contexts.length),1);
  assert.equal(await phone.evaluate(()=>window.__phoneProbe.contexts[0].oscillators[0].started),true);
  assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'false');
+ await phone.locator('#phoneAudioBackup').click();
+ assert.equal(await phone.evaluate(()=>window.__phoneProbe.htmlAudio.length),1,'backup audio is only opened after a click');
+ assert.equal(await phone.evaluate(()=>window.__phoneProbe.htmlAudio[0].played),true);
+ assert.match(await phone.locator('#phoneFeedbackStatus').textContent(),/Backup audio playback requested/);
+ await phone.locator('#phoneDiagnostics').evaluate(e=>e.open=true);
+ await phone.locator('#phoneRefreshDiagnostics').click();
+ const report=await phone.locator('#phoneDiagnosticsText').inputValue();
+ assert.match(report,/Web Audio API: available/);
+ assert.match(report,/HTML audio backup: available/);
+ assert.match(report,/Last backup speaker test: playback requested/);
+ assert.match(report,/Media volume: not readable/);
+ assert.doesNotMatch(report,/userAgent|IMEI|telephone|geolocation/);
  await phone.locator('#phoneVibrationTest').click();
  const diagnostic=await phone.evaluate(()=>window.__phoneProbe.vibrations.at(-1));
  assert.deepEqual(diagnostic,[80,35,80],'explicit test requests a noticeable bounded pattern');
