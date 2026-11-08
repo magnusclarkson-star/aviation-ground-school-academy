@@ -22,11 +22,14 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
  let enabled=false,lastGlobal=-Infinity;
  const last={};
  function stop(){
-  if(supported)try{nav.vibrate(0)}catch{}
+  // Do not even request a cancellation from the Vibration API until a
+  // learner has opted in. This keeps the default state entirely inert.
+  if(enabled&&supported)try{nav.vibrate(0)}catch{}
  }
  function setEnabled(value){
+  const wasEnabled=enabled;
   enabled=supported&&value===true;
-  if(!enabled)stop();
+  if(wasEnabled&&!enabled&&supported)try{nav.vibrate(0)}catch{}
   return enabled;
  }
  function pulse(kind){
