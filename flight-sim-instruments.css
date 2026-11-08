@@ -1,0 +1,70 @@
+/* Flight-sim shared mini PFD and session cues; responsive, with no animations
+   that would make flight instruments lag behind the actual simulated state. */
+.instruments-layout{display:grid;grid-template-columns:minmax(175px,.32fr) minmax(0,.68fr);
+ background:#0a1c2a;border-top:1px solid #436d82;min-width:0}
+.instruments-layout.compact{grid-template-columns:1fr}
+.instruments-layout.compact .mini-pfd{display:none}
+.mini-pfd{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;
+ padding:8px 10px 7px;background:radial-gradient(ellipse at 50% 10%,#2d4a60,#081b2a 80%);
+ border-right:1px solid #4a6b7e}
+.mini-pfd-top,.mini-pfd-footer{display:flex;gap:6px;justify-content:space-between;align-items:center;
+ font-size:9px;font-weight:800;letter-spacing:.045em;color:#bce3f1}
+.mini-pfd-top{color:#e8d2a8}
+.mini-pfd-top span:last-child{font-size:8px;color:#a7cadb;text-align:right}
+.mini-pfd svg{display:block;width:100%;height:auto;max-height:174px}
+.mini-pfd-footer{font-size:10px;font-variant-numeric:tabular-nums}
+.instruments-telemetry{min-width:0;display:flex;flex-direction:column}
+.instruments-telemetry .readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));flex:1}
+.instruments-telemetry .readouts>div{display:flex;flex-direction:column;justify-content:center;min-width:0;
+ padding:8px 6px;border-bottom:1px solid #30546b}
+.instruments-telemetry .readouts strong{font-size:clamp(14px,1.7vw,20px)}
+.alignment-widget{display:flex;align-items:center;justify-content:space-between;gap:11px;
+ padding:7px 12px;border-top:1px solid #385f76;background:#0e283a;font-size:10px;font-weight:800;
+ color:#bedce9;min-width:0;font-variant-numeric:tabular-nums}
+.alignment-widget>span:first-child{flex:0 0 auto;min-width:81px}
+.alignment-widget>strong{color:#ffe0a6;min-width:46px;text-align:right}
+.alignment-track{height:12px;flex:1;min-width:45px;position:relative;
+ background:linear-gradient(90deg,#7d5164,#264459 40%,#1b634c 50%,#264459 60%,#7d5164);
+ border:1px solid #537d91;border-radius:8px}
+.alignment-centre{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:#e9f5ff}
+.alignment-marker{position:absolute;left:calc(50% - 5px);top:-3px;width:10px;height:16px;
+ background:#ffda85;border:1px solid #fff2c1;border-radius:4px;box-shadow:0 0 6px #ffe49e88;
+ will-change:transform}
+.coach-glance{background:linear-gradient(135deg,#173b4b,#0d2638);border-top:1px solid #466b7e;
+ display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 12px}
+.coach-glance>div:first-child{min-width:0}
+.coach-glance .eyebrow{font-size:8px;letter-spacing:.12em}
+.coach-glance strong{font-size:12px;color:#f6d9a2;line-height:1.3}
+.coach-glance p{color:#d6ebf3;font-size:11px;line-height:1.35;margin:3px 0 0}
+.coach-glance[data-level="caution"]{border-left:4px solid #ffc984}
+.coach-glance[data-level="positive"]{border-left:4px solid #6ac6ab}
+.session-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;flex:0 1 45%}
+.session-facts span{font-size:8px;color:#9ebfd2;text-align:center;letter-spacing:.03em;
+ border:1px solid #31566b;padding:5px 3px;border-radius:7px}
+.session-facts strong{font-size:11px;display:block;color:#e7edf1;font-variant-numeric:tabular-nums}
+@media(max-width:740px){
+ .instruments-layout{grid-template-columns:minmax(0,.43fr) minmax(0,.57fr)}
+ .mini-pfd{padding:5px 4px;gap:2px}
+ .mini-pfd-top{font-size:7px}.mini-pfd-top span:last-child{font-size:6px}
+ .mini-pfd-footer{font-size:7px}
+ .mini-pfd svg{max-height:122px}
+ .instruments-telemetry .readouts>div{padding:3px 2px}
+ .instruments-telemetry .readouts small{font-size:7px}
+ .instruments-telemetry .readouts strong{font-size:12px}
+ .instruments-telemetry .readouts span{font-size:7px}
+ .alignment-widget{gap:5px;padding:3px 5px;font-size:8px}
+ .alignment-widget>span:first-child{min-width:62px}
+ .alignment-widget>strong{min-width:31px}
+ .coach-glance{padding:5px 7px;gap:6px}
+ .coach-glance strong{font-size:10px}
+ .coach-glance p{font-size:9px}
+ .coach-glance .eyebrow{font-size:7px}
+ .session-facts{flex:0 0 34%;grid-template-columns:1fr;gap:2px}
+ .session-facts span{font-size:7px;padding:2px;display:flex;justify-content:space-between;align-items:center;gap:2px}
+ .session-facts strong{font-size:9px}
+}
+@media(max-width:370px){
+ .mini-pfd-top span:last-child{display:none}
+ .alignment-widget>span:first-child{min-width:55px}
+ .coach-glance p{font-size:8px}
+}
