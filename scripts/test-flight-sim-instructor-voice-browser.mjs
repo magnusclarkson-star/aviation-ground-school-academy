@@ -125,8 +125,8 @@ try{
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
  const control=await phone.locator("#controlPad").boundingBox();
  const pedal=await phone.locator("#rightRudder").boundingBox();
- assert.ok(control&&pedal&&Math.abs(control.y-pedal.y)<145,
-  "phone two-thumb yoke/pedals remain adjacent when narration panel expands");
+ assert.ok(control&&pedal&&pedal.y>=control.y+control.height-12&&pedal.y-control.y<280,
+  "pedals remain below the centered yoke when narration panel expands");
  assert.deepEqual(errors,[]);
  await phone.close();
  console.log("Instructor voice browser passed: no auto-play, Scout/pilot scripts, slower pace, reference/comparison/feedback speech, stop/hide, unsupported 390px phone and text-only self-check.");
