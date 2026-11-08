@@ -36,6 +36,8 @@
 <script src="flight-sim-engine-audio.js" defer></script>
 <script src="flight-sim-phone-probe.js" defer></script>
 <script src="flight-sim-audio-fallback.js" defer></script>
+<script src="flight-sim-atc-world.js" defer></script>
+<script src="flight-sim-radio-effects.js" defer></script>
 <script src="flight-sim-atc-radio.js" defer></script>
 <script src="flight-sim-radio-tone.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
@@ -234,7 +236,33 @@
      <p class="hint">The imaginary piston engine changes pitch with simulated power; the conceptual helicopter uses a steady rotor-like pulse. The in-app slider starts at 100%; lower your phone media volume or this slider if it is too loud. Pause, change aircraft or leave the page to stop the sound.</p>
     </div>
     <div class="audio-block">
-     <h3>Academy Tower &amp; Student Pilot</h3>
+     <h3>International airport radio training</h3>
+      <p>Choose a real-world airport as the setting for a fictional training clearance. Scenario runway, facility names, altitudes and instructions are illustrative, not verified live procedures or current ATC instructions.</p>
+      <div class="international-atc-options">
+       <label for="atcAirport">Training airport
+        <select id="atcAirport">
+         <optgroup label="Sierra Leone"><option value="gfll" selected>Freetown International — Lungi (GFLL)</option><option value="gfha">Freetown city — Hastings (GFHA)</option></optgroup>
+         <optgroup label="United Kingdom"><option value="egll">London Heathrow (EGLL)</option><option value="egcc">Manchester (EGCC)</option></optgroup>
+         <optgroup label="Europe"><option value="lfpg">Paris Charles de Gaulle (LFPG)</option><option value="eddf">Frankfurt (EDDF)</option><option value="eham">Amsterdam Schiphol (EHAM)</option></optgroup>
+         <optgroup label="United States"><option value="kjfk">New York JFK (KJFK)</option><option value="klax">Los Angeles (KLAX)</option></optgroup>
+         <optgroup label="Canada"><option value="cyyz">Toronto Pearson (CYYZ)</option><option value="cyvr">Vancouver (CYVR)</option></optgroup>
+         <optgroup label="Africa"><option value="hkjk">Nairobi Jomo Kenyatta (HKJK)</option><option value="dgaa">Accra Kotoka (DGAA)</option><option value="faor">Johannesburg OR Tambo (FAOR)</option></optgroup>
+         <optgroup label="Australia"><option value="yssy">Sydney (YSSY)</option><option value="ymml">Melbourne (YMML)</option></optgroup>
+        </select>
+       </label>
+       <label for="atcSituation">Training situation
+        <select id="atcSituation">
+         <option value="normal" selected>Normal departure / approach / landing</option>
+         <option value="go-around">Go-around from approach</option>
+         <option value="readback">Incorrect altitude readback and correction</option>
+         <option value="radio-check">Radio check and taxi</option>
+        </select>
+       </label>
+       <label for="radioFxChoice">Radio communication sound effects
+        <select id="radioFxChoice"><option value="on" selected>ON — push-to-talk, click and squelch/static</option><option value="off">Off — clear spoken voices only</option></select>
+       </label>
+      </div>
+      <p id="radioFxStatus" role="status" aria-live="polite">Radio effects ON by default. Each spoken transmission will have local synthetic radio keying and static, if Web Audio is available.</p>
      <div class="atc-buttons" aria-label="Choose fictional radio dialogue">
       <button id="atcBefore" type="button">Before departure</button>
       <button id="atcDuring" type="button">During flight</button>
@@ -252,7 +280,7 @@
      <h4>Written radio transcript</h4>
      <ol id="atcTranscript" class="atc-transcript" aria-label="Fictional tower and pilot radio script"></ol>
      <p class="hint">Start ALL flight effects also enables phase-linked radio and the cue tone, with no extra switches required. Phase-linked radio plays at most one before, during and after exchange per practice session. The browser may restrict speech when a flight phase changes; the written transcript still updates. The optional short radio cue tone does not change or filter device voices.</p>
-     <p class="hint">Device voices may be unavailable or sound alike; the transcript always works. This is scripted text-to-speech, not live AI, a real ATC recording, actual radio phraseology training, a clearance, or a substitute for a qualified instructor.</p>
+     <p class="hint">Each spoken call uses synthetic push-to-talk clicks, receiver squelch and narrow-band static where supported. The device voice itself cannot be filtered by Web Audio in this browser, and voices may sound alike. These are scripted, location-inspired educational scenarios, not live communications, airport-operating instructions or approved ATC training.</p>
     </div>
    </div>
    <p class="disclaimer">No aircraft audio files, live radio streams, microphone permissions, recorded voices or network services are used. Fictional engine pitch and simulated communications do not represent real aircraft or operational air traffic control.</p>
