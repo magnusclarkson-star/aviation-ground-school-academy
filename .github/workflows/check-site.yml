@@ -57,3 +57,6 @@ jobs:
       - run: node --check flight-sim-guidance.js
       - run: node scripts/test-flight-sim-instruments.mjs
       - run: node scripts/test-flight-sim-guidance.mjs
+      - run: node --check flight-sim-gamepad.js
+      - run: node --check flight-sim-gamepad-ui.js
+      - run: node scripts/test-flight-sim-gamepad.mjs
