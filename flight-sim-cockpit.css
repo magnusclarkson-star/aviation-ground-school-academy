@@ -406,3 +406,19 @@
  .cockpit-info-panel{padding:7px}
  .cockpit-info-panel p{font-size:11px}
 }
+
+
+/* Keep the visual flight deck clean. Context is behind the ⓘ buttons;
+   status and descriptive copy remain available to assistive technology. */
+.cockpit-station #cockpitAircraftCaption,
+.cockpit-station #cockpitAircraftNotice,
+.cockpit-station #cockpitRotationStatus{
+ position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;
+ clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important
+}
+.cockpit-station .control-panel>.eyebrow,
+.cockpit-station .control-panel>h2,
+.cockpit-station .control-panel>#controlHint,
+.cockpit-station .control-panel>.shortcuts{display:none!important}
+.cockpit-station .control-panel #collectivePanel>.hint{display:none!important}
