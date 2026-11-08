@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..');
 const Recorder=require('../flight-sim-recorder.js');
 const html=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
 const app=fs.readFileSync(path.join(root,'flight-sim.js'),'utf8');
-function state(){return {mode:'airplane',scenario:'runway',phase:'roll',altitudeM:0,speedKt:20,headingDeg:30,verticalMs:0,rollDeg:0,pitchDeg:0,xM:0};}
+function state(){return {mode:'airplane',scenario:'runway',phase:'roll',altitudeM:0,speedKt:20,headingDeg:30,verticalMs:0,rollDeg:0,pitchDeg:0,xM:0,zM:110};}
 const input={bank:0,pitch:0,rudder:0,throttle:.5,flaps:10};
 test('off by default and explicit start / stop',()=>{
  const r=Recorder.makeRecorder();
@@ -24,7 +24,8 @@ test('bounded trace contains synthetic whitelisted fields only',()=>{
  assert.equal(d.reviewStatus,'SME_REVIEW_REQUIRED');
  assert.equal(d.observations.length,Recorder.MAX_SAMPLES);
  assert.equal(r.status().active,false);
- assert.deepEqual(Object.keys(d.observations[0]),['t','phase','altitudeM','speedKt','headingDeg','verticalMs','bankDeg','pitchDeg','lateralM','bankInput','pitchInput','rudderInput','powerInput','flapDeg']);
+ assert.equal(d.observations[0].forwardM,110);
+ assert.deepEqual(Object.keys(d.observations[0]),['t','phase','altitudeM','speedKt','headingDeg','verticalMs','bankDeg','pitchDeg','lateralM','forwardM','bankInput','pitchInput','rudderInput','powerInput','flapDeg']);
 });
 test('reset and scenario mismatch never preserve old observations',()=>{
  const r=Recorder.makeRecorder();r.start(state());
