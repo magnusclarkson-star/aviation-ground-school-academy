@@ -9,6 +9,11 @@ on:
       - 'flight-sim-model.js'
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
+      - 'flight-sim-instruments.js'
+      - 'flight-sim-guidance.js'
+      - 'flight-sim-instruments.css'
+      - 'scripts/test-flight-sim-instruments.mjs'
+      - 'scripts/test-flight-sim-guidance.mjs'
       - 'scripts/test-flight-sim-model.mjs'
       - 'scripts/test-flight-sim-haptics.mjs'
       - 'scripts/test-flight-sim-browser.mjs'
@@ -21,6 +26,11 @@ on:
       - 'flight-sim-model.js'
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
+      - 'flight-sim-instruments.js'
+      - 'flight-sim-guidance.js'
+      - 'flight-sim-instruments.css'
+      - 'scripts/test-flight-sim-instruments.mjs'
+      - 'scripts/test-flight-sim-guidance.mjs'
       - 'scripts/test-flight-sim-model.mjs'
       - 'scripts/test-flight-sim-haptics.mjs'
       - 'scripts/test-flight-sim-browser.mjs'
@@ -43,10 +53,16 @@ jobs:
           node --check flight-sim-model.js
           node --check flight-sim-haptics.js
           node --check flight-sim-scenery.js
+          node --check flight-sim-instruments.js
+          node --check flight-sim-guidance.js
       - name: Test deterministic flight model
         run: node scripts/test-flight-sim-model.mjs
       - name: Test optional vibration
         run: node scripts/test-flight-sim-haptics.mjs
+      - name: Test integrated glass instruments and guidance
+        run: |
+          node scripts/test-flight-sim-instruments.mjs
+          node scripts/test-flight-sim-guidance.mjs
       - name: Install isolated browser test dependency
         run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
       - name: Install Chromium
