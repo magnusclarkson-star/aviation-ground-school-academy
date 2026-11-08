@@ -3,7 +3,7 @@
  * Flight logic is untouched; this module merely updates fictional inputs.
  */
 (function(root){"use strict";
-function attach({api,documentLike,navigatorLike,getCurrentInput,onDisconnect,onUpdate}) {
+function attach({api,documentLike,navigatorLike,getCurrentInput,getMode,onDisconnect,onDisable,onUpdate}) {
  const doc=documentLike,read=id=>doc.getElementById(id);
  if(!api||!doc)throw Error("Controller UI requires the browser model and document");
  const device=api.makeController({navigatorLike,documentLike:doc});
@@ -82,14 +82,14 @@ function attach({api,documentLike,navigatorLike,getCurrentInput,onDisconnect,onU
  }
  function resetPower(){
   const input=getCurrentInput();
-  device.setPower(input?.throttle??input?.collective??0);
+  device.setPower(getMode?.()==="helicopter"?(input?.collective??0):(input?.throttle??0));
  }
  read("gamepadToggle").addEventListener("click",()=>{
   const enabled=device.enable(!device.isEnabled());
   selectedHasBeenActive=false;previousState="";
   resetPower();
   refresh({autoSelect:enabled});
-  if(!enabled){onUpdate?.();read("gamepadLive").textContent="BANK 0% · PITCH 0% · RUDDER 0% · POWER inactive";}
+  if(!enabled){onDisable?.();read("gamepadLive").textContent="BANK 0% · PITCH 0% · RUDDER 0% · POWER inactive";}
  });
  read("gamepadSelect").addEventListener("change",()=>{
   const selected=read("gamepadSelect").value;
@@ -118,6 +118,10 @@ function attach({api,documentLike,navigatorLike,getCurrentInput,onDisconnect,onU
    return snap;
   }
   if(snap.state!=="active"){
+   if(selectedHasBeenActive){
+    selectedHasBeenActive=false;
+    onDisconnect?.();
+   }
    const message=snap.state==="incompatible"?
     "Selected controller has insufficient axes for bank/pitch; choose another or adjust the axis numbers.":
     "Waiting for an active controller. Move a stick/button and refresh the device list if necessary.";
