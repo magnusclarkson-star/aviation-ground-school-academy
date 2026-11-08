@@ -7,17 +7,17 @@ const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number.isFinite(n)?n:a));
 const model=(mode,power)=>{
  const p=clamp(Number(power),0,1),heli=mode==="helicopter";
  return Object.freeze({
-  primaryHz:heli?45+34*p:56+100*p,
-  harmonicHz:heli?94+72*p:112+200*p,
+  primaryHz:heli?95+70*p:118+175*p,
+  harmonicHz:heli?235+175*p:275+245*p,
   chopHz:heli?12+8*p:0,
-  engineLevel:heli?.065+.025*p:.045+.055*p
+  engineLevel:heli?.14+.065*p:.13+.11*p
  });
 };
 function createEngine({windowLike,documentLike}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  const Audio=win?.AudioContext||win?.webkitAudioContext;
  const supported=typeof Audio==="function";
- let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=32,duck=false,mode="airplane",texture="smooth",grainGain=null;
+ let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=58,duck=false,mode="airplane",texture="smooth",grainGain=null;
  function setTarget(parameter,value){
   if(parameter&&ctx){
    try{parameter.setTargetAtTime(value,ctx.currentTime,.06);}
@@ -48,7 +48,7 @@ function createEngine({windowLike,documentLike}={}){
    grainGain=ctx.createGain();
    pGain.gain.value=.8;hGain.gain.value=.18;grainGain.gain.value=0;
    const filter=ctx.createBiquadFilter();
-   filter.type="lowpass";filter.frequency.value=650;
+   filter.type="lowpass";filter.frequency.value=1100;
    gain=ctx.createGain();gain.gain.value=0;
    primary.connect(pGain);harmonic.connect(hGain);
     pGain.connect(filter);hGain.connect(filter);grain.connect(grainGain);grainGain.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
@@ -59,6 +59,7 @@ function createEngine({windowLike,documentLike}={}){
    osc.forEach(o=>o.start());
    active=true;update(mode,power);
    if(typeof ctx.resume==="function")await ctx.resume();
+   if(ctx?.state==="suspended"){stop();return false;}
    return active;
   }catch{stop();return false;}
  }
@@ -82,7 +83,7 @@ function createEngine({windowLike,documentLike}={}){
  }
  function setVolume(value,power=0){volume=clamp(Number(value),0,100);level(power);return volume;}
  function setDuck(value,power=0){duck=value===true;level(power);}
- function status(){return {supported,active,volume,duck,mode,texture};}
+ function status(){return {supported,active,volume,duck,mode,texture,audioState:ctx?.state||(active?"unknown":"off")};}
  if(doc?.addEventListener)doc.addEventListener("visibilitychange",()=>{if(doc.hidden)stop();});
  win?.addEventListener?.("pagehide",stop);
  return {supported,start,update,stop,setVolume,setTexture,setDuck,status,model};

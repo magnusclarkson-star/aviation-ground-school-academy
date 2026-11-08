@@ -1,50 +1,72 @@
-/* Opt-in, bounded vibration cues for Academy fictional simulator.
- * Requires direct user activation and a browser implementing navigator.vibrate.
- * Silent/unsupported systems must still allow normal visual simulation.
+/* Opt-in, bounded phone vibration for fictional Academy flight controls.
+ * Browser acceptance cannot prove the hardware motor moved. No background use.
  */
 (function(root){"use strict";
 const patterns=Object.freeze({
- control:[9],rudder:[10],flap:[13],runwayRumble:[14,35,11],
- turn:[13],climb:[11],descent:[10,25,10],turbulence:[22,32,16],
- stall:[36,45,36],liftoff:[25,35,16],touchdown:[45,30,26],
- hardLanding:[80,50,65],completed:[12,40,12]
+ control:[45],rudder:[45],flap:[55],runwayRumble:[55,30,50],
+ turn:[50],climb:[50],descent:[55,25,45],turbulence:[65,35,65],
+ stall:[80,35,75],liftoff:[70,35,65],touchdown:[75,35,70],
+ hardLanding:[80,35,80],completed:[60,35,60],airflow:[55,30,55]
 });
 const gaps=Object.freeze({
- control:350,rudder:350,flap:450,runwayRumble:1400,turn:1700,
- climb:2200,descent:2200,turbulence:1250,stall:1800,
- liftoff:550,touchdown:550,hardLanding:550,completed:550
+ control:350,rudder:350,flap:450,runwayRumble:1700,turn:1700,
+ climb:2200,descent:2200,turbulence:1900,stall:1800,
+ liftoff:550,touchdown:550,hardLanding:550,completed:550,airflow:3200
 });
+const sum=items=>items.reduce((a,b)=>a+b,0);
 function createHaptics({navigatorLike,documentLike,clock}={}){
  const nav=navigatorLike||(typeof navigator!=="undefined"?navigator:null);
  const doc=documentLike||(typeof document!=="undefined"?document:null);
  const now=clock||(()=>Date.now());
  const supported=typeof nav?.vibrate==="function";
- let enabled=false,lastGlobal=-Infinity;
- const last={};
+ let enabled=false,lastGlobal=-Infinity,quality="noticeable",lastResult="not requested";
+ const last=Object.create(null);
  function stop(){
-  // Do not even request a cancellation from the Vibration API until a
-  // learner has opted in. This keeps the default state entirely inert.
   if(enabled&&supported)try{nav.vibrate(0)}catch{}
  }
  function setEnabled(value){
-  const wasEnabled=enabled;
+  const previous=enabled;
   enabled=supported&&value===true;
-  if(wasEnabled&&!enabled&&supported)try{nav.vibrate(0)}catch{}
+  if(previous&&!enabled&&supported)try{nav.vibrate(0)}catch{}
   return enabled;
  }
+ function setStrength(value){quality=value==="gentle"?"gentle":"noticeable";return quality;}
+ function request(pattern){
+  if(!supported||doc?.hidden){lastResult=supported?"page hidden":"unsupported";return false;}
+  try{
+   const accepted=nav.vibrate(pattern.slice())!==false;
+   lastResult=accepted?"browser accepted request":"browser rejected request";
+   return accepted;
+  }catch{lastResult="browser threw an error";return false;}
+ }
  function pulse(kind){
-  if(!enabled||!supported||doc?.hidden||!Object.hasOwn(patterns,kind))return false;
+  if(!enabled||!Object.prototype.hasOwnProperty.call(patterns,kind))return false;
   const t=now();
   if(!Number.isFinite(t)||t-lastGlobal<290||t-(last[kind]??-Infinity)<gaps[kind])return false;
-  const pattern=patterns[kind].slice();
-  // Each event is at most 195 ms in aggregate; never request continuous vibration.
-  try{
-   const accepted=nav.vibrate(pattern);
-   if(accepted!==false){lastGlobal=t;last[kind]=t;return true;}
-  }catch{}
+  const source=patterns[kind];
+  const pattern=quality==="gentle"?source.map(x=>Math.max(12,Math.round(x*.65))):source;
+  if(sum(pattern)>200)return false;
+  if(request(pattern)){lastGlobal=t;last[kind]=t;return true;}
   return false;
  }
- return {supported,pulse,stop,setEnabled,isEnabled:()=>enabled};
+ // Called exclusively from an explicit "Test vibration" click. This does
+ // not arm automatic flight vibration or promise that hardware moved.
+ function test(){
+  const accepted=request([80,35,80]);
+  if(accepted){lastGlobal=now();last.control=lastGlobal;last.airflow=lastGlobal;last.runwayRumble=lastGlobal;}
+  return {supported,accepted,reason:lastResult};
+ }
+ function ambience(state,input){
+  if(!enabled||!state||doc?.hidden)return false;
+  const speed=Number(state.speedKt)||0;
+  if((state.phase==="roll"||state.phase==="rollout")&&speed>=8)
+   return pulse("runwayRumble");
+  if(["climb","flight","approach","lift","hover"].includes(state.phase)&&
+     (Number(input?.turbulence)||0)>0.05) return pulse("airflow");
+  return false;
+ }
+ return {supported,pulse,ambience,test,stop,setEnabled,setStrength,
+   isEnabled:()=>enabled,status:()=>({supported,enabled,strength:quality,lastResult})};
 }
 const api={createHaptics,patterns,gaps};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
