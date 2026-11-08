@@ -131,7 +131,7 @@ for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  });
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
- input.rudder=(right?1:0)-(left?1:0);
+ input.rudder=M.clamp((right?1:0)-(left?1:0)+(keys.has("d")?.65:0)-(keys.has("a")?.65:0),-1,1);
  $("cmdRudder").textContent="RUDDER "+Math.round(input.rudder*100)+"%";
  input.brake=pointers.brake!==null||keys.has(" ");
  $("leftRudder").classList.toggle("held",left);
@@ -161,10 +161,7 @@ function syncKeys(){
   input.bank=(keys.has("ArrowRight")? .66:0)-(keys.has("ArrowLeft")?.66:0);
   input.pitch=(keys.has("ArrowDown")?.66:0)-(keys.has("ArrowUp")?.66:0);
  }
- input.rudder=(pointers.right!==null?1:0)-(pointers.left!==null?1:0)+
-  (keys.has("d")?.65:0)-(keys.has("a")?.65:0);
- input.rudder=M.clamp(input.rudder,-1,1);
- input.brake=pointers.brake!==null||keys.has(" ");
+ updateHeld();
  gripTransform();
 }
 function releaseControls(){
