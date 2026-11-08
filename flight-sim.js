@@ -132,6 +132,7 @@ for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
  input.rudder=(right?1:0)-(left?1:0);
+ $("cmdRudder").textContent="RUDDER "+Math.round(input.rudder*100)+"%";
  input.brake=pointers.brake!==null||keys.has(" ");
  $("leftRudder").classList.toggle("held",left);
  $("rightRudder").classList.toggle("held",right);
