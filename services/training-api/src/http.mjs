@@ -1,6 +1,7 @@
 import {generateSecret,hashSha256,normalizeEmail,verifyPassword,consumePasswordCost,secureEquals} from "./crypto.mjs";
 import {ClientError,validateAttempt,validateDraft,validateIdempotencyKey} from "./validation.mjs";
 import {isPortalPath,servePortal} from "./portal.mjs";
+import {validateModuleClaim,MODULE_SOURCE_STATUS,MODULE_CLAIM_DAILY_LIMIT} from "./module-learning.mjs";
 import {verifyTokenFormat} from "./invites.mjs";
 import {REALTIME_LIMITS,realtimeEnabled,realtimeAllowed,validateRealtimeRequest,createRealtimeCall,RealtimeCallRegistry} from "./realtime-voice.mjs";
 import {validateTutorRequest,validateVoiceRequest,askTutor,synthesizeTutorSpeech,aiFlags,AI_LIMITS} from "./ai-tutor.mjs";
@@ -270,6 +271,33 @@ export function createHandler(store,config={}){
     json(res,200,{status:"signed_out"},{"Set-Cookie":[
      cookie(name,"",secure,true,0),cookie(csrfName,"",secure,false,0)
     ]});return;
+   }
+   if(method==="POST"&&pathname==="/api/v1/learning/module-claims"){
+    requireRole(actor,"student");requireCsrf(req,session);
+    const claim=validateModuleClaim(await bodyJson(req));
+    const key=validateIdempotencyKey(req.headers["idempotency-key"]);
+    const digest=hashSha256(JSON.stringify(claim));
+    const outcome=await store.createModuleClaim(actor,key,digest,claim);
+    if(outcome.conflict)
+     throw requestError(409,"idempotency_conflict","The same key was used with another module claim");
+    json(res,outcome.created?201:200,{
+     id:outcome.id,created:outcome.created,receivedAt:outcome.receivedAt,
+     sourceStatus:MODULE_SOURCE_STATUS,flightCredit:false,certificateEligible:false,
+     notice:"Authenticated receipt of unverified browser data. Not a grade, exam, instructor approval or training record."
+    });return;
+   }
+   if(method==="GET"&&pathname==="/api/v1/learning/module-claims"){
+    requireRole(actor,"student");
+    const items=await store.listOwnModuleClaims(actor,getLimit(url));
+    json(res,200,{items,sourceStatus:MODULE_SOURCE_STATUS,
+     dailyImportLimit:MODULE_CLAIM_DAILY_LIMIT,
+     officialAssessment:false});return;
+   }
+   if(method==="GET"&&pathname==="/api/v1/instructor/assigned-module-claims"){
+    requireRole(actor,"instructor");
+    const items=await store.listAssignedModuleClaims(actor,getLimit(url));
+    json(res,200,{items,sourceStatus:MODULE_SOURCE_STATUS,
+     officialAssessment:false});return;
    }
    if(method==="POST"&&pathname==="/api/v1/practice-attempts"){
     requireRole(actor,"student");requireCsrf(req,session);
