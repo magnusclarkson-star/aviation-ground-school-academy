@@ -198,3 +198,15 @@
  .cockpit-station .control-panel .control-pad{height:91px}
  .cockpit-station .control-panel .flight-grip{height:88px}
 }
+
+/* Keep the steering and anti-torque/rudder touch zones within thumb reach. */
+@media(max-width:740px){
+ .cockpit-station .control-panel #controlHint{
+  position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;
+  white-space:nowrap;padding:0;margin:0;border:0
+ }
+ .cockpit-station .control-panel .control-pad{height:96px}
+ .cockpit-station .control-panel .flight-grip{height:93px}
+ .cockpit-station .control-panel .axis-values{margin-top:1px}
+ .cockpit-station .control-panel .axis-values span{padding:1px;font-size:8px}
+}
