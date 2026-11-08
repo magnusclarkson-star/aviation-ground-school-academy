@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice;
+ V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -18,13 +18,17 @@ const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
+ clearTrace();
+const trace=R.makeRecorder();
+function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;}
+function clearTrace(){trace.clear();traceStatus();}
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
 let hardware=null;
 let exerciseSession=X.begin("cgTransfer","trainer");
 let exerciseApplying=false;
 let instructorVoice=null;
-let paused=false,lastFrame=0,prevView=0,dragPointer=null;
+let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
 let lastPhase=state.phase;
@@ -294,6 +298,7 @@ function setMode(next){
   $("pauseFlight").textContent="Pause simulation";
   lastPhase=state.phase;
   practice=G.start(state);
+  clearTrace();
   systems=A.create(state.mode);
   A.step(systems,state,input,0);
  }
@@ -533,6 +538,16 @@ $("hapticsToggle").addEventListener("click",()=>{
   haptics.supported?"Off. No vibration will be requested.":"This browser does not expose phone vibration. The simulator still works visually.";
  if(enabled)haptics.pulse("control");
 });
+$("traceStart").addEventListener("click",()=>{trace.start(state);traceStatus();});
+$("traceStop").addEventListener("click",()=>{trace.stop();traceStatus();});
+$("traceClear").addEventListener("click",clearTrace);
+$("traceDownload").addEventListener("click",()=>{
+ const data=trace.exportData();if(!data.observations.length||trace.status().active)return;
+ const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+ const a=document.createElement("a");a.href=url;a.download="academy-unsigned-synthetic-flight-trace.json";
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $("traceStatus").textContent="Unsigned synthetic trace downloaded locally. Review before sharing.";
+});
 function frame(now){
  const dt=lastFrame?Math.min(.08,Math.max(0,(now-lastFrame)/1000)):0;
  lastFrame=now;
@@ -542,6 +557,7 @@ function frame(now){
   const result=M.step(state,input,dt);
   A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
+  trace.sample(state,input,dt);
   // Prioritise distinctive events over routine rate-limited ambience.
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
@@ -554,6 +570,7 @@ function frame(now){
  }
  drawScenery(now);
  if(now-prevView>42){updateReadouts();prevView=now;}
+ if(now-prevViewTrace>500){traceStatus();prevViewTrace=now;}
  requestAnimationFrame(frame);
 }
 if(!haptics.supported){
