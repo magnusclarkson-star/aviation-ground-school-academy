@@ -90,7 +90,7 @@ try{
  await phone.locator('#phoneFeedbackStart').click();
  await phone.waitForFunction(()=>document.querySelector('#engineAudioToggle')?.getAttribute('aria-pressed')==='true');
  assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'true');
- assert.equal(await phone.evaluate(()=>window.__phoneProbe.contexts.length),3,'speaker + engine + radio cue contexts created after a user click');
+ assert.equal(await phone.evaluate(()=>window.__phoneProbe.contexts.length),4,'speaker, engine, radio tone and radio squelch contexts created after a user click');
  assert.equal(await phone.locator('#engineAudioVolume').inputValue(),'100');
  assert.equal(await phone.locator('#engineAudioTexture').inputValue(),'textured');
  assert.equal(await phone.locator('#atcAutoToggle').getAttribute('aria-pressed'),'true','tower automatically armed by one-tap full flight');
