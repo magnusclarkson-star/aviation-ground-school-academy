@@ -41,12 +41,12 @@ function step(system,state,input,seconds){
   r.tailPitch=rudder*.17;
  }else{
   r.propeller=system.rotation;
-  r.leftAileron=-bank*19*RAD;
+  r.leftAileron=bank===0?0:-bank*19*RAD;
   r.rightAileron=bank*19*RAD;
   r.leftFlap=-system.flapDeg*RAD;
   r.rightFlap=-system.flapDeg*RAD;
-  r.elevatorLeft=-pitch*16*RAD;
-  r.elevatorRight=-pitch*16*RAD;
+  r.elevatorLeft=pitch===0?0:-pitch*16*RAD;
+  r.elevatorRight=pitch===0?0:-pitch*16*RAD;
   r.rudder=rudder*24*RAD;
  }
  return system;
