@@ -11,6 +11,7 @@ let state=M.makeState(),input=M.makeInput(),mode="analog",pfdPage="pfd";
 let focus=0,paused=false,previous=0,lastDraw=0,presetUntil=0,trail=[],controlStyle="yoke";
 let mission=null,lastMissionPhase=null,skillsSession=null;
 let skillsCoachCache=null,skillsCoachRendered=false,skillsSaved=false,journalDeleteArmed=false;
+let liveCoachVoiceEnabled=false,liveCoachLastSpeechAt=-100,liveCoachLastSpokenKey="",liveCoachWasRunning=false;
 const instruments=[
  ["asi","Airspeed indicator","The indicated airspeed needle uses a numbered dial with colored reference arcs. Airspeed changes with throttle, pitch and flaps. The arcs are conceptual and MUST be checked against a real aircraft's approved operating handbook."],
  ["att","Attitude indicator","The miniature aircraft is fixed. Blue represents sky, brown represents ground, and the moving horizon shows pitch and bank. Pulling the yoke raises the nose and moves the horizon down."],
@@ -278,6 +279,8 @@ function selectSkillTask(id){
  const Skills=window.CockpitV3Skills;
  if(!Skills)throw Error("Skills practice module did not load");
  skillsSession=Skills.create(id);
+ setLiveCoachVoice(false);
+ liveCoachWasRunning=false;
  stopCoachVoice("Voice practice review stopped. Select Read practice review after finishing.");
  skillsCoachCache=null;skillsCoachRendered=false;skillsSaved=false;
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
@@ -288,6 +291,51 @@ function selectSkillTask(id){
  $("skillsSelect").value=id;
  if(window.CockpitV3Focus)window.CockpitV3Focus.dockSkills(id);
  renderSkills();
+}
+function setLiveCoachVoice(enabled){
+ liveCoachVoiceEnabled=!!enabled&&canSpeakCoach();
+ liveCoachLastSpeechAt=-100;
+ liveCoachLastSpokenKey="";
+ if(!liveCoachVoiceEnabled){
+  try{if("speechSynthesis" in window)window.speechSynthesis.cancel();}catch{}
+ }
+ $("skillsLiveVoice").setAttribute("aria-pressed",String(liveCoachVoiceEnabled));
+ $("skillsLiveVoice").textContent=liveCoachVoiceEnabled?"Turn off spoken cues":"Enable spoken practice cues";
+ $("skillsLiveVoiceStatus").textContent=liveCoachVoiceEnabled
+  ?"Voice enabled for this simulated observation. Cues are spaced apart and use device speech."
+  :"Voice off. Written cues remain beside the flight display. Synthetic device speech only.";
+}
+function renderLiveCoach(running,done){
+ const node=$("skillsLiveCue");
+ const cue=running?window.CockpitV3LiveCoach.cue(skillsSession.id,state,input):null;
+ const message=running?cue.text:done
+  ?"Observation finished. Review the result and the related Academy lesson."
+  :"Begin the observation to see short cockpit teaching cues beside the instruments.";
+ if(node.textContent!==message)node.textContent=message;
+ $("skillsLiveVoice").disabled=!canSpeakCoach();
+ if(liveCoachWasRunning&&!running){
+  try{if(liveCoachVoiceEnabled)window.speechSynthesis.cancel();}catch{}
+  liveCoachWasRunning=false;
+  if(liveCoachVoiceEnabled)$("skillsLiveVoiceStatus").textContent="Observation ended. No further live cues will be spoken.";
+ }
+ if(!running)return;
+ liveCoachWasRunning=true;
+ if(paused||document.hidden||!liveCoachVoiceEnabled||!canSpeakCoach())return;
+ const t=skillsSession.elapsed;
+ if(!window.CockpitV3LiveCoach.shouldSpeak({
+  enabled:true,elapsed:t,key:cue.key,lastKey:liveCoachLastSpokenKey,lastAt:liveCoachLastSpeechAt
+ }))return;
+ try{
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance("Simulated cockpit practice cue. "+cue.text);
+  utterance.lang="en-GB";utterance.rate=.95;
+  utterance.onerror=()=>$("skillsLiveVoiceStatus").textContent="Device voice unavailable. Continue with the written cue beside the PFD.";
+  window.speechSynthesis.speak(utterance);
+  liveCoachLastSpeechAt=t;liveCoachLastSpokenKey=cue.key;
+ }catch{
+  setLiveCoachVoice(false);
+  $("skillsLiveVoiceStatus").textContent="Device voice unavailable. Written practice cues remain on-screen.";
+ }
 }
 function renderSkills(){
  if(!skillsSession||mode!=="skills")return;
@@ -302,6 +350,7 @@ function renderSkills(){
  $("skillsMatched").textContent=skillsSession.percent+"%";
  $("skillsProgress").value=skillsSession.elapsed;
  $("skillsResult").textContent=skillsSession.feedback;
+ renderLiveCoach(running,done);
  $("skillsMiniPhase").textContent=task.title;
  $("skillsMiniHint").textContent=running
   ?skillsSession.elapsed.toFixed(1)+"s / "+Skills.duration+"s · "+skillsSession.percent+"% within target"
@@ -479,7 +528,11 @@ function downloadSkillReport(){
  downloadJSON(report,"academy-unofficial-"+skillsSession.id+"-practice.json");
 }
 function setMode(next){
- if(mode==="skills"&&next!=="skills")stopCoachVoice("Practice review reading stopped.");
+ if(mode==="skills"&&next!=="skills"){
+  setLiveCoachVoice(false);
+  liveCoachWasRunning=false;
+  stopCoachVoice("Practice review reading stopped.");
+ }
  const wasMission=mode==="mission",wasSkills=mode==="skills";
  if(next==="mission"&&!wasMission){
   mission=null;
@@ -518,6 +571,7 @@ function setMode(next){
  $("missionMiniStatus").classList.toggle("hidden",mode!=="mission");
  $("skillsPanel").classList.toggle("hidden",mode!=="skills");
  $("skillsMiniStatus").classList.toggle("hidden",mode!=="skills");
+ $("skillsLiveCue").classList.toggle("hidden",mode!=="skills");
  $("mapTab").disabled=mode==="skills";
  $("engineTab").disabled=mode==="skills";
  $("controlOverview").classList.toggle("hidden",["focus","digital","mission","skills"].includes(mode));
@@ -620,6 +674,7 @@ function wireControls(){
  $("skillsRetry").onclick=()=>{if(mode==="skills"){selectSkillTask($("skillsSelect").value);paint();}};
  $("skillsExport").onclick=downloadSkillReport;
  $("skillsSave").onclick=saveSkillAttempt;
+ $("skillsLiveVoice").onclick=()=>{setLiveCoachVoice(!liveCoachVoiceEnabled);renderSkills();};
  $("coachSpeak").onclick=speakCoachReview;
  $("coachStop").onclick=()=>stopCoachVoice("Practice review reading stopped.");
  $("skillsExportJournal").onclick=exportSkillJournal;
@@ -656,7 +711,7 @@ function wireControls(){
   if(!("speechSynthesis" in window))return;
   speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(instruments[focus][1]+". "+instruments[focus][2]);u.rate=.94;speechSynthesis.speak(u);
  };
- $("pauseBtn").onclick=()=>{paused=!paused;$("pauseBtn").setAttribute("aria-pressed",String(paused));$("pauseBtn").textContent=paused?"Resume flight":"Pause flight";};
+ $("pauseBtn").onclick=()=>{paused=!paused;if(paused&&liveCoachVoiceEnabled)try{window.speechSynthesis.cancel();}catch{}$("pauseBtn").setAttribute("aria-pressed",String(paused));$("pauseBtn").textContent=paused?"Resume flight":"Pause flight";};
  $("resetBtn").onclick=reset;
  $("throttle").addEventListener("input",e=>{cancelPreset();input.throttle=Number(e.target.value);$("outThrottle").textContent=round(input.throttle)+"%";});
  $("trim").addEventListener("input",e=>{cancelPreset();input.trim=Number(e.target.value)/100;$("outTrim").textContent=round(input.trim*100)+"%";});
@@ -701,7 +756,8 @@ function wireControls(){
   if(e.code==="KeyA"||e.code==="KeyD"){keys.add(e.code);cancelPreset();input.rudder=keys.has("KeyD")?1:keys.has("KeyA")?-1:0;}
  });
  window.addEventListener("keyup",e=>{keys.delete(e.code);input.rudder=keys.has("KeyD")?1:keys.has("KeyA")?-1:0});
- window.addEventListener("blur",()=>{releaseYoke();input.rudder=0;});
+ window.addEventListener("blur",()=>{releaseYoke();input.rudder=0;if(liveCoachVoiceEnabled)setLiveCoachVoice(false);});
+ document.addEventListener("visibilitychange",()=>{if(document.hidden&&liveCoachVoiceEnabled)setLiveCoachVoice(false);});
  $("runSelfTest").onclick=()=>{
   const s=M.makeState(),a=M.makeInput();
   a.yokeY=-.65;a.throttle=82;for(let i=0;i<180;i++)M.step(s,a,1/40);
