@@ -1,0 +1,40 @@
+/* Structured fictional exercises remain visible below the loading panel and
+ * do not overlay touch controls or the sticky flight instrument view. */
+.exercise-lab{background:#102c3e;border:1px solid #638ca0;padding:12px;border-radius:12px;min-width:0}
+.exercise-lab.hidden{display:none!important}
+.exercise-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px}
+.exercise-head h3{font-size:15px;margin:0;color:#f7dcaf}
+.exercise-review{color:#f7d2a3;border:1px solid #ac8558;border-radius:7px;padding:5px 7px;
+ font-size:10px;font-weight:850}
+.exercise-lab>.hint{font-size:11px;color:#c5d8e6;line-height:1.5;margin:9px 0}
+.exercise-lab label{display:block;font-size:11px;font-weight:800;color:#e4f1f7;margin:9px 0 4px}
+.exercise-lab select{width:100%;min-width:0;min-height:43px;padding:8px;border:1px solid #729bb0;
+ border-radius:8px;background:#122d41;color:#edf7f9;font-size:12px;line-height:1.4}
+.exercise-goal{font-size:11px;color:#bde6db;font-weight:750;margin:12px 0 5px}
+.exercise-question{font-size:13px;font-weight:850;line-height:1.5;color:#ffe6bf;margin:8px 0}
+.exercise-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.exercise-actions button{flex:1 1 180px;min-height:42px;border-radius:8px;font-size:11px}
+.exercise-observations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;min-width:0}
+.exercise-observations>div{background:#0b2433;border:1px solid #547789;padding:9px;border-radius:8px;min-width:0}
+.exercise-observations small{font-size:9px;letter-spacing:.04em;color:#a6d4e9;font-weight:850}
+.exercise-observations p{margin:4px 0 0;font-size:11px;line-height:1.5;color:#e7f3fa;overflow-wrap:anywhere}
+.exercise-evidence{font-size:10px;line-height:1.6;color:#dceaf0;padding:8px;border-left:3px solid #81aabd;background:#102737}
+.exercise-feedback{font-size:11px;line-height:1.6;color:#d9e8f0;border-left:4px solid #8bb7cf;
+ background:#1b3749;padding:9px 11px;margin:9px 0}
+.exercise-feedback[data-result="matches-model"]{border-color:#77c1a4;background:#183d39;color:#ddf3e8}
+.exercise-feedback[data-result="revisit"]{border-color:#e3aa70;background:#44342a;color:#ffe7c6}
+.exercise-disclaimer{font-size:10px;line-height:1.5;color:#d8c5ac;margin:9px 0 0}
+.exercise-disclaimer code{font-size:10px;overflow-wrap:anywhere}
+@media(max-width:740px){
+ .exercise-lab{padding:9px}
+ .exercise-head h3{font-size:13px}
+ .exercise-lab>.hint,.exercise-goal,.exercise-observations p,.exercise-feedback{font-size:10px}
+ .exercise-actions button{flex:1 1 125px;min-height:44px}
+ .exercise-review{font-size:9px}
+ .exercise-observations{gap:5px}
+ .exercise-observations>div{padding:6px}
+ .exercise-lab select{font-size:11px;min-height:44px}
+ .exercise-disclaimer{font-size:9px}
+}
+@media(max-width:345px){.exercise-observations{grid-template-columns:1fr}}
