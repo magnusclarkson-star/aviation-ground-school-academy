@@ -153,3 +153,25 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
  .audio-block{padding:10px}
  .atc-buttons button{flex:1 1 125px;max-width:100%;min-height:44px}
 }
+
+/* Immediate sound/haptics access on phones without hiding the sticky cockpit. */
+.phone-feedback{margin:10px 0 2px;padding:12px 15px;border-color:#8bb5c7;background:linear-gradient(130deg,#113349,#092637)}
+.phone-feedback-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.phone-feedback-heading strong{color:#f7dfad;font-size:16px}
+.phone-feedback-heading p{margin:5px 0;font-size:12px}
+.phone-feedback-heading label{font-size:11px;display:grid;gap:5px}
+.phone-feedback-heading select{min-height:40px;max-width:220px;border-radius:7px;color:#ecf8ff;border:1px solid #7a9aa9;background:#0d2b40;padding:5px}
+.phone-feedback-buttons{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:7px;margin:10px 0 6px}
+.phone-feedback-buttons button{min-width:0;white-space:normal;line-height:1.25;padding:9px 7px}
+.phone-feedback-buttons #phoneFeedbackStart{border-color:#f5cd86;background:#775624;color:#fff7e8}
+.phone-feedback #phoneFeedbackStatus{color:#d9f4df;margin:7px 0;font-size:12px}
+.phone-feedback .hint{font-size:11px;margin:5px 0}
+@media(max-width:740px){
+ .phone-feedback{padding:10px;margin:8px 0 0}
+ .phone-feedback-heading{align-items:start;flex-wrap:wrap;gap:6px}
+ .phone-feedback-heading label{display:flex;justify-content:space-between;align-items:center;width:100%;gap:6px}
+ .phone-feedback-heading select{max-width:60%;width:60%;min-width:0}
+ .phone-feedback-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .phone-feedback-buttons button{font-size:11px;min-height:44px}
+ .phone-feedback-heading strong{font-size:14px}
+}
