@@ -26,7 +26,7 @@ jobs:
           node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs
 
   private-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
