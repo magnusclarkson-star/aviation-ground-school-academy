@@ -166,8 +166,8 @@ try{
   assert.ok(sig.width<=960&&sig.height<=540,"GPU render-size budget protects phone");
  }
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
- const sticky=await phone.locator(".scene-panel").boundingBox();
- assert.ok(sticky&&sticky.y>=-7&&sticky.y<45);
+ assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","only the shallow windscreen sticks within the cockpit");
+ assert.equal(await phone.locator("#controlPad").evaluate(el=>!!el.closest("#cockpitStation")),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
