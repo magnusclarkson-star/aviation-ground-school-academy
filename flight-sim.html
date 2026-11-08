@@ -110,8 +110,32 @@
     </label>
    </div>
    <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
+   <div class="cockpit-adjust-row" aria-label="Adjust touchscreen control feel">
+    <label for="cockpitTouchScale">Touch control size
+     <select id="cockpitTouchScale">
+      <option value="compact">Compact</option>
+      <option value="standard" selected>Standard</option>
+      <option value="large">Larger controls</option>
+     </select>
+    </label>
+    <label for="cockpitTouchSensitivity">Steering sensitivity
+     <select id="cockpitTouchSensitivity">
+      <option value="0.75">Gentle</option>
+      <option value="1" selected>Normal</option>
+      <option value="1.3">Responsive</option>
+     </select>
+    </label>
+    <span>Tap any gauge or display to enlarge it while flying.</span>
+   </div>
    <div id="cockpitMain" class="cockpit-main">
-    <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Dynamic aircraft-style cockpit instruments"></div>
+    <div id="cockpitInstrumentWell" class="cockpit-instrument-well">
+     <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Tap individual live aircraft-style instruments to enlarge"></div>
+     <section id="cockpitZoomPanel" class="cockpit-zoom-panel" aria-label="Enlarged live cockpit instrument" hidden>
+      <div class="cockpit-zoom-head"><strong id="cockpitZoomTitle">Instrument</strong><button type="button" id="cockpitZoomClose">Close ✕</button></div>
+      <div id="cockpitZoomContent" class="cockpit-zoom-content"></div>
+      <small>Simulated live readings, not certified aircraft data. Flight controls remain accessible alongside.</small>
+     </section>
+    </div>
    </div>
    <p class="cockpit-note">Flight control: <strong id="cockpitGripLabel">Yoke</strong>. Instruments and yoke, stick, cyclic, throttle, collective and pedals are in the same cockpit area. Hold two fingers to steer and use a pedal.</p>
   </section>
