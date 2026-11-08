@@ -133,7 +133,14 @@
  #flightInstruments .readouts small{font-size:7px}
  #flightInstruments .readouts strong{font-size:11px}
  #flightInstruments .instruments-telemetry .readouts>div{padding:2px}
- #flightInstruments .wind-readouts,#flightInstruments .aircraft-systems-strip,#flightInstruments .alignment-widget{display:none}
+ /* Keep wind, track, engine-system and runway-offset readouts accessible.
+    They remain in the same scrollable cockpit below the primary panel. */
+ #flightInstruments .wind-readouts{display:flex;flex-wrap:wrap;gap:3px;padding:3px}
+ #flightInstruments .wind-readouts span{font-size:8px}
+ #flightInstruments .aircraft-systems-strip{display:grid}
+ #flightInstruments .aircraft-systems-strip small{font-size:7px}
+ #flightInstruments .aircraft-systems-strip strong{font-size:9px}
+ #flightInstruments .alignment-widget{display:flex;padding:3px}
 }
 @media(max-width:365px){.cockpit-gauge-title{font-size:7px}.cockpit-gauge-number{font-size:9px}.cockpit-station .control-panel .rudder-deck .hint{display:none}}
 
