@@ -40,7 +40,6 @@ function aircraftFootprint(x,z,headingDeg=0){
   z+ahead*forward[1]+across*side[1]
  ];
  return Object.freeze({
-  fuselage:freezeList([]), // placeholder compatibility is not used for geometry
   spine:[point(-5,0),point(5,0)],
   wings:[point(-.1,-7),point(-.1,7)],
   tail:[point(-3.5,-2.7),point(-3.5,2.7)],
