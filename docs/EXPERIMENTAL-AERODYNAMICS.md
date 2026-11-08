@@ -38,3 +38,7 @@ The helicopter *always uses the existing conceptual collective/cyclic model*; th
 **Known limitations:** These invented coefficients do not capture a real wing's lift/drag polars, density-altitude effects, real stall/spin behaviour, wind shear, slip, ground friction, engine/propeller maps, weight and balance, energy calibration, qualified manoeuvres, aircraft-specific emergency procedures, or instrument validation. Successful in-app takeoff or touchdown does not indicate the student can fly. Results are not persisted or counted toward qualification or training credit.
 
 **Remaining acceptance:** Physical Android and iPhone testing, actual joystick/pedal testing, performance/thermal and accessibility assessment, and independent instructor/subject-matter-expert review. All synthetic warnings and lesson text need expert verification before use in a formal aviation curriculum.
+
+## Fictional loading and centre-of-gravity study
+
+An additional loading panel accompanies the experimental fixed-wing model with four invented station masses, mass moments, CG expressed as a percent of imaginary mean aerodynamic chord, and conceptual wing loading. The chosen loadout affects the experimental mass, acceleration and bounded pitch sensitivity. This is never a real aircraft weight-and-balance calculation, and it has no approved aircraft limits. See [Fictional Weight and Balance Lab](FICTIONAL-WEIGHT-BALANCE-LAB.md) for exact scope, safeguards and test coverage.

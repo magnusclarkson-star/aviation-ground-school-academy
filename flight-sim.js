@@ -6,9 +6,10 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
- A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics;
+ A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
+ W=window.AGSAFlightLoading;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -156,6 +157,31 @@ function updateReadouts(){
    "EXPERIMENTAL · Calculated forces and energy use invented coefficients, not real aircraft limits.";
  }
 }
+const loadingFields=[
+ ["loadPilot","pilotKg","loadPilotValue"],
+ ["loadPassenger","passengerKg","loadPassengerValue"],
+ ["loadBaggage","baggageKg","loadBaggageValue"],
+ ["loadFuel","fuelKg","loadFuelValue"]
+];
+function currentLoadout(){
+ const values={};
+ for(const [id,key] of loadingFields)values[key]=Number($(id).value);
+ return values;
+}
+function renderLoadingPreview(preview=false){
+ const load=W.evaluate($("profileSelect").value,currentLoadout());
+ for(const [id,key,label] of loadingFields)$(label).textContent=load.loadout[key]+" kg";
+ $("loadingMass").textContent=load.totalKg+" kg";
+ $("loadingMoment").textContent=load.momentKgM.toFixed(1)+" kg·m";
+ $("loadingCg").textContent=load.cgPercentMAC.toFixed(1)+"%";
+ $("loadingWing").textContent=load.wingLoadingKgM2.toFixed(1)+" kg/m²";
+ $("loadingCgMarker").style.left=Math.max(0,Math.min(100,load.cgPercentMAC)).toFixed(1)+"%";
+ $("loadingStatus").dataset.level=load.withinFictionalBand?"normal":"caution";
+ $("loadingStatus").textContent=load.balanceLabel+
+  ". All mass/CG bands are fictional, not real loading limits."+
+  (preview?" Release the slider to restart this training scenario.":"");
+ return load;
+}
 function reportEnvironment(){
  const profile=state.mode==="airplane"?E.selectProfile(state.profileId):null;
  const wind=E.selectWind(state.windId);
@@ -166,6 +192,9 @@ function reportEnvironment(){
  $("environmentStatus").textContent=(profile?profile.name:"Conceptual rotorcraft")+" · "+
   wind.name+" · "+(state.physicsId==="aero"?"Experimental energy dynamics":"Classic learning model")+
   ". Changing a setting restarts this fictional scenario.";
+ const loadingActive=state.mode==="airplane"&&state.physicsId==="aero";
+ show("loadingWrap",loadingActive);
+ if(loadingActive)renderLoadingPreview();
  $("physicsHint").textContent=state.mode==="helicopter"?
   "The conceptual helicopter retains its original simplified hover model. Experimental aerodynamics apply only to fictional aeroplanes.":
   state.physicsId==="aero"?
@@ -176,7 +205,8 @@ function makeConfiguredState(mode,scenario="runway"){
  return M.makeState(mode,scenario,{
   profileId:$("profileSelect").value,
   windId:$("windSelect").value,
-  physicsId:$("physicsSelect").value
+  physicsId:$("physicsSelect").value,
+  loadout:currentLoadout()
  });
 }
 function setMode(next){
@@ -346,6 +376,13 @@ $("flaps").addEventListener("change",e=>{input.flaps=Number(e.target.value);hapt
 $("profileSelect").addEventListener("change",()=>reset(state.scenario));
 $("windSelect").addEventListener("change",()=>reset(state.scenario));
 $("physicsSelect").addEventListener("change",()=>reset(state.scenario));
+for(const [id] of loadingFields){
+ $(id).addEventListener("input",()=>renderLoadingPreview(true));
+ $(id).addEventListener("change",()=>{
+  if(state.mode==="airplane"&&state.physicsId==="aero")reset(state.scenario);
+  else renderLoadingPreview();
+ });
+}
 $("turbulence").addEventListener("input",e=>{
  input.turbulence=intensity[Number(e.target.value)]??.14;
  $("turbulenceValue").textContent=intensityNames[Number(e.target.value)]??"Light";

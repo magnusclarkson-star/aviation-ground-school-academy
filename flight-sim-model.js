@@ -38,7 +38,7 @@ function makeState(mode="airplane",scenario="runway",options={}){
   verticalMs:approach?-1.8:0,pitchDeg:approach?-2.8:0,rollDeg:0,headingDeg:0,
   lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:!approach,
   message:approach?"Fictional short-final setup. Descend toward the pictured runway.":"Set simulated power, build speed and gently rotate to explore liftoff."};
- return physicsId==="aero"?D.prepare(plane):plane;
+ return physicsId==="aero"?D.prepare(plane,options.loadout):plane;
 }
 function step(state,input,seconds){
  const dt=clamp(seconds,0,.1);
@@ -52,7 +52,11 @@ function step(state,input,seconds){
  state.turbulence=turb*(Math.sin(t*2.91)*.55+Math.sin(t*7.31)*.3);
  const bank=clamp(input.bank,-1,1),pitch=clamp(input.pitch,-1,1),rudder=clamp(input.rudder,-1,1);
  const rollTarget=bank*(state.mode==="helicopter"?13:p.bankDeg)+state.turbulence*2.5;
- const pitchTarget=-pitch*(state.mode==="helicopter"?9:p.pitchDeg)+state.turbulence*1.2;
+ // An aft/forward CG modifies *only* the experimental fictional pitch
+ // response. Classic and conceptual rotorcraft handling are unchanged.
+ const loadingPitch=state.physicsId==="aero"?
+  (state.loading?.pitchAuthority??1):1;
+ const pitchTarget=-pitch*(state.mode==="helicopter"?9:p.pitchDeg*loadingPitch)+state.turbulence*1.2;
  state.rollDeg=smooth(state.rollDeg,rollTarget,state.mode==="helicopter"?2:p.rollResponse,dt);
  state.pitchDeg=smooth(state.pitchDeg,pitchTarget,state.mode==="helicopter"?1.7:p.pitchResponse,dt);
  if(turb>.25&&Math.abs(state.turbulence)>.12)events.push("turbulence");

@@ -1,0 +1,36 @@
+/* Responsive read-only educational CG and mass comparison panel. */
+.loading-settings{min-width:0;border:1px solid #688fa3;background:#0f2d3e;
+ padding:12px;border-radius:11px}
+.loading-settings.hidden{display:none!important}
+.loading-settings h3{font-size:14px;font-weight:850;margin:0 0 7px;color:#f5deb0}
+.loading-settings>.hint{font-size:10px;color:#c9dce8;line-height:1.5}
+.loading-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;margin:10px 0}
+.loading-grid label{display:block;min-width:0;font-size:11px;color:#d5e9f4;font-weight:700}
+.loading-grid label strong{font-size:11px;color:#f7dba5;float:right;font-variant-numeric:tabular-nums}
+.loading-grid input[type=range]{display:block;width:100%;max-width:100%;margin:8px 0;min-height:26px;
+ accent-color:#7cd4e8;touch-action:pan-y;cursor:pointer}
+.loading-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:0;border:1px solid #4a758d;border-radius:8px;overflow:hidden}
+.loading-results>div{display:flex;flex-direction:column;padding:6px 9px;background:#102739;
+ border-bottom:1px solid #41667b}
+.loading-results>div:nth-child(odd){border-right:1px solid #41667b}
+.loading-results>div:nth-last-child(-n+2){border-bottom:0}
+.loading-results small{font-size:8px;letter-spacing:.02em;color:#bed9e7;line-height:1.45}
+.loading-results strong{font-size:14px;color:#f5dc9c;font-variant-numeric:tabular-nums}
+.cg-track{height:16px;border-radius:10px;background:linear-gradient(90deg,#425766,#334855);margin:15px 9px 4px;
+ border:1px solid #77919f;position:relative;overflow:visible}
+.cg-band{position:absolute;left:30%;width:25%;height:100%;background:#5a9e92;opacity:.85}
+.cg-marker{position:absolute;left:45%;top:-4px;height:22px;width:4px;transform:translateX(-50%);
+ border-radius:3px;background:#ffdb96;box-shadow:0 0 0 1px #192d37}
+.loading-status{margin:8px 0 0!important;padding:8px;border-left:3px solid #83bfa6;
+ background:#163c3c;color:#d7f0df;font-size:10px;line-height:1.5}
+.loading-status[data-level="caution"]{background:#43342a;border-color:#e8af72;color:#ffe0b5}
+@media(max-width:740px){
+ .loading-settings{padding:9px}
+ .loading-grid{gap:4px 8px}
+ .loading-grid label,.loading-grid label strong{font-size:10px}
+ .loading-results small{font-size:7px}
+ .loading-results strong{font-size:12px}
+ .loading-grid input[type=range]{min-height:30px}
+}
+@media(max-width:345px){.loading-grid{grid-template-columns:1fr}}
