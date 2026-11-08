@@ -7,9 +7,10 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
- W=window.AGSAFlightLoading;
+ W=window.AGSAFlightLoading,
+ X=window.AGSAFlightExercises,Y=window.AGSAFlightExercisesUI;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!Y){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -20,6 +21,7 @@ let practice=G.start(state);
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
 let hardware=null;
+let guided=null;
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -156,6 +158,7 @@ function updateReadouts(){
    "EXPERIMENTAL STALL / LOW-ENERGY CUE · Compare fictional wing loading, airspeed and pitch. Reset if needed. Not a real aircraft warning.":
    "EXPERIMENTAL · Calculated forces and energy use invented coefficients, not real aircraft limits.";
  }
+ guided?.observe();
 }
 const loadingFields=[
  ["loadPilot","pilotKg","loadPilotValue"],
@@ -466,6 +469,22 @@ if(!haptics.supported){
 }
 setMode("yoke");
 input.turbulence=.14;
+guided=Y.attach({
+ model:X,documentLike:document,windowLike:window,
+ readState:()=>state,readInput:()=>input,
+ configure:preset=>{
+  // Learner-selected guided sessions configure only local controls.
+  // Reset uses existing input release, haptic cancellation and scenario setup.
+  if(type==="cyclic")setMode("yoke");
+  $("profileSelect").value=preset.profileId;
+  $("physicsSelect").value=preset.physicsId;
+  $("windSelect").value=preset.windId;
+  if(preset.resetLoading){
+   for(const [id,key] of loadingFields)$(id).value=String(W.DEFAULT[key]);
+  }
+  reset(preset.scenario);
+ }
+});
 chooseVisual();
 requestAnimationFrame(frame);
 })();
