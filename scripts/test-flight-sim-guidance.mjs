@@ -14,7 +14,7 @@ assert.match(G.guidance(runway,controls).text,/throttle/);
 assert.equal(G.guidance({...runway,speedKt:36},controls).tag,"RUNWAY · ACCELERATING");
 assert.equal(G.guidance({...runway,speedKt:55},controls).tag,"RUNWAY · PITCH RESPONSE");
 
-runway.phase="climb";runway.altitudeM=35;runway.verticalMs=2.6;runway.time=13;
+runway.phase="climb";runway.altitudeM=35;runway.verticalMs=2.6;runway.speedKt=83;runway.time=13;
 G.observe(session,runway,["liftoff","climb"]);
 assert.deepEqual(session.phaseVisits,["roll","climb"]);
 assert.equal(session.liftoffs,1);
