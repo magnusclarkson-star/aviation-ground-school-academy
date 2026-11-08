@@ -72,7 +72,7 @@ try{
   assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-grid').count(),1);
   assert.ok(await desktop.locator('.'+expectedClass).count()>0,id+' unique layout');
   assert.equal(await desktop.locator('#cockpitJetHud').isVisible(),true);
-  assert.match(await desktop.locator('#cockpitAircraftNotice').textContent(),/fictional trainer flight model/i);
+  assert.equal(await desktop.locator('#cockpitAircraftNotice').textContent(),'FLIGHT DISPLAYS');
   assert.equal(await desktop.locator('#cockpitVisualPanel').evaluate(el=>el.closest('#cockpitStation')!==null),true);
   assert.equal(await desktop.locator('#controlPad').evaluate(el=>el.closest('#cockpitStation')!==null),true);
  }
