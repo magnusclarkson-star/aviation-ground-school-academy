@@ -20,11 +20,11 @@ function step(system,state,input,seconds){
  const bank=clamp(input?.bank,-1,1),pitch=clamp(input?.pitch,-1,1);
  const rudder=clamp(input?.rudder,-1,1);
  if(dt){
-  const target=heli?.84:.1+.9*throttle;
+  const target=heli ? .84 : (.1+.9*throttle);
   // A fixed illustrated rotor RPM independent of helicopter collective;
   // collective instead changes blade pitch conceptually.
   system.powerPct=smooth(system.powerPct,target*100,heli?1.1:1.6,dt);
-  system.rotation=(system.rotation+(heli?18:12)+system.powerPct*(heli?.22:.47))*dt;
+  system.rotation=(system.rotation+((heli?18:12)+system.powerPct*(heli?.22:.47))*dt)%TAU;
   system.tailRotation=(system.tailRotation+(heli?25:40)*dt)%TAU;
   system.rotation%=TAU;
   system.time+=dt;
