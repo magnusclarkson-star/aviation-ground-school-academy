@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach;
+ V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O||!C){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -35,6 +35,8 @@ function refreshReplay(){
  const slider=$("traceReplayIndex");slider.max=String(rows.length-1);
  const idx=Math.min(stateOfPlayer.index,rows.length-1);slider.value=String(idx);
  Q.draw($("traceReplayCanvas"),rows,idx);
+ const position=B.draw($("traceTrackCanvas"),trace.exportData().observations,idx);
+ $("traceTrackDescription").textContent=position.description;
  $("traceReplayDetail").textContent=Q.describe(rows,idx);
  const moment=C.inspect(trace.exportData().observations,idx,$("traceMomentPathway").value);
  $("traceMomentTitle").textContent=moment.title;
