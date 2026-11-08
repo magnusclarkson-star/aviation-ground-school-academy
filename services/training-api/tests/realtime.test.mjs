@@ -2,11 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
  REALTIME_LIMITS,realtimeEnabled,validateRealtimeRequest,makeRealtimeSession,
- createRealtimeCall,RealtimeCallRegistry
+ createRealtimeCall,RealtimeCallRegistry,realtimeAllowed
 } from "../src/realtime-voice.mjs";
 const env={
  AGSA_AI_ENABLED:"1",AGSA_AI_REALTIME_ENABLED:"1",AGSA_AI_REALTIME_STAGING_APPROVED:"1",
- OPENAI_API_KEY:"TEST_KEY_DO_NOT_USE_IN_REAL_APP_2026"
+ OPENAI_API_KEY:"TEST_KEY_DO_NOT_USE_IN_REAL_APP_2026",
+ AGSA_AI_REALTIME_ALLOWED_USER_IDS:"22222222-2222-4222-a222-222222222222"
 };
 const actor={organizationId:"11111111-1111-4111-a111-111111111111",userId:"22222222-2222-4222-a222-222222222222"};
 const other={organizationId:"33333333-3333-4333-a333-333333333333",userId:"44444444-4444-4444-a444-444444444444"};
@@ -18,6 +19,14 @@ test("live voice disabled by default; separate operator and provider gates requi
  assert.equal(realtimeEnabled({...env,AGSA_AI_REALTIME_STAGING_APPROVED:"0"}),false);
  assert.equal(realtimeEnabled({...env,OPENAI_API_KEY:""}),false);
  assert.equal(realtimeEnabled(env),true);
+ assert.equal(realtimeEnabled({...env,AGSA_AI_REALTIME_ALLOWED_USER_IDS:""}),false);
+ assert.equal(realtimeEnabled({...env,AGSA_AI_REALTIME_ALLOWED_USER_IDS:"invalid"}),false);
+ assert.equal(realtimeEnabled({...env,AGSA_AI_REALTIME_ALLOWED_USER_IDS:env.AGSA_AI_REALTIME_ALLOWED_USER_IDS+","+env.AGSA_AI_REALTIME_ALLOWED_USER_IDS}),false);
+ assert.equal(realtimeAllowed({...actor,role:"student"},env),true);
+ assert.equal(realtimeAllowed({...actor,role:"instructor"},env),true);
+ assert.equal(realtimeAllowed({...actor,role:"anonymous"},env),false);
+ assert.equal(realtimeAllowed({...other,role:"student"},env),false);
+ assert.equal(realtimeAllowed({...actor,role:"student"},{...env,AGSA_AI_REALTIME_ALLOWED_USER_IDS:""}),false);
  assert.deepEqual(REALTIME_LIMITS,{dailyCalls:2,maxSeconds:120});
 });
 test("validate consent and bounded audio-only SDP; reject browser session/model overrides",()=>{
@@ -65,6 +74,12 @@ test("unified provider SDP exchange keeps API credentials and controls on backen
  assert.equal(config.audio.output.voice,"coral");
  assert.equal(JSON.stringify(config).includes(env.OPENAI_API_KEY),false);
  assert.equal(JSON.stringify(answer).includes(env.OPENAI_API_KEY),false);
+});
+test("unapproved account must not reach the voice provider",async()=>{
+ let calls=0;
+ await assert.rejects(createRealtimeCall({sdp,consent:true},other,{env,request:async()=>{calls++;throw Error("not expected")}}),
+  e=>e.status===403&&e.code==="realtime_not_approved");
+ assert.equal(calls,0);
 });
 test("realtime provider and malformed SDP failures never reveal upstream secrets",async()=>{
  await assert.rejects(createRealtimeCall({sdp,consent:true},actor,{env:{},request:async()=>{throw Error("should not call")}}),e=>e.status===503);
