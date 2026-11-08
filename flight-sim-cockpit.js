@@ -220,6 +220,31 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  });
  $("cockpitZoomClose").addEventListener("click",closeZoom);
  doc.addEventListener("keydown",event=>{if(event.key==="Escape"&&!zoomPanel.hidden)closeZoom();});
+ const focusButton=$("cockpitControlFocusToggle");
+ let focusExpanded=false;
+ function setControlFocus(enabled){
+  focusExpanded=Boolean(enabled);
+  cockpitStation.dataset.controlFocus=focusExpanded?"expanded":"normal";
+  focusButton.setAttribute("aria-pressed",String(focusExpanded));
+  focusButton.textContent=focusExpanded?"Return to normal controls":"Expand flight controls";
+  focusButton.setAttribute("aria-label",focusExpanded?"Return to normal cockpit control size":"Enlarge the on-cockpit flight controls");
+  return focusExpanded;
+ }
+ focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded));
+ // Expand only once the touch gesture finishes, so an active two-finger
+ // steering or rudder press cannot be shifted halfway through a manoeuvre.
+ for(const id of ["controlPad","leftRudder","rightRudder","brake"]){
+  $(id).addEventListener("pointerup",event=>{
+   if(event.pointerType!=="mouse"||event.button===0)setControlFocus(true);
+  });
+ }
+ for(const id of ["power","collective","flaps"]){
+  $(id).addEventListener("change",()=>setControlFocus(true));
+ }
+ doc.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&focusExpanded)setControlFocus(false);
+ });
+ setControlFocus(false);
  const sizes=new Set(["compact","standard","large"]);
  function resizeControls(){
   const size=sizes.has(touchSize.value)?touchSize.value:"standard";
@@ -254,6 +279,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
   closeZoom();
+  setControlFocus(false);
   if(notify)onSelect(profile.control,profile.id);
   update();
   return profile;
@@ -274,7 +300,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   });
  }
  choose("c172");
- return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,
+ return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,setControlFocus,
   sensitivity:()=>clamp(sensitivity.value,.5,1.5),
   getProfile:()=>byId(active),profiles:FRAMES});
 }
