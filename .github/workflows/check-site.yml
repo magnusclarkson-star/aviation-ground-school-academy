@@ -54,6 +54,8 @@ jobs:
       - run: node scripts/test-flight-sim-loading.mjs
       - run: node --check flight-sim-exercises.js
       - run: node scripts/test-flight-sim-exercises.mjs
+      - run: node --check flight-sim-instructor-voice.js
+      - run: node scripts/test-flight-sim-instructor-voice.mjs
       - run: node --check flight-sim-environment.js
       - run: node scripts/test-flight-sim-environment.mjs
       - run: node --check flight-sim-haptics.js
