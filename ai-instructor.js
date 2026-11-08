@@ -6,7 +6,7 @@
 const L=window.AGSAAIInstructorLessons,P=window.AGSAInstructorProgress,$=id=>document.getElementById(id);
 if(!L){document.body.insertAdjacentText("afterbegin","Lessons unavailable.");return}
 let lessonId="forces",style="mentor",answered=false,lastSpoken="",voices=[],recognition=null;
-const lessonIds=L.lessons.map(l=>l.id);
+const lessonIds=L?L.lessons.map(l=>l.id):[];
 let history=P?P.load(window.localStorage,lessonIds):[];
 function renderPractice(){
  if(!P)return;
