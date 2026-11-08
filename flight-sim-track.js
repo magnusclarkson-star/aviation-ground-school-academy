@@ -4,12 +4,29 @@
 (function(root){'use strict';
 const LIMIT=600;
 const coordinate=(v)=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=100000?v:null;
+const heading=(v)=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=3600?((v%360)+360)%360:null;
+const PHASES=Object.freeze({
+ roll:'Runway roll — the fictional aircraft is moving along the simulated ground.',
+ climb:'Climb — the fictional simulation indicates upward flight.',
+ flight:'Free flight — observe fictional position and instrument trends.',
+ approach:'Approach — the simulator depicts a runway arrival, not a real procedure.',
+ rollout:'Rollout — the simulator depicts ground movement after its touchdown cue.',
+ complete:'Exercise complete — replay the previous synthetic observations.',
+ halted:'Exercise halted — the fictional model has stopped progression.',
+ pad:'Helipad ready — conceptual rotorcraft begins on its imaginary landing area.',
+ lift:'Lift — the simplified rotorcraft model is moving upward.',
+ hover:'Hover — the simplified rotorcraft model depicts low-speed airborne position.',
+ landed:'Helipad landed — the fictional rotorcraft is back on the simulated ground.'
+});
+function phaseExplanation(value){return PHASES[value]||'Unknown phase — this recording does not contain a recognized fictional phase.';}
+
 function prepare(observations){
  if(!Array.isArray(observations))return [];
  return observations.slice(0,LIMIT).map((s,i)=>({
   index:i,
   x:coordinate(s?.lateralM),
   z:coordinate(s?.forwardM),
+  headingDeg:heading(s?.headingDeg),
   phase:typeof s?.phase==='string'?s.phase.slice(0,24):'unknown'
  }));
 }
@@ -22,7 +39,23 @@ function describe(points,index){
  const first=usable[0];
  const round=n=>(Math.round(n*10)/10).toFixed(1);
  return 'Bird’s-eye fictional position, sample '+(i+1)+': '+round(current.x-first.x)+
-  ' m lateral and '+round(current.z-first.z)+' m forward relative to the first recorded position. Not a GPS location or measured flight path.';
+  ' m lateral and '+round(current.z-first.z)+' m forward relative to the first recorded position. '+
+  'Recorded fictional heading: '+(current.headingDeg===null?'not available':round(current.headingDeg)+' degrees')+'. '+
+  'Phase: '+phaseExplanation(current.phase)+' Not a GPS location or measured flight path.';
+}
+// A local top-down aircraft glyph; 0° points toward +Z (top of chart).
+// Avoid image files, font glyphs and canvas transforms for consistent phones.
+function drawAircraft(ctx,p,headingDeg){
+ if(headingDeg===null)return false;
+ const r=headingDeg*Math.PI/180,forward={x:Math.sin(r),y:-Math.cos(r)};
+ const side={x:-forward.y,y:forward.x};
+ const at=(ahead,across)=>({x:p.x+forward.x*ahead+side.x*across,y:p.y+forward.y*ahead+side.y*across});
+ const shape=[[15,0],[0,4],[-3,12],[-6,12],[-3,3],[-12,3],[-13,6],[-15,6],[-15,-6],[-13,-6],[-12,-3],[-3,-3],[-6,-12],[-3,-12],[0,-4]];
+ const first=at(shape[0][0],shape[0][1]);ctx.beginPath();ctx.moveTo(first.x,first.y);
+ for(let i=1;i<shape.length;i++){const q=at(shape[i][0],shape[i][1]);ctx.lineTo(q.x,q.y);}
+ ctx.lineTo(first.x,first.y);
+ ctx.fillStyle='#9d2e75';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+ return true;
 }
 function draw(canvas,observations,index){
  const points=prepare(observations),valid=points.filter(p=>p.x!==null&&p.z!==null);
@@ -59,11 +92,14 @@ function draw(canvas,observations,index){
  dot(valid[valid.length-1],5,'#9a591c');
  const idx=Math.max(0,Math.min(points.length-1,Math.trunc(Number(index)||0)));
  const chosen=points[idx];
- if(chosen&&chosen.x!==null&&chosen.z!==null)dot(chosen,7,'#9d2e75');
- ctx.fillStyle='#233e57';ctx.fillText('Start ●   End ●   Selected ●',14,h-10);
+ if(chosen&&chosen.x!==null&&chosen.z!==null){
+  const q=project(chosen);
+  if(!drawAircraft(ctx,q,chosen.headingDeg))dot(chosen,7,'#9d2e75');
+ }
+ ctx.fillStyle='#233e57';ctx.fillText('Start ●   End ●   Selected ✈',14,h-10);
  return {available:true,count:valid.length,description:describe(points,idx)};
 }
-const api={prepare,describe,draw,LIMIT};
+const api={prepare,describe,draw,drawAircraft,phaseExplanation,LIMIT};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(root)root.AGSAFlightTrack=api;
 })(typeof window!=='undefined'?window:null);
