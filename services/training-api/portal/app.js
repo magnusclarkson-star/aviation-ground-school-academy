@@ -75,6 +75,7 @@ function resetSession(message){
  $("reportFile").value="";
  removeAll("studentList");removeAll("moduleStudentList");
  removeAll("assignedList");removeAll("moduleInstructorList");removeAll("feedbackList");
+ show("moduleInstructorStatus",false);
  show("loadingPanel",false);show("loginPanel",true);show("workspace",false);
  show("studentPanel",false);show("instructorPanel",false);
  if(message)status("globalStatus",message);
@@ -178,9 +179,10 @@ async function refreshModuleInstructor(){
  try{
   const result=await api("/api/v1/instructor/assigned-module-claims?limit=30");
   const container=removeAll("moduleInstructorList");
+  show("moduleInstructorStatus",false);
   if(!result.items?.length)container.appendChild(one("p","No assigned fictional learners' module claims.","muted"));
   else for(const item of result.items)container.appendChild(moduleCard(item,true));
- }catch(error){status("moduleImportStatus","Could not load assigned module claims: "+error.message,"error");}
+ }catch(error){status("moduleInstructorStatus","Could not load assigned module claims: "+error.message,"error");}
 }
 async function parseModuleExport(){
  const input=$("moduleImportFile"),select=$("moduleClaimSelect"),button=$("moduleImportButton");
@@ -196,7 +198,7 @@ async function parseModuleExport(){
      !Array.isArray(raw.attempts)||raw.attempts.length<1||raw.attempts.length>48)
    throw Error("Choose the unsigned JSON exported by Ground-School Module Practice");
   for(const value of raw.attempts){
-   if(!value||typeof value!=="object"||!(value.moduleId in moduleTitles)||
+   if(!value||typeof value!=="object"||!(Object.hasOwn(moduleTitles,value.moduleId))||
       value.revision!==moduleRevision||value.total!==6||
       !Number.isInteger(value.correct)||value.correct<0||value.correct>6)
     throw Error("Some entries use an obsolete or invalid module question set");
