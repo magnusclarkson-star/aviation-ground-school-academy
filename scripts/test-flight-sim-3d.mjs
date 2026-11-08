@@ -1,0 +1,64 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const Three=require("../flight-sim-3d.js");
+const M=require("../flight-sim-model.js");
+
+const empty=new Three.Mesh();
+assert.equal(empty.finish().triangles,0);
+empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
+empty.quad([0,0,0],[1,0,0],[1,0,1],[0,0,1],[.2,.3,.4]);
+empty.box(0,0,0,2,3,4,[.5,.6,.7]);
+empty.cone(2,0,4,1.5,7,[.2,.7,.3],6);
+empty.cloud(0,100,500,20);
+const basic=empty.finish();
+assert.equal(basic.triangles,1+2+12+6+8);
+assert.equal(basic.vertices,basic.triangles*3);
+assert.equal(basic.positions.length,basic.vertices*3);
+assert.equal(basic.normals.length,basic.positions.length);
+assert.equal(basic.colors.length,basic.positions.length);
+assert.ok([...basic.positions].every(Number.isFinite),"geometry must be finite");
+assert.ok([...basic.normals].every(Number.isFinite),"normals must be finite");
+assert.ok([...basic.colors].every(x=>x>=0&&x<=1),"colors are normalized");
+assert.ok(basic.positions.some(v=>v===500),"cloud has meaningful world depth");
+
+const runway=Three.buildWorld("airplane"),pad=Three.buildWorld("helicopter");
+for(const mesh of [runway,pad]){
+ assert.ok(mesh.vertices>5000&&mesh.vertices<130000,"mobile geometry budget");
+ assert.equal(mesh.vertices,mesh.triangles*3);
+ assert.ok(mesh.positions.some(v=>v>4500),"terrain has far depth");
+ assert.ok(mesh.positions.some(v=>v< -1300),"terrain spreads to both sides");
+ assert.ok(mesh.positions.some(v=>v>700),"mountain and cloud elevations");
+ assert.equal(mesh.colors.length,mesh.positions.length);
+ assert.equal(mesh.normals.length,mesh.positions.length);
+}
+assert.notEqual(runway.triangles,pad.triangles,"runway/helipad are different 3D places");
+assert.throws(()=>Three.buildWorld("submarine"),/Unknown 3D/);
+assert.throws(()=>Three.buildVehicle("balloon"),/Unknown 3D/);
+const airplane=Three.buildVehicle("airplane"),helicopter=Three.buildVehicle("helicopter");
+assert.ok(airplane.vertices>50&&helicopter.vertices>50);
+assert.notEqual(airplane.vertices,helicopter.vertices,"aircraft models must differ");
+assert.ok(Math.min(...airplane.positions)>-100,"airplane model is local to aircraft");
+assert.ok(Math.max(...helicopter.positions)<100,"helicopter model is local to aircraft");
+
+const state=M.makeState("airplane","approach",{windId:"crosswind"});
+const pilot=Three.cameraPose(state,"cockpit"),chase=Three.cameraPose(state,"chase");
+assert.equal(pilot.view,"cockpit");
+assert.equal(chase.view,"chase");
+assert.equal(pilot.eye[0],state.xM);
+assert.equal(pilot.eye[2],state.zM);
+assert.ok(chase.eye[2]<state.zM-20,"chase camera is behind the airplane");
+assert.ok(chase.eye[1]>pilot.eye[1],"chase camera is above the airplane");
+assert.equal(chase.craft[1],state.altitudeM+1.5);
+assert.equal(pilot.yaw,0);
+const turned=Three.cameraPose({...state,headingDeg:90,pitchDeg:8,rollDeg:25},"chase");
+assert.ok(turned.eye[0]<state.xM-20,"camera follows +90 degree heading");
+assert.ok(Math.abs(turned.roll)<Math.abs(25*Math.PI/180),"chase camera dampens bank");
+const rotor=M.makeState("helicopter");
+assert.equal(Three.cameraPose(rotor,"chase").craft[1],2);
+assert.throws(()=>Three.cameraPose(null),/state required/);
+assert.throws(()=>Three.cameraPose(rotor,"satellite"),/Unknown 3D camera/);
+assert.equal(Three.createRenderer(null),null);
+assert.equal(Three.createRenderer({getContext(){return null}}),null);
+assert.equal(Three.createRenderer({getContext(){throw Error("WebGL blocked")}}),null);
+console.log("Real 3D model passed: finite 3D meshes, terrain/runway/helipad, two aircraft, 3D camera viewpoints, mobile vertex budget and GPU fallback.");
