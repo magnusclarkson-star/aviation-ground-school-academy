@@ -4,6 +4,12 @@
  */
 (function(root){"use strict";
 const STAGES=Object.freeze(["before","during","after"]);
+const STAGE_BY_PHASE=Object.freeze({
+ roll:"before",pad:"before",
+ climb:"during",flight:"during",approach:"during",lift:"during",hover:"during",
+ rollout:"after",landed:"after",complete:"after"
+});
+const stageFromPhase=phase=>typeof phase==="string"&&Object.prototype.hasOwnProperty.call(STAGE_BY_PHASE,phase)?STAGE_BY_PHASE[phase]:null;
 const line=(speaker,text)=>Object.freeze({speaker,text});
 function dialogue(stage="before",mode="airplane",scenario="runway"){
  if(!STAGES.includes(stage))throw Error("Unsupported simulated radio stage");
@@ -53,13 +59,14 @@ function dialogue(stage="before",mode="airplane",scenario="runway"){
 function makeAll(mode,scenario){
  return STAGES.flatMap(stage=>dialogue(stage,mode,scenario).map(entry=>({...entry,stage})));
 }
-function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=> "runway",
+function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=> "runway",getPhase=()=>null,
  onBegin=()=>{},onFinish=()=>{}}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  if(!doc||typeof doc.getElementById!=="function")throw Error("Scripted radio needs a page");
  const el=id=>doc.getElementById(id),synth=win?.speechSynthesis,Utter=win?.SpeechSynthesisUtterance;
  const supported=typeof synth?.speak==="function"&&typeof synth?.cancel==="function"&&typeof Utter==="function";
- let playing=false,sequence=0;
+ let playing=false,sequence=0,armed=false;
+ const stagesSeen=new Set();
  const status=message=>{el("atcStatus").textContent=message;};
  function render(entries){
   const list=el("atcTranscript");list.replaceChildren();
@@ -106,16 +113,49 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
    return true;
   }catch{stop("Device speech could not start. The full transcript remains visible.");return false;}
  }
- for(const stage of STAGES)el("atc"+stage[0].toUpperCase()+stage.slice(1)).addEventListener("click",()=>play(stage));
- el("atcAll").addEventListener("click",()=>play("all"));
- el("atcStop").addEventListener("click",()=>stop("Scripted radio stopped by learner."));
- doc.addEventListener?.("visibilitychange",()=>{if(doc.hidden)stop("Page hidden: scripted radio stopped.");});
- win?.addEventListener?.("pagehide",()=>stop("Page closed: scripted radio stopped."));
+ function cuePhase(phase){
+  const stage=stageFromPhase(phase);
+  if(!armed||!stage||stagesSeen.has(stage))return false;
+  stagesSeen.add(stage);
+  // Even when the browser blocks synthesized speech, show the full transcript.
+  const voiced=play(stage);
+  if(!voiced)status("Automatic "+stage+" stage: fictional transcript shown. Device voice may be unavailable; no audio was transmitted.");
+  return true;
+ }
+ function arm(enable){
+  armed=enable===true;
+  stagesSeen.clear();
+  el("atcAutoToggle").setAttribute("aria-pressed",String(armed));
+  el("atcAutoToggle").textContent=armed?"Disable phase-linked radio":"Enable phase-linked radio";
+  if(!armed){
+   stop("Phase-linked radio disabled. Manual dialogue buttons still work.");
+   el("atcAutoStatus").textContent="Phase-linked radio off. It will not speak automatically.";
+   return false;
+  }
+  el("atcAutoStatus").textContent="Phase-linked radio armed for this practice session. Each fictional before/during/after stage plays once as phases change. Voice playback depends on the browser.";
+  if(!cuePhase(getPhase()))status("Phase-linked radio armed. Waiting for the next recognized fictional flight phase.");
+  return true;
+ }
+ function disarm(message="Phase-linked radio disarmed."){
+  if(armed){
+   armed=false;stagesSeen.clear();
+   el("atcAutoToggle").setAttribute("aria-pressed","false");
+   el("atcAutoToggle").textContent="Enable phase-linked radio";
+   el("atcAutoStatus").textContent=message;
+  }
+  stop(message);
+ }
+ for(const stage of STAGES)el("atc"+stage[0].toUpperCase()+stage.slice(1)).addEventListener("click",()=>{if(armed)arm(false);play(stage);});
+ el("atcAll").addEventListener("click",()=>{if(armed)arm(false);play("all");});
+ el("atcAutoToggle").addEventListener("click",()=>arm(!armed));
+ el("atcStop").addEventListener("click",()=>disarm("Radio stopped by learner."));
+ doc.addEventListener?.("visibilitychange",()=>{if(doc.hidden)disarm("Page hidden: scripted radio and phase-linked cues stopped.");});
+ win?.addEventListener?.("pagehide",()=>disarm("Page closed: scripted radio stopped."));
  render(dialogue("before",getMode(),getScenario()));
  status(supported?"Radio voices ready, but silent until you select a stage. Transcript shown below.":"Device speech unavailable; written fictional radio script is available below.");
- return {supported,play,stop,isSpeaking:()=>playing,script:dialogue};
+ return {supported,play,stop,arm,disarm,cuePhase,isArmed:()=>armed,isSpeaking:()=>playing,script:dialogue};
 }
-const api={dialogue,makeAll,attach,STAGES};
+const api={dialogue,makeAll,attach,STAGES,stageFromPhase};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightATCRadio=api;
 })(typeof window!=="undefined"?window:null);

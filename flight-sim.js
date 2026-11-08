@@ -8,11 +8,22 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,F=window.AGSAFlightATCRadio,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!F||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
+const radioTone=Y.createTone({windowLike:window,documentLike:document});
+function syncRadioToneUI(message){
+ const info=radioTone.status();
+ $("radioToneToggle").disabled=!info.supported;
+ $("radioToneToggle").setAttribute("aria-pressed",String(info.enabled));
+ $("radioToneToggle").textContent=info.enabled?"Disable radio cue tone":"Enable radio cue tone";
+ $("radioToneStatus").textContent=message||(info.enabled?
+  "Radio cue tone enabled. A brief synthetic chirp plays when a scripted transmission starts.":
+  info.supported?"Radio cue tone off; voice and transcript work without it.":
+  "Web Audio not supported on this device. Written transcripts remain available.");
+}
 let atcRadio=null,lastEngineAudioFrame=0;
 function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
@@ -341,7 +352,8 @@ function setMode(next){
  type=newType;
  if(newMode!==oldMode){
   engineAudio.stop();syncEngineAudioUI("Aircraft type changed. Engine sound off until enabled again.");
-  atcRadio?.stop("Aircraft changed: previous fictional radio exchange stopped.");
+  atcRadio?.disarm("Aircraft changed: phase-linked radio and speech stopped.");
+  radioTone.stop();syncRadioToneUI("Aircraft changed: radio cue tone off.");
   startExercise("Aircraft mode changed. Apply Reference and Comparison again if you return to the experimental aeroplane.");
   state=makeConfiguredState(newMode);
   input=M.makeInput(newMode);
@@ -386,7 +398,8 @@ function setMode(next){
 }
 function reset(scenario){
  engineAudio.stop();syncEngineAudioUI("Practice reset. Engine sound off until enabled again.");
- atcRadio?.stop("Practice reset: scripted radio stopped.");
+ atcRadio?.disarm("Practice reset: phase-linked radio and speech stopped.");
+ radioTone.stop();syncRadioToneUI("Scenario reset: radio cue tone off.");
  const newMode=type==="cyclic"?"helicopter":"airplane";
  state=makeConfiguredState(newMode,scenario==="approach"?"approach":"runway");
  input=M.makeInput(newMode);
@@ -492,7 +505,8 @@ window.addEventListener("keyup",e=>{
 window.addEventListener("blur",()=>{releaseControls();haptics.stop()});
 document.addEventListener("visibilitychange",()=>{
  if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();
-  engineAudio.stop();syncEngineAudioUI("Page hidden: engine sound stopped.");}
+  engineAudio.stop();syncEngineAudioUI("Page hidden: engine sound stopped.");
+  radioTone.stop();syncRadioToneUI("Page hidden: radio cue tone stopped.");}
  lastFrame=0;
 });
 $("power").addEventListener("input",e=>{
@@ -550,7 +564,11 @@ $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")rese
 $("restartFlight").addEventListener("click",()=>reset(state.scenario));
 $("pauseFlight").addEventListener("click",()=>{
  paused=!paused;lastFrame=0;releaseControls();haptics.stop();
- if(paused){engineAudio.stop();syncEngineAudioUI("Simulation paused; engine sound stopped until re-enabled.");}
+ if(paused){
+  engineAudio.stop();syncEngineAudioUI("Simulation paused; engine sound stopped until re-enabled.");
+  atcRadio?.disarm("Simulation paused: phase-linked radio and speech stopped.");
+  radioTone.stop();syncRadioToneUI("Simulation paused: radio cue tone stopped.");
+ }
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
 });
@@ -561,10 +579,25 @@ $("engineAudioToggle").addEventListener("click",async()=>{
  $("engineAudioToggle").disabled=true;
  const started=await engineAudio.start(state.mode,audioPower());
  engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
+ engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  syncEngineAudioUI(started?
   "Fictional "+(state.mode==="helicopter"?"helicopter rotor":"piston engine")+
   " audio playing. Use the volume slider or Stop engine sound.":
   "Device audio unavailable or blocked. The simulator still works silently.");
+});
+$("engineAudioTexture").addEventListener("change",()=>{
+ const selected=engineAudio.setTexture($("engineAudioTexture").value,audioPower());
+ if(engineAudio.status().active)syncEngineAudioUI("Engine texture updated to "+(selected==="textured"?"detailed":"gentle")+". Volume remains under your control.");
+});
+$("radioToneToggle").addEventListener("click",()=>{
+ if(radioTone.status().enabled){
+  radioTone.stop();syncRadioToneUI("Radio cue tone disabled by learner.");
+ }else{
+  const enabled=radioTone.enable(true);
+  syncRadioToneUI(enabled?
+   "Short synthetic radio cue tone enabled. It sounds only before scripted transmissions.":
+   "Device blocked the radio cue tone. The spoken script and transcript still work.");
+ }
 });
 $("engineAudioVolume").addEventListener("input",()=>{
  const volume=engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
@@ -670,6 +703,7 @@ function frame(now){
   }
   if(state.phase!==lastPhase){
    lastPhase=state.phase;
+   atcRadio?.cuePhase(state.phase);
   }
   }
  }
@@ -694,19 +728,21 @@ instructorVoice=V.attach({
 });
 atcRadio=F.attach({
  documentLike:document,windowLike:window,
- getMode:()=>state.mode,getScenario:()=>state.scenario,
+ getMode:()=>state.mode,getScenario:()=>state.scenario,getPhase:()=>state.phase,
  onBegin:()=>{
   if(instructorVoice?.isSpeaking())instructorVoice.stop("Scripted radio has taken the voice output.");
   engineAudio.setDuck(true,audioPower());
+  radioTone.pulse();
  },
  onFinish:()=>engineAudio.setDuck(false,audioPower())
 });
 // Do not allow radio and instructor narration to cancel each other mid-speech.
 document.addEventListener("click",event=>{
  if(["exerciseSpeakLesson","exerciseSpeakComparison","exerciseSpeakFeedback"].includes(event.target?.id))
-  atcRadio?.stop("Radio stopped for the instructor's scripted narration.");
+  atcRadio?.disarm("Radio stopped for the instructor's scripted narration.");
 },true);
 syncEngineAudioUI();
+syncRadioToneUI();
 chooseVisual();
 requestAnimationFrame(frame);
 })();

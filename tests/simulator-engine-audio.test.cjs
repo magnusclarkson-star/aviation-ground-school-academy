@@ -62,8 +62,26 @@ test('piston and rotor profiles are compact, mode-specific and safely clamped',(
  assert.equal(Engine.model('airplane',99).primaryHz,high.primaryHz);
  assert.ok(high.engineLevel<=.1);
 });
+test('engine texture setting adds an optional power-responsive oscillator without changing default',async()=>{
+ const env=audioWorld(),engine=Engine.createEngine({windowLike:env.win,documentLike:env.doc});
+ assert.equal(engine.status().texture,'smooth');
+ assert.equal(engine.setTexture('textured',.3),'textured');
+ assert.equal(engine.status().active,false,'texture selection is silent before consent');
+ assert.equal(env.contexts.length,0);
+ assert.equal(await engine.start('airplane',.3),true);
+ assert.equal(env.contexts[0].oscillators.length,4,'additional bounded engine oscillator exists');
+ const grain=env.contexts[0].oscillators[3];
+ assert.equal(grain.started,true);
+ const old=grain.frequency.value;
+ engine.update('airplane',.9);
+ assert.ok(grain.frequency.value>old);
+ assert.equal(engine.setTexture('unexpected',.9),'smooth');
+ assert.equal(engine.status().texture,'smooth');
+ engine.stop();
+ assert.equal(env.contexts[0].closed,true);
+});
 test('simulator audio controls remain opt-in, local and independent of instruments',()=>{
- for(const id of ['engineAudioToggle','engineAudioVolume','engineAudioVolumeValue','engineAudioStatus','atcStatus'])
+ for(const id of ['engineAudioToggle','engineAudioTexture','engineAudioVolume','engineAudioVolumeValue','engineAudioStatus','atcStatus'])
   assert.ok(html.includes('id="'+id+'"'));
  assert.ok(html.includes('src="flight-sim-engine-audio.js"'));
  assert.ok(script.includes('N.createEngine({windowLike:window,documentLike:document})'));
