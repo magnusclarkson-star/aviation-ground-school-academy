@@ -13,6 +13,7 @@
 <script src="flight-sim-scenery.js" defer></script>
 <script src="flight-sim-instruments.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
+<script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -107,6 +108,31 @@
     <button type="button" id="pauseFlight" aria-pressed="false">Pause simulation</button>
    </div>
    <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>
+   <details id="hardwareController" class="hardware-panel">
+    <summary>USB / Bluetooth joystick and gamepad support</summary>
+    <p class="hint">Optional experimental hardware controls. Connect a compatible controller, interact with it, and explicitly enable access here. Mappings differ across devices; this is not calibrated flight-control hardware.</p>
+    <div class="section-line"><strong>Controller input</strong><button id="gamepadToggle" type="button" aria-pressed="false">Enable controller</button></div>
+    <label for="gamepadSelect">Detected controller</label>
+    <select id="gamepadSelect" disabled><option value="">No controller selected</option></select>
+    <div class="mapping-grid">
+     <label for="gamepadBank">Bank axis<select id="gamepadBank"><option value="0" selected>Axis 0</option></select></label>
+     <label for="gamepadPitch">Pitch axis<select id="gamepadPitch"><option value="1" selected>Axis 1</option></select></label>
+     <label for="gamepadRudder">Rudder axis<select id="gamepadRudder"><option value="2" selected>Axis 2</option></select></label>
+     <label for="gamepadPower">Power/collective axis<select id="gamepadPower"><option value="none" selected>Triggers 6 / 7 (incremental)</option></select></label>
+    </div>
+    <label class="toggle-row" for="gamepadReversePitch">
+     <input id="gamepadReversePitch" type="checkbox"> Reverse pitch axis direction
+    </label>
+    <label for="gamepadDeadzone">Stick deadzone</label>
+    <select id="gamepadDeadzone">
+     <option value="0.08">8% · Small</option><option value="0.12" selected>12% · Normal</option>
+     <option value="0.2">20% · Large</option><option value="0.3">30% · Extra-large</option>
+    </select>
+    <div class="controller-actions"><button id="gamepadCalibrate" type="button" disabled>Set neutral (release sticks first)</button><button id="gamepadRefresh" type="button">Refresh detected controllers</button></div>
+    <p id="gamepadStatus" class="controller-status" role="status" aria-live="polite">Off. Use the phone touch controls or desktop keyboard unless you enable a controller.</p>
+    <p id="gamepadLive" class="controller-live" aria-label="Current optional controller input">BANK 0% · PITCH 0% · RUDDER 0% · POWER idle</p>
+    <p class="hint">Touch/keyboard takes priority while actively held. Controller availability varies by browser and device. If it disconnects, the practice simulation pauses rather than continuing with an uncontrolled input. No controller IDs or readings are saved or sent anywhere.</p>
+   </details>
    <div class="optional-feedback">
     <div class="section-line"><strong>Flight-display layout</strong><button id="instrumentToggle" type="button" aria-pressed="true">Hide glass instruments</button></div>
     <p class="hint">You can collapse the graphical attitude indicator for a larger outside view on smaller phones. Numeric indications remain available.</p>
