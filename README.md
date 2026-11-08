@@ -178,3 +178,11 @@ The optional fictional flight-path replay now draws a small aircraft-shaped glyp
 Beside the path, an accessible text description now states the selected synthetic heading and explains the recorded phase (runway roll, climb, free flight, approach, rollout, conceptual helicopter lift/hover, etc.). It is rule-based reflection, **not** real-world aircraft navigation, operational instruction, validated aircraft dynamics, grading, or accredited training. Browser and regression checks run through GitHub Actions; qualified instructor review and testing on physical phones remain necessary.
 
 Published-viewing URLs: https://magnusclarkson-star.github.io/aviation-ground-school-academy/ and https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html .
+
+### Optional scenery light: daytime / warm evening / illustrated dusk
+
+The immersive flight simulator offers an **Illustrated outside lighting** selector (Daylight, Warm evening, Dusk). It changes the Canvas 2D sky/hills/field palette and WebGL2 sky/fog/terrain illumination; the 2D backdrop receives a subtle overlay for warm and dim scenes. It is user-controlled, remains local to the current page, and does **not** affect flight physics, airspeed/attitude/heading displays, control layout, recorded flight data, device vibration, camera position or accessibility of the instrument panel. WebGL2 continues to fall back to the 2D airfield if unavailable. The default remains Daylight.
+
+These are **artistic lighting presets**, not measured times of day, night-flying lessons, meteorological visibility simulation, operational safety limits or accredited pilot instruction. Tests include module privacy/invariance checks and a Chromium phone viewport that compares daylight/evening/dusk 2D pixels and optional WebGL2 sky pixels.
+
+**App preview:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/ and https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html . Changes on a feature branch are not live until merged and GitHub Pages deployment succeeds.
