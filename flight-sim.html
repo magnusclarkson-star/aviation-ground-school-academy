@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="flight-sim-instruments.css">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
 <link rel="stylesheet" href="flight-sim-environment.css">
+<link rel="stylesheet" href="flight-sim-3d.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
@@ -18,6 +19,7 @@
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
+<script src="flight-sim-3d.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -36,7 +38,8 @@
  <section class="notice" role="note"><strong>Educational simulation only.</strong> The aircraft models, takeoff/landing speeds, helipad behaviour, terrain, cues and weather are fictional simplifications—not a qualified flight simulator or usable flight instruction. No real navigation, ATC clearance, flight-hour credit, or aircraft operating procedures. Use a qualified instructor and approved aircraft manuals for real flight training.</section>
  <section class="scene-panel" aria-label="Animated simulated airfield view and flight instruments">
   <div class="scene-shell">
-   <canvas id="outsideView" width="960" height="540" aria-label="Animated simulated forward view of a runway or helipad and scrolling countryside, with a horizon that follows pitch and bank">A synthetic moving airfield scene. Flight status is also provided as text below.</canvas>
+   <canvas id="outsideView" width="960" height="540" aria-label="Illustrated 2D outside view of a synthetic runway or helipad; always available as a fallback">A synthetic airfield scene. Flight status is provided as text below.</canvas>
+   <canvas id="outsideView3D" width="960" height="540" hidden aria-label="GPU-rendered 3D synthetic airfield with geometric runway, terrain, buildings, trees and fictional aircraft chase view">This browser does not support the 3D visual mode.</canvas>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
    <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
@@ -139,6 +142,20 @@
     <button type="button" id="pauseFlight" aria-pressed="false">Pause simulation</button>
    </div>
    <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>
+   <div class="visual-options" aria-label="Flight scenery display settings">
+    <label for="visualMode">Outside visual environment</label>
+    <select id="visualMode">
+     <option value="3d" selected>3D airfield · WebGL2 when available</option>
+     <option value="2d">Lightweight 2D · best compatibility</option>
+    </select>
+    <label for="cameraMode">3D camera viewpoint</label>
+    <select id="cameraMode">
+     <option value="cockpit" selected>Forward pilot view</option>
+     <option value="chase">Outside chase view · 3D aircraft</option>
+    </select>
+    <p id="visualStatus" class="visual-status" role="status" aria-live="polite">Checking 3D graphics support. The original 2D airfield remains available.</p>
+    <p class="hint">3D uses locally generated terrain, runway geometry, trees, hangars and a stylised aircraft model. No satellite maps or real airports. On unsupported phones the scene automatically returns to 2D.</p>
+   </div>
    <details id="hardwareController" class="hardware-panel">
     <summary>USB / Bluetooth joystick and gamepad support</summary>
     <p class="hint">Optional experimental hardware controls. Connect a compatible controller, interact with it, and explicitly enable access here. Mappings differ across devices; this is not calibrated flight-control hardware.</p>
