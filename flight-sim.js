@@ -3,14 +3,14 @@
  */
 (()=>{"use strict";
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
- I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
+ I=window.AGSAFlightInstruments,CI=window.AGSACockpitIntegrated,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
  V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,AM=window.AGSAFlightATCMissions,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!CI||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -172,6 +172,7 @@ const lightingId=()=>$("lightingMode").value;
 const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
+let cockpit=null;
 let practice=G.start(state);
 const trace=R.makeRecorder();
 const playback=O.makePlayer();
@@ -328,6 +329,7 @@ function updateReadouts(){
  $("scenePhase").textContent=phase;
  $("flightMessage").textContent=n.message;
  I.paint(document,state);
+ cockpit?.update();
  const cue=G.guidance(state,input),stats=G.summary(practice,state);
  $("coachPhase").textContent=cue.tag;
  $("coachText").textContent=cue.text;
@@ -560,8 +562,9 @@ function reset(scenario){
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
- const dx=(event.clientX-(box.left+box.width/2))/(box.width*.35);
- const dy=(event.clientY-(box.top+box.height/2))/(box.height*.39);
+ const sensitivity=cockpit?.sensitivity()??1;
+ const dx=(event.clientX-(box.left+box.width/2))/(box.width*.35)*sensitivity;
+ const dy=(event.clientY-(box.top+box.height/2))/(box.height*.39)*sensitivity;
  input.bank=M.clamp(dx,-1,1);
  input.pitch=M.clamp(dy,-1,1);
  gripTransform();
@@ -938,6 +941,11 @@ if(!haptics.supported){
  $("hapticsStatus").textContent="Phone vibration is not exposed by this browser/device. Flight simulation works without it.";
 }
 setMode("yoke");
+cockpit=CI.attach({
+ documentLike:document,
+ getState:()=>state,getSystems:()=>systems,getInput:()=>input,
+ onSelect:(control)=>setMode(control)
+});
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,

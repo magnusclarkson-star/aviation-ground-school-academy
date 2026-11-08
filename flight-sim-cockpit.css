@@ -1,0 +1,376 @@
+/* One integrated view: scenery, pilot-side instrument panel and REAL touch controls.
+ * Responsive and local-only. Stylistic approximations, not instrument certification. */
+.cockpit-station{border-top:2px solid #8a9fa8;background:linear-gradient(155deg,#29323c,#151f2b 38%,#152b37 100%);padding:9px 12px 12px}
+.cockpit-station-head{display:flex;flex-wrap:wrap;gap:9px;justify-content:space-between;align-items:center}
+.cockpit-station-head label{display:grid;gap:2px;color:#d9e5eb;font-size:10px;letter-spacing:.03em;min-width:170px;max-width:340px;flex:1}
+.cockpit-station-head select{background:#071e2a;border:1px solid #8dabb9;border-radius:8px;padding:6px 8px;min-height:39px;color:#f7fafb;font-size:12px;width:100%}
+.cockpit-station-head>div{min-width:150px;flex:2}
+.cockpit-station-head strong{color:#f6db9b;font-size:13px}
+.cockpit-station-head p{margin:3px 0;color:#c0d4df;font-size:10px;line-height:1.35}
+.cockpit-note{font-size:10px;color:#d5bf92;background:#222b2e;border-left:3px solid #c9a970;padding:4px 8px;margin:7px 0}
+.cockpit-main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(270px,.9fr);gap:9px;align-items:start}
+.cockpit-visual-panel{padding:8px;border:2px solid #56616e;border-radius:12px;background:linear-gradient(160deg,#303943,#111d2a 80%);box-shadow:inset 0 4px 12px #060b1299;min-width:0}
+.cockpit-sixpack{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.cockpit-gauge{min-width:0;min-height:0;padding:5px 3px 6px;border-radius:11px;border:1px solid #566675;
+ background:radial-gradient(circle at 49% 48%,#293c50 0%,#111925 72%,#424b53 92%,#0d1823 100%);
+ display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:inset 0 2px 8px #0009}
+.cockpit-gauge-title{font-size:10px;color:#f0f5f4;font-weight:850;letter-spacing:.015em;text-align:center;line-height:1.1;min-height:20px;display:grid;place-items:center}
+.cockpit-gauge svg{width:100%;max-width:126px;height:auto;aspect-ratio:1}
+.cockpit-gauge-number{font-variant-numeric:tabular-nums;color:#f9df9f;font-size:12px;line-height:1.1;text-align:center}
+.cockpit-gauge small{color:#a9bdcc;font-size:9px;text-align:center;line-height:1}
+.cockpit-station[data-family="rotor"] .cockpit-visual-panel{background:linear-gradient(145deg,#404751,#101925)}
+.cockpit-station[data-family="rotor"] .cockpit-gauge{border-radius:10px;background:radial-gradient(circle,#2c3b48,#111927 78%)}
+.cockpit-station .control-panel{margin:0;padding:9px;background:#162734;border:1px solid #637583;border-radius:10px}
+.cockpit-station .control-panel h2{font-size:16px;margin:3px 0}
+.cockpit-station .control-panel>.eyebrow{font-size:9px}
+.cockpit-station .control-panel #controlHint{margin:5px 0;font-size:10px}
+.cockpit-station .control-panel .control-pad{height:160px}
+.cockpit-station .control-panel .flight-grip{height:142px}
+.cockpit-station .control-panel .physical-controls{grid-template-columns:minmax(0,1fr) minmax(106px,.55fr);gap:7px}
+.cockpit-station .control-panel .lever-panel{padding:6px 7px}
+.cockpit-station .control-panel .lever-track{margin-top:3px;padding:4px}
+.cockpit-station .control-panel .lever-panel select{margin-top:4px}
+.cockpit-station .control-panel .rudder-deck{margin-top:8px;padding:6px 8px;grid-template-columns:1fr 1.4fr}
+.cockpit-station .control-panel .rudder-pedals button{min-height:51px;border-width:3px}
+.cockpit-station .control-panel .brake-button{margin-top:6px}
+.cockpit-station .control-panel .shortcuts{font-size:9px!important}
+.cockpit-mfd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cockpit-mfd-grid.cockpit-mfd-quad{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cockpit-mfd-grid.cockpit-mfd-dual{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cockpit-mfd-grid.cockpit-mfd-panoramic{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cockpit-mfd-panoramic>.cockpit-mfd:first-child{grid-column:1/-1;min-height:180px}
+.cockpit-mfd{border:3px ridge #576779;border-radius:8px;padding:5px;min-width:0;background:linear-gradient(145deg,#1b2e3b,#0d1722);box-shadow:inset 0 0 0 2px #192d3b}
+.cockpit-mfd-head{font-size:9px;color:#b7e6d3;letter-spacing:.07em;text-align:center;font-weight:850;min-height:15px;white-space:normal}
+.cockpit-mfd-body{border:1px solid #35586c;background:linear-gradient(165deg,#082d33,#041a25);border-radius:3px;padding:5px;min-height:89px}
+.cockpit-mfd-line{display:flex;justify-content:space-between;gap:5px;margin-bottom:7px;font-size:10px;color:#9dcfdd;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cockpit-mfd-line strong{color:#e4f7ea}
+.cockpit-mfd-foot{font-size:7px;color:#a9bcbb;text-align:center;line-height:1.3;margin-top:4px}
+.cockpit-mfd-attitude{height:82px;position:relative;overflow:hidden;border:1px solid #84c4b8;background:#2b7d9b}
+.cockpit-mfd-horizon{position:absolute;inset:-115% -50%;background:linear-gradient(to bottom,#14698d 0 50%,#96744f 50% 100%);will-change:transform}
+.cockpit-mfd-wings{position:absolute;left:19%;right:19%;top:48%;height:2px;background:#f4d66d;box-shadow:0 0 3px #f6efbc}
+.cockpit-mfd-wings:before,.cockpit-mfd-wings:after{content:"";position:absolute;top:-5px;width:5px;height:11px;border:2px solid #f4d66d}
+.cockpit-mfd-wings:before{left:0}.cockpit-mfd-wings:after{right:0}
+.cockpit-mfd-readouts{display:flex;gap:5px;justify-content:space-between;flex-wrap:wrap;margin-top:5px}
+.cockpit-mfd-readouts span{color:#a9dedd;font-size:9px}
+.cockpit-mfd-readouts strong{color:#e7eebb}
+.cockpit-station[data-airframe="fa18"] .cockpit-mfd{border-color:#536779}
+.cockpit-station[data-airframe="f22"] .cockpit-mfd{border-color:#4e616e;background:#121f2a}
+.cockpit-station[data-airframe="f35"] .cockpit-mfd{border-color:#63747c;background:#14262a}
+.cockpit-station[data-airframe="f35"] .cockpit-mfd-body{background:#041d21}
+.cockpit-station[data-airframe="typhoon"] .cockpit-mfd{border-color:#527373}
+.cockpit-station[data-airframe="su37"] .cockpit-mfd{border-color:#65849a;background:#234052}
+.cockpit-jet-hud{position:absolute;top:12%;left:32%;right:32%;height:63%;border:1px solid #86eccc66;
+ background:#0b393b18;box-shadow:inset 0 0 15px #2ee5ad18;pointer-events:none;z-index:3;
+ color:#9df6cd;font:700 11px/1.45 ui-monospace,monospace;text-shadow:0 0 3px #22caa9;display:flex;flex-direction:column;justify-content:space-around;padding:4px 11px}
+.cockpit-jet-hud[hidden]{display:none!important}
+.cockpit-jet-hud .hud-top{display:flex;gap:8px;justify-content:space-between}
+.cockpit-jet-hud .hud-centre{text-align:center;font-size:22px;color:#d4ffe0}
+.cockpit-jet-hud .hud-bottom{display:flex;justify-content:space-between}
+.cockpit-station[data-family="jet"] .cockpit-visual-panel{border-color:#617e82;background:#172832}
+@media(max-width:1050px){
+ .cockpit-main{grid-template-columns:minmax(0,1fr) minmax(240px,.85fr)}
+ .cockpit-gauge svg{max-width:110px}
+ .cockpit-gauge-title{font-size:9px}
+}
+@media(max-width:740px){
+ .scene-panel{position:sticky;top:2px;max-height:calc(100dvh - 4px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+ .scene-panel .scene-shell{height:clamp(100px,18dvh,140px);aspect-ratio:auto}
+ .scene-panel .cockpit-station{padding:6px 7px}
+ .cockpit-main{grid-template-columns:1fr;gap:6px}
+ .cockpit-station-head{flex-wrap:nowrap;gap:6px}
+ .cockpit-station-head>div{min-width:0;flex:1}
+ .cockpit-station-head strong{font-size:11px}
+ .cockpit-station-head p{font-size:9px}
+ .cockpit-station-head label{min-width:0;max-width:45%;font-size:9px}
+ .cockpit-station-head select{min-height:36px;font-size:11px;padding:5px}
+ .cockpit-note{font-size:9px;margin:4px 0;padding:4px}
+ .cockpit-visual-panel{padding:4px}
+ .cockpit-sixpack{gap:4px}
+ .cockpit-gauge{padding:2px 2px 3px;gap:0;border-radius:7px}
+ .cockpit-gauge-title{font-size:8px;min-height:14px}
+ .cockpit-gauge svg{width:auto;height:clamp(51px,9.3dvh,72px);max-width:100%}
+ .cockpit-gauge-number{font-size:10px}
+ .cockpit-gauge small{font-size:8px}
+ .cockpit-station .control-panel{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:4px;padding:5px}
+ .cockpit-station .control-panel>.eyebrow,.cockpit-station .control-panel>h2,.cockpit-station .control-panel>#controlHint,
+ .cockpit-station .control-panel>.brake-button,.cockpit-station .control-panel>.shortcuts{grid-column:1/-1}
+ .cockpit-station .control-panel>.eyebrow,.cockpit-station .control-panel>h2,.cockpit-station .control-panel>.shortcuts{display:none}
+ .cockpit-station .control-panel>#controlHint{font-size:9px;line-height:1.2;margin:0 0 3px}
+ .cockpit-station .control-panel>.physical-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(92px,.68fr);grid-column:1;gap:4px}
+ .cockpit-station .control-panel>.rudder-deck{grid-column:2;display:flex;flex-direction:column;justify-content:start;align-items:stretch;gap:3px;margin:0;padding:5px 3px}
+ .cockpit-station .control-panel>.rudder-deck .eyebrow{font-size:8px}
+ .cockpit-station .control-panel>.rudder-deck .hint{font-size:8px;margin:0}
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals{display:flex;gap:3px;width:100%}
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals button{min-width:0;min-height:53px;padding:3px 1px;font-size:9px;border-width:2px}
+ .cockpit-station .control-panel .control-pad{height:clamp(106px,18dvh,145px)}
+ .cockpit-station .control-panel .flight-grip{height:clamp(103px,17dvh,138px)}
+ .cockpit-station .control-panel .side-controls{margin:0;gap:4px}
+ .cockpit-station .control-panel .lever-panel{padding:3px}
+ .cockpit-station .control-panel .lever-panel label{font-size:8px}
+ .cockpit-station .control-panel .lever-panel output{font-size:9px;margin:0}
+ .cockpit-station .control-panel .lever-track{margin:0;padding:2px}
+ .cockpit-station .control-panel .lever-panel select{font-size:9px;min-height:35px;margin:2px 0}
+ .cockpit-station .control-panel .axis-values span{font-size:9px;padding:3px}
+ .cockpit-station .control-panel .brake-button{min-height:35px;margin:0;font-size:9px;padding:5px}
+ .cockpit-station .control-panel .pedal-icon{font-size:13px}
+ .cockpit-station .instruments-layout{min-height:0}
+ .cockpit-station .cockpit-mfd-grid{gap:3px}
+ .cockpit-mfd{padding:2px;border-width:2px}
+ .cockpit-mfd-head{font-size:7px;min-height:12px}
+ .cockpit-mfd-body{padding:3px;min-height:74px}
+ .cockpit-mfd-line{font-size:8px;margin-bottom:5px}
+ .cockpit-mfd-attitude{height:65px}
+ .cockpit-mfd-readouts span{font-size:7px}
+ .cockpit-mfd-foot{font-size:6px}
+ .cockpit-mfd-panoramic>.cockpit-mfd:first-child{min-height:120px}
+ .cockpit-jet-hud{left:27%;right:27%;font-size:8px;top:16%;height:60%}
+ .cockpit-jet-hud .hud-centre{font-size:14px}
+ /* Preserve the legacy synthetic PFD and numerical indicators in one compact scan. */
+ #flightInstruments{grid-template-columns:minmax(0,.32fr) minmax(0,.68fr)}
+ #flightInstruments .mini-pfd svg{max-height:68px}
+ #flightInstruments .mini-pfd{padding:3px}
+ #flightInstruments .mini-pfd-top,#flightInstruments .mini-pfd-footer{font-size:7px}
+ #flightInstruments .readouts small{font-size:7px}
+ #flightInstruments .readouts strong{font-size:11px}
+ #flightInstruments .instruments-telemetry .readouts>div{padding:2px}
+ /* Keep wind, track, engine-system and runway-offset readouts accessible.
+    They remain in the same scrollable cockpit below the primary panel. */
+ #flightInstruments .wind-readouts{display:flex;flex-wrap:wrap;gap:3px;padding:3px}
+ #flightInstruments .wind-readouts span{font-size:8px}
+ #flightInstruments .aircraft-systems-strip{display:grid}
+ #flightInstruments .aircraft-systems-strip small{font-size:7px}
+ #flightInstruments .aircraft-systems-strip strong{font-size:9px}
+ #flightInstruments .alignment-widget{display:flex;padding:3px}
+}
+@media(max-width:365px){.cockpit-gauge-title{font-size:7px}.cockpit-gauge-number{font-size:9px}.cockpit-station .control-panel .rudder-deck .hint{display:none}}
+
+
+/* The outside windscreen, gauges AND controls must remain accessible.
+   Do not make an entire viewport-sized sticky overlay: it would block
+   aircraft selectors and radio controls farther down the page. Only the
+   shallow windscreen sticks while within the cockpit. */
+@media(max-width:740px){
+ .scene-panel{position:relative;top:auto;z-index:auto;max-height:none;overflow:visible;overscroll-behavior:auto}
+ .scene-panel .scene-shell{position:sticky;top:2px;z-index:4;height:clamp(100px,18dvh,140px)}
+ .cockpit-main{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:4px;align-items:start}
+ .cockpit-sixpack{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+ .cockpit-gauge svg{height:clamp(47px,7.8dvh,62px)}
+ .cockpit-gauge-title{font-size:7px;min-height:12px;letter-spacing:0}
+ .cockpit-gauge-number{font-size:10px}
+ .cockpit-gauge small{font-size:7px}
+ .cockpit-station .control-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;min-width:0}
+ .cockpit-station .control-panel>.physical-controls{display:contents}
+ .cockpit-station .control-panel>.control-assembly,
+ .cockpit-station .control-panel .control-assembly{grid-column:1;order:2;min-width:0}
+ .cockpit-station .control-panel .control-pad{height:clamp(94px,15dvh,117px)}
+ .cockpit-station .control-panel .flight-grip{height:clamp(91px,14.5dvh,114px)}
+ .cockpit-station .control-panel .axis-values{margin-top:2px}
+ .cockpit-station .control-panel .axis-values span{font-size:8px;padding:2px}
+ .cockpit-station .control-panel>.rudder-deck{
+  grid-column:1;order:3;display:flex;flex-direction:column;margin:0;padding:3px;gap:2px}
+ .cockpit-station .control-panel>.rudder-deck .eyebrow{display:none}
+ .cockpit-station .control-panel>.rudder-deck .hint{font-size:8px;line-height:1.2;margin:0}
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals{display:flex;gap:3px;width:100%}
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals button{min-height:43px;padding:2px;font-size:9px}
+ .cockpit-station .control-panel .side-controls{
+  grid-column:1;order:4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;margin:0;min-width:0}
+ .cockpit-station .control-panel .side-controls #collectivePanel{grid-column:1/-1}
+ .cockpit-station .control-panel .side-controls .lever-panel{min-width:0;padding:3px}
+ .cockpit-station .control-panel .lever-panel label{font-size:7px}
+ .cockpit-station .control-panel .lever-panel select{font-size:8px;max-width:100%;padding:1px}
+ .cockpit-station .control-panel .side-controls input[type=range]{height:30px}
+ .cockpit-station .control-panel>.brake-button{grid-column:1;order:5;min-height:34px}
+ .cockpit-station .control-panel>#controlHint{grid-column:1;order:1}
+ .cockpit-station .control-panel>.eyebrow,.cockpit-station .control-panel>h2,
+ .cockpit-station .control-panel>.shortcuts{display:none}
+ .cockpit-mfd-grid{gap:3px}
+ .cockpit-mfd-grid.cockpit-mfd-triple{grid-template-columns:1fr}
+ .cockpit-mfd-grid.cockpit-mfd-triple .cockpit-mfd-body{min-height:46px}
+ .cockpit-mfd-grid.cockpit-mfd-triple .cockpit-mfd-attitude{height:55px}
+ .cockpit-mfd-grid.cockpit-mfd-quad{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cockpit-mfd-grid.cockpit-mfd-panoramic{grid-template-columns:1fr}
+ .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{grid-column:1;min-height:96px}
+ .cockpit-mfd-grid.cockpit-mfd-dual{grid-template-columns:1fr}
+}
+@media(max-width:360px){
+ .cockpit-main{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr)}
+ .cockpit-station .control-panel .control-pad{height:91px}
+ .cockpit-station .control-panel .flight-grip{height:88px}
+}
+
+/* Keep the steering and anti-torque/rudder touch zones within thumb reach. */
+@media(max-width:740px){
+ .cockpit-station .control-panel #controlHint{
+  position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;
+  white-space:nowrap;padding:0;margin:0;border:0
+ }
+ .cockpit-station .control-panel .control-pad{height:96px}
+ .cockpit-station .control-panel .flight-grip{height:93px}
+ .cockpit-station .control-panel .axis-values{margin-top:1px}
+ .cockpit-station .control-panel .axis-values span{padding:1px;font-size:8px}
+}
+
+
+/* Reachable two-thumb control row. The old rotor pedals moved below the
+   yoke after the responsive refactor; this restores genuinely simultaneous
+   pitch/roll and yaw control at 390px without duplicating interactive IDs. */
+@media(max-width:740px){
+ .cockpit-main{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);align-items:start}
+ .cockpit-station .control-panel{
+  display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);
+  column-gap:3px;row-gap:3px;align-items:start
+ }
+ .cockpit-station .control-panel>.physical-controls{display:contents}
+ .cockpit-station .control-panel .control-assembly{
+  grid-column:1;grid-row:1;order:0;min-width:0
+ }
+ .cockpit-station .control-panel>.rudder-deck{
+  grid-column:2;grid-row:1;order:0;padding:2px;gap:2px;min-width:0
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals{
+  display:flex;flex-direction:column;gap:3px;align-items:stretch
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals button{
+  min-height:43px;max-height:47px;padding:0 1px;font-size:8px
+ }
+ .cockpit-station .control-panel>.rudder-deck .rudder-pedals .pedal-icon{display:none}
+ .cockpit-station .control-panel .side-controls{
+  grid-column:1/-1;grid-row:2;order:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))
+ }
+ .cockpit-station .control-panel .side-controls #collectivePanel{grid-column:1/-1}
+ .cockpit-station .control-panel>.brake-button{grid-column:1/-1;grid-row:3;order:0}
+ .cockpit-station .control-panel>#controlHint{grid-column:1/-1}
+ .cockpit-station .control-panel .control-pad{height:96px}
+ .cockpit-station .control-panel .flight-grip{height:93px}
+}
+
+
+/* Adaptive cockpit: both instructor-friendly instrument enlargement and larger
+   original, wired touch controls without clones or blocking the outside view. */
+.cockpit-adjust-row{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:5px 0 7px;
+ border-top:1px solid #50636a;padding-top:7px}
+.cockpit-adjust-row label{display:grid;gap:3px;font-size:10px;color:#d3e7e9;flex:1 1 115px;max-width:180px}
+.cockpit-adjust-row select{width:100%;min-height:37px;color:#f3f8f7;background:#0e2b35;
+ border:1px solid #83a6a9;border-radius:7px;padding:6px;font-size:11px}
+.cockpit-adjust-row button{min-height:38px;font-size:11px;flex:0 1 auto;white-space:normal;padding:6px 9px}
+.cockpit-adjust-row span{font-size:10px;color:#d1dcbf;line-height:1.4;flex:1 1 160px}
+.cockpit-rotation-status{color:#c5dde3;font-size:10px;margin:4px 0;line-height:1.35}
+.cockpit-instrument-well{min-width:0;display:grid;gap:7px}
+.cockpit-zoom-panel{border:1px solid #92abb7;border-radius:9px;background:linear-gradient(155deg,#0f2737,#122c36);
+ padding:7px;overflow:hidden}
+.cockpit-zoom-panel[hidden]{display:none!important}
+.cockpit-zoom-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.cockpit-zoom-head strong{font-size:12px;color:#f0dfa7}
+.cockpit-zoom-head button{min-height:39px;font-size:11px}
+.cockpit-zoom-content{display:grid;place-items:center;min-height:125px}
+.cockpit-zoom-content>.cockpit-gauge{width:min(100%,260px);min-height:160px}
+.cockpit-zoom-content .cockpit-gauge svg{width:min(100%,220px);height:auto;max-width:220px}
+.cockpit-zoom-content .cockpit-gauge-title{font-size:13px}
+.cockpit-zoom-content .cockpit-gauge-number{font-size:22px}
+.cockpit-zoom-content .cockpit-gauge small{font-size:12px}
+.cockpit-zoom-content>.cockpit-mfd{width:100%;box-sizing:border-box;max-width:340px}
+.cockpit-zoom-content .cockpit-mfd-attitude{height:170px}
+.cockpit-zoom-content .cockpit-mfd-line{font-size:14px}
+.cockpit-zoom-content .cockpit-mfd-head{font-size:13px}
+.cockpit-zoom-content .cockpit-mfd-readouts span{font-size:12px}
+.cockpit-zoom-panel>small{font-size:9px;line-height:1.5;color:#b6cbd2;display:block;margin-top:5px}
+#cockpitVisualPanel [role="button"]{cursor:zoom-in;touch-action:manipulation;outline-offset:2px}
+#cockpitVisualPanel [role="button"]:focus-visible{outline:3px solid #f3d88c}
+.cockpit-station[data-control-focus="expanded"] .cockpit-main{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.cockpit-station[data-control-focus="expanded"] .control-panel{border:2px solid #f0d49d;background:#203747}
+.cockpit-station[data-control-focus="expanded"] .control-panel .control-pad{height:260px}
+.cockpit-station[data-control-focus="expanded"] .control-panel .flight-grip{height:230px}
+.cockpit-station[data-control-focus="expanded"] .control-panel .rudder-pedals button{min-height:78px}
+.cockpit-station[data-control-focus="expanded"] .control-panel .lever-panel select{min-height:48px}
+.cockpit-station[data-touch-size="compact"] .control-panel .control-pad{height:130px}
+.cockpit-station[data-touch-size="compact"] .control-panel .flight-grip{height:120px}
+.cockpit-station[data-touch-size="large"] .control-panel .control-pad{height:245px}
+.cockpit-station[data-touch-size="large"] .control-panel .flight-grip{height:210px}
+.cockpit-station[data-touch-size="large"] .control-panel .rudder-pedals button{min-height:70px}
+.cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .control-pad{height:290px}
+.cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .flight-grip{height:250px}
+@media(max-width:740px){
+ .cockpit-adjust-row{gap:4px;margin:3px 0 4px;padding-top:4px}
+ .cockpit-adjust-row label{flex:1 1 80px;min-width:0;max-width:none;font-size:9px}
+ .cockpit-adjust-row select{min-height:34px;font-size:10px;padding:4px}
+ .cockpit-adjust-row button{min-height:36px;font-size:10px;flex:1 1 100px}
+ .cockpit-adjust-row span{flex:1 1 100%;font-size:9px}
+ .cockpit-zoom-content>.cockpit-gauge{width:min(100%,180px);min-height:122px}
+ .cockpit-zoom-content .cockpit-gauge svg{max-width:160px;width:100%;height:auto}
+ .cockpit-zoom-content .cockpit-gauge-number{font-size:17px}
+ .cockpit-station[data-control-focus="expanded"] .cockpit-main{grid-template-columns:minmax(0,.74fr) minmax(0,1.26fr)}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .control-pad{height:158px}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .flight-grip{height:153px}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .rudder-pedals button{min-height:68px;max-height:none}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .rudder-pedals{gap:5px}
+ .cockpit-station[data-touch-size="compact"] .control-panel .control-pad{height:85px}
+ .cockpit-station[data-touch-size="compact"] .control-panel .flight-grip{height:80px}
+ .cockpit-station[data-touch-size="large"] .control-panel .control-pad{height:128px}
+ .cockpit-station[data-touch-size="large"] .control-panel .flight-grip{height:122px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .control-pad{height:178px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .flight-grip{height:170px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="compact"] .control-panel .control-pad{height:129px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="compact"] .control-panel .flight-grip{height:124px}
+}
+/* Phone rotation uses the actual viewport aspect ratio. CSS responds to
+   orientation without requiring screen-orientation permissions or a reload. */
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ main{padding:5px 8px 22px}
+ .scene-panel{position:relative;top:auto;max-height:none;overflow:visible}
+ .scene-panel .scene-shell{height:clamp(82px,22dvh,118px);position:sticky;top:0;z-index:4}
+ .cockpit-station{padding:5px 7px}
+ .cockpit-station-head{flex-wrap:nowrap}
+ .cockpit-adjust-row{gap:6px}
+ .cockpit-adjust-row span{flex:1 1 110px}
+ .cockpit-main{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:7px}
+ .cockpit-sixpack{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .cockpit-gauge svg{width:100%;height:clamp(46px,14dvh,80px);max-width:100%}
+ .cockpit-gauge-title{font-size:8px;min-height:14px}
+ .cockpit-gauge-number{font-size:10px}
+ .cockpit-station .control-panel{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr);gap:4px}
+ .cockpit-station .control-panel>.physical-controls{display:contents}
+ .cockpit-station .control-panel .control-assembly{grid-column:1;grid-row:1}
+ .cockpit-station .control-panel>.rudder-deck{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:3px;padding:3px;margin:0}
+ .cockpit-station .control-panel .rudder-pedals{display:flex;flex-direction:column;gap:3px}
+ .cockpit-station .control-panel .rudder-pedals button{min-height:39px;border-width:2px}
+ .cockpit-station .control-panel .control-pad{height:94px}
+ .cockpit-station .control-panel .flight-grip{height:91px}
+ .cockpit-station .control-panel .side-controls{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;gap:4px}
+ .cockpit-station .control-panel>.brake-button{grid-column:1/-1;grid-row:3;min-height:34px;margin:0}
+ .cockpit-station .control-panel>.eyebrow,.cockpit-station .control-panel>h2,
+ .cockpit-station .control-panel>.shortcuts,.cockpit-station .control-panel>#controlHint{display:none}
+ .cockpit-mfd-grid.cockpit-mfd-triple{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .cockpit-mfd-grid.cockpit-mfd-quad{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cockpit-mfd-grid.cockpit-mfd-panoramic{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{grid-column:1/-1}
+ .cockpit-mfd-grid.cockpit-mfd-dual{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .control-pad{height:125px}
+ .cockpit-station[data-control-focus="expanded"] .control-panel .flight-grip{height:121px}
+ .cockpit-station[data-touch-size="large"] .control-panel .control-pad{height:115px}
+ .cockpit-station[data-touch-size="large"] .control-panel .flight-grip{height:110px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .control-pad{height:145px}
+ .cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .flight-grip{height:139px}
+ .cockpit-station[data-control-focus="expanded"] .cockpit-main{grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr)}
+}
+
+/* Extra controls appear only when the learner enlarges an on-panel control;
+   original slider values and events remain authoritative. */
+.cockpit-extra-controls{display:none;grid-column:1/-1;min-width:0;margin-top:5px;
+ padding:8px;border:1px solid #94a8a8;border-radius:8px;background:#101f2b}
+.cockpit-station[data-control-focus="expanded"] .cockpit-extra-controls{display:block}
+.cockpit-extra-controls>strong{color:#f2d99d;font-size:11px}
+.cockpit-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:7px}
+.cockpit-extra-grid button{min-width:0;min-height:46px;padding:7px 4px;font-size:11px;line-height:1.3;border-color:#abc5cc}
+.cockpit-extra-controls p{font-size:10px;color:#cde6e6;line-height:1.45;margin:5px 0 0}
+.cockpit-station[data-family="rotor"] .cockpit-extra-flap{display:none}
+@media(max-width:740px){
+ .cockpit-station .control-panel .cockpit-extra-controls{grid-column:1/-1;grid-row:4;order:0;margin-top:1px;padding:5px}
+ .cockpit-extra-grid{gap:4px;margin-top:4px}
+ .cockpit-extra-grid button{min-height:44px;font-size:10px}
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ .cockpit-station .control-panel .cockpit-extra-controls{grid-column:1/-1;grid-row:4}
+ .cockpit-extra-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .cockpit-station[data-family="rotor"] .cockpit-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

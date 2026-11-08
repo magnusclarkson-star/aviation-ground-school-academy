@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="flight-sim-atc-practice.css">
 <link rel="stylesheet" href="flight-sim-atc-missions.css">
 <link rel="stylesheet" href="flight-sim-instruments.css">
+<link rel="stylesheet" href="flight-sim-cockpit.css">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
 <link rel="stylesheet" href="flight-sim-environment.css">
 <link rel="stylesheet" href="flight-sim-3d.css">
@@ -28,6 +29,7 @@
 <script src="flight-sim-airport-detail.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
 <script src="flight-sim-instruments.js" defer></script>
+<script src="flight-sim-cockpit.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
@@ -84,9 +86,61 @@
    </div>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
    <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
+   <div id="cockpitJetHud" class="cockpit-jet-hud" hidden aria-label="Non-tactical fictional fighter head-up flight indications">
+    <div class="hud-top"><span>IAS <strong id="cockpitHudSpeed">0</strong> KT</span><span>FT <strong id="cockpitHudAlt">0</strong></span></div>
+    <div class="hud-centre" aria-hidden="true">⌜ ─ ✚ ─ ⌝</div>
+    <div class="hud-bottom"><span>HDG <strong id="cockpitHudHeading">000</strong>°</span><span>PITCH <strong id="cockpitHudPitch">0</strong>°</span></div>
+   </div>
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
    <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
   </div>
+  <section id="cockpitStation" class="cockpit-station" data-airframe="c172" data-family="trainer" aria-label="Integrated cockpit instruments and hands-on flight controls">
+   <div class="cockpit-station-head">
+    <div><strong id="cockpitAircraftLabel">Cessna 172 · Classic</strong><p id="cockpitAircraftCaption">Traditional six-pack and yoke · training simulation</p></div>
+    <label for="cockpitAircraftSelect">Choose aircraft cockpit
+     <select id="cockpitAircraftSelect" aria-label="Switch Cessna, Robinson and five fighter cockpit styles">
+      <option value="c172" selected>Cessna 172 · Classic</option>
+      <option value="r44">Robinson R44 · Raven</option>
+      <option value="fa18">F/A-18 · Super Hornet</option>
+      <option value="f22">F-22 · Raptor</option>
+      <option value="f35">F-35 · Lightning II</option>
+      <option value="typhoon">Eurofighter · Typhoon</option>
+      <option value="su37">Su-37 · Concept</option>
+     </select>
+    </label>
+   </div>
+   <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
+   <div class="cockpit-adjust-row" aria-label="Adjust touchscreen control feel">
+    <label for="cockpitTouchScale">Touch control size
+     <select id="cockpitTouchScale">
+      <option value="compact">Compact</option>
+      <option value="standard" selected>Standard</option>
+      <option value="large">Larger controls</option>
+     </select>
+    </label>
+    <label for="cockpitTouchSensitivity">Steering sensitivity
+     <select id="cockpitTouchSensitivity">
+      <option value="0.75">Gentle</option>
+      <option value="1" selected>Normal</option>
+      <option value="1.3">Responsive</option>
+     </select>
+    </label>
+    <button id="cockpitControlFocusToggle" type="button" aria-pressed="false" aria-controls="controlPad">Expand flight controls</button>
+    <span>Touch a control to enlarge its area. Tap any instrument to zoom it live.</span>
+   </div>
+   <p id="cockpitRotationStatus" class="cockpit-rotation-status" role="status" aria-live="polite">Cockpit automatically adapts to portrait and landscape rotation.</p>
+   <div id="cockpitMain" class="cockpit-main">
+    <div id="cockpitInstrumentWell" class="cockpit-instrument-well">
+     <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Tap individual live aircraft-style instruments to enlarge"></div>
+     <section id="cockpitZoomPanel" class="cockpit-zoom-panel" aria-label="Enlarged live cockpit instrument" hidden>
+      <div class="cockpit-zoom-head"><strong id="cockpitZoomTitle">Instrument</strong><button type="button" id="cockpitZoomClose">Close ✕</button></div>
+      <div id="cockpitZoomContent" class="cockpit-zoom-content"></div>
+      <small>Simulated live readings, not certified aircraft data. Flight controls remain accessible alongside.</small>
+     </section>
+    </div>
+   </div>
+   <p class="cockpit-note">Flight control: <strong id="cockpitGripLabel">Yoke</strong>. Instruments and yoke, stick, cyclic, throttle, collective and pedals are in the same cockpit area. Hold two fingers to steer and use a pedal.</p>
+  </section>
   <div class="instruments-layout" id="flightInstruments" aria-label="Compact simulated glass instruments and numeric flight indications">
    <div class="mini-pfd" aria-label="Synthetic attitude, simulated airspeed, height, heading and vertical rate">
     <div class="mini-pfd-top"><span>AGSA · SIM PFD</span><span id="pfdSpeedStatus">SIMULATED AIRSPEED</span></div>
@@ -508,8 +562,8 @@
    </div>
   </section>
   <section class="panel control-panel" aria-labelledby="controlTitle">
-   <span class="eyebrow">02 · FLY WITH TWO THUMBS</span>
-   <h2 id="controlTitle">Touchscreen flight controls</h2>
+   <span class="eyebrow">02 · ON-COCKPIT CONTROLS</span>
+   <h2 id="controlTitle">Flight controls on your instrument panel</h2>
    <p class="hint" id="controlHint">Drag inside the control area to move the yoke. Use another finger for the rudder or engine power.</p>
    <div class="physical-controls">
     <div class="control-assembly">
@@ -576,6 +630,16 @@
     </div>
    </div>
    <button id="brake" type="button" class="brake-button">Hold wheel brake during rollout</button>
+   <div id="cockpitExtraControls" class="cockpit-extra-controls" aria-label="Extra controls available in enlarged cockpit mode">
+    <strong>Additional touch controls</strong>
+    <div class="cockpit-extra-grid">
+     <button id="cockpitPowerDown" type="button" aria-label="Reduce engine power or helicopter collective by five percent">− Power / collective</button>
+     <button id="cockpitPowerUp" type="button" aria-label="Increase engine power or helicopter collective by five percent">+ Power / collective</button>
+     <button id="cockpitFlapsDown" type="button" class="cockpit-extra-flap" aria-label="Retract flaps by one detent">Flaps −</button>
+     <button id="cockpitFlapsUp" type="button" class="cockpit-extra-flap" aria-label="Extend flaps by one detent">Flaps +</button>
+    </div>
+    <p id="cockpitExtraStatus" role="status" aria-live="polite">Step controls use the same simulator inputs. Not real aircraft procedures.</p>
+   </div>
    <p class="hint shortcuts">Desktop: arrows = pitch/bank, A/D = rudder, W/S = power/collective, space = brake, R = reset. On phones, keep the outside view visible while using two fingers.</p>
   </section>
  </div>

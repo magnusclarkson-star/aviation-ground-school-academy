@@ -134,15 +134,15 @@ try{
  assert.ok(Math.abs(pad.y-right.y)<145,"yoke and pedals must share one phone thumb row");
  assert.ok(pad.y<844&&pad.y+pad.height>0&&right.y>=0&&right.y+right.height<=844,
   "both controls must fit the visible phone viewport");
- const view=await phone.locator(".scene-panel").boundingBox();
- assert.ok(view&&view.y>=-7&&view.y<45,"outside view stays sticky while touch controls operate");
+ assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","shallow outside scene stays sticky without blocking aircraft choices");
+ assert.equal(await phone.locator("#controlPad").evaluate(el=>!!el.closest("#cockpitStation")),true,"controls sit within instrument cockpit");
  await phone.locator("#hapticsToggle").tap();
  assert.equal(await phone.locator("#hapticsToggle").getAttribute("aria-pressed"),"true");
  await phone.locator("#rightRudder").scrollIntoViewIfNeeded();
  // A sticky outside-view panel can cover an otherwise in-viewport control.
  // Position the whole two-thumb row below it before dispatching real touches.
  await phone.evaluate(()=>{
-  const view=document.querySelector(".scene-panel").getBoundingClientRect();
+  const view=document.querySelector(".scene-shell").getBoundingClientRect();
   const pad=document.querySelector("#controlPad").getBoundingClientRect();
   const overlap=view.bottom+8-pad.top;
   if(overlap>0)window.scrollBy(0,-overlap);
