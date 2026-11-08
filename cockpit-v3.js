@@ -224,6 +224,10 @@ function paint(){
  $("outThrottle").textContent=round(input.throttle)+"%";
  $("outTrim").textContent=round(input.trim*100)+"%";
  $("outFlaps").textContent=round(input.flaps)+"°";
+ // Explicit command feedback, distinct from the delayed physical-response indicators.
+ // Kept next to the PFD so both fingers can work controls without losing feedback.
+ const percent=value=>Math.round(clamp(value,-1,1)*100);
+ $("activeControlInput").textContent="BANK "+percent(input.yokeX)+"% · PITCH "+percent(input.yokeY)+"% · RUDDER "+percent(input.rudder)+"% · FLAPS "+round(input.flaps)+"°";
  const d=Math.abs(state.roll)>5?(state.roll>0?"Banking right.":"Banking left."):Math.abs(state.pitch)>3?(state.pitch>0?"Nose-high attitude.":"Nose-low attitude."):"Near level attitude.";
  $("teachingFeedback").innerHTML="<p><strong>"+d+"</strong> Airspeed "+round(state.speed)+" kt; vertical speed "+round(state.verticalSpeed)+" ft/min. The readings change from controls, not direct touches on the dial.</p>";
  if(mode==="skills")renderSkills();
@@ -722,30 +726,52 @@ function wireControls(){
  let drag=null;
  function moveGrip(e){
   const box=pad.getBoundingClientRect();
-  let dx=clamp((e.clientX-(box.left+box.width/2))/(box.width*(controlStyle==="joystick"?.31:.34)),-1,1);
-  let dy=clamp((e.clientY-(box.top+box.height/2))/(box.height*(controlStyle==="joystick"?.29:.3)),-1,1);
+  const dx=clamp((e.clientX-(box.left+box.width/2))/(box.width*(controlStyle==="joystick"?.31:.34)),-1,1);
+  const dy=clamp((e.clientY-(box.top+box.height/2))/(box.height*(controlStyle==="joystick"?.29:.3)),-1,1);
   input.yokeX=dx;input.yokeY=dy;
   grip.style.transform="translate("+(dx*48).toFixed(0)+"px,"+(dy*25).toFixed(0)+"px)";
  }
- grip.addEventListener("pointerdown",e=>{
+ // Treat the entire pad as the hit target. A finger may begin beside the
+ // small grip, and a second finger can operate a separate pedal concurrently.
+ pad.addEventListener("pointerdown",e=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
+  if(drag!==null)return; // Only the owning finger may steer the yoke.
   cancelPreset();drag=e.pointerId;
-  grip.setPointerCapture(e.pointerId);
+  pad.setPointerCapture(e.pointerId);
   moveGrip(e);e.preventDefault();
  });
- grip.addEventListener("pointermove",e=>{if(drag===e.pointerId)moveGrip(e)});
- for(const t of ["pointerup","pointercancel","lostpointercapture"])grip.addEventListener(t,e=>{if(drag===e.pointerId){drag=null;releaseYoke()}});
+ pad.addEventListener("pointermove",e=>{if(drag===e.pointerId)moveGrip(e)});
+ for(const kind of ["pointerup","pointercancel","lostpointercapture"])
+  pad.addEventListener(kind,e=>{
+   if(drag!==e.pointerId)return;
+   drag=null;releaseYoke();
+  });
  grip.addEventListener("keydown",e=>{
   const cmd={ArrowLeft:["yokeX",-1],ArrowRight:["yokeX",1],ArrowUp:["yokeY",-1],ArrowDown:["yokeY",1]};
   if(cmd[e.key]){e.preventDefault();cancelPreset();input[cmd[e.key][0]]=cmd[e.key][1]*.6;}
  });
- grip.addEventListener("keyup",()=>releaseYoke());
+ grip.addEventListener("keyup",()=>{if(drag===null)releaseYoke()});
  function bindHold(id,key,value){
-  const el=$(id);let keyActive=false;
-  el.addEventListener("pointerdown",e=>{cancelPreset();input[key]=value;el.classList.add("pressed");if(el.setPointerCapture)el.setPointerCapture(e.pointerId)});
-  for(const kind of ["pointerup","pointercancel","lostpointercapture"])el.addEventListener(kind,()=>{input[key]=0;el.classList.remove("pressed")});
-  el.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();cancelPreset();input[key]=value;keyActive=true;}});
-  el.addEventListener("keyup",()=>{if(keyActive){input[key]=0;keyActive=false;}});
+  const el=$(id);let keyActive=false,pointer=null;
+  el.addEventListener("pointerdown",e=>{
+   if(e.pointerType==="mouse"&&e.button!==0||pointer!==null)return;
+   pointer=e.pointerId;cancelPreset();input[key]=value;el.classList.add("pressed");
+   if(el.setPointerCapture)el.setPointerCapture(e.pointerId);
+   e.preventDefault();
+  });
+  for(const kind of ["pointerup","pointercancel","lostpointercapture"])
+   el.addEventListener(kind,e=>{
+    if(pointer!==e.pointerId)return; // Ignore unrelated touch releases.
+    pointer=null;
+    if(!keyActive)input[key]=0;
+    el.classList.remove("pressed");
+   });
+  el.addEventListener("keydown",e=>{
+   if(e.key===" "||e.key==="Enter"){e.preventDefault();cancelPreset();input[key]=value;keyActive=true;}
+  });
+  el.addEventListener("keyup",()=>{
+   if(keyActive){keyActive=false;if(pointer===null)input[key]=0;}
+  });
  }
  bindHold("leftRudder","rudder",-1);bindHold("rightRudder","rudder",1);
  bindHold("noseUp","yokeY",-.75);bindHold("noseDown","yokeY",.75);
