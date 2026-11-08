@@ -28,7 +28,7 @@ function makeController({navigatorLike,documentLike}={}){
  const supported=typeof nav?.getGamepads==="function";
  let enabled=false,index=null,mapping={...DEFAULT},neutral=Object.create(null),powerSetpoint=0;
  function devices(){
-  if(!supported||doc?.hidden)return [];
+  if(!enabled||!supported||doc?.hidden)return [];
   try{
    return Array.from(nav.getGamepads()||[]).filter(gp=>gp?.connected===true &&
     Number.isInteger(gp.index)&&gp.index>=0&&gp.index<32).map(gp=>({
