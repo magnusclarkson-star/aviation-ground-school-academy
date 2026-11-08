@@ -252,3 +252,15 @@ The Academy CI adds deterministic geometry and coordinate-sharing checks, 2D dra
 
 **Simulator:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
 **Academy:** https://magnusclarkson-star.github.io/aviation-ground-school-academy/
+
+### Visual motion feedback and stronger one-tap vibration test (2026-11-08)
+
+A learner confirmed that **aircraft engine sound plays on the Tecno Camon 30 but website vibration cannot be felt**. This update deliberately **does not change the working engine and ATC sound implementations**. The Android haptic issue is isolated to the OS/browser vibration mechanism, not to Web Audio.
+
+The simulator now provides a second, longer **Test stronger vibration** button. That direct-gesture test requests a bounded `[180,100,180]` millisecond pattern (460ms total) without enrolling the user in ongoing in-flight vibration. In-flight vibration still uses the existing short, rate-limited patterns, and event pulses are prioritised ahead of general runway/airflow ambience. The diagnostic report shows request attempts, calls accepted by the browser, and stronger test requests. **An accepted website vibration request does not establish that the physical motor moved.**
+
+An unobtrusive **VISUAL CUE** display now follows the fictional flight phases (roll, climb, flight, approach, landing) and highlights select recorded simulation events, including turbulence, touchdown and stall. It remains visible even when no haptic API exists. It never claims to replicate physical flight forces and does not obstruct the instruments or touchscreen controls.
+
+**Tecno / Android device checks:** First verify the phone itself vibrates for an ordinary incoming call or notification. Open Android **Settings → Sound & vibration** (or **Accessibility → Vibration & haptics**, depending on the phone's HiOS version) and enable vibration/haptic feedback, and check Do Not Disturb. Next use the simulator directly in Chrome rather than an in-app view, tap **Test stronger vibration**, and read **Browser & device diagnostics**. The browser API may report a request as accepted while nothing is felt; websites cannot force the phone's system settings or use Android's native vibrator service directly. If the phone vibrates in other applications but not this web page, a future dedicated Android build with a native haptics bridge may be necessary for more reliable feedback. Do not assume the hardware is faulty based on the website alone.
+
+Flight simulator: https://magnusclarkson-star.github.io/aviation-ground-school-academy/flight-sim.html
