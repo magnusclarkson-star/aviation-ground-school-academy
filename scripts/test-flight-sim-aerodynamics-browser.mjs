@@ -24,8 +24,10 @@ try{
  assert.match(await page.locator("#environmentStatus").textContent(),/Experimental energy dynamics/);
  assert.match(await page.locator("#physicsHint").textContent(),/invented forces/);
  assert.equal(await page.locator("#readSpeed").textContent(),"73");
- assert.equal(await page.locator("#aeroEnergy").textContent(),"0 J/kg",
-  "switching models resets the fictional exercise rather than carrying across energy");
+ assert.ok((await numeric(page,"#aeroEnergy"))>1000,
+  "the fresh fictional final approach starts with physical-model kinetic and height energy");
+ assert.equal(await page.locator("#coachElapsed").textContent(),"0 s",
+  "switching physics resets the local practice clock rather than carrying a prior session");
  await page.waitForTimeout(1000);
  assert.ok((await numeric(page,"#aeroLift"))>0,"wing lift should update live");
  assert.ok((await numeric(page,"#aeroDrag"))>0,"wing drag should update live");
