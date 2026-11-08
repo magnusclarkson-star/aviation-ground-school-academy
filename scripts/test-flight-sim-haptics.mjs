@@ -12,7 +12,7 @@ assert.equal(h.pulse("touchdown"),false,"vibration is opt-in only");
 assert.equal(seen.length,0,"off state must not invoke vibration");
 assert.equal(h.setEnabled(true),true);
 assert.equal(h.pulse("control"),true);
-assert.deepEqual(seen[0],[9]);
+assert.deepEqual(seen[0],H.patterns.control,"direct control feedback should remain bounded but more noticeable");
 timestamp+=180;assert.equal(h.pulse("control"),false,"no high-frequency pulses");
 timestamp+=180;assert.equal(h.pulse("control"),true,"small pulse resumes after limit");
 timestamp+=300;
