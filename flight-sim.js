@@ -557,7 +557,7 @@ $("traceInsights").addEventListener("click",()=>{
  const analysis=Z.summarise(trace.exportData());
  if(!analysis.available)return;
  $("traceInsightsFacts").textContent=analysis.text;
- $("traceInsightsPrompts").textContent=analysis.prompts.map((p,i)=>(i+1)+". "+p).join("\\n\\n");
+ $("traceInsightsPrompts").textContent=analysis.prompts.map((p,i)=>(i+1)+". "+p).join("\n\n");
  $("traceInsightsWarning").textContent=analysis.warning;
  $("traceInsightsPanel").hidden=false;
 });
