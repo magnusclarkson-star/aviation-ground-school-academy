@@ -31,6 +31,8 @@
 <script src="flight-sim-aircraft-systems.js" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
+<script src="flight-sim-engine-audio.js" defer></script>
+<script src="flight-sim-atc-radio.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
 <script src="flight-sim-replay.js" defer></script>
 <script src="flight-sim-after-action.js" defer></script>
@@ -163,7 +165,38 @@
      </select>
      <p id="physicsHint" class="hint">Classic keeps the familiar takeoff/landing behaviour. Experimental uses invented lift, drag, angle of attack, bank loading and engine response; it is not a validated flight model.</p>
     </div>
-    <section id="loadingWrap" class="loading-settings hidden" aria-labelledby="loadingTitle">
+    <section class="panel audio-lab" aria-labelledby="audioLabTitle">
+   <span class="eyebrow">AUDIO TRAINING LAB · OPTIONAL</span>
+   <h2 id="audioLabTitle">Aircraft sounds &amp; pilot–tower conversations</h2>
+   <p>Try a fictional engine sound and scripted radio conversations for before departure, during flight, and after landing. Both features are silent until you press Play. They do not use your microphone or send transmissions.</p>
+   <div class="audio-lab-grid">
+    <div class="audio-block">
+     <h3>Aircraft engine / rotor sound</h3>
+     <button id="engineAudioToggle" type="button" aria-pressed="false">Enable engine sound</button>
+     <label for="engineAudioVolume">Engine volume</label>
+     <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="32">
+     <output id="engineAudioVolumeValue" for="engineAudioVolume">32%</output>
+     <p id="engineAudioStatus" role="status" aria-live="polite">Engine sound is off. Tap Enable to start locally synthesized audio.</p>
+     <p class="hint">The imaginary piston engine changes pitch with simulated power; the conceptual helicopter uses a steady rotor-like pulse. Use a comfortable volume. Pause, change aircraft or leave the page to stop the sound.</p>
+    </div>
+    <div class="audio-block">
+     <h3>Academy Tower &amp; Student Pilot</h3>
+     <div class="atc-buttons" aria-label="Choose fictional radio dialogue">
+      <button id="atcBefore" type="button">Before departure</button>
+      <button id="atcDuring" type="button">During flight</button>
+      <button id="atcAfter" type="button">After landing</button>
+      <button id="atcAll" type="button">Play complete exchange</button>
+      <button id="atcStop" type="button">Stop radio</button>
+     </div>
+     <p id="atcStatus" role="status" aria-live="polite">Radio is off until you select a dialogue.</p>
+     <h4>Written radio transcript</h4>
+     <ol id="atcTranscript" class="atc-transcript" aria-label="Fictional tower and pilot radio script"></ol>
+     <p class="hint">Device voices may be unavailable or sound alike; the transcript always works. This is scripted text-to-speech, not live AI, a real ATC recording, actual radio phraseology training, a clearance, or a substitute for a qualified instructor.</p>
+    </div>
+   </div>
+   <p class="disclaimer">No aircraft audio files, live radio streams, microphone permissions, recorded voices or network services are used. Fictional engine pitch and simulated communications do not represent real aircraft or operational air traffic control.</p>
+ </section>
+ <section id="loadingWrap" class="loading-settings hidden" aria-labelledby="loadingTitle">
      <h3 id="loadingTitle">Fictional weight &amp; balance lab</h3>
      <p class="hint">Change the imaginary occupants, bags and fuel to see how mass, moments and centre of gravity affect the experimental teaching model. Releasing a control restarts the current exercise. These are not actual aircraft stations or safe loading limits.</p>
      <div class="loading-grid">
