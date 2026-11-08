@@ -13,7 +13,9 @@
 <link rel="stylesheet" href="flight-sim-3d.css">
 <link rel="stylesheet" href="flight-sim-aircraft-systems.css">
 <link rel="stylesheet" href="flight-sim-aerodynamics.css">
+<link rel="stylesheet" href="flight-sim-loading.css">
 <script src="flight-sim-environment.js" defer></script>
+<script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
@@ -150,6 +152,35 @@
      </select>
      <p id="physicsHint" class="hint">Classic keeps the familiar takeoff/landing behaviour. Experimental uses invented lift, drag, angle of attack, bank loading and engine response; it is not a validated flight model.</p>
     </div>
+    <section id="loadingWrap" class="loading-settings hidden" aria-labelledby="loadingTitle">
+     <h3 id="loadingTitle">Fictional weight &amp; balance lab</h3>
+     <p class="hint">Change the imaginary occupants, bags and fuel to see how mass, moments and centre of gravity affect the experimental teaching model. Releasing a control restarts the current exercise. These are not actual aircraft stations or safe loading limits.</p>
+     <div class="loading-grid">
+      <label for="loadPilot">Front occupant <strong id="loadPilotValue">80 kg</strong>
+       <input type="range" id="loadPilot" min="45" max="120" step="5" value="80">
+      </label>
+      <label for="loadPassenger">Rear occupant <strong id="loadPassengerValue">35 kg</strong>
+       <input type="range" id="loadPassenger" min="0" max="130" step="5" value="35">
+      </label>
+      <label for="loadBaggage">Rear baggage <strong id="loadBaggageValue">0 kg</strong>
+       <input type="range" id="loadBaggage" min="0" max="80" step="5" value="0">
+      </label>
+      <label for="loadFuel">Imaginary fuel <strong id="loadFuelValue">75 kg</strong>
+       <input type="range" id="loadFuel" min="15" max="90" step="5" value="75">
+      </label>
+     </div>
+     <div class="loading-results" aria-label="Synthetic mass, moments and centre of gravity">
+      <div><small>TOTAL MASS · SIM</small><strong id="loadingMass">840 kg</strong></div>
+      <div><small>MOMENT · SIM</small><strong id="loadingMoment">1714 kg·m</strong></div>
+      <div><small>CG · % IMAGINARY MAC</small><strong id="loadingCg">45.4%</strong></div>
+      <div><small>WING LOADING · SIM</small><strong id="loadingWing">49.4 kg/m²</strong></div>
+     </div>
+     <div class="cg-track" role="img" aria-label="Illustrative centre-of-gravity band: grey region 30 to 55 percent, amber marker shows the current model centre of gravity">
+      <span class="cg-band" aria-hidden="true"></span>
+      <span id="loadingCgMarker" class="cg-marker" aria-hidden="true"></span>
+     </div>
+     <p id="loadingStatus" class="loading-status" data-level="normal" role="status" aria-live="polite">Inside the imaginary comparison band. Not an aircraft operating limit.</p>
+    </section>
     <div>
      <label for="windSelect">Illustrative wind environment</label>
      <select id="windSelect" aria-describedby="windHint">
