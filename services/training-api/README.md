@@ -235,7 +235,7 @@ Detailed architecture and operational restrictions: [AI Instructor and Voice Gui
 
 The private dashboard now supports `/api/v1/ai/realtime-connect` and `/api/v1/ai/realtime-end`. On a user-confirmed, authenticated request, the browser asks permission for its microphone and sends a bounded SDP offer **to this same-origin API**, not a provider key. The server combines the offer with its own fixed educational session configuration and exchanges it using OpenAI's **GA `POST /v1/realtime/calls` unified WebRTC API**. The browser then uses the returned SDP answer for microphone audio and synthetic instructor speech. It never sees a long-lived API key or short-lived provider token.
 
-**Default is disabled**: for fictional staging ONLY, a trusted operator must explicitly set all three `AGSA_AI_ENABLED=1`, `AGSA_AI_REALTIME_ENABLED=1`, `AGSA_AI_REALTIME_STAGING_APPROVED=1`, and supply `OPENAI_API_KEY` from a private secret manager. No API key or account is preconfigured and no live paid voice calls have been made in tests.
+**Default is disabled**: for fictional staging ONLY, a trusted operator must explicitly set all three `AGSA_AI_ENABLED=1`, `AGSA_AI_REALTIME_ENABLED=1`, `AGSA_AI_REALTIME_STAGING_APPROVED=1`, supply `OPENAI_API_KEY` from a private secret manager, **and set a valid `AGSA_AI_REALTIME_ALLOWED_USER_IDS` allowlist for independently vetted adult fictional testers**. No API key or account is preconfigured and no live paid voice calls have been made in tests.
 
 Safety and spend constraints: a verified login and CSRF token are mandatory; explicit voice consent is required for each call. A validated lesson topic, teaching style and synthetic voice are the only client-selectable settings; model `gpt-realtime-2.1-mini`, AI instructions and token limits remain server-owned. The voice tutor includes a **two-minute client timer** and the private server attempts to end each call through **`POST /v1/realtime/calls/{call_id}/hangup`** after 120 seconds. Staging also permits **only one live voice session per learner per application process**, and two session reservations per account per UTC day via PostgreSQL. The student may manually mute or end a call; sign-out triggers server hangup. Local, nonpersisted generated transcripts may appear in the browser.
 
@@ -244,3 +244,6 @@ Safety and spend constraints: a verified login and CSRF token are mandatory; exp
 Automated CI now checks session validation, no external provider credentials in responses, simulated backend handshakes, mock provider hangup, access and quota boundaries, and fake desktop/mobile WebRTC browser flows. All provider calls in CI are mocked.
 
 See [AI Instructor and Voice Engineering Guide](../../docs/AI-INSTRUCTOR-VOICE.md).
+
+
+**Pilot eligibility/microphone permission:** see [VOICE-PILOT-SECURITY.md](./VOICE-PILOT-SECURITY.md). Unapproved accounts are denied before provider calls or reservations; age verification is not implemented. Backend call expiry is still best-effort.
