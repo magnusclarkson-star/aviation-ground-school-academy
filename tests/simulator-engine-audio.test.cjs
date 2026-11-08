@@ -60,7 +60,7 @@ test('piston and rotor profiles are compact, mode-specific and safely clamped',(
  assert.ok(high.harmonicHz>idle.harmonicHz);
  assert.ok(heli.chopHz>0);
  assert.equal(Engine.model('airplane',99).primaryHz,high.primaryHz);
- assert.ok(high.engineLevel<=.1);
+ assert.ok(high.engineLevel>.1&&high.engineLevel<.3,"gain should be audible on phones while remaining bounded");
 });
 test('engine texture setting adds an optional power-responsive oscillator without changing default',async()=>{
  const env=audioWorld(),engine=Engine.createEngine({windowLike:env.win,documentLike:env.doc});
