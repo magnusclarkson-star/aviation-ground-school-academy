@@ -976,7 +976,7 @@ atcPractice=AP.attach({
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
  onFinish:()=>engineAudio.setDuck(false,audioPower())
 });
-// atcMissions=AM.attach({
+atcMissions=AM.attach({
  documentLike:document,windowLike:window,getAirport:()=>$("atcAirport").value,
  onBegin:()=>{
   atcRadio?.disarm("ATC decision mission has taken the radio channel.");
