@@ -1,0 +1,42 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const Playback=require('../flight-sim-playback.js');
+const html=fs.readFileSync(path.join(root,'flight-sim.html'),'utf8');
+const script=fs.readFileSync(path.join(root,'flight-sim.js'),'utf8');
+test('replay never auto-plays, can pause, and advances at one sample per second',()=>{
+ const p=Playback.makePlayer();
+ p.load(5);assert.deepEqual(p.status(),{count:5,index:0,playing:false,atEnd:false});
+ p.tick(100);assert.equal(p.status().index,0);
+ p.play();for(let i=0;i<4;i++)p.tick(.25);
+ assert.equal(p.status().index,1);
+ p.pause();p.tick(3);assert.equal(p.status().index,1);
+ p.play();for(let i=0;i<12;i++)p.tick(.25);
+ assert.deepEqual(p.status(),{count:5,index:4,playing:false,atEnd:true});
+ p.play();assert.equal(p.status().index,0);
+ assert.equal(p.status().playing,true);
+});
+test('seek, reset and unsupported sample counts are bounded',()=>{
+ const p=Playback.makePlayer();
+ assert.throws(()=>p.load(601));assert.throws(()=>p.load(-1));
+ p.load(3);p.seek(900);assert.equal(p.status().index,2);
+ p.seek(-10);assert.equal(p.status().index,0);
+ p.play();p.load(0);
+ assert.equal(p.status().playing,false);
+ assert.equal(p.status().index,0);
+ assert.equal(p.play().playing,false);
+});
+test('playback is user controlled, independent of simulated aircraft controls and private',()=>{
+ for(const id of ['tracePlayPause','traceReplayIndex','traceReplayPanel'])assert.ok(html.includes('id="'+id+'"'));
+ assert.ok(html.includes('src="flight-sim-playback.js"'));
+ assert.ok(html.includes('aria-pressed="false" disabled>Play recorded samples'));
+ assert.ok(script.includes('playback.tick(dt)'));
+ assert.ok(script.includes('playback.seek(Number($("traceReplayIndex").value))'));
+ assert.ok(script.includes('playback.pause()'));
+ assert.ok(script.includes('document.hidden'));
+ assert.ok(script.includes('playback.load(0)'));
+ const src=fs.readFileSync(path.join(root,'flight-sim-playback.js'),'utf8');
+ for(const forbidden of ['fetch(', 'XMLHttpRequest','sendBeacon','localStorage','sessionStorage','setInterval(', 'setTimeout('])assert.ok(!src.includes(forbidden));
+});
