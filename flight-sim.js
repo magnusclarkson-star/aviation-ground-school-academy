@@ -8,12 +8,39 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!K||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!K||!J||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
+const audioFallback=J.createFallback({windowLike:window,documentLike:document});
+let lastSpeakerTest="not attempted";
+function refreshPhoneDiagnostics(){
+ const vibration=haptics.status(),engine=engineAudio.status(),htmlAudio=audioFallback.status();
+ let embedded=false;
+ try{embedded=window.top!==window.self;}catch{embedded=true;}
+ const lines=[
+  "ACADEMY PHONE AUDIO / HAPTIC DIAGNOSTICS",
+  "Page: "+(document.hidden?"hidden":"visible"),
+  "Secure browser context: "+(window.isSecureContext===true?"yes":"no or unavailable"),
+  "Embedded frame: "+(embedded?"yes — open directly in Chrome":"no (does not identify the browser app)"),
+  "Web Audio API: "+(phoneProbe.supported?"available":"unavailable"),
+  "HTML audio backup: "+(htmlAudio.supported?"available":"unavailable"),
+  "Engine: "+(engine.active?"active":"inactive"),
+  "Engine audio context: "+engine.audioState,
+  "Website vibration API: "+(vibration.supported?"available":"unavailable"),
+  "Flight vibration armed: "+(vibration.enabled?"yes":"no"),
+  "Last vibration request: "+vibration.lastResult,
+  "Last primary speaker test: "+lastSpeakerTest,
+  "Last backup speaker test: "+htmlAudio.lastResult,
+  "Media volume: not readable by websites",
+  "Vibration motor and actual speaker output: not measurable by websites",
+  "No device ID, location, microphone recordings or personal files included."
+ ];
+ $("phoneDiagnosticsText").value=lines.join("\n");
+ return lines.join("\n");
+}
 const radioTone=Y.createTone({windowLike:window,documentLike:document});
 function syncRadioToneUI(message){
  const info=radioTone.status();
@@ -522,6 +549,7 @@ window.addEventListener("blur",()=>{releaseControls();haptics.stop()});
 document.addEventListener("visibilitychange",()=>{
  if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();
   engineAudio.stop();syncEngineAudioUI("Page hidden: engine sound stopped.");
+  audioFallback.stop();refreshPhoneDiagnostics();
   radioTone.stop();syncRadioToneUI("Page hidden: radio cue tone stopped.");}
  lastFrame=0;
 });
@@ -684,18 +712,45 @@ $("phoneFeedbackStart").addEventListener("click",async()=>{
   ". If you hear or feel nothing, test each separately, increase MEDIA volume, and check Android vibration settings.");
 });
 $("phoneFeedbackStop").addEventListener("click",()=>{
- engineAudio.stop();phoneProbe.stop();haptics.setEnabled(false);
+ engineAudio.stop();phoneProbe.stop();audioFallback.stop();haptics.setEnabled(false);
  syncEngineAudioUI("Engine stopped.");syncHapticsUI("Flight vibration turned off.");
  syncPhoneFeedbackUI("Engine and vibration are both off.");
+ refreshPhoneDiagnostics();
 });
 $("phoneSoundTest").addEventListener("click",async()=>{
  $("phoneSoundTest").disabled=true;
  const report=await phoneProbe.testSpeaker();
+ lastSpeakerTest=report.started?"requested playback":"blocked — "+report.reason;
+ refreshPhoneDiagnostics();
  $("phoneSoundTest").disabled=false;
  syncPhoneFeedbackUI(report.reason+(report.started?" Did you hear the brief beep? The app cannot measure your speaker.":""));
 });
+$("phoneAudioBackup").addEventListener("click",async()=>{
+ $("phoneAudioBackup").disabled=true;
+ const result=await audioFallback.play();
+ $("phoneAudioBackup").disabled=false;
+ syncPhoneFeedbackUI(result.reason);
+ refreshPhoneDiagnostics();
+});
+$("phoneRefreshDiagnostics").addEventListener("click",()=>{
+ refreshPhoneDiagnostics();
+ $("phoneDiagnosticsStatus").textContent="Current browser feature report refreshed. It does not identify your physical phone.";
+});
+$("phoneCopyDiagnostics").addEventListener("click",async()=>{
+ const report=refreshPhoneDiagnostics();
+ try{
+  if(!navigator.clipboard?.writeText)throw Error("clipboard unavailable");
+  await navigator.clipboard.writeText(report);
+  $("phoneDiagnosticsStatus").textContent="Report copied. Paste it in ChatGPT if you want me to inspect the results.";
+ }catch{
+  $("phoneDiagnosticsText").focus();
+  $("phoneDiagnosticsText").select();
+  $("phoneDiagnosticsStatus").textContent="Automatic copying was unavailable. Select and copy the report text to share it.";
+ }
+});
 $("phoneVibrationTest").addEventListener("click",()=>{
  const report=haptics.test();
+ refreshPhoneDiagnostics();
  syncPhoneFeedbackUI(report.supported?
   (report.accepted?"Browser accepted a 195-millisecond vibration request. If you felt nothing, check phone vibration settings or browser compatibility.":"Browser rejected the vibration request. Try Chrome and check system settings."):
   "This browser does not support website vibration. Try Chrome on Android; the simulator still operates visually.");
@@ -802,6 +857,7 @@ document.addEventListener("click",event=>{
 syncEngineAudioUI();
 syncHapticsUI();
 syncPhoneFeedbackUI();
+refreshPhoneDiagnostics();
 syncRadioToneUI();
 chooseVisual();
 requestAnimationFrame(frame);
