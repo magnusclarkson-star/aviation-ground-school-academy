@@ -3,9 +3,24 @@
  * The browser's speech engine is optional and never contacts the Academy API.
  */
 (()=>{"use strict";
-const L=window.AGSAAIInstructorLessons,$=id=>document.getElementById(id);
+const L=window.AGSAAIInstructorLessons,P=window.AGSAInstructorProgress,$=id=>document.getElementById(id);
 if(!L){document.body.insertAdjacentText("afterbegin","Lessons unavailable.");return}
 let lessonId="forces",style="mentor",answered=false,lastSpoken="",voices=[],recognition=null;
+const lessonIds=L?L.lessons.map(l=>l.id):[];
+let practiceHistory=P?P.load(window.localStorage,lessonIds):[];
+function renderPractice(){
+ if(!P)return;
+ const o=P.overview(practiceHistory,L.lessons);
+ $("practiceSummary").textContent=o.total?o.total+" checkpoints · "+o.correct+" correct ("+o.percent+"%).":"No quiz checkpoints recorded yet.";
+ const next=L.lessonById(o.recommended);
+ $("practiceRecommendation").textContent="Suggested next lesson: "+next.name+". "+(o.total?"Based on your practice history.":"Start here, or choose any lesson above.");
+ $("practiceNext").dataset.lesson=next.id;
+}
+function storePractice(){
+ if(!P)return;
+ if(!P.save(window.localStorage,practiceHistory,lessonIds))$("practiceStorageNote").textContent="This browser blocked local storage. Progress will last only until the page closes.";
+ renderPractice();
+}
 const speech="speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
 const speechAPI=speech?window.speechSynthesis:null;
 function sayStatus(text){$("voiceStatus").textContent=text}
@@ -78,11 +93,12 @@ function selectLesson(id){
  if(speech)speechAPI.cancel();
  const currentUrl=new URL(window.location.href);
  currentUrl.searchParams.set("lesson",lesson.id);
- history.replaceState(null,"",currentUrl.pathname+currentUrl.search);
+ window.history.replaceState(null,"",currentUrl.pathname+currentUrl.search);
 }
 function selectAnswer(index){
  const evaluation=L.evaluateQuiz(lessonId,index);
  answered=true;
+ if(P){practiceHistory=P.record(practiceHistory,lessonId,evaluation.correct,lessonIds);storePractice();}
  document.querySelectorAll("#quizAnswers button").forEach(button=>{
   const idx=Number(button.dataset.answer);
   button.classList.toggle("correct",idx===evaluation.correctIndex);
@@ -124,6 +140,14 @@ function startMicrophone(){
  }
 }
 function initialise(){
+ if(P){
+  renderPractice();
+  $("practiceNext").addEventListener("click",()=>selectLesson($("practiceNext").dataset.lesson));
+  $("practiceReset").addEventListener("click",()=>{
+   if(!window.confirm("Clear this device’s saved quiz history?"))return;
+   practiceHistory=[];storePractice();
+  });
+ }else $("practiceStorageNote").textContent="Revision record unavailable; you can still complete lessons.";
  L.lessons.forEach(lesson=>{
   const opt=document.createElement("option");opt.value=lesson.id;opt.textContent=lesson.group+" · "+lesson.name;
   $("lessonSelect").appendChild(opt);

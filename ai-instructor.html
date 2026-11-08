@@ -7,6 +7,7 @@
 <title>AI Instructor Studio | Aviation Ground School Academy</title>
 <link rel="stylesheet" href="ai-instructor.css">
 <script src="ai-instructor-lessons.js" defer></script>
+<script src="ai-instructor-progress.js" defer></script>
 <script src="ai-instructor.js" defer></script>
 </head>
 <body>
@@ -53,6 +54,14 @@
     <button id="repeatLesson" type="button">Repeat</button>
    </div>
   </div>
+  <section class="quiz" aria-label="Personal revision plan">
+   <div class="eyebrow">YOUR PRIVATE STUDY PLAN · THIS DEVICE ONLY</div>
+   <h3>Practice and revise</h3>
+   <p id="practiceSummary" role="status" aria-live="polite">No recorded practice yet.</p>
+   <p id="practiceRecommendation">Complete a lesson checkpoint to see what to revise next.</p>
+   <div class="buttons"><button type="button" id="practiceNext" class="primary">Study recommended lesson</button><button type="button" id="practiceReset">Clear practice history</button></div>
+   <p class="tiny" id="practiceStorageNote">Scores remain in this browser only. They are not shared with an instructor or Academy server, and do not count towards certification.</p>
+  </section>
   <div class="quiz" aria-label="Lesson checkpoint">
    <div class="eyebrow">STEP 2 · CHECK YOUR UNDERSTANDING</div>
    <h3 id="quizQuestion"></h3>
