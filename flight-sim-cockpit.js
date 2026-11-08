@@ -231,6 +231,28 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   return focusExpanded;
  }
  focusButton.addEventListener("click",()=>setControlFocus(!focusExpanded));
+ // Expanded quick controls operate the original slider/select elements; there
+ // are no parallel or unsynchronised flight-input values.
+ function adjustPower(direction){
+  const control=byId(active).family==="rotor"?$("collective"):$("power");
+  const next=clamp(Number(control.value)+direction*5,0,100);
+  control.value=String(next);
+  control.dispatchEvent(new win.Event("input",{bubbles:true}));
+  $("cockpitExtraStatus").textContent=(byId(active).family==="rotor"?"Collective":"Power")+" adjusted to "+next+"% (fictional).";
+ }
+ function adjustFlaps(direction){
+  if(byId(active).family==="rotor")return;
+  const control=$("flaps"),steps=[...control.options].map(o=>Number(o.value));
+  const current=Math.max(0,steps.indexOf(Number(control.value)));
+  const next=steps[clamp(current+direction,0,steps.length-1)];
+  control.value=String(next);
+  control.dispatchEvent(new win.Event("change",{bubbles:true}));
+  $("cockpitExtraStatus").textContent="Flaps set to "+next+"° (fictional).";
+ }
+ $("cockpitPowerDown").addEventListener("click",()=>adjustPower(-1));
+ $("cockpitPowerUp").addEventListener("click",()=>adjustPower(1));
+ $("cockpitFlapsDown").addEventListener("click",()=>adjustFlaps(-1));
+ $("cockpitFlapsUp").addEventListener("click",()=>adjustFlaps(1));
  // Expand only once the touch gesture finishes, so an active two-finger
  // steering or rudder press cannot be shifted halfway through a manoeuvre.
  for(const id of ["controlPad","leftRudder","rightRudder","brake"]){
