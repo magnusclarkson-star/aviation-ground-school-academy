@@ -40,6 +40,10 @@ function guidance(state,input){
  const phase=state.phase;
  const heli=state.mode==="helicopter";
  const base={tag:"LEARNING CUE",level:"normal",text:"Observe the fictional scenery and instruments together.",complete:false};
+ if(!heli&&state.physicsId==="aero"&&state.aeroStalled===true&&
+   ["climb","flight","approach"].includes(phase))
+  return {...base,tag:"EXPERIMENTAL WING ENERGY CUE",level:"caution",
+   text:"The invented aerodynamic model indicates insufficient wing energy or excessive angle of attack. Compare the fictional lift, drag, speed and pitch readings; this is not real stall recovery instruction."};
  if(phase==="halted")return {...base,tag:"SIMULATION STOPPED",level:"caution",complete:true,
   text:"The imaginary aircraft contacted terrain outside this exercise's gentle-landing conditions. Reset and compare the controls, runway alignment and height trend."};
  if(phase==="complete"||phase==="landed")
@@ -64,12 +68,18 @@ function guidance(state,input){
    text:"Explore how a gentle nose-up command changes the artificial horizon and simulated lift. Numbers are invented for this demonstration."};
  }
  if(phase==="climb"){
+  if(state.physicsId==="aero"&&!state.aeroStalled)
+   return {...base,tag:"EXPERIMENTAL CLIMB · ENERGY TRADE",
+    text:"Observe how a pitch change affects invented lift, drag, specific energy and vertical rate. This is not calibrated aircraft handling."};
   if(state.speedKt<lowEnergyKt(state))return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
    text:"The simplified model indicates low airspeed while airborne. Observe the power, attitude and speed relationships; this is not an actual stall-warning system."};
   return {...base,tag:"CLIMB · INSTRUMENT CROSS-CHECK",
    text:"Compare the outside horizon with the mini attitude indicator, simulated vertical rate and increasing height. Small bank inputs affect heading."};
  }
  if(phase==="flight"){
+  if(state.physicsId==="aero")
+   return {...base,tag:"EXPERIMENTAL FLIGHT · LIFT AND DRAG",
+    text:"Compare fictional angle of attack, lift and drag while using bank and pitch. The wing coefficients are invented and do not describe any aircraft."};
   if(state.windId&&state.windId!=="calm")
    return {...base,tag:"FREE FLIGHT · WIND AND TRACK",
     text:"Compare the fictional nose heading with the path over the moving ground. The two indications need not agree when wind shifts the aircraft sideways."};
@@ -77,6 +87,9 @@ function guidance(state,input){
    text:"Try gentle bank changes and observe heading, pitch and the moving countryside. Use the separate final-approach setup to practise a landing scene."};
  }
  if(phase==="approach"){
+  if(state.physicsId==="aero"&&state.verticalMs<-3.4)
+   return {...base,tag:"EXPERIMENTAL APPROACH · RAPID SINK",level:"caution",
+    text:"The invented model shows a high descent rate. Compare illustrated wing energy and drag; reset the exercise rather than applying it to real-world flight."};
   if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
    text:"The imaginary aircraft is offset from the drawn runway. Compare the outside view with the lateral-offset marker and heading."};
   if(state.verticalMs<-3.4)return {...base,tag:"SHORT FINAL · RAPID DESCENT",level:"caution",
