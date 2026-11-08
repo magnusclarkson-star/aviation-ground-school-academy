@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!K||!J||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -32,6 +32,9 @@ function refreshPhoneDiagnostics(){
   "Website vibration API: "+(vibration.supported?"available":"unavailable"),
   "Flight vibration armed: "+(vibration.enabled?"yes":"no"),
   "Last vibration request: "+vibration.lastResult,
+  "Website vibration requests attempted: "+vibration.requestCount,
+  "Requests accepted by browser (not physical confirmation): "+vibration.acceptedCount,
+  "Stronger vibration tests requested: "+vibration.strongTestCount,
   "Last primary speaker test: "+lastSpeakerTest,
   "Last backup speaker test: "+htmlAudio.lastResult,
   "Media volume: not readable by websites",
@@ -142,6 +145,16 @@ function stopFullFlight(){
  syncRadioToneUI("Radio cue off.");
  syncPhoneFeedbackUI("All flight effects off. Tap Start to restore the full experience.");
  refreshPhoneDiagnostics();
+}
+let lastVisualCueMs=0;
+function updateVisualFeedback(now,events=[]){
+ if(now-lastVisualCueMs<550&&!events.length)return;
+ const cue=FX.describe(state,events);
+ const target=$("flightFeedbackVisual");
+ target.dataset.kind=cue.kind;
+ target.textContent="VISUAL CUE · "+cue.label;
+ target.setAttribute("aria-label",cue.label+". Visual feedback, not physical vibration.");
+ lastVisualCueMs=now;
 }
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -796,10 +809,23 @@ $("phoneCopyDiagnostics").addEventListener("click",async()=>{
 });
 $("phoneVibrationTest").addEventListener("click",()=>{
  const report=haptics.test();
+ $("phoneVibrationResult").textContent=report.supported?
+  (report.accepted?"Browser accepted the short request. This does NOT prove the motor vibrated.":
+  "Short vibration request was rejected by the browser."):
+  "Website vibration unavailable in this browser. Visual flight cues still work.";
  refreshPhoneDiagnostics();
  syncPhoneFeedbackUI(report.supported?
-  (report.accepted?"Browser accepted a 195-millisecond vibration request. If you felt nothing, check phone vibration settings or browser compatibility.":"Browser rejected the vibration request. Try Chrome and check system settings."):
-  "This browser does not support website vibration. Try Chrome on Android; the simulator still operates visually.");
+  (report.accepted?"Short vibration request sent; no physical feedback can be verified by a website.":"Browser rejected the vibration request. Try Chrome and check system settings."):
+  "This browser does not support website vibration. The simulator still works visually.");
+});
+$("phoneVibrationStrongTest").addEventListener("click",()=>{
+ const report=haptics.testStrong();
+ $("phoneVibrationResult").textContent=report.supported?
+  (report.accepted?"Stronger 460 ms request accepted by browser. If you did not feel it, check Android vibration settings; acceptance is NOT physical proof.":
+  "Stronger vibration request rejected or blocked. Check browser/phone settings."):
+  "Website vibration unsupported. The 460 ms test cannot trigger the phone motor.";
+ refreshPhoneDiagnostics();
+ syncPhoneFeedbackUI($("phoneVibrationResult").textContent);
 });
 $("traceStart").addEventListener("click",()=>{trace.start(state);playback.load(0);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();});
 $("traceStop").addEventListener("click",()=>{trace.stop();traceStatus();refreshReplay();});
@@ -851,15 +877,18 @@ function frame(now){
   A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
   trace.sample(state,input,dt);
-  haptics.ambience(state,input);
   if(now-lastEngineAudioFrame>110){
    engineAudio.update(state.mode,audioPower());lastEngineAudioFrame=now;
   }
-  // Prioritise distinctive events over routine rate-limited ambience.
+  // Prioritise distinctive short events, then occasional runway/airflow.
+  // Visual feedback always renders even when browser vibration is unavailable.
+  let eventRequested=false;
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
-   if(result.events.includes(event)){haptics.pulse(event);break;}
+   if(result.events.includes(event)){eventRequested=haptics.pulse(event);break;}
   }
+  if(!eventRequested)haptics.ambience(state,input);
+  updateVisualFeedback(now,result.events);
   if(state.phase!==lastPhase){
    lastPhase=state.phase;
    atcRadio?.cuePhase(state.phase);
@@ -902,6 +931,7 @@ document.addEventListener("click",event=>{
 },true);
 syncEngineAudioUI();
 syncHapticsUI();
+updateVisualFeedback(performance.now()+1000,[]);
 syncPhoneFeedbackUI();
 refreshPhoneDiagnostics();
 syncRadioToneUI();
