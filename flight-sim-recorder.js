@@ -21,7 +21,7 @@ function makeRecorder(){
    altitudeM:rounded(state.altitudeM),speedKt:rounded(state.speedKt),
    headingDeg:rounded(state.headingDeg),verticalMs:rounded(state.verticalMs),
    bankDeg:rounded(state.rollDeg),pitchDeg:rounded(state.pitchDeg),
-   lateralM:rounded(state.xM),
+   lateralM:rounded(state.xM),forwardM:rounded(state.zM),
    bankInput:rounded(input.bank,2),pitchInput:rounded(input.pitch,2),
    rudderInput:rounded(input.rudder,2),powerInput:rounded(mode==='helicopter'?input.collective:input.throttle,2),
    flapDeg:mode==='airplane'?rounded(input.flaps,0):null
