@@ -6,6 +6,8 @@
 (function(root){"use strict";
 const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
 if(!E)throw Error("Synthetic environment definitions are required");
+const W=root?.AGSAFlightLoading||(typeof module!=="undefined"?require("./flight-sim-loading.js"):null);
+if(!W)throw Error("Fictional loading module required");
 const KNOT=.514444,DEG=Math.PI/180,G=9.80665,RHO=1.225;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,Number.isFinite(value)?value:min));
 const smooth=(a,b,r,dt)=>a+(b-a)*(1-Math.exp(-r*dt));
@@ -34,6 +36,7 @@ function sample(state,input){
  if(!state||state.mode!=="airplane"||state.physicsId!=="aero")
   throw Error("Experimental aerodynamic mode requires a fictional airplane");
  const c=config(state.profileId||"trainer");
+ const massKg=state.loading?.totalKg??c.massKg;
  const speedKt=clamp(state.speedKt,0,180);
  const v=Math.max(2,speedKt*KNOT);
  const vertical=clamp(state.verticalMs,-v+.01,v-.01);
@@ -44,18 +47,19 @@ function sample(state,input){
  const lift=q*c.wingM2*aero.cl;
  const drag=q*c.wingM2*aero.cd;
  const bank=clamp(state.rollDeg,-80,80)*DEG;
- const loadFactor=clamp(lift/(c.massKg*G),-1,5);
+ const loadFactor=clamp(lift/(massKg*G),-1,5);
  const thrust=clamp(state.engineFraction??.1,0,1)*c.thrustN*
   clamp(38/(v+12),.55,1.25);
- const weight=c.massKg*G;
+ const weight=massKg*G;
  return {...aero,speedKt,v,gamma,bank,liftN:lift,dragN:drag,thrustN:thrust,
-  loadFactor,weightN:weight,massKg:c.massKg,
+  loadFactor,weightN:weight,massKg,
   effectiveStall:aero.stalled||(state.speedKt<E.selectProfile(state.profileId||"trainer").stallKt-3)};
 }
-function prepare(state){
+function prepare(state,loadout=W.DEFAULT){
  if(!state||state.mode!=="airplane"||state.physicsId!=="aero")
   throw Error("Cannot prepare non-aerodynamic mode");
  config(state.profileId||"trainer");
+ state.loading=W.evaluate(state.profileId||"trainer",loadout);
  state.engineFraction=state.scenario==="approach"?.49:.1;
  state.aoaDeg=0;
  state.liftN=0;
@@ -73,6 +77,7 @@ function step(state,input,dt,events=[],wind){
  if(!(dt>0))return {state,events};
  const p=E.selectProfile(state.profileId||"trainer");
  const c=config(state.profileId||"trainer");
+ const massKg=state.loading?.totalKg??c.massKg;
  const t=clamp(input.throttle,0,1),flap=clamp(input.flaps,0,30);
  state.engineFraction=smooth(clamp(state.engineFraction??.1,0,1),t,1.8,dt);
  const f=sample(state,input);
@@ -85,7 +90,7 @@ function step(state,input,dt,events=[],wind){
   // handling or differential braking.
   const rolling=.08*f.weightN;
   const brake=input.brake===true ? .94*f.weightN : 0;
-  const accel=(f.thrustN-f.dragN-rolling-brake)/c.massKg;
+  const accel=(f.thrustN-f.dragN-rolling-brake)/massKg;
   const v=Math.max(0,state.speedKt*KNOT+clamp(accel,-12,6)*dt);
   state.speedKt=clamp(v/KNOT,0,115);
   state.verticalMs=0;state.altitudeM=0;state.flightPathDeg=0;
@@ -116,10 +121,10 @@ function step(state,input,dt,events=[],wind){
   }
  }else{
   const v=Math.max(4,f.v),gamma=f.gamma;
-  const accel=(f.thrustN-f.dragN)/c.massKg-G*Math.sin(gamma);
+  const accel=(f.thrustN-f.dragN)/massKg-G*Math.sin(gamma);
   const nextV=clamp(v+clamp(accel,-7,5)*dt,4,86);
   const gammaRate=(f.liftN*Math.cos(f.bank)-f.weightN*Math.cos(gamma))/
-   (c.massKg*v);
+   (massKg*v);
   // Avoid numeric instability when very slow or far from the stable flight
   // envelope. These limits do not represent a real aircraft.
   const nextGamma=clamp(gamma+clamp(gammaRate,-.55,.55)*dt,-.95,.55);
@@ -175,7 +180,11 @@ function indications(state){
   energy:Math.round(state.energyJPerKg||0),
   pathDeg:Number((state.flightPathDeg||0).toFixed(1)),
   stalled:state.aeroStalled===true,
-  enginePct:Math.round(clamp(state.engineFraction,0,1)*100)
+  enginePct:Math.round(clamp(state.engineFraction,0,1)*100),
+  massKg:state.loading?.totalKg??config(state.profileId||"trainer").massKg,
+  cgPercentMAC:Number((state.loading?.cgPercentMAC??45).toFixed(1)),
+  balanceLabel:state.loading?.balanceLabel??"Reference configuration",
+  withinFictionalBand:state.loading?.withinFictionalBand??true
  };
 }
 const api={CONFIG,config,coefficients,prepare,sample,step,indications,KNOT};
