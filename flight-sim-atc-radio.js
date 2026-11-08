@@ -3,6 +3,7 @@
  * radio transmission, remote AI, real frequencies, clearances, or grading.
  */
 (function(root){"use strict";
+const World=root?.AGSAFlightATCWorld||(typeof module!=="undefined"&&module.exports?require("./flight-sim-atc-world.js"):null);
 const STAGES=Object.freeze(["before","during","after"]);
 const STAGE_BY_PHASE=Object.freeze({
  roll:"before",pad:"before",
@@ -11,8 +12,9 @@ const STAGE_BY_PHASE=Object.freeze({
 });
 const stageFromPhase=phase=>typeof phase==="string"&&Object.prototype.hasOwnProperty.call(STAGE_BY_PHASE,phase)?STAGE_BY_PHASE[phase]:null;
 const line=(speaker,text)=>Object.freeze({speaker,text});
-function dialogue(stage="before",mode="airplane",scenario="runway"){
+function dialogue(stage="before",mode="airplane",scenario="runway",airportId="academy",situationId="normal"){
  if(!STAGES.includes(stage))throw Error("Unsupported simulated radio stage");
+ if(airportId!=="academy"&&World)return World.dialogue(stage,mode,scenario,airportId,situationId);
  const heli=mode==="helicopter",arrival=scenario==="approach"&&!heli;
  const pilot="Student One",tower="Academy Tower";
  if(stage==="before")return Object.freeze(heli?[
@@ -56,11 +58,12 @@ function dialogue(stage="before",mode="airplane",scenario="runway"){
   line("Tower","Academy Tower concludes this fictional exchange. No real clearance or flight credit was issued.")
  ]);
 }
-function makeAll(mode,scenario){
- return STAGES.flatMap(stage=>dialogue(stage,mode,scenario).map(entry=>({...entry,stage})));
+function makeAll(mode,scenario,airportId="academy",situationId="normal"){
+ return STAGES.flatMap(stage=>dialogue(stage,mode,scenario,airportId,situationId).map(entry=>({...entry,stage})));
 }
 function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=> "runway",getPhase=()=>null,
- onBegin=()=>{},onFinish=()=>{}}={}){
+ getAirport=()=> "academy",getSituation=()=> "normal",
+ onBegin=()=>{},onFinish=()=>{},onTransmissionStart=()=>{},onTransmissionEnd=()=>{}}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  if(!doc||typeof doc.getElementById!=="function")throw Error("Scripted radio needs a page");
  const el=id=>doc.getElementById(id),synth=win?.speechSynthesis,Utter=win?.SpeechSynthesisUtterance;
@@ -72,7 +75,7 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
   const list=el("atcTranscript");list.replaceChildren();
   for(const entry of entries){
    const item=doc.createElement("li"),who=doc.createElement("strong"),speech=doc.createElement("span");
-   who.textContent=entry.speaker==="Tower"?"Academy Tower: ":"Student Pilot: ";
+   who.textContent=entry.speaker==="Tower"?(getAirport()==="academy"?"Academy Tower: ":"ATC / training radio: "):"Student Pilot: ";
    speech.textContent=entry.text;item.className=entry.speaker==="Tower"?"atc-tower":"atc-pilot";
    item.append(who,speech);list.appendChild(item);
   }
@@ -81,12 +84,13 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
   ++sequence;
   if(playing){try{synth?.cancel()}catch{}}
   const wasPlaying=playing;playing=false;
-  if(wasPlaying)onFinish();
+  if(wasPlaying){onTransmissionEnd();onFinish();}
   status(message);
  }
  function play(stage){
   const mode=getMode()==="helicopter"?"helicopter":"airplane",scenario=getScenario();
-  const entries=stage==="all"?makeAll(mode,scenario):dialogue(stage,mode,scenario);
+  const airportId=getAirport()||"academy",situationId=getSituation()||"normal";
+  const entries=stage==="all"?makeAll(mode,scenario,airportId,situationId):dialogue(stage,mode,scenario,airportId,situationId);
   stop("Preparing fictional training radio transcript.");
   render(entries);
   const badge=stage==="all"?"complete before/during/after":stage;
@@ -95,18 +99,23 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
    onBegin();
    // Two distinct voices where possible; different pitches otherwise.
    const voices=typeof synth.getVoices==="function"?synth.getVoices().filter(v=>/^en(?:-|$)/i.test(v.lang||"")):[];
+   const language=airportId==="academy"?"en-GB":World?.getAirport(airportId)?.lang||"en-GB";
+   const matched=voices.filter(v=>(v.lang||"").toLowerCase()===language.toLowerCase());
+   const available=matched.length>=2?matched:voices;
    const generation=++sequence;playing=true;
    for(let i=0;i<entries.length;i++){
     const entry=entries[i],utter=new Utter(entry.text);
-    utter.lang="en-GB";utter.rate=entry.speaker==="Tower"?.86:.94;
+    utter.lang=language;utter.rate=entry.speaker==="Tower"?.86:.94;
     utter.pitch=entry.speaker==="Tower"?.78:1.17;
     utter.volume=1;
-    if(voices.length){utter.voice=voices[entry.speaker==="Tower"&&voices.length>1?1:0];}
-    if(i===entries.length-1){
-     utter.onend=()=>{if(sequence!==generation)return;playing=false;onFinish();
-      status("Scripted "+badge+" radio exchange complete. This was not a real ATC conversation.");};
-    }
-    utter.onerror=()=>{if(sequence!==generation)return;stop("Speech output was interrupted. Read the transcript instead.");};
+    if(available.length){utter.voice=available[entry.speaker==="Tower"&&available.length>1?1:0];}
+    utter.onstart=()=>{if(sequence===generation)onTransmissionStart(entry);};
+    utter.onend=()=>{if(sequence!==generation)return;
+     onTransmissionEnd(entry);
+     if(i===entries.length-1){playing=false;onFinish();
+      status("Scripted "+badge+" radio exchange complete. This was not a real ATC conversation.");}
+    };
+    utter.onerror=()=>{if(sequence!==generation)return;onTransmissionEnd(entry);stop("Speech output was interrupted. Read the transcript instead.");};
     synth.speak(utter);
    }
    status("Speaking the fictional "+badge+" pilot and tower exchange. Stop radio at any time.");
@@ -145,13 +154,20 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
   }
   stop(message);
  }
+ for(const key of ["atcAirport","atcSituation"]){
+  el(key)?.addEventListener?.("change",()=>{
+   if(playing)stop("Selected a new airport or exercise.");
+   stagesSeen.clear();render(dialogue("before",getMode(),getScenario(),getAirport()||"academy",getSituation()||"normal"));
+   status("Training location updated. Play a dialogue or start full flight effects. All clearances are fictional.");
+  });
+ }
  for(const stage of STAGES)el("atc"+stage[0].toUpperCase()+stage.slice(1)).addEventListener("click",()=>{if(armed)arm(false);play(stage);});
  el("atcAll").addEventListener("click",()=>{if(armed)arm(false);play("all");});
  el("atcAutoToggle").addEventListener("click",()=>arm(!armed));
  el("atcStop").addEventListener("click",()=>disarm("Radio stopped by learner."));
  doc.addEventListener?.("visibilitychange",()=>{if(doc.hidden)disarm("Page hidden: scripted radio and phase-linked cues stopped.");});
  win?.addEventListener?.("pagehide",()=>disarm("Page closed: scripted radio stopped."));
- render(dialogue("before",getMode(),getScenario()));
+ render(dialogue("before",getMode(),getScenario(),getAirport()||"academy",getSituation()||"normal"));
  status(supported?"Radio voices ready, but silent until you select a stage. Transcript shown below.":"Device speech unavailable; written fictional radio script is available below.");
  return {supported,play,stop,arm,disarm,cuePhase,isArmed:()=>armed,isSpeaking:()=>playing,script:dialogue};
 }
