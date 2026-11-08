@@ -7,6 +7,8 @@ on:
       - 'ai-instructor.css'
       - 'ai-instructor.js'
       - 'ai-instructor-lessons.js'
+      - 'ai-instructor-progress.js'
+      - 'scripts/test-ai-instructor-progress.mjs'
       - 'scripts/test-ai-instructor.mjs'
       - 'scripts/test-ai-instructor-browser.mjs'
       - '.github/workflows/ai-instructor-browser.yml'
@@ -16,6 +18,8 @@ on:
       - 'ai-instructor.css'
       - 'ai-instructor.js'
       - 'ai-instructor-lessons.js'
+      - 'ai-instructor-progress.js'
+      - 'scripts/test-ai-instructor-progress.mjs'
       - 'scripts/test-ai-instructor.mjs'
       - 'scripts/test-ai-instructor-browser.mjs'
       - '.github/workflows/ai-instructor-browser.yml'
@@ -33,6 +37,8 @@ jobs:
           node-version: '22'
       - run: node --check ai-instructor-lessons.js
       - run: node --check ai-instructor.js
+      - run: node --check ai-instructor-progress.js
+      - run: node scripts/test-ai-instructor-progress.mjs
       - run: node scripts/test-ai-instructor.mjs
       - run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
       - run: npx playwright install chromium
