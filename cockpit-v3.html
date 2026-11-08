@@ -117,7 +117,15 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
  .digital-control-grid.simultaneous-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
  .digital-control-grid.simultaneous-controls #control-yoke,
  .digital-control-grid.simultaneous-controls #control-rudder{grid-row:1}
- .digital-control-grid.simultaneous-controls #control-yoke{grid-column:1}
+ .digital-control-grid.simultaneous-controls #control-yoke{grid-column:1;display:flex;flex-direction:column}
+ /* Prioritize the actual touch pad, not its optional selector/buttons, so
+    both thumbs reach the yoke and rudder on the same horizontal band. */
+ .digital-control-grid.simultaneous-controls #control-yoke>h3{order:0}
+ .digital-control-grid.simultaneous-controls #control-yoke>p.note{order:1}
+ .digital-control-grid.simultaneous-controls #control-yoke>#controlPad{order:2}
+ .digital-control-grid.simultaneous-controls #control-yoke>.control-style-choice{order:3}
+ .digital-control-grid.simultaneous-controls #control-yoke>#controlStyleHint{order:4}
+ .digital-control-grid.simultaneous-controls #control-yoke>.actions{order:5}
  .digital-control-grid.simultaneous-controls #control-rudder{grid-column:2}
  .digital-control-grid.simultaneous-controls .hardware{padding:6px}
  .digital-control-grid.simultaneous-controls .hardware h3{font-size:12px}
