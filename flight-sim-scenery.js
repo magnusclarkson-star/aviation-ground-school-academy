@@ -184,6 +184,9 @@ function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
   }
  }
  ctx.restore();
+ // Grade only the illustrated outside scenery. The cockpit PFD/controls remain
+ // outside this canvas, and the stationary white reference cue stays legible.
+ if(palette.overlay){ctx.fillStyle=palette.overlay;ctx.fillRect(0,0,w,h);}
  // Fixed airframe reference cue and non-certified horizon tick marks.
  ctx.strokeStyle="#ffffffc4";ctx.lineWidth=2;
  ctx.beginPath();ctx.moveTo(w*.43,h*.53);ctx.lineTo(w*.485,h*.53);
