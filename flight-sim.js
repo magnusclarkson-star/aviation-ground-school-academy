@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback;
+ V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O||!C){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -36,6 +36,11 @@ function refreshReplay(){
  const idx=Math.min(stateOfPlayer.index,rows.length-1);slider.value=String(idx);
  Q.draw($("traceReplayCanvas"),rows,idx);
  $("traceReplayDetail").textContent=Q.describe(rows,idx);
+ const moment=C.inspect(trace.exportData().observations,idx,$("traceMomentPathway").value);
+ $("traceMomentTitle").textContent=moment.title;
+ $("traceMomentFacts").textContent=moment.observations;
+ $("traceMomentQuestion").textContent=moment.question;
+ $("traceMomentNotice").textContent=moment.warning;
  $("tracePlayPause").textContent=stateOfPlayer.playing?"Pause replay":"Play recorded samples";
  $("tracePlayPause").setAttribute("aria-pressed",String(stateOfPlayer.playing));
 }
@@ -580,6 +585,7 @@ $("traceReplay").addEventListener("click",()=>{
  $("traceReplayPanel").hidden=false;
  refreshReplay();
 });
+$("traceMomentPathway").addEventListener("change",refreshReplay);
 $("traceReplayIndex").addEventListener("input",()=>{
  pauseReplay();
  playback.seek(Number($("traceReplayIndex").value));
