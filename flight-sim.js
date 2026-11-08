@@ -8,10 +8,26 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,N=window.AGSAFlightEngineAudio,F=window.AGSAFlightATCRadio,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!N||!F||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
+const engineAudio=N.createEngine({windowLike:window,documentLike:document});
+let atcRadio=null,lastEngineAudioFrame=0;
+function audioPower(){
+ return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
+  Math.max(0,Math.min(1,(systems?.powerPct??0)/100));
+}
+function syncEngineAudioUI(message){
+ const info=engineAudio.status();
+ $("engineAudioToggle").disabled=!info.supported;
+ $("engineAudioToggle").setAttribute("aria-pressed",String(info.active));
+ $("engineAudioToggle").textContent=info.active?"Stop engine sound":"Enable engine sound";
+ $("engineAudioStatus").textContent=message||(info.active?
+  "Locally synthesized fictional "+(info.mode==="helicopter"?"rotor":"piston engine")+" sound active. Stop or pause to mute.":
+  info.supported?"Engine sound off. Tap Enable to start.":
+  "Web Audio is unavailable. Flight simulation and scripted radio transcripts still work.");
+}
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 const lightingChoice=()=>L.choose($("lightingMode").value);
@@ -324,6 +340,8 @@ function setMode(next){
  const oldMode=state.mode;
  type=newType;
  if(newMode!==oldMode){
+  engineAudio.stop();syncEngineAudioUI("Aircraft type changed. Engine sound off until enabled again.");
+  atcRadio?.stop("Aircraft changed: previous fictional radio exchange stopped.");
   startExercise("Aircraft mode changed. Apply Reference and Comparison again if you return to the experimental aeroplane.");
   state=makeConfiguredState(newMode);
   input=M.makeInput(newMode);
@@ -367,6 +385,8 @@ function setMode(next){
  setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()});
 }
 function reset(scenario){
+ engineAudio.stop();syncEngineAudioUI("Practice reset. Engine sound off until enabled again.");
+ atcRadio?.stop("Practice reset: scripted radio stopped.");
  const newMode=type==="cyclic"?"helicopter":"airplane";
  state=makeConfiguredState(newMode,scenario==="approach"?"approach":"runway");
  input=M.makeInput(newMode);
@@ -471,7 +491,8 @@ window.addEventListener("keyup",e=>{
 });
 window.addEventListener("blur",()=>{releaseControls();haptics.stop()});
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();}
+ if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();
+  engineAudio.stop();syncEngineAudioUI("Page hidden: engine sound stopped.");}
  lastFrame=0;
 });
 $("power").addEventListener("input",e=>{
@@ -529,8 +550,25 @@ $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")rese
 $("restartFlight").addEventListener("click",()=>reset(state.scenario));
 $("pauseFlight").addEventListener("click",()=>{
  paused=!paused;lastFrame=0;releaseControls();haptics.stop();
+ if(paused){engineAudio.stop();syncEngineAudioUI("Simulation paused; engine sound stopped until re-enabled.");}
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
+});
+$("engineAudioToggle").addEventListener("click",async()=>{
+ if(engineAudio.status().active){
+  engineAudio.stop();syncEngineAudioUI("Engine sound stopped by learner.");return;
+ }
+ $("engineAudioToggle").disabled=true;
+ const started=await engineAudio.start(state.mode,audioPower());
+ engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
+ syncEngineAudioUI(started?
+  "Fictional "+(state.mode==="helicopter"?"helicopter rotor":"piston engine")+
+  " audio playing. Use the volume slider or Stop engine sound.":
+  "Device audio unavailable or blocked. The simulator still works silently.");
+});
+$("engineAudioVolume").addEventListener("input",()=>{
+ const volume=engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
+ $("engineAudioVolumeValue").textContent=volume+"%";
 });
 $("visualMode").addEventListener("change",chooseVisual);
 $("cameraMode").addEventListener("change",()=>{
@@ -622,6 +660,9 @@ function frame(now){
   A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
   trace.sample(state,input,dt);
+  if(now-lastEngineAudioFrame>110){
+   engineAudio.update(state.mode,audioPower());lastEngineAudioFrame=now;
+  }
   // Prioritise distinctive events over routine rate-limited ambience.
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
@@ -651,6 +692,21 @@ instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,
  getSession:()=>exerciseSession
 });
+atcRadio=F.attach({
+ documentLike:document,windowLike:window,
+ getMode:()=>state.mode,getScenario:()=>state.scenario,
+ onBegin:()=>{
+  if(instructorVoice?.isSpeaking())instructorVoice.stop("Scripted radio has taken the voice output.");
+  engineAudio.setDuck(true,audioPower());
+ },
+ onFinish:()=>engineAudio.setDuck(false,audioPower())
+});
+// Do not allow radio and instructor narration to cancel each other mid-speech.
+document.addEventListener("click",event=>{
+ if(["exerciseSpeakLesson","exerciseSpeakComparison","exerciseSpeakFeedback"].includes(event.target?.id))
+  atcRadio?.stop("Radio stopped for the instructor's scripted narration.");
+},true);
+syncEngineAudioUI();
 chooseVisual();
 requestAnimationFrame(frame);
 })();
