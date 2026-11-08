@@ -9,8 +9,8 @@ const env={
  OPENAI_API_KEY:"TEST_KEY_DO_NOT_USE_IN_REAL_APP_2026",
  AGSA_AI_REALTIME_ALLOWED_USER_IDS:"22222222-2222-4222-a222-222222222222"
 };
-const actor={organizationId:"11111111-1111-4111-a111-111111111111",userId:"22222222-2222-4222-a222-222222222222"};
-const other={organizationId:"33333333-3333-4333-a333-333333333333",userId:"44444444-4444-4444-a444-444444444444"};
+const actor={organizationId:"11111111-1111-4111-a111-111111111111",userId:"22222222-2222-4222-a222-222222222222",role:"student"};
+const other={organizationId:"33333333-3333-4333-a333-333333333333",userId:"44444444-4444-4444-a444-444444444444",role:"student"};
 const sdp="v=0\r\no=- 1234567 2 IN IP4 127.0.0.1\r\ns=AGSA\r\nt=0 0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\na=rtpmap:111 opus/48000/2\r\n";
 const resSdp=sdp+"a=fingerprint:sha-256 "+"a".repeat(60)+"\r\n";
 test("live voice disabled by default; separate operator and provider gates required",()=>{
