@@ -17,6 +17,22 @@ on:
       - 'scripts/test-cockpit-mission-browser.mjs'
       - 'scripts/test-cockpit-control-options.mjs'
       - '.github/workflows/cockpit-browser.yml'
+  pull_request:
+    paths:
+      - 'cockpit-v3.html'
+      - 'cockpit-v3.js'
+      - 'cockpit-v3-model.js'
+      - 'cockpit-v3-focus.js'
+      - 'cockpit-v3-mission.js'
+      - 'cockpit-v3-skills.js'
+      - 'cockpit-v3-coach.js'
+      - 'cockpit-v3-journal.js'
+      - 'scripts/test-cockpit-journal-browser.mjs'
+      - 'scripts/test-cockpit-skills-browser.mjs'
+      - 'scripts/test-cockpit-browser.mjs'
+      - 'scripts/test-cockpit-mission-browser.mjs'
+      - 'scripts/test-cockpit-control-options.mjs'
+      - '.github/workflows/cockpit-browser.yml'
   workflow_dispatch:
 permissions:
   contents: read
