@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,AM=window.AGSAFlightATCMissions,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -61,7 +61,7 @@ function syncRadioToneUI(message){
   info.supported?"Radio cue tone off; voice and transcript work without it.":
   "Web Audio not supported on this device. Written transcripts remain available.");
 }
-let atcRadio=null,atcPractice=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false;
+let atcRadio=null,atcPractice=null,atcMissions=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false;
 function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
   Math.max(0,Math.min(1,(systems?.powerPct??0)/100));
@@ -148,6 +148,7 @@ function stopFullFlight(){
  haptics.setEnabled(false);
  atcRadio?.disarm("Full flight effects stopped by learner.");
  atcPractice?.stop();
+ atcMissions?.stop();
  radioTone.stop();radioFx.disable();syncRadioFxUI();
  syncEngineAudioUI("Engine stopped.");syncHapticsUI("Flight vibration off.");
  syncRadioToneUI("Radio cue off.");
@@ -948,6 +949,7 @@ atcRadio=F.attach({
  getAirport:()=>$("atcAirport").value,getSituation:()=>$("atcSituation").value,
  onBegin:()=>{
   atcPractice?.stop();
+  atcMissions?.stop();
   radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
   if(instructorVoice?.isSpeaking())instructorVoice.stop("Scripted radio has taken the voice output.");
   engineAudio.setDuck(true,audioPower());
@@ -962,6 +964,7 @@ atcPractice=AP.attach({
  getAirport:()=>$("atcAirport").value,getSituation:()=>$("atcSituation").value,
  onBegin:()=>{
   atcRadio?.disarm("Readback drill has taken the radio channel.");
+  atcMissions?.stop();
   if(instructorVoice?.isSpeaking())instructorVoice.stop("Readback drill has taken the voice output.");
   radioFx.enable($("radioFxChoice").value==="on");
   engineAudio.setDuck(true,audioPower());
@@ -973,10 +976,25 @@ atcPractice=AP.attach({
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
  onFinish:()=>engineAudio.setDuck(false,audioPower())
 });
-// // Do not allow radio and instructor narration to cancel each other mid-speech.
+atcMissions=AM.attach({
+ documentLike:document,windowLike:window,getAirport:()=>$("atcAirport").value,
+ onBegin:()=>{
+  atcRadio?.disarm("ATC decision mission has taken the radio channel.");
+  atcPractice?.stop();
+  if(instructorVoice?.isSpeaking())instructorVoice.stop("ATC mission has taken the voice output.");
+  radioFx.enable($("radioFxChoice").value==="on");
+  engineAudio.setDuck(true,audioPower());syncRadioFxUI();
+ },
+ onTransmissionStart:()=>{radioFx.begin();radioTone.pulse();
+  $("radioFxStatus").textContent="RADIO RECEIVING · fictional scenario with push-to-talk effects.";
+ },
+ onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
+ onFinish:()=>engineAudio.setDuck(false,audioPower())
+});
+// Do not allow radio and instructor narration to cancel each other mid-speech.
 document.addEventListener("click",event=>{
  if(["exerciseSpeakLesson","exerciseSpeakComparison","exerciseSpeakFeedback"].includes(event.target?.id))
-  {atcRadio?.disarm("Radio stopped for the instructor's scripted narration.");atcPractice?.stop();}
+  {atcRadio?.disarm("Radio stopped for the instructor's scripted narration.");atcPractice?.stop();atcMissions?.stop();}
 },true);
 syncEngineAudioUI();
 syncHapticsUI();
