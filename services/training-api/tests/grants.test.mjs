@@ -24,6 +24,9 @@ test("role SQL uses escaped, distinct identifiers with narrow privileges",()=>{
  assert.ok(!sql.includes('GRANT UPDATE(email_verified_at) ON public.users TO "ci_web"'));
  assert.ok(sql.includes('GRANT SELECT,INSERT ON public.ai_daily_usage TO "ci_web"'));
  assert.ok(sql.includes('GRANT UPDATE(request_count) ON public.ai_daily_usage TO "ci_web"'));
+ assert.ok(sql.includes('GRANT SELECT,INSERT ON public.realtime_voice_calls TO "ci_web"'));
+ assert.ok(sql.includes('GRANT UPDATE(provider_call_id,state,updated_at,expires_at,next_attempt_at,claim_until,attempt_count,last_error_code,resolved_at) ON public.realtime_voice_calls TO "ci_web"'));
+ assert.ok(!sql.includes('GRANT DELETE ON public.realtime_voice_calls'));
 });
 test("real PostgreSQL denies runtime audit changes, approvals and role escalation",async t=>{
  const uri=process.env.AGSA_TEST_DATABASE_URL;
@@ -79,6 +82,16 @@ test("real PostgreSQL denies runtime audit changes, approvals and role escalatio
   assert.equal(mfaSecret.rows[0].allowed,false);
   await expectDenied(app,"UPDATE public.instructor_mfa SET encrypted_secret='newsecret' WHERE false");
   assert.equal(await checkPrivilege(app,"users","UPDATE"),false);
+  assert.equal(await checkPrivilege(app,"realtime_voice_calls","SELECT"),true);
+  assert.equal(await checkPrivilege(app,"realtime_voice_calls","INSERT"),true);
+  assert.equal(await checkPrivilege(app,"realtime_voice_calls","DELETE"),false);
+  assert.equal(await checkPrivilege(app,"realtime_voice_calls","UPDATE"),false);
+  const voiceState=await client.query("SELECT has_column_privilege($1,'public.realtime_voice_calls','state','UPDATE') AS allowed",[app]);
+  assert.equal(voiceState.rows[0].allowed,true);
+  const voiceOwner=await client.query("SELECT has_column_privilege($1,'public.realtime_voice_calls','user_id','UPDATE') AS allowed",[app]);
+  assert.equal(voiceOwner.rows[0].allowed,false);
+  await expectDenied(app,"UPDATE public.realtime_voice_calls SET user_id=gen_random_uuid() WHERE false");
+  await expectDenied(app,"DELETE FROM public.realtime_voice_calls WHERE false");
   assert.equal(await checkPrivilege(app,"ai_daily_usage","SELECT"),true);
   assert.equal(await checkPrivilege(app,"ai_daily_usage","INSERT"),true);
   assert.equal(await checkPrivilege(app,"ai_daily_usage","DELETE"),false);

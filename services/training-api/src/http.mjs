@@ -228,12 +228,16 @@ export function createHandler(store,config={}){
      throw requestError(503,"realtime_unavailable","Two-way AI voice is not enabled for this private staging service");
     if(!realtimeAllowed(actor,config.aiEnv||{}))
      throw requestError(403,"realtime_not_approved","This account is not approved for the private adult-only voice pilot");
-    const handle=realtimeRegistry.reserve(actor);
+    const handle=await realtimeRegistry.reserve(actor);
     try{
-     if(!await store.reserveAiUsage(actor,"realtime",REALTIME_LIMITS.dailyCalls))
+     if(!await store.reserveAiUsage(actor,"realtime",REALTIME_LIMITS.dailyCalls)){
+      // No provider call was attempted: safe to release the DB reservation.
+      await realtimeRegistry.abandon?.(handle);
       throw requestError(429,"realtime_daily_limit","Daily two-way AI voice session limit reached");
+     }
      const created=await createRealtimeCall(input,actor,{
-      env:config.aiEnv,request:config.aiRequest||fetch
+      env:config.aiEnv,request:config.aiRequest||fetch,
+      onCallCreated:callId=>realtimeRegistry.associate?.(handle,callId)
      });
      await realtimeRegistry.activate(handle,created.callId);
      json(res,200,{

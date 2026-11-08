@@ -39,3 +39,17 @@ Run `npm test --prefix services/training-api` for API unit tests, then run the r
 5. An approved account can mute, explicitly end, and be forcibly hung up after the session limit, with mock provider/network tests.
 
 Before any limited pilot, manually verify secure HTTPS microphone permission, iOS/Android browser behavior, logout and page-exit cleanup and provider budget enforcement on a **test account**. No live external calls are made by CI.
+
+## Durable provider call recovery (new migration 006)
+
+The private API now boots with a PostgreSQL-backed `DurableRealtimeCallRegistry`, not the earlier in-memory-only registry. **Apply `006_realtime_call_registry.sql` before restarting the server**: the application deliberately refuses to boot without that table. The table records only opaque session handles, user and organisation UUIDs, provider call IDs and lifecycle metadata; not microphone audio, transcripts, SDP or API credentials.
+
+- A unique partial index permits only one unresolved voice call per user and organisation, including across application replicas. Unknown status fails closed.
+- The provider call ID is associated with the row as soon as the remote call response returns, before SDP is delivered to the browser.
+- The worker scans for expired calls, claims hangup jobs with PostgreSQL row locking, and retries unsuccessful requests after a bounded exponential delay. On restart, a fresh worker can finish work left by another process.
+- A remotely confirmed success (or 404/410 remote-already-gone response) is required before marking a tracked call closed. Calls with **no known provider ID** remain `uncertain` and block a new call until an operator independently reconciles them.
+- The read-only `node scripts/voice-ledger-status.mjs` command outputs only totals and overdue counts, without identifiers. It exits nonzero for uncertain or overdue hangups and should be used with a scheduled operator alert. Do not expose it over the public Academy site.
+
+**Limits:** This is durable retry and accounting, not a guaranteed billable-time limit. A provider call could be created in the narrow gap before its ID reaches PostgreSQL, the entire staging service and worker may be offline, or the provider might not honour hangup promptly. Use the provider's spending controls and independent alerts; never declare real-money voice safe solely because this worker exists. Protect DB backups and carefully audit any operator decision to close an `uncertain` record. Never delete unresolved records simply to allow another call.
+
+Validation: CI runs isolated PostgreSQL recovery tests for simultaneous reservations, cross-instance expiry, upstream hangup failure and retries, fail-closed uncertainty and delayed provider call ID attachment. The existing local browser and API mocks remain offline.
