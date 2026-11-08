@@ -26,7 +26,10 @@ function script(exercises,session,kind="lesson",audience="scouts"){
    definition.title+". "+session.feedback.message:
    definition.title+". No checked explanation is available yet. Complete both setups and select an explanation when ready.";
  }
- return [introduction,body,DISCL].join(" ").slice(0,MAX_CHARS);
+ // Always preserve the explicit safety boundary when long evidence is read;
+ // truncate only the descriptive section, never the unapproved-use notice.
+ return (introduction+" "+body).slice(0,MAX_CHARS-DISCL.length-1)+
+  " "+DISCL;
 }
 function attach({documentLike,windowLike,exercises,getSession}){
  if(!documentLike||!exercises||typeof getSession!=="function")
