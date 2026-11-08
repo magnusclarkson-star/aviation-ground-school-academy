@@ -369,6 +369,17 @@ function renderCoach(review){
  }
  list("coachImprovements",review.improvements,"No major metric gaps were observed in this fictional target.");
  list("coachNextSteps",review.nextSteps,"Repeat the task with steady inputs and cross-check your instruments.");
+ const weak=review.criterionScores.filter(x=>x.percent<80).sort((a,b)=>a.percent-b.percent)[0];
+ const defaultTopic={level:"instruments",climb:"forces",turn:"controls",descent:"instruments",flap:"flaps"};
+ let topic=defaultTopic[skillsSession.id]||"instruments";
+ if(weak&&["level","descent"].includes(skillsSession.id)&&["pitch","bank"].includes(weak.id))topic="controls";
+ if(weak&&skillsSession.id==="climb"&&["pitch","vsi"].includes(weak.id))topic="instruments";
+ const titles={instruments:"Flight instruments",forces:"Four forces of flight",controls:"Yoke, joystick and rudder",flaps:"Flaps, lift and drag"};
+ $("coachLessonLink").href="ai-instructor.html?lesson="+topic;
+ $("coachLessonLink").textContent="Review "+titles[topic]+" in AI Instructor Studio";
+ $("coachLessonReason").textContent=weak
+  ?"Suggested from this exercise and your lowest matching practice indication ("+weak.label+"). This is a curated lesson, not formal instruction."
+  :"Related introductory lesson for "+window.CockpitV3Skills.tasks[skillsSession.id].title+". This is not formal instruction.";
  const node=$("coachCriteria");node.replaceChildren();
  for(const crit of review.criterionScores){
   const row=document.createElement("div");row.className="coach-criterion";

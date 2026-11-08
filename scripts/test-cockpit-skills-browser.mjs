@@ -46,6 +46,8 @@ try{
  assert.match(await desktop.locator("#coachHeadline").textContent(),/fictional practice target/i);
  assert.ok((await desktop.locator("#coachCriteria .coach-criterion").count())>=4,"criteria breakdown available");
  assert.match(await desktop.locator("#coachNextSteps").textContent(),/Repeat/);
+ assert.match(await desktop.locator("#coachLessonLink").getAttribute("href"),/ai-instructor\.html\?lesson=flaps$/);
+ assert.match(await desktop.locator("#coachLessonLink").textContent(),/Flaps, lift and drag/);
  assert.equal(await desktop.locator("#coachSpeak").isEnabled(),true);
  assert.equal(await desktop.evaluate(()=>window.__coachSpoken),undefined,"coaching is never narrated automatically");
  await desktop.locator("#coachSpeak").click();
@@ -76,6 +78,7 @@ try{
  await desktop.locator("#skillsEnd").click();
  assert.equal(await desktop.locator("#skillsStage").textContent(),"REVIEW");
  assert.match(await desktop.locator("#skillsOutcome").textContent(),/INCOMPLETE/);
+ assert.match(await desktop.locator("#coachLessonLink").getAttribute("href"),/lesson=controls$/);
  await desktop.locator("#digitalMode").click();
  assert.equal(await desktop.locator("#skillsPanel").isVisible(),false);
  assert.equal(await desktop.locator("#mapTab").isEnabled(),true,"normal digital cockpit is restored");
