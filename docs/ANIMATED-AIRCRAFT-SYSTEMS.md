@@ -31,3 +31,7 @@ When the WebGL2 renderer is unavailable, a phone loses its GPU context, or a lea
 - Existing checks continue to cover the synthetic flight model, takeoff, landing, wind vectors, attitude instruments, optional vibration, gamepad controls, simultaneous touchscreen steering and rudder, GPU context loss and Pages security packaging.
 
 **Required physical acceptance:** Test on representative Android and iOS phones, with battery/heat and reduced-motion settings, and on real desktop yokes/sticks/pedals. Do not claim real flight training credit or mechanical accuracy from automated Chromium tests. A certified simulator would require aircraft-specific validated engineering, qualified instructors and regulator/device approval.
+
+## Experimental engine-force integration
+
+When **Experimental · lift, drag and energy** is selected for the fictional aeroplane, the illustrated propeller/engine-motion reading follows the new model's delayed engine command rather than an independent animation speed estimate. Aircraft surfaces remain controlled by their existing UI mappings. The experimental model is unvalidated and separate from Classic/default teaching flights. See [Experimental Aerodynamics](EXPERIMENTAL-AERODYNAMICS.md).
