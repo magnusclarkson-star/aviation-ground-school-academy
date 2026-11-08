@@ -24,7 +24,7 @@ class FakeStore{
    ["pilot.teacher@example.org",{userId:teacher,organizationId:org,role:"instructor",passwordHash}],
    ["pilot.unassigned@example.org",{userId:unassigned,organizationId:org,role:"instructor",passwordHash}]
   ]);
-  this.sessions=new Map();this.attempts=[];this.drafts=[];this.mfaSteps=new Map();
+  this.sessions=new Map();this.attempts=[];this.moduleClaims=[];this.drafts=[];this.mfaSteps=new Map();
   this.verified=new Set([teacher,unassigned]);this.inviteHash=hashSha256(inviteToken);this.aiCalls=new Map();
  }
  async ping(){return true}
@@ -51,6 +51,21 @@ class FakeStore{
   return actor&&this.verified.has(actor.userId)?actor:null;
  }
  async revokeSession(hash){this.sessions.delete(hash)}
+ async createModuleClaim(actor,key,digest,claim){
+  const prior=this.moduleClaims.find(x=>x.studentId===actor.userId&&x.organizationId===actor.organizationId&&x.key===key);
+  if(prior)return {created:false,conflict:prior.digest!==digest,id:prior.id,receivedAt:prior.receivedAt};
+  const item={id:randomUUID(),studentId:actor.userId,organizationId:actor.organizationId,key,digest,
+   moduleId:claim.moduleId,revision:claim.revision,claimedCorrect:claim.correct,total:6,
+   sourceStatus:"UNVERIFIED_CLIENT_SELF_CHECK",receivedAt:new Date().toISOString()};
+  this.moduleClaims.push(item);
+  return {created:true,conflict:false,id:item.id,receivedAt:item.receivedAt};
+ }
+ async listOwnModuleClaims(actor,limit){
+  return this.moduleClaims.filter(x=>x.organizationId===actor.organizationId&&x.studentId===actor.userId).slice(-limit);
+ }
+ async listAssignedModuleClaims(actor,limit){
+  return actor.userId===teacher?this.moduleClaims.filter(x=>x.organizationId===actor.organizationId&&x.studentId===student).slice(-limit):[];
+ }
  async reserveAiUsage(actor,kind,maxCount){
   const key=actor.organizationId+"|"+actor.userId+"|"+kind;
   const used=this.aiCalls.get(key)||0;
@@ -251,6 +266,31 @@ try{
  assert.equal(store.attempts.length,1);
  assert.equal(store.attempts[0].report.flightCredit,false);
  assert.equal(JSON.stringify(store.attempts[0].report).includes("SPOOFED_STUDENT_ID"),false);
+ const moduleFile={
+  schema:"agsa.local-module-checkpoints.v1",
+  recordStatus:"UNVERIFIED_DEVICE_ONLY",
+  attempts:[
+   {moduleId:"foundations",revision:"2026-11-08.1",correct:5,total:6,at:1794121200000,
+    studentId:"SPOOFED_ID_MUST_NOT_BE_UPLOADED",officialGrade:true},
+   {moduleId:"cockpit",revision:"2026-11-08.1",correct:2,total:6,at:1794121300000}
+  ]
+ };
+ await desktop.locator("#moduleImportFile").setInputFiles({
+  name:"agsa-module-practice-UNVERIFIED.json",mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(moduleFile))
+ });
+ await desktop.waitForFunction(()=>document.querySelector("#moduleClaimSelect").options.length===2);
+ await desktop.locator("#moduleClaimSelect").selectOption("0");
+ assert.equal(await desktop.locator("#moduleImportButton").isDisabled(),false);
+ await desktop.locator("#moduleImportButton").click();
+ await desktop.waitForFunction(()=>document.querySelector("#moduleImportStatus").textContent.includes("Import received"));
+ assert.equal(await desktop.locator("#moduleStudentList .list-item").count(),1);
+ assert.equal(store.moduleClaims.length,1);
+ assert.equal(store.moduleClaims[0].studentId,student);
+ assert.equal(store.moduleClaims[0].moduleId,"foundations");
+ assert.equal(store.moduleClaims[0].claimedCorrect,5);
+ assert.equal(JSON.stringify(store.moduleClaims).includes("SPOOFED_ID"),false);
+ assert.equal(JSON.stringify(store.moduleClaims).includes("officialGrade"),false);
  await desktop.reload({waitUntil:"load"});
  assert.equal(await desktop.locator("#studentPanel").isVisible(),true);
  await desktop.locator("#studentList .list-item").first().waitFor();
@@ -275,6 +315,8 @@ try{
  assert.equal((await desktop.request.get(base+"/api/v1/practice-attempts")).status(),403);
  await desktop.locator("#assignedList .list-item").first().waitFor();
  assert.equal(await desktop.locator("#assignedList .list-item").count(),1);
+ assert.equal(await desktop.locator("#moduleInstructorList .list-item").count(),1);
+ assert.match(await desktop.locator("#moduleInstructorList .list-item").first().textContent(),/UNVERIFIED CLIENT SELF-CHECK/);
  await desktop.locator("#assignedList button").first().click();
  assert.equal(await desktop.locator("#selectedAttempt").isVisible(),true);
  assert.equal(await desktop.locator("#feedbackButton").isDisabled(),false);
@@ -297,11 +339,13 @@ try{
  await login(phone,"pilot.unassigned@example.org");
  assert.equal(await phone.locator("#instructorPanel").isVisible(),true);
  assert.equal(await phone.locator("#assignedList .list-item").count(),0);
+ assert.equal(await phone.locator("#moduleInstructorList .list-item").count(),0);
  assert.equal(await phone.locator("#feedbackButton").isDisabled(),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),"No sideways mobile overflow");
  await phone.locator("#logoutButton").tap();
  await login(phone,"pilot.student@example.org");
  assert.equal(await phone.locator("#studentList .list-item").count(),1);
+ assert.equal(await phone.locator("#moduleStudentList .list-item").count(),1);
  assert.equal(await phone.locator("#studentPanel").isVisible(),true);
  await phone.waitForFunction(()=>document.querySelector("#aiAvailability").textContent.includes("enabled for fictional"));
  await phone.locator("#aiTopic").selectOption("instruments");
