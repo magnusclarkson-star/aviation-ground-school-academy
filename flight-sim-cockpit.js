@@ -75,6 +75,9 @@ function makeAnalogFace(doc,id,label,unit){
  const output=doc.createElement("strong");output.className="cockpit-gauge-number";output.dataset.liveValue=id;output.textContent="0";
  const unitEl=doc.createElement("small");unitEl.textContent=unit;
  face.append(heading,svg,output,unitEl);
+ face.setAttribute("role","button");
+ face.tabIndex=0;
+ face.setAttribute("aria-label","Enlarge "+label+" simulated instrument");
  return face;
 }
 function digitalScreen(doc,kind,index){
@@ -106,7 +109,11 @@ function digitalScreen(doc,kind,index){
   }
  }
  const foot=doc.createElement("div");foot.className="cockpit-mfd-foot";foot.textContent="TRAINING DISPLAY "+(index+1)+" · NO TACTICAL DATA";
- screen.append(header,body,foot);return screen;
+ screen.append(header,body,foot);
+ screen.setAttribute("role","button");
+ screen.tabIndex=0;
+ screen.setAttribute("aria-label","Enlarge "+header.textContent+" simulated display");
+ return screen;
 }
 function buildPanel(doc,profile,holder){
  holder.replaceChildren();
@@ -162,6 +169,11 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  const doc=documentLike||root?.document;if(!doc?.getElementById)throw Error("Cockpit requires the simulator document");
  const $=id=>doc.getElementById(id);
  const wrap=$("cockpitMain"),holder=$("cockpitVisualPanel"),control=$("controlTitle")?.closest(".control-panel");
+ const zoomPanel=$("cockpitZoomPanel"),zoomContent=$("cockpitZoomContent"),zoomTitle=$("cockpitZoomTitle");
+ const cockpitStation=$("cockpitStation");
+ const touchSize=$("cockpitTouchScale"),sensitivity=$("cockpitTouchSensitivity");
+ const win=root||null;
+ if(!zoomPanel||!zoomContent||!zoomTitle||!touchSize||!sensitivity)throw Error("Instrument zoom or touch configuration missing");
  if(!wrap||!holder||!control)throw Error("Cockpit controls or panel missing");
  // Move, never duplicate: existing pointer events, IDs and instrument hooks survive.
  wrap.appendChild(control);
@@ -172,6 +184,61 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   select.appendChild(option);
  }
  let active="c172";
+ function closeZoom(){
+  zoomPanel.hidden=true;
+  zoomContent.replaceChildren();
+  zoomTitle.textContent="Instrument";
+ }
+ function openZoom(tile){
+  const clone=tile.cloneNode(true);
+  clone.removeAttribute("role");
+  clone.removeAttribute("tabindex");
+  clone.removeAttribute("aria-label");
+  // Duplicate SVG clipping IDs must be unique in the live document.
+  const clip=clone.querySelector("clipPath[id]");
+  if(clip){
+   const original=clip.id,unique=original+"-zoom";
+   clip.id=unique;
+   for(const el of clone.querySelectorAll("[clip-path]")){
+    if(el.getAttribute("clip-path")==="url(#"+original+")")el.setAttribute("clip-path","url(#"+unique+")");
+   }
+  }
+  zoomContent.replaceChildren(clone);
+  zoomTitle.textContent=tile.querySelector(".cockpit-gauge-title, .cockpit-mfd-head")?.textContent||"Instrument";
+  zoomPanel.hidden=false;
+  update();
+ }
+ holder.addEventListener("click",event=>{
+  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
+  if(tile&&holder.contains(tile))openZoom(tile);
+ });
+ holder.addEventListener("keydown",event=>{
+  if(event.key!=="Enter"&&event.key!==" ")return;
+  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
+  if(!tile||!holder.contains(tile))return;
+  event.preventDefault();openZoom(tile);
+ });
+ $("cockpitZoomClose").addEventListener("click",closeZoom);
+ doc.addEventListener("keydown",event=>{if(event.key==="Escape"&&!zoomPanel.hidden)closeZoom();});
+ const sizes=new Set(["compact","standard","large"]);
+ function resizeControls(){
+  const size=sizes.has(touchSize.value)?touchSize.value:"standard";
+  cockpitStation.dataset.touchSize=size;
+ }
+ touchSize.addEventListener("change",resizeControls);
+ resizeControls();
+ function refreshOrientation(){
+  const landscape=Boolean(win&&win.innerWidth>win.innerHeight&&win.innerHeight<=620);
+  const mobile=Boolean(win&&win.innerWidth<=740&&win.innerHeight>win.innerWidth);
+  cockpitStation.dataset.orientation=landscape?"landscape":mobile?"portrait":"desktop";
+  $("cockpitRotationStatus").textContent=landscape?
+   "Landscape cockpit active · instruments and controls spread across the wider screen. Rotate upright to restore portrait layout.":
+   mobile?"Portrait cockpit active · rotate the phone sideways for a wider flight deck.":
+   "Responsive cockpit active · layout adjusts automatically to screen dimensions.";
+ }
+ win?.addEventListener?.("resize",refreshOrientation);
+ win?.addEventListener?.("orientationchange",refreshOrientation);
+ refreshOrientation();
  function choose(id,{notify=false}={}){
   const profile=byId(id);active=profile.id;select.value=active;
   const deck=$("cockpitStation");
@@ -186,13 +253,17 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
+  closeZoom();
   if(notify)onSelect(profile.control,profile.id);
   update();
   return profile;
  }
  function update(){
   const state=getState(),sys=getSystems(),input=getInput();
-  if(state)paint(holder,state,sys,input,active,doc);
+  if(state){
+   paint(holder,state,sys,input,active,doc);
+   if(!zoomPanel.hidden)paint(zoomContent,state,sys,input,active,doc);
+  }
  }
  select.addEventListener("change",()=>choose(select.value,{notify:true}));
  // Existing mode buttons remain useful and continue to select the correct family.
@@ -203,7 +274,9 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   });
  }
  choose("c172");
- return Object.freeze({choose,update,getProfile:()=>byId(active),profiles:FRAMES});
+ return Object.freeze({choose,update,openZoom,closeZoom,refreshOrientation,
+  sensitivity:()=>clamp(sensitivity.value,.5,1.5),
+  getProfile:()=>byId(active),profiles:FRAMES});
 }
 const api=Object.freeze({FRAMES,byId,snapshot,attach,paint,buildPanel});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
