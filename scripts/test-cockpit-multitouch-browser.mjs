@@ -44,7 +44,9 @@ try{
   assert.match(combined,/BANK [1-9]\d*%/,"bank stays commanded with second finger down");
   assert.match(combined,/RUDDER 100%/,"second finger commands right rudder independently");
   assert.equal(await phone.locator("#dv-slip").textContent(),"RIGHT","live PFD responds to two-finger control");
-  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[finger1]});
+  // CDP touchEnd identifies the point being lifted, not the point to keep.
+  // End only the rudder finger and leave the pad finger actively dragging.
+  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[finger2]});
   await phone.waitForTimeout(200);
   assert.match(await controls(phone),/BANK [1-9]\d*%/,"releasing rudder does not release joystick");
   assert.match(await controls(phone),/RUDDER 0%/,"rudder resets after its owning touch ends");
