@@ -7,9 +7,12 @@
 <meta name="description" content="Immersive fictional airfield flight simulator with scrolling runway scenery, yoke, joystick, helicopter cyclic, optional haptics, takeoff and landing practice. Not a certified simulator.">
 <title>Immersive Airfield Flight Simulator | Aviation Ground School Academy</title>
 <link rel="stylesheet" href="flight-sim.css">
+<link rel="stylesheet" href="flight-sim-instruments.css">
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
+<script src="flight-sim-instruments.js" defer></script>
+<script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim.js" defer></script>
 </head>
 <body>
@@ -33,7 +36,40 @@
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
    <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
   </div>
-  <div class="readouts" aria-label="Fictional flight indication">
+  <div class="instruments-layout" id="flightInstruments" aria-label="Compact simulated glass instruments and numeric flight indications">
+   <div class="mini-pfd" aria-label="Synthetic attitude, simulated airspeed, height, heading and vertical rate">
+    <div class="mini-pfd-top"><span>AGSA · SIM PFD</span><span id="pfdSpeedStatus">SIMULATED AIRSPEED</span></div>
+    <svg id="miniAttitude" viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" aria-label="Artificial horizon indicating aircraft pitch and bank as an educational illustration" role="img">
+      <defs><clipPath id="miniHorizonClip"><rect x="7" y="6" width="226" height="151" rx="8"/></clipPath></defs>
+      <rect x="3" y="2" width="234" height="176" rx="12" fill="#081827" stroke="#7991a3" stroke-width="4"/>
+      <g clip-path="url(#miniHorizonClip)">
+       <g id="pfdHorizonMotion" transform="translate(120 82) rotate(0) translate(-120 -82)">
+        <rect x="-185" y="-270" width="610" height="352" fill="#2880b3"/>
+        <rect x="-185" y="82" width="610" height="470" fill="#946c46"/>
+        <path d="M-185 82 H425" stroke="#edf5fc" stroke-width="4"/>
+        <g stroke="#f8fcff" stroke-width="2" fill="none" opacity=".85">
+         <path d="M90 55 H150 M103 41 H137 M80 28 H160 M102 109 H138 M90 123 H150 M80 137 H160"/>
+        </g>
+       </g>
+       <path d="M54 83 H91 L111 91 H129 L149 83 H186" stroke="#f5dd9e" stroke-width="5" stroke-linejoin="round" fill="none"/>
+       <circle cx="120" cy="83" r="5" fill="#f5d083" stroke="#183748" stroke-width="2"/>
+       <path d="M120 8 V20 M104 13 L97 24 M136 13 L143 24" stroke="#e7f6fd" stroke-width="3" fill="none"/>
+       <rect x="10" y="66" width="55" height="33" rx="3" fill="#051827e0" stroke="#b4d5e6"/>
+       <rect x="175" y="66" width="55" height="33" rx="3" fill="#051827e0" stroke="#b4d5e6"/>
+       <text x="37" y="79" fill="#b1d8eb" text-anchor="middle" font-size="9">KT SIM</text>
+       <text id="pfdSpeed" x="37" y="93" fill="#f8fdff" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800">0</text>
+       <text x="202" y="79" fill="#b1d8eb" text-anchor="middle" font-size="9">M AGL</text>
+       <text id="pfdAltitude" x="202" y="93" fill="#f8fdff" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800">0</text>
+       <path d="M98 148 H142" stroke="#d7f4fc" stroke-width="2"/>
+       <circle id="pfdSlipDot" cx="120" cy="148" r="4.5" fill="#ffd17f" stroke="#102333" stroke-width="2"/>
+      </g>
+      <rect x="62" y="158" width="116" height="18" rx="5" fill="#102b3b"/>
+      <text id="pfdHeading" x="120" y="171" text-anchor="middle" fill="#bce9f5" font-family="system-ui,sans-serif" font-weight="850" font-size="14">000°</text>
+    </svg>
+    <div class="mini-pfd-footer"><span id="pfdAttitude">PITCH 0° · BANK 0°</span><span id="pfdVerticalRate">+0.0 m/s</span></div>
+   </div>
+   <div class="instruments-telemetry">
+   <div class="readouts" aria-label="Fictional flight indication">
    <div><small>AIRSPEED</small><strong id="readSpeed">0</strong><span>kt · indicative</span></div>
    <div><small>HEIGHT AGL</small><strong id="readAlt">0</strong><span>metres</span></div>
    <div><small>VERTICAL RATE</small><strong id="readVS">0.0</strong><span>m/s</span></div>
@@ -41,7 +77,18 @@
    <div><small>PITCH / BANK</small><strong id="readAttitude">0° / 0°</strong><span>degrees</span></div>
    <div><small>RUNWAY OFFSET</small><strong id="readOffset">0</strong><span>metres · illustrative</span></div>
   </div>
+   <div class="alignment-widget" aria-label="Lateral offset from the imaginary runway or helipad">
+    <span id="offsetLabel">RUNWAY OFFSET</span>
+    <div class="alignment-track" aria-hidden="true"><span class="alignment-centre"></span><span id="alignmentMarker" class="alignment-marker"></span></div>
+    <strong id="alignmentOffset">0 m</strong>
+   </div>
+   </div>
+  </div>
   <div class="flight-cue" role="status" aria-live="polite"><strong id="flightPhase">RUNWAY START</strong><span id="flightMessage">Advance the throttle to begin a simulated runway departure.</span></div>
+  <div id="coachGlance" class="coach-glance" role="status" aria-live="off" aria-label="Contextual imaginary-flight learning guidance">
+    <div><span class="eyebrow">INSTRUMENT + SCENERY CROSS-CHECK</span><strong id="coachPhase">RUNWAY · BUILDING MOTION</strong><p id="coachText">Watch the imaginary runway move as the airspeed indication changes.</p></div>
+    <div class="session-facts"><span>SESSION <strong id="coachElapsed">0 s</strong></span><span>MAX HEIGHT <strong id="coachMaxHeight">0 m</strong></span><span>TOUCHDOWNS <strong id="coachLandings">0</strong></span></div>
+  </div>
  </section>
  <div class="lab-grid">
   <section class="panel choices" aria-labelledby="aircraftTitle">
@@ -61,6 +108,8 @@
    </div>
    <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>
    <div class="optional-feedback">
+    <div class="section-line"><strong>Flight-display layout</strong><button id="instrumentToggle" type="button" aria-pressed="true">Hide glass instruments</button></div>
+    <p class="hint">You can collapse the graphical attitude indicator for a larger outside view on smaller phones. Numeric indications remain available.</p>
     <div class="section-line"><strong>Optional phone vibration</strong><button id="hapticsToggle" type="button" aria-pressed="false">Enable vibration</button></div>
     <p id="hapticsStatus" role="status" aria-live="polite">Off by default. Requires supported vibration hardware and browser permission after a user gesture.</p>
     <label for="turbulence">Synthetic turbulence strength <output id="turbulenceValue">Light</output></label>

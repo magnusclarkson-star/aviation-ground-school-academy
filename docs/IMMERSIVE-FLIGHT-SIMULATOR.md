@@ -44,3 +44,16 @@ An FAA-approved aviation training device has specific qualification/approval and
 Future work to pursue **only under professional oversight**: 3D terrain/airport geometry, independently validated aerodynamic and engine models, real-world control geometries from a specific authorised training aircraft, true wind/terrain/visual databases, calibrated controller hardware, approved instructor lesson plans, multi-device regression testing, performance budgets, accessibility and data/safeguarding review. A validated simulator needs more than attractive graphics or plausible controls. None of those approvals or physical-device checks are claimed here.
 
 This prototype is for **conceptual orientation and entertainment-style aviation practice only**. It must not be used to teach a genuine aircraft-specific takeoff, landing, emergency, helicopter procedure or operational decision.
+
+
+## Integrated instrument cross-check and coaching (November 2026 update)
+
+The **same** local simulator state now drives both the forward-moving runway scene and a compact drawn flight display. The graphical attitude indicator moves its horizon with simulated pitch/bank. Companion fields show fictional heading, airspeed, height above the simulated ground, rate of climb/descent, and a lateral alignment indicator relative to the painted runway or helipad. This removes the need to switch away from moving scenery just to observe the core simulated flight indications.
+
+The existing numeric readouts remain visible. A **Hide glass instruments** button collapses only the graphical display to free room on smaller phones; selecting **Show glass instruments** restores it. It does not change flight physics, scoring, aircraft type, or public/local-only privacy.
+
+A new deterministic, phase-aware practice cue explains what a novice should *observe* during taxi/roll, fictional rotation, climb, free flight, short final, touchdown/rollout, and rotorcraft lift/hover. It also highlights illustrative low-energy, rapid-descent and runway-offset situations. A session-only observation strip shows elapsed time, highest simulated height and touchdown events. No observation is uploaded, graded, signed, persisted, or usable as flight-training credit.
+
+**Display limitations:** This is not an approved PFD, certified instrument layout, aircraft-specific speed/height system, real compass, slip/skid instrument, flight director or validated aircraft model. The graphical horizon and simple coaching cues are driven by the invented model, not physics suitable for live operations. Numerical units are explicitly shown (fictional knots, metres AGL, metres per second). Any real training use would require professional review and dedicated simulator/device qualification.
+
+CI validates that model changes correctly propagate to the outside view and instrument horizon, that scenario prompts reflect state, and that a 390px touchscreen retains working flight controls and the optional instrument layout. Physical mobile-device verification remains outstanding.
