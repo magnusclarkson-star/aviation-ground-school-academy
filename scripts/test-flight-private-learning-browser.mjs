@@ -38,6 +38,13 @@ try{
  await phone.locator('#traceStop').click();
  await phone.locator('#traceReplay').click();
  assert.equal(await phone.locator('#traceReplayPanel').isVisible(),true);
+ const scoutQuestion=await phone.locator('#traceMomentQuestion').textContent();
+ assert.ok(scoutQuestion.includes('qualified aviation instructor'));
+ await phone.locator('#traceMomentPathway').selectOption('pilots');
+ const pilotQuestion=await phone.locator('#traceMomentQuestion').textContent();
+ assert.ok(pilotQuestion.includes('qualified aviation instructor'));
+ assert.notEqual(scoutQuestion,pilotQuestion,'different learner pathways receive distinct reflection questions');
+ assert.match(await phone.locator('#traceMomentNotice').textContent(),/SME_REVIEW_REQUIRED/);
  assert.equal(await phone.locator('#tracePlayPause').isDisabled(),false);
  assert.equal(await phone.locator('#tracePlayPause').getAttribute('aria-pressed'),'false');
  await phone.locator('#tracePlayPause').click();
