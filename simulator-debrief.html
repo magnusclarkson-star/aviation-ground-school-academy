@@ -67,7 +67,7 @@ function learningPrompts(d){
  rotorcraft:'Consider collective, cyclic and pedal indications without treating the model as helicopter handling guidance.',
  loading:'Consider the invented mass, CG and lift/drag comparison. Never use these values as aircraft loading limits.'
  };
- return ['SELF-REFLECTION PROMPTS — NOT AI, NOT A GRADE, NOT INSTRUCTOR FEEDBACK',...tips,'Scenario thought question: '+focus[d.scenario],'SME_REVIEW_REQUIRED · No real flight competency determination.'].join('\\n\\n');
+ return ['SELF-REFLECTION PROMPTS — NOT AI, NOT A GRADE, NOT INSTRUCTOR FEEDBACK',...tips,'Scenario thought question: '+focus[d.scenario],'SME_REVIEW_REQUIRED · No real flight competency determination.'].join('\n\n');
 }
 byId('coach').addEventListener('click',()=>{byId('coachFeedback').textContent=learningPrompts(collect());byId('notice').textContent='Local guidance only. Review with a qualified instructor.';});
 byId('scenario').addEventListener('change',updateBriefing);byId('pathway').addEventListener('change',updateBriefing);
