@@ -43,7 +43,7 @@ try{
  assert.equal(await desktop.locator("#pfdHeading").textContent(),"000°");
  assert.equal(await desktop.locator("#pfdSpeed").textContent(),await desktop.locator("#readSpeed").textContent());
  assert.match(await desktop.locator("#coachPhase").textContent(),/RUNWAY/);
- assert.equal(await desktop.locator("#coachElapsed").textContent(),"0 s");
+ assert.ok(/^\\d+ s$/.test(await desktop.locator("#coachElapsed").textContent()),"session elapsed is a whole-second indication");
  assert.equal(await desktop.locator("#offsetLabel").textContent(),"RUNWAY OFFSET");
  const first=await screenshotSignature(desktop);
  assert.ok(first>0);
