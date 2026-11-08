@@ -1,0 +1,110 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const X=require("../flight-sim-exercises.js");
+const M=require("../flight-sim-model.js");
+const W=require("../flight-sim-loading.js");
+
+assert.deepEqual(Object.keys(X.LESSONS),["cg-shift","wind-track","energy-flaps"]);
+assert.equal(X.view(null).active,false);
+assert.throws(()=>X.lesson("landing-checkride"),/Unknown educational/);
+for(const data of Object.values(X.LESSONS)){
+ assert.equal(data.review,"SME_REVIEW_REQUIRED");
+ assert.equal(data.preset.mode,"airplane");
+ assert.ok(data.choices.length===3);
+ assert.equal(data.choices.filter(c=>c.id===data.correct).length,1);
+ assert.match(data.objective,/fictional|imaginary/i);
+ assert.equal(Object.isFrozen(data),true);
+ assert.equal(Object.isFrozen(data.preset),true);
+ assert.equal(Object.isFrozen(data.choices),true);
+}
+
+const preset=(id,options={})=>{
+ const p=X.lesson(id).preset;
+ return M.makeState(p.mode,p.scenario,{
+  physicsId:p.physicsId,profileId:p.profileId,windId:p.windId,...options
+ });
+};
+const cgState=preset("cg-shift");
+const cg=X.begin("cg-shift",cgState);
+assert.equal(X.view(cg).stage,0);
+assert.equal(X.view(cg).showRecord,true);
+assert.equal(X.view(cg).showQuestion,false);
+assert.equal(X.view(cg).review,"SME_REVIEW_REQUIRED");
+assert.throws(()=>X.respond(cg,"a"),/Complete the observation/);
+assert.equal(X.recordBaseline(cg,cgState),true);
+assert.equal(X.recordBaseline(cg,cgState),false,"cannot record a second artificial baseline");
+assert.equal(cg.baseline.massKg,840);
+assert.ok(cg.baseline.cgPercentMAC>40);
+assert.equal(cg.baseline.baggageKg,0);
+assert.equal(X.view(cg).stage,1);
+assert.match(X.view(cg).prompt,/at least 40 kg/);
+const light=preset("cg-shift",{loadout:{...W.DEFAULT,baggageKg:35}});
+X.observe(cg,light,M.makeInput());
+assert.equal(cg.stage,1,"insufficient rear baggage must not trigger an observation");
+const shifted=preset("cg-shift",{loadout:{...W.DEFAULT,baggageKg:40}});
+X.observe(cg,shifted,M.makeInput());
+assert.equal(cg.stage,2);
+assert.ok(cg.latest.massKg>cg.baseline.massKg);
+assert.ok(cg.latest.cgPercentMAC>cg.baseline.cgPercentMAC);
+assert.equal(X.view(cg).showQuestion,true);
+assert.equal(X.respond(cg,"c"),false);
+assert.equal(cg.done,false);
+assert.match(cg.feedback,/no grade is recorded/);
+assert.throws(()=>X.respond(cg,"not-in-list"),/listed reflection/);
+assert.equal(X.respond(cg,"a"),true);
+assert.equal(cg.done,true);
+assert.equal(X.view(cg).completed,true);
+assert.equal(X.view(cg).showQuestion,false);
+assert.match(cg.feedback,/not a graded assessment/);
+const finalFeedback=cg.feedback;
+X.observe(cg,light,M.makeInput());
+assert.equal(cg.feedback,finalFeedback,"completed observations cannot roll backward");
+assert.throws(()=>X.respond(cg,"a"),/Active exercise required/);
+assert.equal(Object.hasOwn(cg,"score"),false);
+assert.equal(Object.hasOwn(cg,"studentId"),false);
+
+const windState=preset("wind-track");
+const wind=X.begin("wind-track",windState);
+assert.equal(wind.stage,0);
+X.observe(wind,{...windState,xM:8,trackDeg:0,time:2},M.makeInput());
+assert.equal(wind.stage,0,"track/heading difference is essential");
+X.observe(wind,{...windState,xM:6,trackDeg:7,headingDeg:0,time:2},M.makeInput());
+assert.equal(wind.stage,1);
+assert.equal(wind.latest.lateralOffsetM,6);
+assert.equal(X.view(wind).showQuestion,true);
+assert.equal(X.respond(wind,"b"),false);
+assert.equal(X.respond(wind,"a"),true);
+assert.equal(wind.done,true);
+assert.match(wind.feedback,/not a crosswind landing procedure/i);
+const mismatched=X.begin("wind-track",preset("wind-track"));
+X.observe(mismatched,preset("wind-track",{windId:"headwind"}),M.makeInput());
+assert.equal(mismatched.interrupted,true);
+assert.equal(X.view(mismatched).showQuestion,false);
+assert.equal(X.view(mismatched).stepText,"Needs restart");
+assert.match(mismatched.feedback,/Restart/);
+assert.throws(()=>X.respond(mismatched,"a"),/Active exercise required/);
+assert.throws(()=>X.begin("wind-track",preset("cg-shift")),/Set the fictional preset/);
+assert.equal(X.matches(X.lesson("cg-shift").preset,shifted),true);
+
+const energyState=preset("energy-flaps");
+const energy=X.begin("energy-flaps",energyState);
+const input=M.makeInput();input.flaps=20;
+X.observe(energy,{...energyState,time:3,dragN:900,energyJPerKg:1000},input);
+assert.equal(energy.stage,0);
+input.flaps=30;
+X.observe(energy,{...energyState,time:3,dragN:0,energyJPerKg:1000},input);
+assert.equal(energy.stage,0,"actual fictional drag observation required");
+X.observe(energy,{...energyState,time:3,dragN:700,energyJPerKg:1000},input);
+assert.equal(energy.stage,1);
+assert.ok(energy.latest.dragN>0);
+assert.equal(energy.latest.flapDeg,30);
+assert.match(X.view(energy).prompt,/choose the explanation/i);
+assert.equal(X.respond(energy,"a"),true);
+assert.equal(energy.done,true);
+assert.match(energy.feedback,/fabricated/);
+const interruptedEnergy=X.begin("energy-flaps",preset("energy-flaps"));
+X.observe(interruptedEnergy,preset("energy-flaps",{physicsId:"classic"}),input);
+assert.equal(interruptedEnergy.interrupted,true);
+
+console.log("Guided exercises passed: 3 unapproved local scenarios, CG baseline/shift, crosswind heading/track, flap-drag observation, ungraded reflection, interruption safety, no identity or scores.");
