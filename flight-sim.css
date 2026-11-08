@@ -142,6 +142,10 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
 .audio-block output{font-variant-numeric:tabular-nums;padding-inline:8px}
 .audio-block button{min-height:42px}
 .audio-block [role="status"]{overflow-wrap:anywhere}
+.international-atc-options{display:grid;gap:9px;margin:14px 0;padding:12px;border:1px solid #49697a;border-radius:10px;background:#102e40}
+.international-atc-options label{display:grid;gap:5px;min-width:0;margin:0;color:#e7f6fc;font-weight:650}
+.international-atc-options select{display:block;max-width:100%;width:100%;min-width:0;min-height:45px;padding:9px;border:1px solid #7ea7b9;border-radius:8px;background:#092538;color:#f3fbff}
+#radioFxStatus{padding:8px 10px;border-left:3px solid #4ec6da;background:#122c3d;border-radius:6px;font-size:12px}
 .atc-buttons{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
 .atc-transcript{max-height:265px;overflow-y:auto;display:grid;gap:8px;padding:10px 10px 10px 30px;
  background:#071b29;border:1px solid #486778;border-radius:8px}
