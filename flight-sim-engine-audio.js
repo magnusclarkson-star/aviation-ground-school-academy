@@ -7,8 +7,8 @@ const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number.isFinite(n)?n:a));
 const model=(mode,power)=>{
  const p=clamp(Number(power),0,1),heli=mode==="helicopter";
  return Object.freeze({
-  primaryHz:heli?45+34*p:56+100*p,
-  harmonicHz:heli?94+72*p:112+200*p,
+  primaryHz:heli?95+70*p:118+175*p,
+  harmonicHz:heli?235+175*p:275+245*p,
   chopHz:heli?12+8*p:0,
   engineLevel:heli?.14+.065*p:.13+.11*p
  });
@@ -48,7 +48,7 @@ function createEngine({windowLike,documentLike}={}){
    grainGain=ctx.createGain();
    pGain.gain.value=.8;hGain.gain.value=.18;grainGain.gain.value=0;
    const filter=ctx.createBiquadFilter();
-   filter.type="lowpass";filter.frequency.value=650;
+   filter.type="lowpass";filter.frequency.value=1100;
    gain=ctx.createGain();gain.gain.value=0;
    primary.connect(pGain);harmonic.connect(hGain);
     pGain.connect(filter);hGain.connect(filter);grain.connect(grainGain);grainGain.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
