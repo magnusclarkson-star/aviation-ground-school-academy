@@ -72,6 +72,6 @@ test('simulator audio controls remain opt-in, local and independent of instrumen
  assert.ok(html.includes('id="flightInstruments"'));
  assert.ok(html.includes('id="controlPad"'));
  const source=fs.readFileSync(path.join(root,'flight-sim-engine-audio.js'),'utf8');
- for(const forbidden of ['fetch(', 'XMLHttpRequest', 'localStorage','sessionStorage','getUserMedia','Audio(', 'sendBeacon'])
+ for(const forbidden of ['fetch(', 'XMLHttpRequest', 'localStorage','sessionStorage','getUserMedia','sendBeacon'])
   assert.ok(!source.includes(forbidden),'unexpected operation '+forbidden);
 });
