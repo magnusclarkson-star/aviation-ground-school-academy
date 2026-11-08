@@ -91,3 +91,7 @@ Open `guided-practical-lab.html` for separate fixed-wing, R44 conceptual and gen
 ## Instructor Studio curriculum expansion — November 2026
 
 The [AI Instructor Studio](ai-instructor.html) includes eight **introductory, unreviewed** guided lessons: the four forces, instruments, flight controls, flaps, weather, radio, aircraft anatomy and preflight safety. Each has three learning objectives, a fictional practice activity, a versioned draft label, boundaries on operational use and an official FAA reference pointer. The [curriculum review worksheet](curriculum-review.html) can export local **unsigned draft** feedback for a qualified aviation reviewer to consider; it cannot approve lessons, authenticate instructors or confer training credit. See [Curriculum Review Governance](docs/CURRICULUM-REVIEW-GOVERNANCE.md).
+
+## Device-only module checkpoints — November 2026
+
+The public [Ground-School Module Practice](ground-school-modules.html) page groups the eight curated instructor lessons into four conceptual modules with 24 short self-check questions and two introductory pathway orders (Scouts/Air Scouts or aviation enthusiasts/aspiring pilots). Practice outcomes may be kept in the learner's browser, cleared or exported as **unverified** JSON. No secure student records, qualified instructor review, approved examination, certification, or credit are created. See [Module Practice Acceptance](docs/MODULE-PRACTICE-ACCEPTANCE.md).
