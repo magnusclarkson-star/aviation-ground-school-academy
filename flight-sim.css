@@ -203,3 +203,26 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
  .full-flight-launch p{font-size:11px}
  .full-flight-launch button{min-height:58px;min-width:0;max-width:100%;width:100%;font-size:14px}
 }
+
+/* Accessible non-haptic flight event indicator. Does not obscure the PFD. */
+.flight-feedback-visual{
+ position:absolute;top:42px;left:50%;transform:translateX(-50%);
+ z-index:3;pointer-events:none;max-width:calc(100% - 22px);
+ background:#112c39de;color:#d7effe;border:1px solid #9dbfce;
+ border-radius:8px;padding:5px 11px;letter-spacing:.07em;text-align:center;
+ font-size:10px;font-weight:850;line-height:1.3;white-space:normal;
+}
+.flight-feedback-visual[data-kind="rough"]{
+ color:#fff0c9;border-color:#ead09d;background:#684e24dc;
+}
+.flight-feedback-visual[data-kind="impact"]{
+ color:#fff1e5;border-color:#ffc0a4;background:#73372ddc;
+}
+.flight-feedback-visual[data-kind="motion"]{
+ color:#e9f9ed;border-color:#b6d9c0;background:#235140d9;
+}
+#phoneVibrationResult{color:#ffe7b4;font-weight:680;font-size:12px;line-height:1.5}
+.phone-feedback-buttons #phoneVibrationStrongTest{border:1px solid #d6b66d}
+@media(max-width:740px){
+ .flight-feedback-visual{top:32px;font-size:9px;padding:3px 7px;max-width:calc(100% - 16px)}
+}

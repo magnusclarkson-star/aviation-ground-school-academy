@@ -76,6 +76,17 @@ try{
  const diagnostic=await phone.evaluate(()=>window.__phoneProbe.vibrations.at(-1));
  assert.deepEqual(diagnostic,[80,35,80],'explicit test requests a noticeable bounded pattern');
  assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'false','test never opts learner in to flight haptics');
+ await phone.locator('#phoneVibrationStrongTest').click();
+ assert.deepEqual(await phone.evaluate(()=>window.__phoneProbe.vibrations.at(-1)),[180,100,180],
+  'stronger diagnostic must request a bounded, user-triggered 460ms pattern');
+ assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'false');
+ assert.match(await phone.locator('#phoneVibrationResult').textContent(),/does NOT prove|NOT physical proof/);
+ await phone.locator('#phoneRefreshDiagnostics').click();
+ const updatedReport=await phone.locator('#phoneDiagnosticsText').inputValue();
+ assert.match(updatedReport,/Stronger vibration tests requested: 1/);
+ assert.match(updatedReport,/Requests accepted by browser/);
+ assert.equal(await phone.locator('#flightFeedbackVisual').isVisible(),true);
+ assert.match(await phone.locator('#flightFeedbackVisual').textContent(),/VISUAL CUE/);
  await phone.locator('#phoneFeedbackStart').click();
  await phone.waitForFunction(()=>document.querySelector('#engineAudioToggle')?.getAttribute('aria-pressed')==='true');
  assert.equal(await phone.locator('#hapticsToggle').getAttribute('aria-pressed'),'true');

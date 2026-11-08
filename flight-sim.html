@@ -21,6 +21,7 @@
 <script src="flight-sim-aerodynamics.js" defer></script>
 <script src="flight-sim-model.js" defer></script>
 <script src="flight-sim-haptics.js" defer></script>
+<script src="flight-sim-feedback-visual.js" defer></script>
 <script src="flight-sim-lighting.js" defer></script>
 <script src="flight-sim-airport-detail.js" defer></script>
 <script src="flight-sim-scenery.js" defer></script>
@@ -72,6 +73,7 @@
    <canvas id="outsideView" width="960" height="540" aria-label="Illustrated 2D outside view of a synthetic runway or helipad; always available as a fallback">A synthetic airfield scene. Flight status is provided as text below.</canvas>
    <canvas id="outsideView3D" width="960" height="540" hidden aria-label="GPU-rendered 3D synthetic airfield with geometric runway, terrain, buildings, trees and fictional aircraft chase view">This browser does not support the 3D visual mode.</canvas>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
+   <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
    <div class="scene-centre" aria-hidden="true"><span class="wings-reference"></span></div>
    <div class="scene-bottom" aria-hidden="true"><span id="scenePhase">RUNWAY DEPARTURE</span><span id="sceneSpeed">0 KT</span><span id="sceneHeight">0 M AGL</span></div>
   </div>
@@ -165,7 +167,9 @@
    <button id="phoneSoundTest" type="button">Test speaker</button>
    <button id="phoneAudioBackup" type="button">Try backup sound</button>
    <button id="phoneVibrationTest" type="button">Test vibration</button>
+   <button id="phoneVibrationStrongTest" type="button">Test stronger vibration</button>
   </div>
+  <p id="phoneVibrationResult" role="status" aria-live="polite">No vibration test performed yet. The browser may accept a request without the motor moving.</p>
   <p id="phoneFeedbackStatus" role="status" aria-live="polite">All effects prepared at maximum app settings. Tap Start ALL flight effects once to activate them in your browser.</p>
   <details id="phoneDiagnostics" class="phone-diagnostics">
    <summary>Browser &amp; device diagnostics — share the report if tests fail</summary>
@@ -175,6 +179,7 @@
    <textarea id="phoneDiagnosticsText" readonly rows="8" aria-label="Technical browser feature diagnostic report"></textarea>
    <p id="phoneDiagnosticsStatus" role="status" aria-live="polite">Diagnostics are kept on this device unless you choose to share them.</p>
   </details>
+  <p class="hint">If vibration never works, the live <strong>VISUAL CUE</strong> marker on the outside view will still show fictional runway rumble, turns, turbulence, touchdown, and flight phases. It is visual feedback only; it is not proof of a vibration or physical aircraft movement.</p>
   <p class="hint">On Android: open this page directly in Chrome, increase <strong>Media volume</strong>, and enable system vibration. If the test still stays silent, check Silent/Do Not Disturb and browser support. The simulator cannot override phone settings.</p>
  </section>
  <div class="lab-grid">

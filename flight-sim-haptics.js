@@ -20,6 +20,7 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
  const now=clock||(()=>Date.now());
  const supported=typeof nav?.vibrate==="function";
  let enabled=false,lastGlobal=-Infinity,quality="noticeable",lastResult="not requested";
+ let requestCount=0,acceptedCount=0,strongTestCount=0;
  const last=Object.create(null);
  function stop(){
   if(enabled&&supported)try{nav.vibrate(0)}catch{}
@@ -33,8 +34,10 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
  function setStrength(value){quality=value==="gentle"?"gentle":"noticeable";return quality;}
  function request(pattern){
   if(!supported||doc?.hidden){lastResult=supported?"page hidden":"unsupported";return false;}
+  requestCount++;
   try{
    const accepted=nav.vibrate(pattern.slice())!==false;
+   if(accepted)acceptedCount++;
    lastResult=accepted?"browser accepted request":"browser rejected request";
    return accepted;
   }catch{lastResult="browser threw an error";return false;}
@@ -56,6 +59,14 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
   if(accepted){lastGlobal=now();last.control=lastGlobal;last.airflow=lastGlobal;last.runwayRumble=lastGlobal;}
   return {supported,accepted,reason:lastResult};
  }
+ // A stronger, bounded diagnostic ONLY from a direct learner click.
+ // Never used for automatic in-flight feedback or repeated unattended.
+ function testStrong(){
+  strongTestCount++;
+  const accepted=request([180,100,180]); // 460ms total
+  if(accepted){lastGlobal=now();last.control=lastGlobal;last.airflow=lastGlobal;last.runwayRumble=lastGlobal;}
+  return {supported,accepted,reason:lastResult};
+ }
  function ambience(state,input){
   if(!enabled||!state||doc?.hidden)return false;
   const speed=Number(state.speedKt)||0;
@@ -65,8 +76,10 @@ function createHaptics({navigatorLike,documentLike,clock}={}){
      (Number(input?.turbulence)||0)>0.05) return pulse("airflow");
   return false;
  }
- return {supported,pulse,ambience,test,stop,setEnabled,setStrength,
-   isEnabled:()=>enabled,status:()=>({supported,enabled,strength:quality,lastResult})};
+ return {supported,pulse,ambience,test,testStrong,stop,setEnabled,setStrength,
+   isEnabled:()=>enabled,status:()=>({
+    supported,enabled,strength:quality,lastResult,requestCount,acceptedCount,strongTestCount
+   })};
 }
 const api={createHaptics,patterns,gaps};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
