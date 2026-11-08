@@ -1,0 +1,41 @@
+name: Build Android Native Haptics Test APK
+on:
+  pull_request:
+    paths:
+      - 'android/native-haptics/**'
+      - 'flight-sim-native-haptics.js'
+      - '.github/workflows/android-native-haptics.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'android/native-haptics/**'
+      - 'flight-sim-native-haptics.js'
+      - '.github/workflows/android-native-haptics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android 35 build tools
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Build debug APK from reviewed source
+        working-directory: android/native-haptics
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Publish test APK as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: academy-native-haptics-test-apk
+          path: android/native-haptics/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
