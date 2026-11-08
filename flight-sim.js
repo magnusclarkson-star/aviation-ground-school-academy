@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction;
+ V=window.AGSAFlightInstructorVoice,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!R||!Q||!Z||!O){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -19,19 +19,28 @@ const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
 const trace=R.makeRecorder();
+const playback=O.makePlayer();
+function pauseReplay(){
+ playback.pause();
+ $("tracePlayPause").textContent="Play recorded samples";
+ $("tracePlayPause").setAttribute("aria-pressed","false");
+}
 function refreshReplay(){
  const rows=Q.prepare(trace.exportData().observations);
+ const panel=$("traceReplayPanel"),stateOfPlayer=playback.status();
  $("traceReplay").disabled=trace.status().active||!rows.length;
- const panel=$("traceReplayPanel");
+ $("tracePlayPause").disabled=panel.hidden||trace.status().active||rows.length<2;
  if(panel.hidden)return;
- if(!rows.length){panel.hidden=true;return;}
+ if(!rows.length){panel.hidden=true;pauseReplay();return;}
  const slider=$("traceReplayIndex");slider.max=String(rows.length-1);
- const idx=Math.min(Number(slider.value)||0,rows.length-1);slider.value=String(idx);
+ const idx=Math.min(stateOfPlayer.index,rows.length-1);slider.value=String(idx);
  Q.draw($("traceReplayCanvas"),rows,idx);
  $("traceReplayDetail").textContent=Q.describe(rows,idx);
+ $("tracePlayPause").textContent=stateOfPlayer.playing?"Pause replay":"Play recorded samples";
+ $("tracePlayPause").setAttribute("aria-pressed",String(stateOfPlayer.playing));
 }
 function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;$("traceReplay").disabled=t.active||!t.samples;$("traceInsights").disabled=t.active||t.samples<2;}
-function clearTrace(){trace.clear();$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();}
+function clearTrace(){trace.clear();playback.load(0);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();}
 let systems=A.create(state.mode);
 A.step(systems,state,input,0);
 let hardware=null;
@@ -448,7 +457,7 @@ window.addEventListener("keyup",e=>{
 });
 window.addEventListener("blur",()=>{releaseControls();haptics.stop()});
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden){releaseControls();haptics.stop();}
+ if(document.hidden){releaseControls();haptics.stop();pauseReplay();refreshReplay();}
  lastFrame=0;
 });
 $("power").addEventListener("input",e=>{
@@ -549,7 +558,7 @@ $("hapticsToggle").addEventListener("click",()=>{
   haptics.supported?"Off. No vibration will be requested.":"This browser does not expose phone vibration. The simulator still works visually.";
  if(enabled)haptics.pulse("control");
 });
-$("traceStart").addEventListener("click",()=>{trace.start(state);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();});
+$("traceStart").addEventListener("click",()=>{trace.start(state);playback.load(0);$("traceReplayPanel").hidden=true;$("traceInsightsPanel").hidden=true;traceStatus();refreshReplay();});
 $("traceStop").addEventListener("click",()=>{trace.stop();traceStatus();refreshReplay();});
 $("traceClear").addEventListener("click",clearTrace);
 $("traceInsights").addEventListener("click",()=>{
@@ -564,11 +573,20 @@ $("traceInsights").addEventListener("click",()=>{
 $("traceReplay").addEventListener("click",()=>{
  if(trace.status().active)return;
  const rows=Q.prepare(trace.exportData().observations);if(!rows.length)return;
+ playback.load(rows.length);
  $("traceReplayPanel").hidden=false;
- $("traceReplayIndex").value=String(rows.length-1);
  refreshReplay();
 });
-$("traceReplayIndex").addEventListener("input",refreshReplay);
+$("traceReplayIndex").addEventListener("input",()=>{
+ pauseReplay();
+ playback.seek(Number($("traceReplayIndex").value));
+ refreshReplay();
+});
+$("tracePlayPause").addEventListener("click",()=>{
+ if(trace.status().active)return;
+ if(playback.status().playing)pauseReplay();else playback.play();
+ refreshReplay();
+});
 $("traceDownload").addEventListener("click",()=>{
  const data=trace.exportData();if(!data.observations.length||trace.status().active)return;
  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
@@ -595,6 +613,10 @@ function frame(now){
    lastPhase=state.phase;
   }
   }
+ }
+ if(!document.hidden&&playback.status().playing){
+  const before=playback.status(),after=playback.tick(dt);
+  if(after.index!==before.index||!after.playing)refreshReplay();
  }
  drawScenery(now);
  if(now-prevView>42){updateReadouts();prevView=now;}
