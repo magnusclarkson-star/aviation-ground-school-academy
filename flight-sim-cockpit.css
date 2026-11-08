@@ -353,3 +353,24 @@
  .cockpit-station[data-control-focus="expanded"][data-touch-size="large"] .control-panel .flight-grip{height:139px}
  .cockpit-station[data-control-focus="expanded"] .cockpit-main{grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr)}
 }
+
+/* Extra controls appear only when the learner enlarges an on-panel control;
+   original slider values and events remain authoritative. */
+.cockpit-extra-controls{display:none;grid-column:1/-1;min-width:0;margin-top:5px;
+ padding:8px;border:1px solid #94a8a8;border-radius:8px;background:#101f2b}
+.cockpit-station[data-control-focus="expanded"] .cockpit-extra-controls{display:block}
+.cockpit-extra-controls>strong{color:#f2d99d;font-size:11px}
+.cockpit-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:7px}
+.cockpit-extra-grid button{min-width:0;min-height:46px;padding:7px 4px;font-size:11px;line-height:1.3;border-color:#abc5cc}
+.cockpit-extra-controls p{font-size:10px;color:#cde6e6;line-height:1.45;margin:5px 0 0}
+.cockpit-station[data-family="rotor"] .cockpit-extra-flap{display:none}
+@media(max-width:740px){
+ .cockpit-station .control-panel .cockpit-extra-controls{grid-column:1/-1;grid-row:4;order:0;margin-top:1px;padding:5px}
+ .cockpit-extra-grid{gap:4px;margin-top:4px}
+ .cockpit-extra-grid button{min-height:44px;font-size:10px}
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ .cockpit-station .control-panel .cockpit-extra-controls{grid-column:1/-1;grid-row:4}
+ .cockpit-extra-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .cockpit-station[data-family="rotor"] .cockpit-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
