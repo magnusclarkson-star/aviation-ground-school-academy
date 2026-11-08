@@ -2,14 +2,16 @@
  * Flight logic and visual renderer are local-only. Device vibration is opt-in.
  */
 (()=>{"use strict";
-const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics;
+const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
+ I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),haptics=H.createHaptics();
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
+let practice=G.start(state);
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -52,6 +54,14 @@ function updateReadouts(){
  $("flightPhase").textContent=phase;
  $("scenePhase").textContent=phase;
  $("flightMessage").textContent=n.message;
+ I.paint(document,state);
+ const cue=G.guidance(state,input),stats=G.summary(practice,state);
+ $("coachPhase").textContent=cue.tag;
+ $("coachText").textContent=cue.text;
+ $("coachGlance").dataset.level=cue.level;
+ $("coachElapsed").textContent=stats.seconds+" s";
+ $("coachMaxHeight").textContent=stats.maxHeightM+" m";
+ $("coachLandings").textContent=String(stats.touchdowns);
 }
 function setMode(next){
  const newType=["yoke","stick","cyclic"].includes(next)?next:"yoke";
@@ -64,6 +74,7 @@ function setMode(next){
   paused=false;$("pauseFlight").setAttribute("aria-pressed","false");
   $("pauseFlight").textContent="Pause simulation";
   lastPhase=state.phase;
+  practice=G.start(state);
  }
  $("controlPad").className="control-pad "+(type==="cyclic"?"cyclic-mode":type==="stick"?"stick-mode":"yoke-mode");
  for(const id of ["Yoke","Stick","Cyclic"])
@@ -100,6 +111,7 @@ function reset(scenario){
  }
  input.turbulence=intensity[Number($("turbulence").value)]??.14;
  lastPhase=state.phase;
+ practice=G.start(state);
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();setValues();updateReadouts();
@@ -217,6 +229,11 @@ $("pauseFlight").addEventListener("click",()=>{
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
 });
+$("instrumentToggle").addEventListener("click",()=>{
+ const isCompact=$("flightInstruments").classList.toggle("compact");
+ $("instrumentToggle").setAttribute("aria-pressed",String(!isCompact));
+ $("instrumentToggle").textContent=isCompact?"Show glass instruments":"Hide glass instruments";
+});
 $("hapticsToggle").addEventListener("click",()=>{
  const enabled=haptics.setEnabled(!haptics.isEnabled());
  $("hapticsToggle").setAttribute("aria-pressed",String(enabled));
@@ -231,6 +248,7 @@ function frame(now){
  lastFrame=now;
  if(!paused&&!document.hidden&&dt>0){
   const result=M.step(state,input,dt);
+  G.observe(practice,state,result.events);
   // Prioritise distinctive events over routine rate-limited ambience.
   for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
