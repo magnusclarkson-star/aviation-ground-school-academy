@@ -32,6 +32,7 @@
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
 <script src="flight-sim-engine-audio.js" defer></script>
+<script src="flight-sim-phone-probe.js" defer></script>
 <script src="flight-sim-atc-radio.js" defer></script>
 <script src="flight-sim-radio-tone.js" defer></script>
 <script src="flight-sim-recorder.js" defer></script>
@@ -138,6 +139,25 @@
     <div class="session-facts"><span>SESSION <strong id="coachElapsed">0 s</strong></span><span>MAX HEIGHT <strong id="coachMaxHeight">0 m</strong></span><span>TOUCHDOWNS <strong id="coachLandings">0</strong></span></div>
   </div>
  </section>
+ <section class="phone-feedback panel" aria-labelledby="phoneFeedbackTitle">
+  <div class="phone-feedback-heading">
+   <div>
+    <strong id="phoneFeedbackTitle">Sound &amp; vibration while flying</strong>
+    <p>Quick phone controls. Off until you tap Start. A browser can accept vibration without the motor actually moving.</p>
+   </div>
+   <label for="hapticsStrength">Vibration strength
+    <select id="hapticsStrength"><option value="noticeable" selected>Noticeable short cues</option><option value="gentle">Gentle short cues</option></select>
+   </label>
+  </div>
+  <div class="phone-feedback-buttons">
+   <button id="phoneFeedbackStart" type="button">Start engine sound + vibration</button>
+   <button id="phoneFeedbackStop" type="button">Stop both</button>
+   <button id="phoneSoundTest" type="button">Test speaker</button>
+   <button id="phoneVibrationTest" type="button">Test vibration</button>
+  </div>
+  <p id="phoneFeedbackStatus" role="status" aria-live="polite">Both off. Tap Start to enable sound and vibration. You can test each separately first.</p>
+  <p class="hint">On Android: open this page directly in Chrome, increase <strong>Media volume</strong>, and enable system vibration. If the test still stays silent, check Silent/Do Not Disturb and browser support. The simulator cannot override phone settings.</p>
+ </section>
  <div class="lab-grid">
   <section class="panel choices" aria-labelledby="aircraftTitle">
    <span class="eyebrow">01 · CHOOSE A FICTIONAL AIRCRAFT</span>
@@ -180,8 +200,8 @@
       <option value="textured">Detailed tone · stronger engine/rotor pulse</option>
      </select>
      <label for="engineAudioVolume">Engine volume</label>
-     <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="32">
-     <output id="engineAudioVolumeValue" for="engineAudioVolume">32%</output>
+     <input id="engineAudioVolume" type="range" min="0" max="100" step="1" value="58">
+     <output id="engineAudioVolumeValue" for="engineAudioVolume">58%</output>
      <p id="engineAudioStatus" role="status" aria-live="polite">Engine sound is off. Tap Enable to start locally synthesized audio.</p>
      <p class="hint">The imaginary piston engine changes pitch with simulated power; the conceptual helicopter uses a steady rotor-like pulse. Use a comfortable volume. Pause, change aircraft or leave the page to stop the sound.</p>
     </div>
@@ -371,7 +391,7 @@
     <p id="hapticsStatus" role="status" aria-live="polite">Off by default. Requires supported vibration hardware and browser permission after a user gesture.</p>
     <label for="turbulence">Synthetic turbulence strength <output id="turbulenceValue">Light</output></label>
     <input id="turbulence" type="range" min="0" max="3" step="1" value="1">
-    <p class="hint">Gentle, short cues can indicate runway rumble, turbulence, control movement, pitch changes, turns and touchdowns. They never reproduce actual aircraft forces.</p>
+    <p class="hint">Short but more noticeable cues can indicate runway rumble, turbulence, control movement, pitch changes, turns and touchdowns. They never reproduce actual aircraft forces.</p>
    </div>
   </section>
   <section class="panel control-panel" aria-labelledby="controlTitle">
