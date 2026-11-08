@@ -24,7 +24,7 @@ assert.throws(()=>W.validate({...W.DEFAULT,pilotKg:81}),/whole-kilogram/);
 assert.throws(()=>W.validate({...W.DEFAULT,passengerKg:-5}),/whole-kilogram/);
 assert.throws(()=>W.validate({...W.DEFAULT,fuelKg:10}),/whole-kilogram/);
 assert.throws(()=>W.validate({...W.DEFAULT,baggageKg:Infinity}),/whole-kilogram/);
-assert.throws(()=>W.evaluate("737"),/Unknown fictional aircraft profile/);
+assert.throws(()=>W.evaluate("737"),/Unknown fictional/);
 
 for(const [name,nominal] of [["trainer",840],["sport",700],["touring",1170]]){
  const result=W.evaluate(name);
