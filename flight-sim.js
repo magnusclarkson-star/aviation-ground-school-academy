@@ -18,7 +18,6 @@ const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
- clearTrace();
 const trace=R.makeRecorder();
 function traceStatus(){const t=trace.status();$("traceStatus").textContent=(t.active?"Recording: ":"Recorder: ")+t.reason+" · "+t.samples+" samples · "+Math.round(t.seconds)+" simulated seconds";$("traceStart").disabled=t.active;$("traceStop").disabled=!t.active;$("traceDownload").disabled=t.active||!t.samples;}
 function clearTrace(){trace.clear();traceStatus();}
@@ -343,6 +342,7 @@ function reset(scenario){
  input.turbulence=intensity[Number($("turbulence").value)]??.14;
  lastPhase=state.phase;
  practice=G.start(state);
+ clearTrace();
  systems=A.create(state.mode);
  A.step(systems,state,input,0);
  reportEnvironment();
