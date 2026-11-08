@@ -29,7 +29,7 @@ function visualMessage(message,status){
 function fallbackTo2D(message){
  if(renderer3D){renderer3D.destroy();renderer3D=null}
  canvas3D.hidden=true;
- $(".scene-shell")?.classList?.remove("three-dimensional");
+ document.querySelector(".scene-shell")?.classList?.remove("three-dimensional");
  $("cameraMode").value="cockpit";
  $("cameraMode").disabled=true;
  visualMessage(message,"fallback");
@@ -52,7 +52,7 @@ function chooseVisual(){
   return;
  }
  canvas3D.hidden=false;
- $(".scene-shell").classList.add("three-dimensional");
+ document.querySelector(".scene-shell").classList.add("three-dimensional");
  $("cameraMode").disabled=false;
  try{
   if(renderer3D.draw(state,{view:$("cameraMode").value})){
