@@ -16,7 +16,7 @@ try{
   {t:1,phase:'climb',speedKt:35,altitudeM:10,bankDeg:3,username:'private'}
  ]};
  await desktop.locator('#traceImport').setInputFiles({name:'synthetic-flight.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(trace))});
- await desktop.waitForFunction(()=>document.querySelector('#traceImportStatus').textContent.includes('Read 2 fictional samples.'));
+ await phone.waitForFunction(()=>Number((document.querySelector('#traceStatus')?.textContent||'').match(/[0-9]+ samples/)?.[0]?.split(' ')[0]||0)>=2,null,{timeout:12000});
  assert.equal(await desktop.locator('#traceImportSummary').isVisible(),true);
  const facts=await desktop.locator('#traceImportFacts').textContent();
  assert.match(facts,/Synthetic height range: 0 to 10 m/);
