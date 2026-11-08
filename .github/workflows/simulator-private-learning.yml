@@ -26,11 +26,12 @@ jobs:
           node --check flight-sim-3d.js
           node --check flight-sim-engine-audio.js
           node --check flight-sim-atc-radio.js
+          node --check flight-sim-radio-tone.js
           node --check simulator-trace-import.js
           node --check flight-sim.js
       - name: Execute private recorder, replay, debrief and learning-summary tests
         run: |
-          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs tests/simulator-moment-coach.test.cjs tests/simulator-track.test.cjs tests/simulator-lighting.test.cjs tests/simulator-engine-audio.test.cjs tests/simulator-atc-radio.test.cjs
+          node --test tests/simulator-private-recorder.test.cjs tests/simulator-replay.test.cjs tests/simulator-debrief-handoff.test.cjs tests/simulator-after-action.test.cjs tests/simulator-playback.test.cjs tests/simulator-trace-import.test.cjs tests/simulator-moment-coach.test.cjs tests/simulator-track.test.cjs tests/simulator-lighting.test.cjs tests/simulator-engine-audio.test.cjs tests/simulator-atc-radio.test.cjs tests/simulator-audio-stages.test.cjs tests/simulator-radio-tone.test.cjs
 
   private-browser:
     runs-on: ubuntu-24.04
