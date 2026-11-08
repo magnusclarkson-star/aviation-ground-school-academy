@@ -89,6 +89,24 @@ try{
   const glOk=await gpuSignature(desktop);
   assert.ok(glOk&&glOk.colors>5);
  }
+ // Simulate a GPU context-loss event where the Chromium test driver
+ // exposes it. The original 2D canvas must remain available immediately.
+ if(supports){
+  const lost=await desktop.evaluate(()=>{
+   const gl=document.querySelector("#outsideView3D").getContext("webgl2");
+   const extension=gl?.getExtension("WEBGL_lose_context");
+   if(!extension)return false;
+   extension.loseContext();return true;
+  });
+  if(lost){
+   await desktop.waitForFunction(()=>!document.querySelector(".scene-shell")
+    .classList.contains("three-dimensional"),null,{timeout:3500});
+   assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
+   assert.equal(await desktop.locator("#outsideView").isVisible(),true);
+   assert.match(await desktop.locator("#visualStatus").textContent(),/context lost/i);
+   assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+  }
+ }
  assert.deepEqual(errors,[]);
  await desktop.close();
 
