@@ -357,6 +357,11 @@ footer{font-size:12px;color:#99acc1;margin:25px 0}
     <div id="skillsCoach" class="coach-panel" aria-label="Automated coaching recommendations">
       <h4>Automated practice coach <small>Not reviewed by an instructor</small></h4>
       <p id="coachHeadline">Feedback appears when an exercise ends.</p>
+      <div class="skills-buttons" role="group" aria-label="Optional spoken coaching">
+        <button type="button" id="coachSpeak" disabled>Read practice review aloud</button>
+        <button type="button" id="coachStop">Stop reading</button>
+      </div>
+      <p id="coachVoiceStatus" role="status" aria-live="polite" class="skills-privacy">Audio is optional synthetic browser speech, not a live AI instructor. The written review remains available.</p>
       <h5>Indications to improve</h5>
       <ul id="coachImprovements"></ul>
       <h5>What to try next</h5>
