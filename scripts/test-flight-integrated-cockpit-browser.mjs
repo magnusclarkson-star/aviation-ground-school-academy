@@ -11,6 +11,18 @@ try{
  desktop.on('pageerror',e=>errors.push('desktop '+e.message));
  await desktop.goto(url,{waitUntil:'load'});
  assert.equal(await desktop.locator('#cockpitAircraftSelect').inputValue(),'c172');
+ const layout=await desktop.evaluate(()=>{
+  const box=id=>document.querySelector(id).getBoundingClientRect();
+  const d=box('#cockpitVisualPanel'),y=box('#controlPad'),p=box('#leftRudder'),t=box('#powerPanel');
+  return {instrumentsAbove:d.bottom<=y.top+35,
+   centered:Math.abs(y.left+y.width/2-(box('#cockpitMain').left+box('#cockpitMain').width/2))<55,
+   pedalsBelow:p.top>=y.bottom-12,throttleRight:t.left>y.left+y.width/2};
+ });
+ assert.equal(layout.instrumentsAbove,true,'gauges sit on dashboard above the yoke');
+ assert.equal(layout.centered,true,'yoke centered in the actual dashboard');
+ assert.equal(layout.pedalsBelow,true,'pedals physically underneath the yoke');
+ assert.equal(layout.throttleRight,true,'throttle sits to the right of the yoke');
+ assert.equal(await desktop.locator('.cockpit-avionics').count(),1,'Cessna radio stack beside six-pack');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'help is hidden until learner taps ⓘ');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'instrument is normal size initially');
  assert.equal(await desktop.locator('#cockpitControlFocusToggle').count(),0,'no control expansion button');
@@ -96,13 +108,15 @@ try{
   return {sameCockpit:station.contains(pad)&&station.contains(pedals),
     noOverflow:page.scrollWidth<=innerWidth+2,scrollable:scene.scrollHeight>0,
     width:window.innerWidth,padX:a.x,pedalsX:b.x,stationX:c.x,
-    padWidth:a.width,pedalsWidth:b.width,stageHeight:scene.getBoundingClientRect().height,
+    padWidth:a.width,padHeight:a.height,pedalsWidth:b.width,pedalY:b.y,gaugeHeight:d.height,stationWidth:c.width,stageHeight:scene.getBoundingClientRect().height,
     gaugeY:d.y,padY:a.y,stickyScene:getComputedStyle(document.querySelector(".scene-shell")).position};
  });
  assert.equal(value.sameCockpit,true,'gauge panel, yoke and pedals share the same cockpit');
  assert.equal(value.noOverflow,true,'mobile cockpit has no horizontal overflow');
  assert.ok(value.padWidth>50&&value.pedalsWidth>20,'touch targets remain large enough');
- assert.ok(Math.abs(value.gaugeY-value.padY)<85,'instruments and control pad share the same glance row');
+ assert.ok(value.padY>=value.gaugeY+value.gaugeHeight-35,'yoke starts below dashboard instruments');
+ assert.ok(value.pedalY>=value.padY+value.padHeight-10,'rudder pedals sit underneath the yoke');
+ assert.ok(Math.abs((value.padX+value.padWidth/2)-(value.stationX+value.stationWidth/2))<55,'yoke is centered in cockpit');
  assert.equal(value.stickyScene,'sticky','small windscreen remains visible without covering other lessons');
  await phone.locator('#cockpitVisualPanel .cockpit-info-dot').first().tap();
  assert.equal(await phone.locator('#cockpitInfoPanel').isVisible(),true,'info button is touch accessible on 390px phone');

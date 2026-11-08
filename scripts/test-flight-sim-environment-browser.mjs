@@ -66,7 +66,16 @@ try{
  assert.equal(await desktop.locator("#profileSelect").inputValue(),"touring",
   "fixed-wing profile choice survives a temporary helicopter mode");
  assert.equal(await desktop.locator("#windSelect").inputValue(),"gusts");
- assert.ok(await desktop.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ const bounds=await desktop.evaluate(()=>({
+  viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+  overflowing:[...document.querySelectorAll("body *")].map(e=>{
+   const r=e.getBoundingClientRect();
+   return {tag:e.tagName,id:e.id,cls:String(e.className?.baseVal??e.className??"").slice(0,65),
+    left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)};
+  }).filter(e=>e.right>innerWidth+4||e.left< -5).slice(0,16)
+ }));
+ if(bounds.scrollWidth>bounds.viewport+2)console.log("Cockpit desktop overflow diagnostics",JSON.stringify(bounds));
+ assert.ok(bounds.scrollWidth<=bounds.viewport+2);
  await desktop.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});

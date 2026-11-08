@@ -131,7 +131,7 @@ try{
  const pad=await phone.locator("#controlPad").boundingBox();
  const right=await phone.locator("#rightRudder").boundingBox();
  assert.ok(pad&&right);
- assert.ok(Math.abs(pad.y-right.y)<145,"yoke and pedals must share one phone thumb row");
+ assert.ok(right.y>=pad.y+pad.height-12&&right.y-pad.y<280,"rudder pedals sit directly beneath the yoke");
  assert.ok(pad.y<844&&pad.y+pad.height>0&&right.y>=0&&right.y+right.height<=844,
   "both controls must fit the visible phone viewport");
  assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","shallow outside scene stays sticky without blocking aircraft choices");

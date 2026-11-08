@@ -102,7 +102,7 @@ try{
  await phone.locator("#rightRudder").scrollIntoViewIfNeeded();
  const pad=await phone.locator("#controlPad").boundingBox();
  const pedal=await phone.locator("#rightRudder").boundingBox();
- assert.ok(pad&&pedal&&Math.abs(pad.y-pedal.y)<145,
+ assert.ok(pad&&pedal&&pedal.y>=pad.y+pad.height-12&&pedal.y-pad.y<280,
   "loading controls must not damage the original two-thumb touch layout");
  await phone.locator("#startApproach").tap();
  await phone.waitForTimeout(350);

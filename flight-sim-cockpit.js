@@ -91,10 +91,41 @@ function makeAnalogFace(doc,id,label,unit){
   for(const offset of [-22,-11,11,22])node("line",{x1:37,x2:63,y1:50+offset,y2:50+offset,stroke:"#d7edf5","stroke-width":1},horizon);
   node("path",{d:"M15 50 H35 L44 55 H56 L65 50 H85",stroke:"#f1c96e","stroke-width":4,fill:"none"});
  }else{
-  for(let j=0;j<=12;j++){
-   const t=-130+j*260/12;
-   node("line",{x1:50,y1:11,x2:50,y2:j%3===0?20:16,stroke:j%3===0?"#f3e8d1":"#87a2b5","stroke-width":j%3===0?2:1,
-    transform:"rotate("+t+" 50 50)"});
+  const dialLabels={
+   speed:["0","40","80","120","160"],alt:["0","2","4","6","8"],
+   vsi:["-2","-1","0","+1","+2"],turn:["L","•","0","•","R"],
+   heading:["W","30","N","6","E"],rpm:["0","25","50","75","100"],
+   power:["0","25","50","75","100"]
+  };
+  const labels=dialLabels[id]||dialLabels.speed;
+  for(let j=0;j<=20;j++){
+   const angle=-130+j*260/20;
+   node("line",{x1:50,y1:10,x2:50,y2:j%5===0?19:15,
+    stroke:j%5===0?"#f2f0e5":"#99a5a8",
+    "stroke-width":j%5===0?1.9:.75,
+    transform:"rotate("+angle+" 50 50)"});
+  }
+  for(let j=0;j<5;j++){
+   const angle=(-130+j*260/4)*Math.PI/180;
+   const t=node("text",{x:(50+30*Math.sin(angle)).toFixed(2),
+    y:(50-30*Math.cos(angle)).toFixed(2),fill:"#eeeada","font-size":7.4,
+    "font-family":"sans-serif","font-weight":650,"text-anchor":"middle",
+    "dominant-baseline":"middle"});
+   t.textContent=labels[j];
+  }
+  if(id==="speed"||id==="rpm"){
+   const ring=(start,end,color)=>{
+    const theta=a=>a*Math.PI/180;
+    const point=a=>({x:50+39*Math.sin(theta(a)),y:50-39*Math.cos(theta(a))});
+    const p=point(start),q=point(end);
+    node("path",{d:"M"+p.x.toFixed(2)+" "+p.y.toFixed(2)+" A39 39 0 0 1 "+q.x.toFixed(2)+" "+q.y.toFixed(2),
+     fill:"none",stroke:color,"stroke-width":3,"stroke-linecap":"round"});
+   };
+   if(id==="speed"){ring(-45,58,"#75a984");ring(58,111,"#dfd074");ring(111,130,"#c87965");}
+   else{ring(-70,85,"#7cab81");ring(85,130,"#cfad72");}
+  }
+  if(id==="turn"){
+   node("path",{d:"M29 55 H40 L49 50 L60 55 H71",stroke:"#dce8e8","stroke-width":2.5,fill:"none"});
   }
   const hand=node("g",{"data-live-needle":"true"});
   node("path",{d:"M48 51 L50 16 L52 51Z",fill:"#ffe0a1"},hand);
@@ -160,6 +191,18 @@ function buildPanel(doc,profile,holder){
   const grid=doc.createElement("div");grid.className="cockpit-sixpack";
   for(const [id,name,unit] of ANALOG[profile.family])grid.appendChild(makeAnalogFace(doc,id,name,unit));
   holder.appendChild(grid);
+  if(profile.id==="c172"){
+   const avionics=doc.createElement("div");
+   avionics.className="cockpit-avionics";
+   avionics.setAttribute("aria-hidden","true");
+   avionics.innerHTML=`<div class="avionics-topline">NAV / COM</div>
+    <div class="avionics-radio"><small>COM 1</small><span>118.000</span><i aria-hidden="true"></i></div>
+    <div class="avionics-radio"><small>NAV 1</small><span>110.300</span><i aria-hidden="true"></i></div>
+    <div class="avionics-screen"><span class="avionics-screen-label">MAP</span>
+     <div class="avionics-track"></div><span class="avionics-plane">✈</span>
+    </div><div class="avionics-buttons"><i></i><i></i><i></i><i></i><i></i></div>`;
+   holder.appendChild(avionics);
+  }
  }
 }
 function paint(holder,state,systems,input,profileId,doc){
@@ -207,6 +250,13 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  if(!wrap||!holder||!control)throw Error("Cockpit controls or panel missing");
  // Move, never duplicate: existing pointer events, IDs and instrument hooks survive.
  wrap.appendChild(control);
+ wrap.classList.add("cockpit-flightdeck");
+ const launch=doc.querySelector(".full-flight-launch");
+ const stationHeader=cockpitStation.querySelector(".cockpit-station-head");
+ if(launch&&stationHeader)stationHeader.appendChild(launch);
+ const about=doc.querySelector(".sim-about");
+ const main=doc.querySelector("main");
+ if(about&&main)main.appendChild(about);
  const select=$("cockpitAircraftSelect");
  select.replaceChildren();
  for(const frame of FRAMES){
