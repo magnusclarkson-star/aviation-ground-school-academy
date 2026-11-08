@@ -278,6 +278,7 @@ function selectSkillTask(id){
  const Skills=window.CockpitV3Skills;
  if(!Skills)throw Error("Skills practice module did not load");
  skillsSession=Skills.create(id);
+ stopCoachVoice("Voice practice review stopped. Select Read practice review after finishing.");
  skillsCoachCache=null;skillsCoachRendered=false;skillsSaved=false;
  state=M.makeState();input=M.makeInput();trail=[];presetUntil=0;
  paused=false;$("pauseBtn").setAttribute("aria-pressed","false");$("pauseBtn").textContent="Pause flight";
@@ -310,6 +311,8 @@ function renderSkills(){
  $("skillsStart").disabled=running;
  $("skillsEnd").disabled=!running;
  $("skillsExport").disabled=!done;
+ $("coachSpeak").disabled=!done||!canSpeakCoach();
+ $("coachStop").disabled=!canSpeakCoach();
  $("skillsSave").disabled=!done||skillsSaved;
  $("skillsSave").textContent=skillsSaved?"Saved on this device":"Save attempt on this device";
  $("skillsStart").textContent=done?"Start new observation":"Start 12-second observation";
@@ -321,6 +324,39 @@ function renderSkills(){
   $("skillsReviewNote").textContent=skillsSession.feedback+" The optional JSON records only synthetic readings and is not a signed assessment.";
   if(!skillsCoachCache)skillsCoachCache=window.CockpitV3Coach.analyse(skillsSession);
   if(!skillsCoachRendered){renderCoach(skillsCoachCache);skillsCoachRendered=true;}
+ }
+}
+function canSpeakCoach(){
+ return "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance==="function";
+}
+function stopCoachVoice(message){
+ try{if("speechSynthesis" in window)window.speechSynthesis.cancel();}catch{}
+ if(message)$("coachVoiceStatus").textContent=message;
+}
+function speakCoachReview(){
+ if(mode!=="skills"||skillsSession?.status!=="finished"||!skillsCoachCache)return;
+ if(!canSpeakCoach()){
+  $("coachVoiceStatus").textContent="Synthetic voice is unavailable in this browser. Read the coaching notes below instead.";
+  return;
+ }
+ const review=skillsCoachCache,task=window.CockpitV3Skills.tasks[skillsSession.id];
+ const script=[
+  "Academy simulated practice review for "+task.title+".",
+  review.headline,
+  "Focus areas: "+(review.improvements.length?review.improvements.join(" "):"No major gaps in this fictional observation."),
+  "Recommended next steps: "+review.nextSteps.join(" "),
+  "This is automated educational feedback, not a human instructor assessment or licence credit."
+ ].join(" ").slice(0,2400);
+ try{
+  stopCoachVoice();
+  const utterance=new SpeechSynthesisUtterance(script);
+  utterance.lang="en-GB";utterance.rate=.94;
+  utterance.onstart=()=>$("coachVoiceStatus").textContent="Reading the practice review aloud using synthetic browser speech.";
+  utterance.onend=()=>$("coachVoiceStatus").textContent="Practice review reading finished.";
+  utterance.onerror=()=>$("coachVoiceStatus").textContent="Speech stopped or unavailable; written feedback remains below.";
+  window.speechSynthesis.speak(utterance);
+ }catch{
+  $("coachVoiceStatus").textContent="Voice playback failed. Review the written coaching advice instead.";
  }
 }
 function renderCoach(review){
@@ -432,6 +468,7 @@ function downloadSkillReport(){
  downloadJSON(report,"academy-unofficial-"+skillsSession.id+"-practice.json");
 }
 function setMode(next){
+ if(mode==="skills"&&next!=="skills")stopCoachVoice("Practice review reading stopped.");
  const wasMission=mode==="mission",wasSkills=mode==="skills";
  if(next==="mission"&&!wasMission){
   mission=null;
@@ -572,6 +609,8 @@ function wireControls(){
  $("skillsRetry").onclick=()=>{if(mode==="skills"){selectSkillTask($("skillsSelect").value);paint();}};
  $("skillsExport").onclick=downloadSkillReport;
  $("skillsSave").onclick=saveSkillAttempt;
+ $("coachSpeak").onclick=speakCoachReview;
+ $("coachStop").onclick=()=>stopCoachVoice("Practice review reading stopped.");
  $("skillsExportJournal").onclick=exportSkillJournal;
  $("skillsClearJournal").onclick=clearSkillJournal;
  renderJournal();
