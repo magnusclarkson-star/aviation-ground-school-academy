@@ -571,6 +571,7 @@ function setMode(next){
  $("missionMiniStatus").classList.toggle("hidden",mode!=="mission");
  $("skillsPanel").classList.toggle("hidden",mode!=="skills");
  $("skillsMiniStatus").classList.toggle("hidden",mode!=="skills");
+ $("skillsLiveCue").classList.toggle("hidden",mode!=="skills");
  $("mapTab").disabled=mode==="skills";
  $("engineTab").disabled=mode==="skills";
  $("controlOverview").classList.toggle("hidden",["focus","digital","mission","skills"].includes(mode));
