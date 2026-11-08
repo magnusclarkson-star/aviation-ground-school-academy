@@ -53,8 +53,8 @@ assert.ok(responsive.rollDeg>standard.rollDeg, "sport handling banks more prompt
 assert.ok(standard.rollDeg>steady.rollDeg, "touring handling banks more gently than default");
 assert.ok(responsive.pitchDeg>steady.pitchDeg);
 assert.ok(steady.speedKt>responsive.speedKt,"fictional touring profile retains a higher airspeed");
-assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"touring"}),onGround:false,speedKt:47}).speedWarning,false);
-assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"touring"}),onGround:false,speedKt:46}).speedWarning,true);
+assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"touring"}),onGround:false,speedKt:50}).speedWarning,false);
+assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"touring"}),onGround:false,speedKt:48}).speedWarning,true);
 assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"sport"}),onGround:false,speedKt:37}).speedWarning,true);
 assert.equal(I.snapshot({...M.makeState("airplane","approach",{profileId:"sport"}),onGround:false,speedKt:39}).speedWarning,false);
 
