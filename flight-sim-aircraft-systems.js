@@ -23,7 +23,11 @@ function step(system,state,input,seconds){
   const target=heli ? .84 : (.1+.9*throttle);
   // A fixed illustrated rotor RPM independent of helicopter collective;
   // collective instead changes blade pitch conceptually.
-  system.powerPct=smooth(system.powerPct,target*100,heli?1.1:1.6,dt);
+  // Experimental engine response is calculated by the optional point-mass
+  // model itself. The illustrated propeller must display that same state.
+  system.powerPct=!heli&&state.physicsId==="aero"?
+   clamp((state.engineFraction??0)*100,0,100):
+   smooth(system.powerPct,target*100,heli?1.1:1.6,dt);
   system.rotation=(system.rotation+((heli?18:12)+system.powerPct*(heli?.22:.47))*dt)%TAU;
   system.tailRotation=(system.tailRotation+(heli?25:40)*dt)%TAU;
   system.rotation%=TAU;
