@@ -27,6 +27,8 @@ jobs:
       - run: node --check cockpit-v3-skills.js
       - run: node scripts/test-cockpit-skills.mjs
       - run: node --check cockpit-v3-coach.js
+      - run: node --check cockpit-v3-live-coach.js
+      - run: node scripts/test-cockpit-live-cues.mjs
       - run: node --check cockpit-v3-journal.js
       - run: node scripts/test-cockpit-coach-journal.mjs
       - run: node scripts/test-accreditation-readiness.mjs
