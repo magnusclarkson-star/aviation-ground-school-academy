@@ -27,8 +27,16 @@ try{
  const baseHeight=await pad.evaluate(el=>el.getBoundingClientRect().height);
  await desktop.locator('#cockpitTouchScale').selectOption('large');
  assert.ok(await pad.evaluate(el=>el.getBoundingClientRect().height)>baseHeight+20,'larger thumb control option changes real pad size');
+ assert.equal(await desktop.locator('#cockpitExtraControls').isVisible(),false,'extra controls hidden until expanded');
  await desktop.locator('#cockpitControlFocusToggle').click();
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-control-focus'),'expanded');
+ assert.equal(await desktop.locator('#cockpitExtraControls').isVisible(),true,'expanded cockpit adds extra thumb buttons');
+ const oldPower=Number(await desktop.locator('#power').inputValue());
+ await desktop.locator('#cockpitPowerUp').click();
+ assert.equal(Number(await desktop.locator('#power').inputValue()),Math.min(100,oldPower+5));
+ const flapBefore=Number(await desktop.locator('#flaps').inputValue());
+ await desktop.locator('#cockpitFlapsUp').click();
+ assert.equal(Number(await desktop.locator('#flaps').inputValue()),Math.min(30,flapBefore+10));
  assert.equal(await desktop.locator('#cockpitControlFocusToggle').getAttribute('aria-pressed'),'true');
  assert.equal(await desktop.locator('#cockpitStation').evaluate(el=>el.contains(document.getElementById('leftRudder'))),true);
  await desktop.locator('#cockpitTouchSensitivity').selectOption('1.3');
@@ -42,6 +50,12 @@ try{
  await desktop.locator('#cockpitAircraftSelect').selectOption('r44');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'switching aircraft clears old display zoom');
  assert.equal(await desktop.locator('#collectivePanel').isVisible(),true);
+ await desktop.locator('#cockpitControlFocusToggle').click();
+ assert.equal(await desktop.locator('#cockpitExtraControls').isVisible(),true);
+ assert.equal(await desktop.locator('#cockpitFlapsUp').isVisible(),false,'no flap stepper on Robinson-style helicopter');
+ const collectiveBefore=Number(await desktop.locator('#collective').inputValue());
+ await desktop.locator('#cockpitPowerUp').click();
+ assert.equal(Number(await desktop.locator('#collective').inputValue()),Math.min(100,collectiveBefore+5));
  await desktop.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
@@ -52,6 +66,8 @@ try{
  await phone.locator('#controlPad').tap();
  assert.equal(await phone.locator('#cockpitStation').getAttribute('data-control-focus'),'expanded',
   'one finger touching control expands on-cockpit steering and pedal area');
+ assert.equal(await phone.locator('#cockpitExtraControls').isVisible(),true);
+ assert.ok(await phone.locator('#cockpitPowerUp').isVisible());
  await phone.locator('#cockpitTouchScale').selectOption('large');
  const expandedHeight=await phone.locator('#controlPad').evaluate(el=>el.getBoundingClientRect().height);
  assert.ok(expandedHeight>=150,'expanded touch controls are larger than initial 390px layout');
