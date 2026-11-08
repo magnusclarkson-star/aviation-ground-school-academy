@@ -6,9 +6,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
- A=window.AGSAFlightSystems;
+ A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U||!E||!T||!A||!D){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 let renderer3D=null,prev3D=0,prev2D=0;
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -139,6 +139,22 @@ function updateReadouts(){
   ["systemsMotionLabel",systemReadout.movingPartLabel],
   ["systemsMotionValue",systemReadout.motionValue]
  ])$(id).textContent=value;
+ const aero=D.indications(state);
+ show("energyPanel",Boolean(aero));
+ if(aero){
+  for(const [id,value] of [
+   ["aeroAoA",aero.aoaDeg.toFixed(1)+"°"],
+   ["aeroLift",aero.liftKN.toFixed(1)+" kN"],
+   ["aeroDrag",aero.dragKN.toFixed(1)+" kN"],
+   ["aeroLoad",aero.load.toFixed(2)+" g"],
+   ["aeroPath",aero.pathDeg.toFixed(1)+"°"],
+   ["aeroEnergy",aero.energy+" J/kg"]
+  ])$(id).textContent=value;
+  $("aeroAlert").dataset.level=aero.stalled?"caution":"normal";
+  $("aeroAlert").textContent=aero.stalled?
+   "EXPERIMENTAL STALL / LOW-ENERGY CUE · Compare fictional wing loading, airspeed and pitch. Reset if needed. Not a real aircraft warning.":
+   "EXPERIMENTAL · Calculated forces and energy use invented coefficients, not real aircraft limits.";
+ }
 }
 function reportEnvironment(){
  const profile=state.mode==="airplane"?E.selectProfile(state.profileId):null;
@@ -148,12 +164,19 @@ function reportEnvironment(){
  $("windHint").textContent=wind.description+
   " Wind changes the fictional airborne ground track, not real airworthiness or flight limits.";
  $("environmentStatus").textContent=(profile?profile.name:"Conceptual rotorcraft")+" · "+
-  wind.name+". Changing either selection restarts this fictional scenario.";
+  wind.name+" · "+(state.physicsId==="aero"?"Experimental energy dynamics":"Classic learning model")+
+  ". Changing a setting restarts this fictional scenario.";
+ $("physicsHint").textContent=state.mode==="helicopter"?
+  "The conceptual helicopter retains its original simplified hover model. Experimental aerodynamics apply only to fictional aeroplanes.":
+  state.physicsId==="aero"?
+  "Experimental: invented forces, wing angle of attack, bank loading, drag, engine lag and energy trends. Not real aircraft performance.":
+  "Classic: the original guided takeoff/landing behaviour. Choose Experimental for invented aerodynamic forces and energy trends.";
 }
 function makeConfiguredState(mode,scenario="runway"){
  return M.makeState(mode,scenario,{
   profileId:$("profileSelect").value,
-  windId:$("windSelect").value
+  windId:$("windSelect").value,
+  physicsId:$("physicsSelect").value
  });
 }
 function setMode(next){
@@ -184,6 +207,8 @@ function setMode(next){
   "A dual-handled yoke on a simulated control column represents pitch and roll for a fictional light aeroplane.";
  show("collectivePanel",newMode==="helicopter");
  show("profileWrap",newMode==="airplane");
+ show("physicsWrap",newMode==="airplane");
+ $("physicsSelect").disabled=newMode!=="airplane";
  reportEnvironment();
  show("powerPanel",newMode==="airplane");
  show("flapPanel",newMode==="airplane");
@@ -320,6 +345,7 @@ $("collective").addEventListener("input",e=>{
 $("flaps").addEventListener("change",e=>{input.flaps=Number(e.target.value);haptics.pulse("flap")});
 $("profileSelect").addEventListener("change",()=>reset(state.scenario));
 $("windSelect").addEventListener("change",()=>reset(state.scenario));
+$("physicsSelect").addEventListener("change",()=>reset(state.scenario));
 $("turbulence").addEventListener("input",e=>{
  input.turbulence=intensity[Number(e.target.value)]??.14;
  $("turbulenceValue").textContent=intensityNames[Number(e.target.value)]??"Light";
