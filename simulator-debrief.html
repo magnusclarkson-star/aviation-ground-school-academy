@@ -34,8 +34,8 @@ button.secondary{background:#44586d}.warning{color:#803a15;font-weight:650}.mute
 <label for="selfcheck">How confident are you explaining this fictional exercise?</label><select id="selfcheck"><option value="not-yet">Not yet — I need another demonstration</option><option value="developing">Developing — I can describe some changes</option><option value="explain">I can explain the observations with model limitations</option></select>
 <label for="nextstep">My next practice goal</label><textarea id="nextstep" maxlength="700" placeholder="One safe, conceptual learning objective for next time."></textarea>
 <p class="muted">There is no score or pass/fail result. A self-check is not an instructor endorsement.</p>
-<button id="preview" type="button">Prepare debrief</button><button id="export" type="button">Export unsigned JSON</button><button id="reset" class="secondary" type="button">Clear everything</button>
-<h2>Debrief preview</h2><div id="summary" aria-live="polite">Choose a scenario, record your observations and select Prepare debrief.</div>
+<button id="preview" type="button">Prepare debrief</button><button id="coach" type="button" class="secondary">Show learning prompts</button><button id="export" type="button">Export unsigned JSON</button><button id="reset" class="secondary" type="button">Clear everything</button>
+<h2>Local learning prompts</h2><div id="coachFeedback" role="status" aria-live="polite" class="intro">Optional prompts are based on whether you completed the reflection fields, not on aircraft performance. No AI service or instructor is involved.</div><h2>Debrief preview</h2><div id="summary" aria-live="polite">Choose a scenario, record your observations and select Prepare debrief.</div>
 <p id="notice" role="status"></p></div>
 </main><footer>Academy prototype · no account, storage, external requests or telemetry from this page · Reviewer status: <code>SME_REVIEW_REQUIRED</code></footer>
 <script>
@@ -48,9 +48,28 @@ const scenarios={
  loading:{title:'Fictional loading / aerodynamic comparison',scouts:'Compare an imaginary loading change with its synthetic balance indicator.',pilots:'Record the exact invented reference and comparison, including CG, wing loading or coefficient changes.',prompt:'What changed numerically, and why should those values never be used for real loading?'}
 };
 const byId=id=>document.getElementById(id);
-function updateBriefing(){const s=scenarios[byId('scenario').value],p=byId('pathway').value;byId('briefing').replaceChildren();const h=document.createElement('h3'),a=document.createElement('p'),b=document.createElement('p');h.textContent=s.title;a.textContent=s[p];b.textContent='Reflection question: '+s.prompt;byId('briefing').append(h,a,b);byId('summary').textContent='Scenario changed. Prepare a new debrief after your practice.';}
+function updateBriefing(){const s=scenarios[byId('scenario').value],p=byId('pathway').value;byId('briefing').replaceChildren();const h=document.createElement('h3'),a=document.createElement('p'),b=document.createElement('p');h.textContent=s.title;a.textContent=s[p];b.textContent='Reflection question: '+s.prompt;byId('briefing').append(h,a,b);byId('summary').textContent='Scenario changed. Prepare a new debrief after your practice.';byId('coachFeedback').textContent='Select Show learning prompts to generate new reflection guidance.';}
 function collect(){const s=byId('scenario').value;return {schema:'academy.debrief.v1',reviewStatus:'SME_REVIEW_REQUIRED',trainingCredit:false,instructorVerified:false,simulatorTelemetry:false,createdAt:new Date().toISOString(),pathway:byId('pathway').value,scenario:s,scenarioTitle:scenarios[s].title,indications:[...document.querySelectorAll('input[name="instrument"]:checked')].map(x=>x.value),observation:byId('observation').value.trim(),comparison:byId('comparison').value.trim(),uncertainty:byId('uncertainty').value.trim(),selfcheck:byId('selfcheck').value,nextstep:byId('nextstep').value.trim()};}
 function render(data){const lines=['UNSIGNED EDUCATIONAL DEBRIEF — NOT A GRADE OR TRAINING CREDIT','Review: SME_REVIEW_REQUIRED','Pathway: '+(data.pathway==='scouts'?'Scouts / Air Scouts':'Aviation enthusiasts / aspiring pilots'),'Scenario: '+data.scenarioTitle,'Indications inspected: '+(data.indications.join(', ')||'None selected'),'Observation: '+(data.observation||'Not recorded'),'Comparison: '+(data.comparison||'Not recorded'),'Questions / limitations: '+(data.uncertainty||'Not recorded'),'Self-check: '+data.selfcheck,'Next practice goal: '+(data.nextstep||'Not recorded')];byId('summary').textContent=lines.join('\n\n');}
+// Rule-based prompts assess reflection completeness only; never infer flying ability.
+function learningPrompts(d){
+ const tips=[];
+ if(!d.indications.length) tips.push('Identify at least one synthetic indication you actually examined.');
+ if(!d.observation) tips.push('Describe one control action and one observable change in the fictional scene or instruments.');
+ if(!d.comparison) tips.push('Compare a beginning/end state or reference/comparison setup; avoid real aircraft limits.');
+ if(!d.uncertainty) tips.push('Name a limitation of the fictional model or a question for a qualified instructor.');
+ if(!d.nextstep) tips.push('Choose one narrow learning goal to investigate in your next practice.');
+ if(!tips.length) tips.push('Your reflection contains each requested component. Review whether the statements are accurate; a qualified instructor must check aviation content.');
+ const focus={
+ takeoff:'Consider the relationship between synthetic ground roll, control input and climb indication. This is not rotation-speed advice.',
+ turn:'Consider the difference between indicated bank, changing heading and ground track in invented wind.',
+ approach:'Consider runway alignment and fictional height and descent cues. This is not a real landing checklist.',
+ rotorcraft:'Consider collective, cyclic and pedal indications without treating the model as helicopter handling guidance.',
+ loading:'Consider the invented mass, CG and lift/drag comparison. Never use these values as aircraft loading limits.'
+ };
+ return ['SELF-REFLECTION PROMPTS — NOT AI, NOT A GRADE, NOT INSTRUCTOR FEEDBACK',...tips,'Scenario thought question: '+focus[d.scenario],'SME_REVIEW_REQUIRED · No real flight competency determination.'].join('\\n\\n');
+}
+byId('coach').addEventListener('click',()=>{byId('coachFeedback').textContent=learningPrompts(collect());byId('notice').textContent='Local guidance only. Review with a qualified instructor.';});
 byId('scenario').addEventListener('change',updateBriefing);byId('pathway').addEventListener('change',updateBriefing);
 byId('preview').addEventListener('click',()=>{const d=collect();render(d);byId('notice').textContent='Prepared on this device only. No instructor review has occurred.';});
 byId('export').addEventListener('click',()=>{const d=collect();render(d);const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='academy-unsigned-flight-debrief.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);byId('notice').textContent='Unsigned JSON generated locally. It contains your written answers; review before sharing.';});
