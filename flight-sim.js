@@ -574,6 +574,9 @@ $("traceReplay").addEventListener("click",()=>{
  if(trace.status().active)return;
  const rows=Q.prepare(trace.exportData().observations);if(!rows.length)return;
  playback.load(rows.length);
+ const recording=trace.exportData();
+ const kind=recording.mode==="helicopter"?"rotorcraft":recording.scenario==="approach"?"approach":"takeoff";
+ $("traceDebriefLink").setAttribute("href","simulator-debrief.html?scenario="+kind);
  $("traceReplayPanel").hidden=false;
  refreshReplay();
 });
