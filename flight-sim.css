@@ -184,3 +184,22 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
 .phone-diagnostics textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;background:#071825;color:#d9ecf7;border:1px solid #7e98ab;border-radius:7px;padding:10px;font:12px/1.55 ui-monospace,SFMono-Regular,monospace;resize:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
 .phone-feedback-buttons #phoneAudioBackup{border-color:#7bbec8}
 @media(max-width:740px){.phone-diagnostics{padding:9px}.phone-diagnostics button{font-size:11px;max-width:100%}}
+
+/* One obvious entrance to full sensory mode; does not cover controls or PFD. */
+.full-flight-launch{margin:10px 0 13px;padding:15px 18px;border:2px solid #ecc779;
+  border-radius:14px;background:linear-gradient(120deg,#253c3a,#142a44);
+  display:flex;align-items:center;justify-content:space-between;gap:16px}
+.full-flight-launch strong{font-size:17px;color:#fff0bd;letter-spacing:.05em}
+.full-flight-launch p{color:#d8ecf3;font-size:12px;line-height:1.5;margin:6px 0}
+.full-flight-launch #fullFlightLaunchStatus{font-weight:750;color:#bfe8ba}
+.full-flight-launch button{min-height:68px;min-width:245px;max-width:330px;
+  background:#f2c56b;color:#172a34;border:2px solid #fff0b2;font-size:16px;font-weight:900;
+  box-shadow:0 5px 14px #0005}
+.full-flight-launch button:hover{background:#ffdd96}
+.full-flight-launch button:disabled{opacity:.7}
+@media(max-width:760px){
+ .full-flight-launch{flex-direction:column;align-items:stretch;padding:12px;margin:8px 0 10px}
+ .full-flight-launch strong{font-size:15px}
+ .full-flight-launch p{font-size:11px}
+ .full-flight-launch button{min-height:58px;min-width:0;max-width:100%;width:100%;font-size:14px}
+}
