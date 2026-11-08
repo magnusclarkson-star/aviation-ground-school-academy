@@ -1,0 +1,17 @@
+/* Opt-in hardware controller setup never obscures the shared flight display. */
+.hardware-panel{margin-top:14px;background:#112c40;border:1px solid #5a8095;border-radius:12px;padding:12px}
+.hardware-panel>summary{cursor:pointer;font-weight:850;font-size:13px;color:#e5f5fa;line-height:1.5;padding:3px 0}
+.hardware-panel>summary:focus-visible{outline:3px solid #f5d89d;outline-offset:4px}
+.hardware-panel .hint{font-size:11px;line-height:1.55}
+.hardware-panel label{display:block;font-weight:750;font-size:11px;color:#c9e3ec;line-height:1.4;margin:10px 0 5px}
+.hardware-panel select{display:block;width:100%;margin:5px 0;padding:8px 6px;min-height:42px;border:1px solid #658ba1;border-radius:8px;background:#10283b;color:#e5f6fb;font:inherit;font-size:12px}
+.hardware-panel select:disabled{opacity:.6}
+.hardware-panel .mapping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 9px}
+.hardware-panel .mapping-grid label{min-width:0}
+.hardware-panel .toggle-row{display:flex;gap:9px;align-items:center;font-size:11px}
+.hardware-panel .toggle-row input{width:18px;height:18px;accent-color:#8ee4ed}
+.hardware-panel .controller-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.hardware-panel .controller-actions button{flex:1 1 170px;font-size:11px}
+.hardware-panel .controller-status{padding:9px 10px;background:#0c2132;border-left:3px solid #7aabbc;border-radius:6px;font-size:11px;line-height:1.5}
+.hardware-panel .controller-live{padding:8px 10px;background:#0c2334;border:1px solid #55758a;border-radius:7px;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+@media(max-width:740px){.hardware-panel{margin-top:10px;padding:10px}.hardware-panel .controller-actions button{min-height:44px}.hardware-panel .mapping-grid{gap:0 6px}}

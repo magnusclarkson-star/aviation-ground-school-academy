@@ -3,15 +3,17 @@
  */
 (()=>{"use strict";
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
- I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance;
+ I=window.AGSAFlightInstruments,G=window.AGSAFlightGuidance,
+ P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!G){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!G||!P||!U){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),haptics=H.createHaptics();
 const prefersLessMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 const intensity=[0,.14,.37,.75];
 const intensityNames=["Off","Light","Moderate","Bumpy"];
 let type="yoke",state=M.makeState("airplane"),input=M.makeInput("airplane");
 let practice=G.start(state);
+let hardware=null;
 let paused=false,lastFrame=0,prevView=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -100,6 +102,7 @@ function setMode(next){
  $("flightGrip").setAttribute("aria-label",
   "Drag fictional "+(type==="cyclic"?"cyclic":type==="yoke"?"yoke":"joystick")+" left/right for bank and up/down for pitch. Arrow keys on desktop.");
  releaseControls();
+ hardware?.resetPower();
  setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion});
 }
 function reset(scenario){
@@ -114,7 +117,7 @@ function reset(scenario){
  practice=G.start(state);
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
- releaseControls();setValues();updateReadouts();
+ releaseControls();hardware?.resetPower();setValues();updateReadouts();
  haptics.stop();
  S.draw(canvas,state,{reducedMotion:prefersLessMotion});
 }
@@ -208,11 +211,13 @@ document.addEventListener("visibilitychange",()=>{
 });
 $("power").addEventListener("input",e=>{
  input.throttle=M.clamp(Number(e.target.value)/100,0,1);
- $("powerValue").textContent=round(input.throttle*100)+"%";haptics.pulse("control");
+ $("powerValue").textContent=round(input.throttle*100)+"%";
+ hardware?.resetPower();haptics.pulse("control");
 });
 $("collective").addEventListener("input",e=>{
  input.collective=M.clamp(Number(e.target.value)/100,0,1);
- $("collectiveValue").textContent=round(input.collective*100)+"%";haptics.pulse("control");
+ $("collectiveValue").textContent=round(input.collective*100)+"%";
+ hardware?.resetPower();haptics.pulse("control");
 });
 $("flaps").addEventListener("change",e=>{input.flaps=Number(e.target.value);haptics.pulse("flap")});
 $("turbulence").addEventListener("input",e=>{
@@ -234,6 +239,27 @@ $("instrumentToggle").addEventListener("click",()=>{
  $("instrumentToggle").setAttribute("aria-pressed",String(!isCompact));
  $("instrumentToggle").textContent=isCompact?"Show glass instruments":"Hide glass instruments";
 });
+// Optional physical controllers use Gamepad API only after explicit activation.
+ // All output remains fictional; never store the hardware identity or calibration.
+ hardware=U.attach({
+  api:P,documentLike:document,navigatorLike:navigator,
+  getCurrentInput:()=>input,getMode:()=>state.mode,
+  onUpdate:()=>{
+   gripTransform();
+   $("cmdRudder").textContent="RUDDER "+Math.round(input.rudder*100)+"%";
+   $("brake").classList.toggle("held",input.brake);
+   $("powerValue").textContent=round(input.throttle*100)+"%";
+   $("collectiveValue").textContent=round(input.collective*100)+"%";
+   $("power").value=String(round(input.throttle*100));
+   $("collective").value=String(round(input.collective*100));
+  },
+  onDisable:()=>{releaseControls()},
+  onDisconnect:()=>{
+   paused=true;lastFrame=0;releaseControls();haptics.stop();
+   $("pauseFlight").setAttribute("aria-pressed","true");
+   $("pauseFlight").textContent="Resume simulation";
+  }
+ });
 $("hapticsToggle").addEventListener("click",()=>{
  const enabled=haptics.setEnabled(!haptics.isEnabled());
  $("hapticsToggle").setAttribute("aria-pressed",String(enabled));
@@ -247,6 +273,8 @@ function frame(now){
  const dt=lastFrame?Math.min(.08,Math.max(0,(now-lastFrame)/1000)):0;
  lastFrame=now;
  if(!paused&&!document.hidden&&dt>0){
+  hardware?.poll(dt,{input,mode:state.mode,dragActive:dragPointer!==null,keyboard:keys,pointers,paused});
+  if(!paused){
   const result=M.step(state,input,dt);
   G.observe(practice,state,result.events);
   // Prioritise distinctive events over routine rate-limited ambience.
@@ -256,6 +284,7 @@ function frame(now){
   }
   if(state.phase!==lastPhase){
    lastPhase=state.phase;
+  }
   }
  }
  if(now-prevView>42){

@@ -1,0 +1,106 @@
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const GP=require("../flight-sim-gamepad.js");
+const mkPad=()=>({index:0,connected:true,id:"NEVER STORE DEVICE ID",
+ axes:[0,0,0,0],buttons:Array.from({length:12},()=>({value:0,pressed:false}))});
+const gp=mkPad(),doc={hidden:false};
+let pads=[gp],calls=0;
+const nav={getGamepads(){calls++;return pads}};
+const ctrl=GP.makeController({navigatorLike:nav,documentLike:doc});
+assert.equal(ctrl.supported,true);
+assert.equal(ctrl.isEnabled(),false);
+assert.deepEqual(ctrl.read(),{state:"off",active:false});
+assert.equal(calls,0,"Gamepad API cannot be read before opt-in");
+assert.equal(ctrl.enable(true),true);
+assert.equal(ctrl.isEnabled(),true);
+assert.deepEqual(ctrl.devices(),[{index:0,axes:4,buttons:12}]);
+assert.equal(ctrl.choose(0),true);
+const center=ctrl.read();
+assert.equal(center.state,"active");assert.equal(center.bank,0);assert.equal(center.pitch,0);
+assert.equal(center.rudder,0);assert.equal(center.brake,false);
+assert.equal(center.powerChanged,false);
+assert.equal(ctrl.status().index,0);
+assert.equal(JSON.stringify(ctrl.status()).includes("NEVER STORE DEVICE ID"),false,"never expose serial/vendor names");
+
+gp.axes[0]=.63;gp.axes[1]=-.42;gp.axes[2]=.55;
+const steering=ctrl.read();
+assert.ok(steering.bank>.5&&steering.bank<.7);
+assert.ok(steering.pitch<-.25);
+assert.ok(steering.rudder>.4);
+assert.equal(GP.axis(.09,0,.12),0,"small centre jitter must be ignored");
+assert.equal(GP.axis(-1,0,.12),-1);
+assert.equal(GP.axis(Number.NaN,0,.12),0);
+assert.equal(GP.axis(.32,.3,.12),0,"centre calibration correction");
+assert.equal(GP.indexOfAxis("none"),null);
+assert.equal(GP.indexOfAxis(null),null);
+assert.equal(GP.indexOfAxis("7"),7);
+assert.throws(()=>GP.indexOfAxis(8),/index/);
+assert.throws(()=>GP.indexOfAxis("-1"),/index/);
+
+const mapped=ctrl.configure({bank:2,pitch:0,rudder:"none",power:"3",deadzone:.2,reversePitch:true});
+assert.equal(mapped.bank,2);assert.equal(mapped.pitch,0);
+assert.equal(mapped.rudder,null);assert.equal(mapped.power,3);
+assert.equal(mapped.deadzone,.2);assert.equal(mapped.reversePitch,true);
+gp.axes=[-.4,.1,.8,-1];
+const newMap=ctrl.read();
+assert.ok(newMap.bank>.7);
+assert.ok(newMap.pitch>.2,"reversed pitch reflects selected axis");
+assert.equal(newMap.rudder,0);
+assert.equal(newMap.power,0);
+assert.equal(newMap.powerChanged,true);
+gp.axes[3]=1;assert.equal(ctrl.read().power,1);
+gp.axes[3]=-.5;assert.equal(ctrl.read().power,.25);
+
+assert.throws(()=>ctrl.configure({bank:0,pitch:0}),/distinct/);
+assert.throws(()=>ctrl.configure({nonsense:true}),/Unknown/);
+assert.throws(()=>ctrl.configure({deadzone:.5}),/Deadzone/);
+assert.throws(()=>ctrl.configure({bank:null}),/must be assigned/);
+assert.equal(ctrl.status().mapping.bank,2,"failed config does not change selection");
+ctrl.configure({bank:0,pitch:1,rudder:2,power:"none",deadzone:.12,reversePitch:false});
+gp.axes=[.2,-.1,.04,0];
+assert.equal(ctrl.calibrate(),true,"neutral trim accepted with relaxed sticks");
+assert.equal(ctrl.read().bank,0);
+gp.axes[0]=1;assert.ok(ctrl.read().bank>.7,"calibration subtracts centre offset");
+assert.equal(ctrl.calibrate(),false,"hard-over stick must not be calibrated as neutral");
+gp.axes[0]=.2;gp.axes[1]=-.1;gp.axes[2]=.04;
+assert.equal(ctrl.read().bank,0);
+
+ctrl.setPower(.35);
+assert.equal(ctrl.read().power,.35);
+gp.buttons[7]={pressed:true,value:1};
+const accelerated=ctrl.read(.1);
+assert.ok(accelerated.power>.35&&accelerated.power<.5);
+assert.equal(accelerated.powerChanged,true);
+gp.buttons[7]={pressed:false,value:0};
+gp.buttons[6]={pressed:true,value:1};
+assert.ok(ctrl.read(.1).power<accelerated.power);
+gp.buttons[6]={pressed:false,value:0};
+gp.buttons[0]={pressed:true,value:1};
+assert.equal(ctrl.read().brake,true);
+gp.buttons[0]={pressed:false,value:0};
+assert.equal(ctrl.read().brake,false);
+
+doc.hidden=true;
+assert.equal(ctrl.read().state,"hidden");
+assert.deepEqual(ctrl.devices(),[]);
+doc.hidden=false;
+pads=[null];
+assert.equal(ctrl.read().state,"disconnected");
+assert.equal(ctrl.isEnabled(),false,"lost device must disarm");
+assert.equal(ctrl.read().state,"off");
+assert.equal(ctrl.enable(true),true);
+assert.equal(ctrl.choose(0),false,"cannot choose missing device");
+
+const hiddenDoc={hidden:false};
+const denied=GP.makeController({
+ navigatorLike:{getGamepads(){throw Error("policy blocked")}},documentLike:hiddenDoc
+});
+assert.equal(denied.enable(true),true);
+assert.deepEqual(denied.devices(),[]);
+assert.equal(denied.read().state,"waiting","blocked browser must not crash");
+const unsupported=GP.makeController({navigatorLike:{},documentLike:hiddenDoc});
+assert.equal(unsupported.supported,false);
+assert.equal(unsupported.enable(true),false);
+assert.equal(unsupported.read().active,false);
+console.log("Optional controller passed: zero pre-opt-in reads, 4-axis maps, trim/deadzone, reversal, incremental power, brake, disconnect/policy fallback and no device-ID disclosure.");

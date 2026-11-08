@@ -11,6 +11,11 @@ on:
       - 'flight-sim-scenery.js'
       - 'flight-sim-instruments.js'
       - 'flight-sim-guidance.js'
+      - 'flight-sim-gamepad.js'
+      - 'flight-sim-gamepad-ui.js'
+      - 'flight-sim-gamepad.css'
+      - 'scripts/test-flight-sim-gamepad.mjs'
+      - 'scripts/test-flight-sim-gamepad-browser.mjs'
       - 'flight-sim-instruments.css'
       - 'scripts/test-flight-sim-instruments.mjs'
       - 'scripts/test-flight-sim-guidance.mjs'
@@ -28,6 +33,11 @@ on:
       - 'flight-sim-scenery.js'
       - 'flight-sim-instruments.js'
       - 'flight-sim-guidance.js'
+      - 'flight-sim-gamepad.js'
+      - 'flight-sim-gamepad-ui.js'
+      - 'flight-sim-gamepad.css'
+      - 'scripts/test-flight-sim-gamepad.mjs'
+      - 'scripts/test-flight-sim-gamepad-browser.mjs'
       - 'flight-sim-instruments.css'
       - 'scripts/test-flight-sim-instruments.mjs'
       - 'scripts/test-flight-sim-guidance.mjs'
@@ -55,6 +65,8 @@ jobs:
           node --check flight-sim-scenery.js
           node --check flight-sim-instruments.js
           node --check flight-sim-guidance.js
+          node --check flight-sim-gamepad.js
+          node --check flight-sim-gamepad-ui.js
       - name: Test deterministic flight model
         run: node scripts/test-flight-sim-model.mjs
       - name: Test optional vibration
@@ -63,9 +75,13 @@ jobs:
         run: |
           node scripts/test-flight-sim-instruments.mjs
           node scripts/test-flight-sim-guidance.mjs
+      - name: Test optional physical controller mapping
+        run: node scripts/test-flight-sim-gamepad.mjs
       - name: Install isolated browser test dependency
         run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
       - name: Install Chromium
         run: npx playwright install chromium
       - name: Test desktop and simultaneous touch controls
-        run: node scripts/test-flight-sim-browser.mjs
+        run: |
+          node scripts/test-flight-sim-browser.mjs
+          node scripts/test-flight-sim-gamepad-browser.mjs
