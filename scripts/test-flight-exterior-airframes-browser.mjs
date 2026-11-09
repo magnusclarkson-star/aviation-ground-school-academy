@@ -64,17 +64,19 @@ try{
   canvas.width=760;canvas.height=490;
   const ctx=canvas.getContext("2d");
   const state={rollDeg:0,pitchDeg:0,altitudeM:80};
-  const render=angle=>{
+  const render=(angle,blur=0)=>{
    ctx.clearRect(0,0,760,490);
    window.AGSAExteriorChase2D.paint(ctx,state,{id:"r44",width:760,height:490,
-    view:"top",animation:{mainRotor:angle,tailRotor:angle*3}});
+    view:"top",animation:{mainRotor:angle,tailRotor:angle*3,rotorBlurOpacity:blur}});
    return canvas.toDataURL();
   };
-  return {stopped:render(0),spinning:render(1.19)};
+  return {stopped:render(0),spinning:render(1.19),blurred:render(0,.16)};
  });
  assert.ok(rotatingR44.stopped.length>5000,"R44 overhead 2D image includes the main rotor");
  assert.notEqual(rotatingR44.stopped,rotatingR44.spinning,
   "rotating the main and tail rotor must visibly change fallback images");
+  assert.notEqual(rotatingR44.stopped,rotatingR44.blurred,
+   "R44 rotor sweep must appear in the 2D fallback even without GPU");
  await desktop.locator("#cameraMode").selectOption("top");
  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"top");
  const topFallback=await shot(desktop,"#outsideView");
