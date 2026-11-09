@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const UI=require("../flight-sim-cockpit.js");
+const Backlight=require("../flight-sim-instrument-backlight.js");
+assert.deepEqual([...Backlight.MODES],["green","blue","off"]);
+assert.equal(Backlight.normalize("green"),"green");
+assert.equal(Backlight.normalize("blue"),"blue");
+assert.equal(Backlight.normalize("off"),"off");
+assert.equal(Backlight.normalize("invalid"),"green",
+ "unsupported colour falls back to readable green cockpit lighting");
+
 const profiles=UI.FRAMES;
 assert.equal(profiles.length,7,"Cessna, Robinson and five fighter panels");
 assert.deepEqual(profiles.map(p=>p.id),["c172","r44","fa18","f22","f35","typhoon","su37"]);
