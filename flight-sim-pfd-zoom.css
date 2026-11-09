@@ -5,6 +5,7 @@
 #cockpitStation #cockpitZoomPanel:not([hidden]){
  position:fixed!important;
  top:50%!important;left:50%!important;
+ right:auto!important;bottom:auto!important;margin:0!important;
  transform:translate(-50%,-50%)!important;
  z-index:2147483000!important;
  width:min(92vw,540px)!important;
@@ -33,6 +34,7 @@
 #flightInstruments .mini-pfd.agsa-mini-pfd-expanded{
  position:fixed!important;
  top:50%!important;left:50%!important;
+ right:auto!important;bottom:auto!important;margin:0!important;
  transform:translate(-50%,-50%)!important;
  z-index:2147483001!important;
  width:min(92vw,540px)!important;
