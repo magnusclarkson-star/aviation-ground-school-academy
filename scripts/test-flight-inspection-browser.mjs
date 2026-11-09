@@ -86,6 +86,24 @@ try{
  await mobile.locator("#aircraftInspectZoomIn").tap();
  await wait(mobile);
  assert.notEqual(await shot(mobile),initial,"phone zoom changes actual fallback model rendering");
+ await mobile.locator("#aircraftInspectReset").tap();
+ // Android two-thumb pinch zoom, including the low-end Canvas 2D fallback.
+ const bounds=await mobile.locator("#aircraftInspectViewport").boundingBox();
+ const first={x:Math.round(bounds.x+bounds.width*.35),
+  y:Math.round(bounds.y+bounds.height*.5),id:1};
+ const second={x:Math.round(bounds.x+bounds.width*.65),
+  y:first.y,id:2};
+ const cdp=await mobile.context().newCDPSession(mobile);
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[first]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[first,second]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[
+  first,{...second,x:second.x+Math.round(bounds.width*.12)}]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+ await wait(mobile);
+ const pinchZoom=await mobile.locator("#aircraftInspectZoomValue").textContent();
+ assert.ok(Number.parseInt(pinchZoom)>110,"two fingers expanding zoom toward selected aircraft: "+pinchZoom);
+ assert.match(await mobile.locator("#aircraftInspectAngles").textContent(),/AZ 000/,
+  "pinch zoom does not unexpectedly orbit the aircraft");
  assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "portrait inspector does not introduce horizontal scroll");
  await mobile.setViewportSize({width:844,height:390});
