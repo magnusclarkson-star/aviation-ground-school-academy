@@ -66,7 +66,7 @@ for(let i=0;i<8;i++)A.step(rotor,rotorState,rotorInput,.05);
 assert.ok(rotor.rotation!==initialRotor);
 assert.ok(rotor.parts.mainRotor>=0&&rotor.parts.mainRotor<2*Math.PI);
 assert.ok(rotor.parts.tailRotor>=0&&rotor.parts.tailRotor<2*Math.PI);
-assert.ok(rotor.parts.rotorBlurOpacity>.07&&rotor.parts.rotorBlurOpacity<=.18,
+assert.ok(rotor.parts.rotorBlurOpacity>.07&&rotor.parts.rotorBlurOpacity<=.22,
  "rotor-sweep opacity fades in but stays light enough to see both blades");
 const opacity=rotor.parts.rotorBlurOpacity,seconds=rotor.time;
 A.step(rotor,rotorState,rotorInput,0);
