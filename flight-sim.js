@@ -8,9 +8,9 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
- V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,AM=window.AGSAFlightATCMissions,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
+ V=window.AGSAFlightInstructorVoice,RV=window.AGSAFlightR44Voice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,AM=window.AGSAFlightATCMissions,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!CI||!SW||!FO||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!CI||!SW||!FO||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!RV||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -61,7 +61,7 @@ function syncRadioToneUI(message){
   info.supported?"Radio cue tone off; voice and transcript work without it.":
   "Web Audio not supported on this device. Written transcripts remain available.");
 }
-let atcRadio=null,atcPractice=null,atcMissions=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false;
+let atcRadio=null,atcPractice=null,atcMissions=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false,spokenRadioActive=false;
 const audioMode=()=>state.mode==="helicopter"?"helicopter":airframeId()==="c172"?"airplane":"jet";
 function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
@@ -124,6 +124,7 @@ async function startFullFlight(){
  const cueStarted=radioTone.enable(true);
  radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
  const radioArmed=atcRadio?.arm(true)===true;
+ if(state.mode==="helicopter")r44Voice.arm();
  syncPhoneFeedbackUI();
  let engineStarted=false;
  try{engineStarted=await engineStart;}catch{engineStarted=false;}
@@ -145,6 +146,7 @@ async function startFullFlight(){
 }
 function stopFullFlight(){
  fullFlightWanted=false;
+ r44Voice.disarm();
  engineAudio.stop();phoneProbe.stop();audioFallback.stop();
  haptics.setEnabled(false);
  atcRadio?.disarm("Full flight effects stopped by learner.");
@@ -216,6 +218,16 @@ let hardware=null;
 let exerciseSession=X.begin("cgTransfer","trainer");
 let exerciseApplying=false;
 let instructorVoice=null;
+const r44Voice=RV.create({
+ windowLike:window,documentLike:document,
+ getLesson:()=>G.r44LessonStatus(practice,state),
+ isBusy:()=>spokenRadioActive||atcRadio?.isSpeaking()===true||
+  instructorVoice?.isSpeaking()===true
+});
+document.addEventListener("agsa:r44-voice-toggle",()=>{
+ if(state.mode==="helicopter")r44Voice.toggle();
+});
+document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
@@ -563,7 +575,10 @@ function setMode(next){
   "Drag fictional "+(type==="cyclic"?"cyclic":type==="yoke"?"yoke":"joystick")+" left/right for bank and up/down for pitch. Arrow keys on desktop.");
  releaseControls();
  hardware?.resetPower();
- setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
+ setValues();gripTransform();updateReadouts();
+ if(newMode==="helicopter")r44Voice.arm();
+ else r44Voice.disarm();
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 function reset(scenario){
  engineAudio.stop();syncEngineAudioUI("Practice reset. Engine sound off until enabled again.");
@@ -585,6 +600,7 @@ function reset(scenario){
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();hardware?.resetPower();setValues();updateReadouts();
+ r44Voice.restart();
  haptics.stop();
  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
@@ -738,6 +754,7 @@ for(const [id,typeValue] of [["typeYoke","yoke"],["typeStick","stick"],["typeCyc
 function resetFromUserGesture(scenario){
  reset(scenario);
  if(fullFlightWanted)void startFullFlight();
+ else if(state.mode==="helicopter")r44Voice.arm();
 }
 $("startRunway").addEventListener("click",()=>resetFromUserGesture("runway"));
 $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")resetFromUserGesture("approach")});
@@ -748,10 +765,12 @@ $("restartFlight").addEventListener("click",()=>{
 $("pauseFlight").addEventListener("click",()=>{
  paused=!paused;lastFrame=0;releaseControls();haptics.stop();
  if(paused){
+  r44Voice.disarm();
   engineAudio.stop();syncEngineAudioUI("Simulation paused; engine sound stopped until re-enabled.");
   atcRadio?.disarm("Simulation paused: phase-linked radio and speech stopped.");
   radioTone.stop();radioFx.disable();syncRadioFxUI("Simulation paused: radio effects stopped.");syncRadioToneUI("Simulation paused: radio cue tone stopped.");
  }else if(fullFlightWanted){void startFullFlight();}
+ else if(state.mode==="helicopter")r44Voice.arm();
  syncPhoneFeedbackUI();
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
@@ -976,6 +995,7 @@ function frame(now){
    lastPhase=state.phase;
    atcRadio?.cuePhase(state.phase);
   }
+  r44Voice.update();
   }
  }
  if(!document.hidden&&playback.status().playing){
@@ -1010,25 +1030,29 @@ atcRadio=F.attach({
  getMode:()=>state.mode,getScenario:()=>state.scenario,getPhase:()=>state.phase,
  getAirport:()=>$("atcAirport").value,getSituation:()=>$("atcSituation").value,
  onBegin:()=>{
+  r44Voice.interrupt();
   atcPractice?.stop();
   atcMissions?.stop();
   radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
   if(instructorVoice?.isSpeaking())instructorVoice.stop("Scripted radio has taken the voice output.");
+  spokenRadioActive=true;
   engineAudio.setDuck(true,audioPower());
   radioTone.pulse();
  },
  onTransmissionStart:()=>{radioFx.begin();$("radioFxStatus").textContent="RADIO RECEIVING · push-to-talk and squelch active on the simulated training channel.";},
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
- onFinish:()=>engineAudio.setDuck(false,audioPower())
+ onFinish:()=>{spokenRadioActive=false;engineAudio.setDuck(false,audioPower())}
 });
 atcPractice=AP.attach({
  documentLike:document,windowLike:window,
  getAirport:()=>$("atcAirport").value,getSituation:()=>$("atcSituation").value,
  onBegin:()=>{
+  r44Voice.interrupt();
   atcRadio?.disarm("Readback drill has taken the radio channel.");
   atcMissions?.stop();
   if(instructorVoice?.isSpeaking())instructorVoice.stop("Readback drill has taken the voice output.");
   radioFx.enable($("radioFxChoice").value==="on");
+  spokenRadioActive=true;
   engineAudio.setDuck(true,audioPower());
   syncRadioFxUI();
  },
@@ -1036,27 +1060,29 @@ atcPractice=AP.attach({
   $("radioFxStatus").textContent="RADIO RECEIVING · simulated readback challenge.";
  },
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
- onFinish:()=>engineAudio.setDuck(false,audioPower())
+ onFinish:()=>{spokenRadioActive=false;engineAudio.setDuck(false,audioPower())}
 });
 atcMissions=AM.attach({
  documentLike:document,windowLike:window,getAirport:()=>$("atcAirport").value,
  onBegin:()=>{
+  r44Voice.interrupt();
   atcRadio?.disarm("ATC decision mission has taken the radio channel.");
   atcPractice?.stop();
   if(instructorVoice?.isSpeaking())instructorVoice.stop("ATC mission has taken the voice output.");
   radioFx.enable($("radioFxChoice").value==="on");
+  spokenRadioActive=true;
   engineAudio.setDuck(true,audioPower());syncRadioFxUI();
  },
  onTransmissionStart:()=>{radioFx.begin();radioTone.pulse();
   $("radioFxStatus").textContent="RADIO RECEIVING · fictional scenario with push-to-talk effects.";
  },
  onTransmissionEnd:()=>{radioFx.end();syncRadioFxUI();},
- onFinish:()=>engineAudio.setDuck(false,audioPower())
+ onFinish:()=>{spokenRadioActive=false;engineAudio.setDuck(false,audioPower())}
 });
 // Do not allow radio and instructor narration to cancel each other mid-speech.
 document.addEventListener("click",event=>{
  if(["exerciseSpeakLesson","exerciseSpeakComparison","exerciseSpeakFeedback"].includes(event.target?.id))
-  {atcRadio?.disarm("Radio stopped for the instructor's scripted narration.");atcPractice?.stop();atcMissions?.stop();}
+  {r44Voice.interrupt();atcRadio?.disarm("Radio stopped for the instructor's scripted narration.");atcPractice?.stop();atcMissions?.stop();}
 },true);
 syncEngineAudioUI();
 syncHapticsUI();
