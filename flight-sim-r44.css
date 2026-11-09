@@ -159,7 +159,7 @@
  #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge{
   width:100%;
   min-width:0;
-  min-height:0;
+  min-height:85px;
   max-width:none;
   aspect-ratio:auto;
   box-sizing:border-box;
