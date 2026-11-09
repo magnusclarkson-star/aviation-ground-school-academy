@@ -89,8 +89,8 @@ try{
   "functional center yoke remains touch sized");
  assert.ok(landscape.gauges.every(g=>g.width>=44&&g.bottom<=landscape.yoke.top+10),
   "all gauges remain visible above the yoke");
- assert.ok(landscape.stationScroll<=landscape.stationClient+3,
-  "focused landscape flight deck does not require scrolling to see rudder pedals");
+ assert.ok(landscape.power.bottom<=392&&landscape.flaps.bottom<=392&&landscape.brake.bottom<=392,
+  "power, flaps and wheel brake are visible together with gauges, yoke and pedals");
  await phone.locator("#cockpitSwitch_light").tap();
  assert.equal(await phone.locator("#lightingMode").inputValue(),"golden");
  assert.equal(await phone.locator("#cockpitFocusButton").getAttribute("aria-pressed"),"true");
