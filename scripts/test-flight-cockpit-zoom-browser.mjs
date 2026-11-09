@@ -55,8 +55,8 @@ try{
   'instrument ⓘ button opens description without enlarging gauge');
  await desktop.locator('#cockpitInfoClose').click();
  await gauge.click({position:{x:65,y:75}});
- assert.equal(await desktop.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute',
-   'enlarged gauge floats over the dashboard rather than entering the layout');
+ assert.equal(await desktop.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'fixed',
+   'enlarged gauge opens in a visible fixed-position overlay');
  const shiftedPad=await relativeY(desktop,'#controlPad');
  const shiftedPedal=await relativeY(desktop,'#leftRudder');
  assert.ok(Math.abs(shiftedPad-controlPosition)<1,'zoom does not move centered yoke');
@@ -119,7 +119,7 @@ try{
  await phone.locator('#cockpitInfoClose').tap();
  await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().tap({position:{x:32,y:35}});
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true);
- assert.equal(await phone.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute');
+ assert.equal(await phone.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'fixed');
  const phonePadAfterZoom=await relativeY(phone,'#controlPad');
  assert.ok(Math.abs(phonePadPosition-phonePadAfterZoom)<1,
   'phone instrument zoom never moves the yoke touch target');
