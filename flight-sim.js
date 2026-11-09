@@ -12,6 +12,7 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
 const $=id=>document.getElementById(id);
 if(!M||!S||!H||!I||!CI||!SW||!FO||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!RV||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
+const touchdownFX=window.AGSATouchdownFX?.create({documentLike:document})||{update(){}};
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
 const audioFallback=J.createFallback({windowLike:window,documentLike:document});
@@ -992,6 +993,7 @@ function frame(now){
   }
   if(!eventRequested)haptics.ambience(state,input);
   updateVisualFeedback(now,result.events);
+  touchdownFX.update(now,result.events,state);
   if(state.phase!==lastPhase){
    lastPhase=state.phase;
    atcRadio?.cuePhase(state.phase);
@@ -1004,6 +1006,7 @@ function frame(now){
   if(after.index!==before.index||!after.playing)refreshReplay();
  }
  drawScenery(now);
+ touchdownFX.update(now,[],state);
  if(now-prevView>42){updateReadouts();prevView=now;}
  if(now-prevViewTrace>500){traceStatus();prevViewTrace=now;}
  requestAnimationFrame(frame);
