@@ -9,7 +9,9 @@ const NAV=root?.AGSAFlightNavigation||(typeof module!=="undefined"?require("./fl
 if(!NAV)throw Error("Cockpit navigation module missing");
 const FLIGHT=root?.AGSAImmersiveFlight||
  (typeof module!=="undefined"?require("./flight-sim-model.js"):null);
-const GUIDE=root?.AGSAFlightGuidance||
+// Guidance loads after this cockpit module in flight-sim.html. Resolve it
+// when needed rather than capturing an undefined browser global at startup.
+const lessonGuidance=()=>root?.AGSAFlightGuidance||
  (typeof module!=="undefined"?require("./flight-sim-guidance.js"):null);
 const FRAMES=Object.freeze([
  {id:"c172",title:"Cessna 172 · Classic",family:"trainer",control:"yoke",layout:"analog",caption:"Classic training-aircraft six-pack in T configuration",pilot:"Dual-handled yoke",theme:"civil"},
@@ -329,7 +331,7 @@ function buildPanel(doc,profile,holder){
 }
 function paint(holder,state,systems,input,profileId,doc,progress){
  const s=snapshot(state,systems,input,profileId);
- const mission=GUIDE?.r44LessonStatus?.(progress,state);
+ const mission=lessonGuidance()?.r44LessonStatus?.(progress,state);
  for(const el of holder.querySelectorAll("[data-r44-lesson]")){
   el.textContent=mission?.short||"1/4 · TAKEOFF";
   el.setAttribute("aria-label",mission?.hint||"R44 guided lesson: takeoff");
@@ -437,7 +439,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
    selected={title:"Helicopter controls",text:"Cyclic: move to change pitch and roll. Collective: change lift. Pedals: turn the nose. Keep them in view together."};
   }
   if(key==="lesson"&&byId(active).family==="rotor"){
-   const mission=GUIDE?.r44LessonStatus?.(getPractice(),getState());
+   const mission=lessonGuidance()?.r44LessonStatus?.(getPractice(),getState());
    selected={title:"R44 guided lesson",text:mission?.hint||
     "Take off, hold a hover for eight seconds, turn through 90 degrees, then return to land on the helipad."};
   }
