@@ -10,7 +10,7 @@ function create(mode="airplane"){
  if(!["airplane","helicopter"].includes(mode))throw Error("Unknown conceptual aircraft system");
  const heli=mode==="helicopter";
  return {mode,time:0,powerPct:heli?80:10,rotation:0,tailRotation:0,
-  displayedPower:0,flapDeg:0,parts:Object.create(null),
+  displayedPower:0,flapDeg:0,gearRetraction:0,parts:Object.create(null),
   lastGround:true};
 }
 function step(system,state,input,seconds){
@@ -57,6 +57,17 @@ function step(system,state,input,seconds){
   r.rudder=rudder*24*RAD;
   r.rudderLeft=r.rudder;
   r.rudderRight=r.rudder;
+  // Jet gear retracts during the departure climb and extends again before
+  // approach. The Cessna's fixed undercarriage never rotates.
+  const jet=["fa18","f22","f35","typhoon","su37"].includes(state.airframeId);
+  const approaching=Number(state.verticalMs)<-.20&&Number(state.altitudeM)<130;
+  const retract=jet&&!state.onGround&&Number(state.altitudeM)>15&&!approaching;
+  if(dt)system.gearRetraction=smooth(system.gearRetraction||0,
+   retract?1:0,1.35,dt);
+  const gearAngle=(system.gearRetraction||0)*1.53;
+  r.noseGear=jet?gearAngle:0;
+  r.mainGearLeft=jet?gearAngle:0;
+  r.mainGearRight=jet?gearAngle:0;
  }
  return system;
 }
