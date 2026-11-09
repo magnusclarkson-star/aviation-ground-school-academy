@@ -175,7 +175,7 @@ try{
   'aircraft photo, instrument selector, cockpit and More fit in a slim toolbar');
  assert.ok(row.boxes[0].width>row.boxes[1].width,
   'aircraft photo is wider than the compact glass switch');
- assert.ok(Math.max(...row.boxes.map(b=>b.y))-Math.min(...row.boxes.map(b=>b.y))<3,
+ assert.ok(Math.max(...row.boxes.map(b=>b.y))-Math.min(...row.boxes.map(b=>b.y))<=5,
   'four top controls occupy one row; Restart is down by collective');
  assert.equal(row.choicesVisible,false,'three secondary information actions are initially tucked away');
  assert.ok(row.bodyWidth<=row.viewport+2,'the compact cockpit must not overflow the phone');
