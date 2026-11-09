@@ -6,6 +6,18 @@
 const IDS=Object.freeze(["c172","r44","fa18","f22","f35","typhoon","su37"]);
 const LABELS=Object.freeze({c172:"Cessna 172",r44:"Robinson R44",fa18:"F/A-18 Super Hornet",
  f22:"F-22 Raptor",f35:"F-35 Lightning II",typhoon:"Eurofighter Typhoon",su37:"Su-37"});
+// Geometry is authored in unit-friendly local coordinates. Ratios are
+// adjusted to the approximate published overall span/length of each type.
+// Flight physics are unaffected; the same transform applies to hinged parts.
+const SCALE=Object.freeze({
+ c172:Object.freeze([.746,1,.653]),
+ r44:Object.freeze([1,1,1]),
+ fa18:Object.freeze([.890,1,1.148]),
+ f22:Object.freeze([1.015,1,1.139]),
+ f35:Object.freeze([.982,1,.981]),
+ typhoon:Object.freeze([.711,1,.923]),
+ su37:Object.freeze([.850,1,1.260])
+});
 const rgb=(r,g,b)=>[r/255,g/255,b/255];
 const tint=(c,m)=>c.map(n=>Math.max(0,Math.min(1,n*m)));
 const palette=Object.freeze({
@@ -250,7 +262,7 @@ function buildJetParts(Mesh,id){
  });
  return props;
 }
-const api=Object.freeze({IDS,LABELS,normalize,populate,buildJetParts});
+const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAExteriorAirframes=api;
 })(typeof window!=="undefined"?window:null);
