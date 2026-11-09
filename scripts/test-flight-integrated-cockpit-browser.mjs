@@ -171,6 +171,26 @@ try{
   assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-airframe'),id);
   assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-grid').count(),1);
   assert.ok(await desktop.locator('.'+expectedClass).count()>0,id+' unique layout');
+  if(id==='su37'){
+   assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd').count(),2,
+    'Su-37 retains its compact dual display arrangement');
+   assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-sysnav [data-nav-map]').count(),1,
+    'Su-37 has a live moving navigation map');
+   assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-sysnav [data-mfd-value]').count(),3,
+    'Su-37 retains power, RPM and vertical speed engine indications');
+   const coords=await desktop.evaluate(()=>{
+    const panel=document.querySelector('#cockpitVisualPanel');
+    window.AGSAFlightNavigation.paint(panel,{xM:375,zM:-720,headingDeg:37,trackDeg:39,groundSpeedKt:88});
+    const map=panel.querySelector('.cockpit-mfd-sysnav [data-nav-map]');
+    return {position:map.dataset.navPosition,heading:map.dataset.navHeading};
+   });
+   assert.equal(coords.position,'375.0,-720.0','Su-37 navigator tracks aircraft position');
+   assert.equal(coords.heading,'37.0','Su-37 navigator follows heading');
+   await desktop.locator('#cockpitVisualPanel .cockpit-mfd-sysnav').click({position:{x:80,y:65}});
+   assert.equal(await desktop.locator('#cockpitZoomContent .cockpit-mfd-sysnav [data-nav-map]').count(),1,
+    'Su-37 navigation enlarges on touch');
+   await desktop.locator('#cockpitZoomClose').click();
+  }
   assert.equal(await desktop.locator('#cockpitJetHud').isVisible(),true);
   assert.equal(await desktop.locator('#cockpitAircraftNotice').textContent(),'FLIGHT DISPLAYS');
   assert.equal(await desktop.locator('#cockpitVisualPanel').evaluate(el=>el.closest('#cockpitStation')!==null),true);
@@ -284,6 +304,12 @@ try{
   });
   assert.ok(layout.allVisible&&layout.noOverflow,
    id+' phone glass displays fit dashboard with no clipping '+JSON.stringify(layout));
+  if(id==='su37'){
+   assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd-sysnav [data-nav-map]').count(),1,
+    'Su-37 navigator is visible on Android');
+   assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd-sysnav [data-mfd-value]').count(),3,
+    'three compact Su-37 system values are retained on Android');
+  }
   assert.ok(layout.panelHeight<=280,id+' phone screens must not push yoke too far down '+JSON.stringify(layout));
   if(id==='fa18'||id==='f35'||id==='typhoon')
    assert.ok(layout.navWithPfd,id+' navigation should share top row with PFD');
