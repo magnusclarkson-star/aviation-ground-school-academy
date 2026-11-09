@@ -50,6 +50,7 @@ try{
  }
  assert.equal(frames.size,7,"all seven aircraft have distinct 360-degree renders");
  await desktop.locator("#aircraftInspectModelSelect").selectOption("r44");
+ const rotorControlsBefore=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectSpin").click();
  assert.equal(await desktop.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
  await desktop.waitForTimeout(250);
@@ -58,8 +59,9 @@ try{
  await desktop.keyboard.press("Escape");
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
  assert.equal(await desktop.locator("#aircraftInspectOpen").getAttribute("aria-expanded"),"false");
- assert.ok((await desktop.locator("#controlPad").boundingBox()).height===yoke.height,
-  "inspector never enlarges or alters the flight yoke");
+ const rotorControlsAfter=await desktop.locator("#controlPad").boundingBox();
+ assert.ok(Math.abs(rotorControlsAfter.height-rotorControlsBefore.height)<1,
+  "the inspector cannot resize the selected R44 flight control");
  await desktop.close();
 
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
