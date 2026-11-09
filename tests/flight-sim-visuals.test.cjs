@@ -308,3 +308,23 @@ test("mini axis readouts dock beside Cessna pedals and at R44 collective",()=>{
  assert.ok(css.includes('grid-template-columns:minmax(0,1fr) auto!important'));
  assert.ok(css.includes('flex-direction:row!important'));
 });
+
+test("compact glass fighter layouts preserve clickable instrument zoom and phone fit",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-all-aircraft-fit.css"),"utf8");
+ const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
+ assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-fit1"));
+ assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-panoramic"));
+ assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-triple>.cockpit-mfd-pfd"));
+ assert.ok(css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important"));
+ assert.ok(css.includes("grid-column:auto!important"));
+ assert.ok(css.includes("max-width:60px!important"));
+ assert.ok(css.includes("r44-quick-scan"));
+ assert.ok(!css.includes("#cockpitMain #cockpitZoomPanel"),
+  "compact styles must leave enlarged instrument overlays unchanged");
+ for(const line of css.split("\n")){
+  if(line.includes(".cockpit-mfd")&&line.includes("#cockpitMain"))
+   assert.ok(line.includes("#cockpitVisualPanel"),
+    "compact glass styling must only target cockpit screens, not the zoom overlay");
+ }
+});
