@@ -3,14 +3,14 @@
  */
 (()=>{"use strict";
 const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFlightHaptics,
- I=window.AGSAFlightInstruments,CI=window.AGSACockpitIntegrated,SW=window.AGSACockpitSwitchgear,G=window.AGSAFlightGuidance,
+ I=window.AGSAFlightInstruments,CI=window.AGSACockpitIntegrated,SW=window.AGSACockpitSwitchgear,FO=window.AGSAImmersiveCockpitFocus,G=window.AGSAFlightGuidance,
  P=window.AGSAFlightGamepad,U=window.AGSAFlightGamepadUI,
  E=window.AGSAFlightEnvironment,T=window.AGSAFlight3D,
  A=window.AGSAFlightSystems,D=window.AGSAFlightAerodynamics,
  W=window.AGSAFlightLoading,X=window.AGSAFlightExercises,
  V=window.AGSAFlightInstructorVoice,L=window.AGSAFlightLighting,FX=window.AGSAFlightFeedbackVisual,N=window.AGSAFlightEngineAudio,K=window.AGSAFlightPhoneProbe,J=window.AGSAFlightAudioFallback,F=window.AGSAFlightATCRadio,AP=window.AGSAFlightATCPractice,AM=window.AGSAFlightATCMissions,RF=window.AGSAFlightRadioEffects,Y=window.AGSAFlightRadioTone,R=window.AGSAFlightRecorder,Q=window.AGSAFlightReplay,Z=window.AGSAFlightAfterAction,O=window.AGSAFlightPlayback,C=window.AGSAFlightMomentCoach,B=window.AGSAFlightTrack;
 const $=id=>document.getElementById(id);
-if(!M||!S||!H||!I||!CI||!SW||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
+if(!M||!S||!H||!I||!CI||!SW||!FO||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -951,6 +951,7 @@ cockpit=CI.attach({
  onSelect:(control)=>setMode(control)
 });
 switchgear=SW.attach({documentLike:document,windowLike:window});
+FO.attach({documentLike:document,windowLike:window});
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,
