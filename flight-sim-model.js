@@ -232,7 +232,13 @@ function step(state,input,seconds){
    state.speedKt*KNOT*Math.sin(state.pitchDeg*RAD)*p.climbLift+
    (throttle-.5)*p.climbPower-.48-(stall?3.2:0)+state.turbulence*.42,-8,p.climbCap);
   state.verticalMs=smooth(state.verticalMs,targetVertical,1.6,dt);
-  const headingRate=clamp(state.rollDeg*p.turnBank+rudder*p.turnRudder,-4,4);
+  // Coordinated turn: bank must visibly change the flight path. The old
+  // 1–2 deg/s trainer rate produced multi-kilometre turns that were almost
+  // impossible to fly back into the fictional runway on a phone.
+  // Use an accelerated but bounded educational turn, without teleporting.
+  const airspeedMs=Math.max(22,state.speedKt*KNOT);
+  const bankRate=9.81*Math.tan(clamp(state.rollDeg,-55,55)*RAD)/airspeedMs/RAD;
+  const headingRate=clamp(bankRate*1.07+rudder*.62,-9,9);
   state.headingDeg=(state.headingDeg+headingRate*dt+360)%360;
   const heading=state.headingDeg*RAD;
   const vx=state.speedKt*KNOT*Math.sin(heading),vz=state.speedKt*KNOT*Math.cos(heading);
