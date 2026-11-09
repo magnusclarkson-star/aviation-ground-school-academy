@@ -29,6 +29,15 @@ try{
  assert.equal(layout.centered,true,'yoke centered in the actual dashboard');
  assert.equal(layout.pedalsBelow,true,'pedals physically underneath the yoke');
  assert.equal(layout.throttleRight,true,'throttle sits to the right of the yoke');
+ assert.equal(await desktop.locator('#axisReadouts').count(),1,'one live bank/pitch block, never cloned');
+ assert.equal(await desktop.locator('#axisReadouts').evaluate(el=>el.parentElement.id),'axisPedalDock',
+  'Cessna bank and pitch are no longer below the yoke');
+ assert.ok(await desktop.evaluate(()=>{
+  const pedal=document.querySelector('.rudder-pedals').getBoundingClientRect();
+  const readouts=document.querySelector('#axisReadouts').getBoundingClientRect();
+  const grip=document.querySelector('#controlPad').getBoundingClientRect();
+  return readouts.left>=pedal.right-3&&readouts.top>=grip.top;
+ }), 'Cessna tiny bank/pitch sit right of rudder pedals');
  assert.equal(await desktop.locator('.cockpit-avionics').count(),1,'Cessna radio stack beside six-pack');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'help is hidden until learner taps ⓘ');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'instrument is normal size initially');
@@ -97,6 +106,15 @@ try{
  assert.match(await desktop.locator('#cockpitVisualPanel').textContent(),/DUAL TACH/);
  assert.match(await desktop.locator('#cockpitVisualPanel').textContent(),/MANIFOLD PROXY/);
  assert.equal(await desktop.locator('#collectivePanel').isVisible(),true);
+ assert.equal(await desktop.locator('#axisReadouts').evaluate(el=>el.parentElement.id),'axisCollectiveDock',
+  'R44 cyclic bank/pitch indications move to the top of collective');
+ assert.ok(await desktop.evaluate(()=>{
+  const readouts=document.querySelector('#axisReadouts').getBoundingClientRect();
+  const lever=document.querySelector('#collectivePanel .r44-collective-mechanism').getBoundingClientRect();
+  return readouts.bottom<=lever.top+4;
+ }), 'R44 tiny readouts sit above collective mechanism');
+ assert.equal(await desktop.locator('#bankHoldToggle').isVisible(),false,
+  'bank hold remains airplane-only');
  assert.equal(await desktop.locator('.r44-collective-mechanism').isVisible(),true);
  const restartDockPosition=await desktop.evaluate(()=>{
   const collective=document.getElementById('collectivePanel').getBoundingClientRect();
@@ -158,6 +176,12 @@ try{
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on('pageerror',e=>errors.push('phone '+e.message));
  await phone.goto(url,{waitUntil:'load'});
+ assert.equal(await phone.locator('#axisReadouts').count(),1);
+ assert.equal(await phone.locator('#axisReadouts').evaluate(el=>el.parentElement.id),'axisPedalDock');
+ assert.ok(await phone.evaluate(()=>{
+  const box=id=>document.querySelector(id).getBoundingClientRect();
+  return box('#axisReadouts').left>=box('.rudder-pedals').right-3;
+ }), 'phone Cessna bank/pitch are right of pedals, not under yoke');
  assert.ok(await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().isVisible());
  assert.ok(await phone.locator('#flightGrip').isVisible());
  const restart=phone.locator('#restartFlight');
@@ -216,6 +240,8 @@ try{
  assert.equal(await phone.locator('#cockpitJetHud').isVisible(),true);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd').count(),3);
  await phone.locator('#cockpitAircraftSelect').selectOption('r44');
+ assert.equal(await phone.locator('#axisReadouts').evaluate(el=>el.parentElement.id),'axisCollectiveDock',
+  'phone helicopter moves same bank/pitch above collective');
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
