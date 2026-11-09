@@ -34,7 +34,8 @@ try{
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'instrument is normal size initially');
  assert.equal(await desktop.locator('#cockpitControlFocusToggle').count(),0,'no control expansion button');
  assert.equal(await desktop.locator('#cockpitExtraControls').count(),0,'no surprise additional control panels');
- await desktop.locator('[data-cockpit-help="controls"]').click();
+ await desktop.locator('#cockpitHelpToggle').click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').click();
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),true);
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Yoke, stick or cyclic/);
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'help does not enlarge instruments');
@@ -49,7 +50,8 @@ try{
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'enlarged gauge replaces help');
  await desktop.keyboard.press('Escape');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'Escape restores normal gauge');
- await desktop.locator('[data-cockpit-help="radio"]').click();
+ await desktop.locator('#cockpitHelpToggle').click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="radio"]').click();
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Listen to the controller/);
  await desktop.keyboard.press('Escape');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false);
@@ -79,7 +81,8 @@ try{
  assert.equal(await desktop.locator('#cockpitRestartStatus').textContent(),'Flight restarted');
  assert.ok(await desktop.locator('#miniAttitude').isVisible(),'legacy synthetic attitude remains present');
  await desktop.locator('#cockpitAircraftSelect').selectOption('r44');
- await desktop.locator('[data-cockpit-help="controls"]').click();
+ await desktop.locator('#cockpitHelpToggle').click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').click();
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Cyclic/,'rotor controls help changes by aircraft');
  await desktop.locator('#cockpitInfoClose').click();
  assert.equal(await desktop.locator('#typeCyclic').getAttribute('aria-pressed'),'true');
