@@ -62,7 +62,7 @@
   node(doc,"path",{d:"M110 52 L105 78 L83 87 L83 92 L106 88 L107 103 L99 109 L99 113 L110 110 L121 113 L121 109 L113 103 L114 88 L137 92 L137 87 L115 78 Z",
    stroke:"#12373a","stroke-width":2,fill:"#ffe6a4"},svg);
   const north=node(doc,"text",{x:8,y:13,fill:"#d8f1d7","font-size":11,"font-weight":750},svg);
-  north.textContent="N";
+  north.textContent="UP";
   box.appendChild(svg);
   const readouts=doc.createElement("div");
   readouts.className="cockpit-nav-readouts";
