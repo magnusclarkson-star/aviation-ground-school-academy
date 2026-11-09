@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="flight-sim-mini-switches.css?v=20261109-micro2">
 <link rel="stylesheet" href="flight-sim-axis-placement.css?v=20261109-axis1">
 <link rel="stylesheet" href="flight-sim-all-aircraft-fit.css?v=20261109-sunav4">
-<link rel="stylesheet" href="flight-sim-instrument-backlight.css?v=20261109-backlight1">
+<link rel="stylesheet" href="flight-sim-instrument-backlight.css?v=20261109-backlight2">
 <style id="agsa-micro-switch-inline" data-version="micro2">
 /* 2026-11-09 micro pass: make the entire switch module genuinely tiny,
    rather than merely shrinking the four buttons inside a full-width box. */
@@ -103,7 +103,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-circuit-guide.js?v=20261109-circuit2" defer></script>
 <script src="flight-sim-navigation.js?v=20261109-circuit2" defer></script>
 <script src="flight-sim-cockpit.js?v=20261109-sunav4" defer></script>
-<script src="flight-sim-instrument-backlight.js?v=20261109-backlight1" defer></script>
+<script src="flight-sim-instrument-backlight.js?v=20261109-backlight2" defer></script>
 <script src="flight-sim-aircraft-gallery.js?v=20261109-360shortcut2" defer></script>
 <script src="flight-sim-switchgear.js" defer></script>
 <script src="flight-sim-focus.js" defer></script>
@@ -213,6 +213,11 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
       <button type="button" data-cockpit-backlight="green" aria-pressed="true" aria-label="Green instrument backlight">Green</button>
       <button type="button" data-cockpit-backlight="blue" aria-pressed="false" aria-label="Blue instrument backlight">Blue</button>
       <button type="button" data-cockpit-backlight="off" aria-pressed="false" aria-label="Turn off instrument backlight">Off</button>
+      <div class="cockpit-backlight-dimmer">
+       <label for="cockpitBacklightDimmer">DIM</label>
+       <input id="cockpitBacklightDimmer" type="range" min="1" max="3" step="1" value="2" aria-label="Instrument backlight brightness">
+       <output id="cockpitBacklightLevel" for="cockpitBacklightDimmer">NORMAL</output>
+      </div>
      </div>
     </div>
    </div>
