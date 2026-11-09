@@ -243,3 +243,37 @@
   outline:2px solid #f5d596;outline-offset:2px;
  }
 }
+
+/* Integrated four-stage helicopter lesson: one short label, with details
+   on demand from its native instrument-style info button. */
+#cockpitStation[data-family="rotor"] .r44-lesson-strip{
+ position:relative;box-sizing:border-box;
+ display:flex;align-items:center;min-width:0;
+ min-height:37px;margin:5px 0 0;padding:5px 32px 5px 8px;
+ border:1px solid #81969d;border-radius:7px;
+ background:linear-gradient(135deg,#132e38,#101c27);
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip>strong{
+ color:#f4d99f;min-width:0;
+ font:800 11px/1.3 system-ui,sans-serif;
+ letter-spacing:.015em;white-space:normal;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .cockpit-info-dot{
+ right:4px;top:50%;transform:translateY(-50%);
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip [data-lesson-status="completed"]{
+ color:#d0eaba;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip [data-lesson-status="stopped"],
+#cockpitStation[data-family="rotor"] .r44-lesson-strip [data-lesson-status="incomplete"]{
+ color:#f3baa4;
+}
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip{
+  min-height:33px;padding:4px 28px 4px 5px;margin-top:4px;
+ }
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip>strong{font-size:10px}
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip .cockpit-info-dot{
+  width:24px;height:24px;min-width:24px;min-height:24px;
+ }
+}
