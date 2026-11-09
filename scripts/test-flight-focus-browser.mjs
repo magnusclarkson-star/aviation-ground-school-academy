@@ -96,7 +96,8 @@ try{
  assert.equal(await phone.locator("#cockpitFocusButton").getAttribute("aria-pressed"),"true");
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
  assert.equal(await phone.locator("#cockpitStation").getAttribute("data-family"),"rotor");
- assert.ok(await phone.locator("#cockpitVisualPanel .cockpit-gauge").count()===6);
+ assert.equal(await phone.locator("#cockpitVisualPanel .cockpit-gauge").count(),8);
+ assert.equal(await phone.locator('[data-rotor-tbar]').isVisible(),true);
  await phone.locator("#cockpitFocusButton").tap();
  assert.equal(await phone.locator("body").getAttribute("data-cockpit-focus"),"off");
  assert.equal(await phone.locator("#cockpitFocusButton").getAttribute("aria-pressed"),"false");
