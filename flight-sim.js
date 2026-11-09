@@ -344,7 +344,8 @@ function updateReadouts(){
  const phase={
   roll:"RUNWAY ROLL",climb:"CLIMB",flight:"FREE FLIGHT",approach:"FINAL APPROACH",
   rollout:"TOUCHDOWN / ROLLOUT",complete:"RUNWAY EXERCISE FINISHED",halted:"RESTART ADVISED",
-  pad:"HELIPAD READY",lift:"LIFT",hover:"HOVER",landed:"HELIPAD LANDED"
+  pad:"HELIPAD READY",lift:"LIFT",hover:"HOVER",
+  landed:n.landingGrade==="precision"?"HELIPAD LANDED · PRECISION":"HELIPAD LANDED"
  }[n.phase]||"EDUCATIONAL SIM";
  $("flightPhase").textContent=phase;
  $("scenePhase").textContent=phase;
@@ -965,7 +966,7 @@ function frame(now){
   // Prioritise distinctive short events, then occasional runway/airflow.
   // Visual feedback always renders even when browser vibration is unavailable.
   let eventRequested=false;
-  for(const event of ["hardLanding","touchdown","liftoff","stall","turbulence",
+  for(const event of ["hardLanding","touchdown","hoverHeld","liftoff","stall","turbulence",
    "runwayRumble","turn","climb","descent","completed"]){
    if(result.events.includes(event)){eventRequested=haptics.pulse(event);break;}
   }
