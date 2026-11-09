@@ -72,10 +72,26 @@ try{
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Cyclic/,'rotor controls help changes by aircraft');
  await desktop.locator('#cockpitInfoClose').click();
  assert.equal(await desktop.locator('#typeCyclic').getAttribute('aria-pressed'),'true');
- assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6);
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),8,
+  'R44 has eight compact analogue dials in two rows');
+ assert.deepEqual(await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents(),
+  ['AIRSPEED','ATTITUDE','ALTIMETER','VERTICAL SPEED','HEADING','DUAL TACH','MANIFOLD PROXY','TURN / SLIP']);
+ assert.equal(await desktop.locator('#cockpitVisualPanel [data-gauge="heading"]').count(),1,
+  'R44 heading appears in its own live analogue gauge');
+ assert.equal(await desktop.locator('[data-rotor-tbar]').isVisible(),true,
+  'R44 has a recognizable T-bar cyclic geometry');
  assert.match(await desktop.locator('#cockpitVisualPanel').textContent(),/DUAL TACH/);
  assert.match(await desktop.locator('#cockpitVisualPanel').textContent(),/MANIFOLD PROXY/);
  assert.equal(await desktop.locator('#collectivePanel').isVisible(),true);
+ assert.equal(await desktop.locator('.r44-collective-mechanism').isVisible(),true);
+ const rotorDesktop=await desktop.evaluate(()=>{
+  const box=sel=>document.querySelector(sel).getBoundingClientRect();
+  return {left:box('#collectivePanel').left,cyclic:box('#controlPad').left,
+   feet:box('#leftRudder').top,cyclicBottom:box('#controlPad').bottom};
+ });
+ assert.ok(rotorDesktop.left<rotorDesktop.cyclic,
+  'R44 collective sits to the left of its centrally mounted cyclic');
+ assert.ok(rotorDesktop.feet>=rotorDesktop.cyclicBottom-12,'rotor pedals remain beneath the cyclic');
  assert.equal(await desktop.locator('#flapPanel').isVisible(),false);
  assert.equal(await desktop.locator('#brake').isVisible(),false);
  for(const [id,expectedClass] of [['fa18','cockpit-mfd-triple'],['f22','cockpit-mfd-quad'],['f35','cockpit-mfd-panoramic'],['typhoon','cockpit-mfd-triple'],['su37','cockpit-mfd-dual']]){
@@ -144,6 +160,30 @@ try{
  await phone.locator('#cockpitAircraftSelect').selectOption('r44');
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
+ const rotorPhone=await phone.evaluate(()=>{
+  const rect=id=>document.querySelector(id).getBoundingClientRect();
+  return {collective:rect('#collectivePanel'),cyclic:rect('#controlPad'),
+   pedals:rect('#leftRudder'),input:rect('#collective')};
+ });
+ assert.ok(rotorPhone.collective.right<=rotorPhone.cyclic.left+16,
+  'collective and centre cyclic are independently reachable with two thumbs');
+ assert.ok(rotorPhone.pedals.top>=rotorPhone.cyclic.bottom-13,
+  'R44 pedals remain below cyclic on a 390px phone');
+ assert.ok(rotorPhone.input.height>=38,'collective slider retains a finger-sized hit target');
+ await phone.locator('#collective').evaluate(el=>{
+  el.value='85';el.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ assert.equal(await phone.locator('#collectiveValue').textContent(),'85%');
+ const leverUp=await phone.locator('#collectivePanel').evaluate(el=>
+  el.style.getPropertyValue('--r44-collective-angle'));
+ await phone.locator('#collective').evaluate(el=>{
+  el.value='20';el.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ const leverDown=await phone.locator('#collectivePanel').evaluate(el=>
+  el.style.getPropertyValue('--r44-collective-angle'));
+ assert.ok(Number.parseFloat(leverUp)<Number.parseFloat(leverDown),
+  'collective handle physically moves as the flight lift command changes');
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[],'no JS runtime errors');
  console.log('Unified cockpit passed: 7 aircraft styles, analog T layout, rotorcraft gauges, fighter MFDs, cockpit controls and phone geometry.');
