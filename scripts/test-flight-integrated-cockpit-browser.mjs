@@ -14,8 +14,10 @@ try{
  assert.equal(await desktop.locator('#restartFlight').count(),1,'there is one live restart control');
  assert.equal(await desktop.locator('#restartFlight').evaluate(el=>!!el.closest('#cockpitStation')),true,'restart is visibly inside cockpit');
  assert.equal(await desktop.locator('#restartFlight').isVisible(),true);
- assert.match(await desktop.locator('#restartFlight').textContent(),/RESTART FLIGHT/);
- assert.ok((await desktop.locator('#restartFlight').boundingBox()).height>=44,'restart is an easy touch target');
+ assert.match(await desktop.locator('#restartFlight').textContent(),/Restart/i);
+ assert.equal(await desktop.locator('#restartFlight').evaluate(el=>el.parentElement.id),'cockpitRestartDock',
+  'Restart is physically below the collective rather than in the top toolbar');
+ assert.ok((await desktop.locator('#restartFlight').boundingBox()).height>=30,'compact Restart remains tappable');
  const layout=await desktop.evaluate(()=>{
   const box=id=>document.querySelector(id).getBoundingClientRect();
   const d=box('#cockpitVisualPanel'),y=box('#controlPad'),p=box('#leftRudder'),t=box('#powerPanel');
@@ -54,6 +56,15 @@ try{
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6);
  assert.deepEqual((await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents()).slice(0,3),['AIRSPEED','ATTITUDE','ALTIMETER']);
  assert.deepEqual((await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents()).slice(3),['TURN COORD.','HEADING','VERTICAL SPEED']);
+ // Change displays in-place; the same simulated flight state remains active.
+ await desktop.locator('#cockpitInstrumentStyle').click();
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instruments'),'glass');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'trainer glass cockpit has live flight, map and systems displays');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),0,'round dials replaced by glass displays');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-nav').count(),1,'glass navigation map remains available');
+ await desktop.locator('#cockpitInstrumentStyle').click();
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6,'trainer round gauges restored');
+
  assert.equal(await desktop.locator('#controlPad').evaluate(el=>el.closest('#cockpitStation')!==null),true,'active yoke is INSIDE the cockpit, never duplicated');
  assert.equal(await desktop.locator('#leftRudder').evaluate(el=>el.closest('#cockpitStation')!==null),true,'rudder pedals are in the cockpit');
  assert.equal(await desktop.locator('#power').evaluate(el=>el.closest('#cockpitStation')!==null),true,'throttle is in cockpit');
@@ -84,6 +95,24 @@ try{
  assert.match(await desktop.locator('#cockpitVisualPanel').textContent(),/MANIFOLD PROXY/);
  assert.equal(await desktop.locator('#collectivePanel').isVisible(),true);
  assert.equal(await desktop.locator('.r44-collective-mechanism').isVisible(),true);
+ const restartDockPosition=await desktop.evaluate(()=>{
+  const collective=document.getElementById('collectivePanel').getBoundingClientRect();
+  const restart=document.getElementById('restartFlight').getBoundingClientRect();
+  return {sameColumn:Math.abs((collective.left+collective.width/2)-(restart.left+restart.width/2))<50,
+   below:restart.top>=collective.bottom-2,
+   notInToolbar:!document.querySelector('#cockpitStation .cockpit-actions #restartFlight')};
+ });
+ assert.equal(restartDockPosition.sameColumn,true,'Restart is aligned with the helicopter collective');
+ assert.equal(restartDockPosition.below,true,'Restart is visibly beneath the collective');
+ assert.equal(restartDockPosition.notInToolbar,true,'Restart is absent from top cockpit toolbar');
+ await desktop.locator('#cockpitInstrumentStyle').click();
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instruments'),'glass');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'helicopter glass cockpit displays all three screens');
+ assert.equal(await desktop.locator('#cockpitVisualPanel [data-r44-lesson]').count(),1,'helicopter lesson remains in glass mode');
+ assert.equal(await desktop.locator('#collectivePanel').isVisible(),true,'glass instruments do not remove collective');
+ await desktop.locator('#cockpitInstrumentStyle').click();
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),8,'round helicopter instruments restored');
+
  const rotorDesktop=await desktop.evaluate(()=>{
   const box=sel=>document.querySelector(sel).getBoundingClientRect();
   return {left:box('#collectivePanel').left,cyclic:box('#controlPad').left,
@@ -94,6 +123,8 @@ try{
  assert.ok(rotorDesktop.feet>=rotorDesktop.cyclicBottom-12,'rotor pedals remain beneath the cyclic');
  assert.equal(await desktop.locator('#flapPanel').isVisible(),false);
  assert.equal(await desktop.locator('#brake').isVisible(),false);
+ // Jet layouts default to glass, and the mode remains switchable.
+ await desktop.locator('#cockpitInstrumentStyle').click();
  for(const [id,expectedClass] of [['fa18','cockpit-mfd-triple'],['f22','cockpit-mfd-quad'],['f35','cockpit-mfd-panoramic'],['typhoon','cockpit-mfd-triple'],['su37','cockpit-mfd-dual']]){
   await desktop.locator('#cockpitAircraftSelect').selectOption(id);
   if(id==='f35'){
@@ -129,19 +160,19 @@ try{
  const restart=phone.locator('#restartFlight');
  assert.equal(await restart.evaluate(el=>!!el.closest('#cockpitStation')),true);
  const row=await phone.evaluate(()=>{
-  const ids=['restartFlight','aircraftInspectOpen','cockpitFocusButton','cockpitHelpToggle'];
+  const ids=['cockpitAircraftPhotoButton','cockpitInstrumentStyle','cockpitFocusButton','cockpitHelpToggle'];
   const boxes=ids.map(id=>document.getElementById(id).getBoundingClientRect());
   return {boxes:boxes.map(b=>({x:b.x,y:b.y,width:b.width,height:b.height})),
    choicesVisible:getComputedStyle(document.getElementById('cockpitHelpChoices')).display!=='none',
    bodyWidth:document.documentElement.scrollWidth,viewport:innerWidth,
    typeHeight:document.getElementById('typeCyclic').getBoundingClientRect().height};
  });
- assert.ok(row.boxes.every(b=>b.height>=44&&b.height<=45),
-  'four compact cockpit actions remain finger-sized on phone');
- assert.ok(row.boxes.every(b=>b.width>=65&&b.width<=110),
-  'restart and ancillary buttons no longer occupy whole rows');
- assert.ok(Math.max(...row.boxes.map(b=>b.y))-Math.min(...row.boxes.map(b=>b.y))<2,
-  'restart, inspect, focus and Help must occupy one compact row');
+ assert.ok(row.boxes.every(b=>b.height>=30&&b.height<=44),
+  'aircraft photo, instrument selector, cockpit and More fit in a slim toolbar');
+ assert.ok(row.boxes[0].width>row.boxes[1].width,
+  'aircraft photo is wider than the compact glass switch');
+ assert.ok(Math.max(...row.boxes.map(b=>b.y))-Math.min(...row.boxes.map(b=>b.y))<3,
+  'four top controls occupy one row; Restart is down by collective');
  assert.equal(row.choicesVisible,false,'three secondary information actions are initially tucked away');
  assert.ok(row.bodyWidth<=row.viewport+2,'the compact cockpit must not overflow the phone');
  assert.ok(row.typeHeight<=46,'large redundant aircraft family buttons have been shortened');
@@ -152,7 +183,7 @@ try{
  assert.equal(await phone.locator('#cockpitHelpToggle').getAttribute('aria-expanded'),'false');
  assert.match(await phone.locator('#cockpitInfoText').textContent(),/Yoke, stick or cyclic/);
  await phone.locator('#cockpitInfoClose').tap();
- assert.ok((await restart.boundingBox()).height>=44,'phone restart remains an easy touch target');
+ assert.ok((await restart.boundingBox()).height>=30,'phone Restart remains a compact usable target');
  await restart.tap();
  assert.equal(await phone.locator('#cockpitRestartStatus').textContent(),'Flight restarted');
  const value=await phone.evaluate(()=>{
@@ -184,6 +215,16 @@ try{
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
+ assert.ok(await phone.evaluate(()=>{
+  const c=document.getElementById('collectivePanel').getBoundingClientRect();
+  const r=document.getElementById('restartFlight').getBoundingClientRect();
+  return r.top>=c.bottom-2&&r.width<c.width+2;
+ }), 'Restart visibly below collective on phone');
+ await phone.locator('#cockpitInstrumentStyle').tap();
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'phone helicopter glass switch works');
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-mfd-horizon]').count(),1,'glass attitude tracks flight motion');
+ await phone.locator('#cockpitInstrumentStyle').tap();
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8,'phone helicopter round switch works');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-hover]').textContent(),'ON PAD',
   'on-pad hover cue reflects the grounded state');
 
