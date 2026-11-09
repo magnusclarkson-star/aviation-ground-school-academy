@@ -119,6 +119,28 @@ assert.ok(Math.abs(side.eye[0]-rotor.xM)>20,"side camera offsets to port");
 assert.ok(Math.abs(top.pitch)>1.4,"top view looks steeply downward");
 assert.ok(top.eye[1]>side.eye[1]+20,"overhead camera clears main rotor");
 assert.equal(top.view,"top");
+// Exterior cameras adjust their distance with motion without changing the
+// true aircraft position used by the simulated flight model.
+const stationary=Three.cameraPose({...state,groundSpeedKt:0},"chase");
+const accelerating=Three.cameraPose({...state,groundSpeedKt:210},"chase");
+assert.ok(accelerating.eye[2]<stationary.eye[2]-5,
+ "chase camera pulls away slightly at speed to show wings and runway");
+assert.deepEqual(accelerating.craft,stationary.craft,
+ "exterior camera changes cannot alter aircraft position");
+const fastSide=Three.cameraPose({...state,groundSpeedKt:210},"side");
+const slowSide=Three.cameraPose({...state,groundSpeedKt:0},"side");
+assert.ok(Math.abs(fastSide.eye[0]-state.xM)>Math.abs(slowSide.eye[0]-state.xM)+3,
+ "moving side camera widens the aircraft profile at speed");
+const fastTop=Three.cameraPose({...state,groundSpeedKt:210},"top");
+const slowTop=Three.cameraPose({...state,groundSpeedKt:0},"top");
+assert.ok(fastTop.eye[1]>slowTop.eye[1]+8,
+ "overhead framing keeps high-speed aircraft fully visible");
+const groundedHeli=Three.cameraPose({...rotor,onGround:true,altitudeM:0,groundSpeedKt:0},"chase");
+assert.ok(groundedHeli.eye[1]>9&&groundedHeli.eye[1]<17,
+ "helicopter pad chase camera stays above ground and close enough to see the skids");
+const fastHeli=Three.cameraPose({...rotor,groundSpeedKt:100},"chase");
+assert.ok(fastHeli.eye[2]<groundedHeli.eye[2]-2,
+ "the helicopter's chase view also adapts to translational flight");
 assert.throws(()=>Three.cameraPose(null),/state required/);
 assert.throws(()=>Three.cameraPose(rotor,"satellite"),/Unknown 3D camera/);
 for(const id of Three.airframeIds){
