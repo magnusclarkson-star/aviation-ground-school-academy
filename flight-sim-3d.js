@@ -61,12 +61,16 @@ function elevation(x,z){
  return Math.min(210,edge*.052+far*.015*(.55+.45*Math.sin(x*.002+z*.004)));
 }
 function ground(mesh){
- for(let z=-2400;z<7200;z+=260)for(let x=-3200;x<3200;x+=260){
+ // A continuous terrain mesh covers full circuits and return approaches,
+ // including the southern side of the runway. Larger distant cells keep
+ // vertex counts modest on Android rather than clipping the world at 3 km.
+ const cell=400;
+ for(let z=-9600;z<14400;z+=cell)for(let x=-9600;x<9600;x+=cell){
   const col=tint(noise(x*.1+z*.05)>.35?grass:rgb(128,144,84),
    .82+noise(x*.17+z*.33)*.27);
-  mesh.quad([x,elevation(x,z)-.2,z],[x+260,elevation(x+260,z)-.2,z],
-   [x+260,elevation(x+260,z+260)-.2,z+260],
-   [x,elevation(x,z+260)-.2,z+260],col);
+  mesh.quad([x,elevation(x,z)-.2,z],[x+cell,elevation(x+cell,z)-.2,z],
+   [x+cell,elevation(x+cell,z+cell)-.2,z+cell],
+   [x,elevation(x,z+cell)-.2,z+cell],col);
  }
 }
 function runway(mesh){
@@ -206,9 +210,9 @@ function airfield(mesh){
  mesh.box(-118,0,600,16,42,16,rgb(154,174,186));
  mesh.box(-126,42,592,32,10,31,rgb(75,114,135));
  mesh.box(-111,52,607,2,20,2,rgb(189,204,211));
- for(let i=0;i<245;i++){
-  const x=(i%2===0?-1:1)*(100+noise(i+7)*1600);
-  const z=-1900+noise(i*3.3+11)*7700,y=elevation(x,z);
+ for(let i=0;i<360;i++){
+  const x=(i%2===0?-1:1)*(100+noise(i+7)*6200);
+  const z=-7200+noise(i*3.3+11)*20000,y=elevation(x,z);
   const h=10+noise(i*9.9)*21;
   mesh.box(x-.95,y,z-.95,1.9,h*.35,1.9,rgb(92,75,62));
   mesh.cone(x,y+h*.2,z,h*.28,h*.82,
