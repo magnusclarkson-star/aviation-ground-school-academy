@@ -179,17 +179,34 @@ function buildWorld(mode="airplane"){
  if(out.vertices>130000)throw Error("3D mesh exceeds mobile geometry budget");
  return out;
 }
+function scaleMesh(mesh,mode){
+ const [sx,sy,sz]=Exterior.SCALE[Exterior.normalize(mode)];
+ if(sx===1&&sy===1&&sz===1)return mesh;
+ const p=mesh.positions,n=mesh.normals;
+ for(let i=0;i<p.length;i+=3){
+  p[i]*=sx;p[i+1]*=sy;p[i+2]*=sz;
+  const nx=n[i]/sx,ny=n[i+1]/sy,nz=n[i+2]/sz;
+  const length=Math.hypot(nx,ny,nz)||1;
+  n[i]=nx/length;n[i+1]=ny/length;n[i+2]=nz/length;
+ }
+ return mesh;
+}
+function scalePart(part,mode){
+ const scale=Exterior.SCALE[Exterior.normalize(mode)];
+ return {...part,pivot:part.pivot.map((v,i)=>v*scale[i]),
+  mesh:scaleMesh(part.mesh,mode)};
+}
 function buildVehicle(mode="airplane"){
  const m=new Mesh();
  Exterior.populate(m,mode);
- return m.finish();
+ return scaleMesh(m.finish(),mode);
 }
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
 function buildMovingParts(mode="airplane"){
  if(Exterior.IDS.includes(mode)&&mode!=="c172"&&mode!=="r44"){
-  return Exterior.buildJetParts(Mesh,mode);
+  return Exterior.buildJetParts(Mesh,mode).map(part=>scalePart(part,mode));
  }
  if(mode==="r44")mode="helicopter";
  if(mode==="c172")mode="airplane";
@@ -261,7 +278,7 @@ function buildMovingParts(mode="airplane"){
    m.box(x-.12,y-.13,z-.15,.24,.26,.30,blue);
   });
  }
- return result;
+ return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
 }
 function cameraPose(state,view="cockpit"){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
