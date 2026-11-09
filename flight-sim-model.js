@@ -113,7 +113,9 @@ function step(state,input,seconds){
   // Anti-torque pedal commands now build and decay a yaw rate rather than
   // rotating the fuselage instantly. Banking adds a gentle coordinated
   // turn only in forward flight; hovering remains pedal-controlled.
-  const forwardSpeed=Math.max(0,state.forwardMs||0);
+  // Small numerical/turbulence drift near hover must not create a
+  // forward-flight coordinated turn. Pedals alone control hover yaw.
+  const forwardSpeed=Math.max(0,(state.forwardMs||0)-1.5);
   const turnAssist=clamp(state.rollDeg*.055*forwardSpeed/8,-2.5,2.5);
   const commandedYaw=clamp(rudder*18+turnAssist,-19,19);
   state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,2.4,dt);
