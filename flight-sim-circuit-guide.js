@@ -59,6 +59,7 @@ function status(circuit,state){
  const course=String(step.course).padStart(3,"0")+"°";
  return Object.freeze({
   stage:circuit.stage,label:step.label,hint:step.hint,
+  waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
   courseDeg:step.course,courseText:course,turn,
   short:step.label+" · "+course+" · "+distanceText,
