@@ -56,6 +56,24 @@ assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spa
  "trainer has a broader high wing compared with the fighter model");
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
  "helicopter has its distinctive tall rotor mast");
+// The R44 uses two ROUND landing skids: several circular cross-section
+// coordinates at the skid sides, upturned noses and two curved cross tubes.
+const rotorPositions=T.buildVehicle("r44").positions;
+const roundCrossSection=[];
+const railEnds=[];
+for(let i=0;i<rotorPositions.length;i+=3){
+ const x=rotorPositions[i],y=rotorPositions[i+1],z=rotorPositions[i+2];
+ if(Math.abs(x-1.36)<.14&&Math.abs(z+1.50)<.055&&y< -1.35)
+  roundCrossSection.push([x,y,z]);
+ if(Math.abs(Math.abs(x)-1.36)<.15&&z>2.75&&y> -1.45)
+  railEnds.push([x,y,z]);
+}
+assert.ok(new Set(roundCrossSection.map(v=>v[0].toFixed(3))).size>=7,
+ "R44 longitudinal skid is a circular tube, not the former rectangular prism");
+assert.ok(new Set(roundCrossSection.map(v=>v[1].toFixed(3))).size>=4,
+ "R44 skid has rounded side surfaces from several angles");
+assert.ok(railEnds.length>=6,"both R44 landing skids curl upward at their forward tips");
+
 for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const parts=T.buildMovingParts(id);
  assert.deepEqual(parts.map(x=>x.name),[

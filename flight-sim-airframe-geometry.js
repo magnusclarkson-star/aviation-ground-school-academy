@@ -158,6 +158,33 @@ function addC172(m){
    [.24*Math.cos(b),-.04+.24*Math.sin(b),spinnerZ],spinner,palette.metal);
  }
 }
+// Lightweight round skid and support tubes. The swept cross-sections
+// follow a curved path with a maximum of nine sides, including phone 2D.
+function curvedTube(m,path,r,color,sides=8){
+ const norm=v=>{const n=Math.hypot(...v)||1;return v.map(x=>x/n)};
+ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],
+  a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ const rings=path.map((point,i)=>{
+  const previous=path[Math.max(0,i-1)],next=path[Math.min(path.length-1,i+1)];
+  const tangent=norm(next.map((x,j)=>x-previous[j]));
+  const reference=Math.abs(tangent[1])>.92?[1,0,0]:[0,1,0];
+  const u=norm(cross(tangent,reference)),v=norm(cross(tangent,u));
+  return Array.from({length:sides},(_,j)=>{
+   const a=j*2*Math.PI/sides;
+   return point.map((x,k)=>x+r*(u[k]*Math.cos(a)+v[k]*Math.sin(a)));
+  });
+ });
+ for(let i=0;i<rings.length-1;i++)for(let j=0;j<sides;j++){
+  const k=(j+1)%sides;
+  m.quad(rings[i][j],rings[i][k],rings[i+1][k],rings[i+1][j],
+   tint(color,.86+.14*Math.sin(j*2*Math.PI/sides)**2));
+ }
+ const last=rings.length-1;
+ for(let j=1;j<sides-1;j++){
+  m.tri(path[0],rings[0][j+1],rings[0][j],color);
+  m.tri(path[last],rings[last][j],rings[last][j+1],color);
+ }
+}
 function addR44(m){
  const ivory=palette.ivory,trim=palette.navy,glass=palette.window;
  // A four-seat cabin with a rounded windscreen, engine cowling and
@@ -194,19 +221,23 @@ function addR44(m){
   [0,-.55,-7.84],[0,.35,-7.27]],ivory,.08);
  mirrored(m,[[.18,.68,-7.40],[1.65,.68,-7.55],
   [1.22,.68,-8.18],[.16,.68,-8.03]],ivory,.12);
- // Two undercarriage skids with forward upturned noses and cross tubes.
+ // R44-style landing structure: two long circular skid rails, four
+ // slender sloping struts and two arching cross tubes. Skid tips curl
+ // upwards at the nose; little shoes protect ground-contact points.
  for(const side of [-1,1]){
   const x=side*1.36;
-  m.box(x-.10,-1.63,-2.10,.20,.17,4.67,palette.dark);
-  sheet(m,[[x,-1.55,2.50],[x,-1.32,2.88],
-   [x,-1.27,3.00],[x,-1.63,2.36]],palette.metal,.09);
-  for(const z of [-1.50,1.16]){
-   sheet(m,[[side*.83,-.78,z-.10],[x,-1.48,z-.10],
-    [x,-1.39,z+.12],[side*.83,-.74,z+.12]],palette.metal,.10);
-  }
+  curvedTube(m,[[x,-1.52,-2.30],[x,-1.56,-1.50],
+   [x,-1.56,1.20],[x,-1.52,2.37],[x,-1.31,2.77],
+   [x,-1.20,2.96]],.105,palette.dark,9);
+  for(const z of [-1.50,1.16])
+   curvedTube(m,[[side*.83,-.73,z],[side*1.09,-1.22,z],
+    [x,-1.47,z]],.075,palette.metal,7);
+  for(const z of [-1.50,-.15,1.20])
+   m.box(x-.11,-1.69,z-.25,.22,.05,.50,palette.black);
  }
- m.box(-1.38,-.98,-1.52,2.76,.18,.14,palette.metal);
- m.box(-1.38,-.98,1.16,2.76,.18,.14,palette.metal);
+ for(const z of [-1.52,1.16])
+  curvedTube(m,[[-1.36,-1.01,z],[0,-.91,z],
+   [1.36,-1.01,z]],.085,palette.metal,8);
  // Tall mast and unmistakable rotor head; the actual blades are separately
  // animated in buildMovingParts(), so there are exactly TWO main blades.
  m.box(-.16,1.18,-.52,.32,1.80,.28,palette.metal);
