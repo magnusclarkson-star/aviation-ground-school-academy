@@ -604,6 +604,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  if(!gl)return null;
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[];
+ const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
  try{
@@ -663,7 +664,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform3fv(uni.uFogColor,palette.fog);
    gl.uniform3fv(uni.uLightColor,palette.light);
    gl.uniform1f(uni.uOpacity,1);
-   const camera=cameraPose(state,view,orbit);
+   const targetCamera=cameraPose(state,view,orbit);
+   const clock=root?.performance?.now?.()??Date.now();
+   const camera=cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera;
    gl.uniform3fv(uni.uEye,camera.eye);
    gl.uniform3fv(uni.uCraft,camera.craft);
    gl.uniform1f(uni.uYaw,camera.yaw);
@@ -738,14 +741,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    return !gl.isContextLost();
   }
   function destroy(){
-   if(disposed)return;disposed=true;canvas.removeEventListener?.("webglcontextlost",contextLost);
+   if(disposed)return;disposed=true;cameraRig?.reset();canvas.removeEventListener?.("webglcontextlost",contextLost);
    if(!lost){
     for(const o of objects)gl.deleteVertexArray(o.vao);
     for(const b of buffers)gl.deleteBuffer(b);
     gl.deleteProgram(program);gl.deleteProgram(skyProgram);
    }
   }
-  return {draw,destroy,supported:true,engine:"webgl2",get lost(){return lost}};
+  return {draw,destroy,resetCamera(){cameraRig?.reset()},supported:true,engine:"webgl2",get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
