@@ -123,7 +123,8 @@ assert.throws(()=>Three.cameraPose(null),/state required/);
 assert.throws(()=>Three.cameraPose(rotor,"satellite"),/Unknown 3D camera/);
 for(const id of Three.airframeIds){
  const shadow=Three.buildShadow(id);
- assert.equal(shadow.triangles,28,id+" projected footprint is a low-cost 28-facet ellipse");
+ assert.ok(shadow.triangles>=40&&shadow.triangles<=200,
+  id+" uses a low-cost aircraft-specific projected shadow silhouette");
  assert.ok(shadow.positions.every(Number.isFinite),id+" shadow geometry finite");
  for(let j=1;j<shadow.positions.length;j+=3)
   assert.equal(shadow.positions[j],0,"shadow stays at zero relative height");
