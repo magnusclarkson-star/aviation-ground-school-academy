@@ -131,6 +131,8 @@ try{
  const trainerSpeed=Number(await phone.locator("#readSpeed").textContent());
  assert.ok(jetSpeed>trainerSpeed+3,
   "changing aircraft changes acceleration in the flight model, not only the outside picture");
+ // Return to the previously selected model for the orientation checks.
+ await phone.locator("#cockpitAircraftSelect").selectOption("typhoon");
 
  assert.equal(await phone.locator("#controlPad").isVisible(),true,"cockpit controls unaffected");
  assert.equal(await phone.locator("#cockpitZoomPanel").isVisible(),false,"instrument zoom unaffected");
