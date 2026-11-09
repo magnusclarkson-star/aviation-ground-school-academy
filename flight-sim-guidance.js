@@ -3,6 +3,7 @@
  */
 (function(root){"use strict";
 const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
+const Circuit=root?.AGSACircuitGuide||(typeof module!=="undefined"?require("./flight-sim-circuit-guide.js"):null);
 if(!E)throw Error("Fictional aircraft profiles unavailable");
 const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
 const round=x=>Math.round(Number.isFinite(x)?x:0);
@@ -72,7 +73,8 @@ function start(state){
   startAt:state.time,elapsed:0,maxHeight:Math.max(0,state.altitudeM),
   maxOffset:Math.abs(state.xM),minVertical:Math.min(0,state.verticalMs),
   phaseVisits:[state.phase],landings:0,hardContacts:0,liftoffs:0,
-  r44Lesson:state.mode==="helicopter"?newR44Lesson():null
+  r44Lesson:state.mode==="helicopter"?newR44Lesson():null,
+  circuit:Circuit?.create(state)||null
  };
 }
 function observe(progress,state,events=[]){
@@ -93,6 +95,7 @@ function observe(progress,state,events=[]){
   if(event==="hardLanding")progress.hardContacts++;
  }
  if(progress.r44Lesson)updateR44Lesson(progress.r44Lesson,state);
+ if(progress.circuit)Circuit.update(progress.circuit,state);
  return progress;
 }
 function guidance(state,input,progress){
@@ -125,6 +128,11 @@ function guidance(state,input,progress){
    text:"Compare horizontal displacement and vertical rate with small, fictional collective/cyclic inputs; aim to observe rather than imitate real helicopter procedures."};
   return {...base,tag:"ROTORCRAFT · MOVEMENT",
    text:"Notice the helipad moving in the visual scene. Explore the effect of collective on height and cyclic on direction in this simplified exercise."};
+ }
+ const circuit=Circuit?.status(progress?.circuit,state);
+ if(circuit&&["climb","flight"].includes(phase)&&state.physicsId==="classic"){
+  return {...base,tag:"RETURN CIRCUIT · "+circuit.label,
+   text:circuit.instructions};
  }
  if(phase==="roll"){
   if(state.speedKt<15)return {...base,tag:"RUNWAY · BUILDING MOTION",
