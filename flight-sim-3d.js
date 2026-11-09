@@ -9,6 +9,10 @@ const limit=(v,a,b)=>Math.max(a,Math.min(b,Number.isFinite(v)?v:0));
 const tint=(c,f)=>c.map(x=>limit(x*f,0,1));
 const noise=n=>{const v=Math.sin(n*127.1+78.233)*43758.5453;return v-Math.floor(v)};
 const grass=rgb(84,130,83),tarmac=rgb(68,81,89),white=rgb(237,242,229);
+const Exterior=root?.AGSAExteriorAirframes||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-airframe-geometry.js"):null);
+if(!Exterior)throw Error("Exterior aircraft geometry module missing");
 const Airport=root?.AGSAFlightAirportDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-airport-detail.js"):null);
@@ -176,33 +180,19 @@ function buildWorld(mode="airplane"){
  return out;
 }
 function buildVehicle(mode="airplane"){
- if(!["airplane","helicopter"].includes(mode))throw Error("Unknown 3D craft mode");
- const m=new Mesh(),white=rgb(214,234,235),blue=rgb(54,121,171),dark=rgb(40,66,78);
- if(mode==="airplane"){
-  m.box(-.9,-.65,-6.4,1.8,1.4,12.3,white);
-  m.box(-7.5,.05,-1.7,15,.25,2.7,white,blue); // wings
-  m.box(-2.7,.75,-5.6,5.4,.2,1.3,white,blue);
-  m.box(-.18,.8,-5.55,.36,2.2,1.2,blue);
-  m.box(-.72,.7,1.1,1.44,.48,2,dark);
-  for(const x of [-2.1,2.1])m.box(x-.25,-1.4,-.9,.5,.8,.6,dark);
-  m.box(-.3,-1.4,3,.6,.8,.5,dark);
- }else{
-  m.box(-1.2,-.9,-2.2,2.4,1.9,5,white);
-  m.box(-.9,-.35,.9,1.8,.85,1.6,dark);
-  m.box(-.32,.05,-8,.64,.65,6.4,blue);
-  m.box(-.3,.2,-8.5,.6,2,1,blue);
-  m.box(-.2,1,-.4,.4,2,.4,rgb(190,198,202));
-  // Main/tail rotor meshes are drawn separately and animated around their
-  // physical-looking illustrated hubs, not baked into the helicopter body.
-  m.box(-.46,2.75,-.4,.92,.4,.92,rgb(183,197,203));
-  for(const x of [-1.6,1.6])m.box(x-.1,-1.45,-2.2,.2,.25,5.0,dark);
- }
+ const m=new Mesh();
+ Exterior.populate(m,mode);
  return m.finish();
 }
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
 function buildMovingParts(mode="airplane"){
+ if(Exterior.IDS.includes(mode)&&mode!=="c172"&&mode!=="r44"){
+  return Exterior.buildJetParts(Mesh,mode);
+ }
+ if(mode==="r44")mode="helicopter";
+ if(mode==="c172")mode="airplane";
  if(!["airplane","helicopter"].includes(mode))throw Error("Unknown animated craft mode");
  const pale=rgb(211,237,241),yellow=rgb(234,183,107),
   blue=rgb(75,137,174),metal=rgb(173,191,205);
@@ -382,10 +372,14 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    const object={vao,count:mesh.vertices};objects.push(object);return object;
   };
   const worldPlane=upload(buildWorld("airplane")),worldHeli=upload(buildWorld("helicopter"));
-  const plane=upload(buildVehicle("airplane")),heli=upload(buildVehicle("helicopter"));
-  const planeParts=buildMovingParts("airplane").map(part=>({...part,gpu:upload(part.mesh)}));
-  const helicopterParts=buildMovingParts("helicopter").map(part=>({...part,gpu:upload(part.mesh)}));
-  function draw(state,{view="cockpit",animation={},lighting="day"}={}){
+  const airframes=Object.create(null);
+  for(const id of Exterior.IDS){
+   airframes[id]={
+    body:upload(buildVehicle(id)),
+    parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)}))
+   };
+  }
+  function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null}={}){
    const palette=root?.AGSAFlightLighting?.choose?.(lighting)||{
     skyLow:[.68,.82,.87],skyHigh:[.055,.25,.43],
     fog:[.60,.76,.82],light:[1,1,1]
@@ -425,10 +419,12 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    gl.bindVertexArray(world.vao);
    gl.drawArrays(gl.TRIANGLES,0,world.count);
    if(view==="chase"){
-    const vehicle=state.mode==="helicopter"?heli:plane;
-    gl.uniform1f(uni.uActor,1);gl.bindVertexArray(vehicle.vao);
-    gl.drawArrays(gl.TRIANGLES,0,vehicle.count);
-    for(const part of (state.mode==="helicopter"?helicopterParts:planeParts)){
+    const selected=Exterior.normalize(airframeId||state.mode);
+    const id=state.mode==="helicopter"?"r44":selected==="r44"?"c172":selected;
+    const model=airframes[id];
+    gl.uniform1f(uni.uActor,1);gl.bindVertexArray(model.body.vao);
+    gl.drawArrays(gl.TRIANGLES,0,model.body.count);
+    for(const part of model.parts){
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      const angle=animation?.[part.name];
@@ -457,7 +453,7 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,airportDetails,buildVehicle,buildMovingParts,cameraPose,createRenderer};
+const api={Mesh,buildWorld,airportDetails,buildVehicle,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
