@@ -231,10 +231,18 @@ document.addEventListener("agsa:r44-voice-toggle",()=>{
  if(state.mode==="helicopter")r44Voice.toggle();
 });
 document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
+document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
 let lastPhase=state.phase;
+/* One authoritative live readout. Move its existing DOM node, never clone
+   bank/pitch numbers or the interactive bank-hold button. */
+function syncAxisReadoutsLocation(){
+ const readouts=$("axisReadouts");
+ const target=state.mode==="helicopter"?$("axisCollectiveDock"):$("axisPedalDock");
+ if(readouts&&target&&readouts.parentElement!==target)target.appendChild(readouts);
+}
 function syncBankHoldUI(){
  const button=$("bankHoldToggle");
  if(!button)return;
@@ -573,6 +581,7 @@ function setMode(next){
   type==="stick"?"A shaped centre-stick style grip represents pitch and roll control for a generic fictional aeroplane.":
   "A dual-handled yoke on a simulated control column represents pitch and roll for a fictional light aeroplane.";
  show("collectivePanel",newMode==="helicopter");
+ syncAxisReadoutsLocation();
  show("profileWrap",newMode==="airplane");
  show("physicsWrap",newMode==="airplane");
  $("physicsSelect").disabled=newMode!=="airplane";
@@ -613,6 +622,7 @@ function reset(scenario){
  systems=A.create(state.mode);
  A.step(systems,state,input,0);
  reportEnvironment();
+ syncAxisReadoutsLocation();
  lastFrame=0;paused=false;
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();hardware?.resetPower();setValues();updateReadouts();
