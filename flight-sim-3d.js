@@ -341,30 +341,40 @@ uniform float uPartAngle;
 uniform int uPartAxis;
 out vec3 vColor;
 out float vDistance,vLight;
+// Surface illumination must follow the surface, including animated hinges,
+// rather than remaining fixed when the aircraft rolls, pitches or turns.
+vec3 rotatePart(vec3 v,int axis,float angle){
+ float ca=cos(angle),sa=sin(angle);
+ if(axis==1)return vec3(v.x,v.y*ca-v.z*sa,v.y*sa+v.z*ca);
+ if(axis==2)return vec3(v.x*ca+v.z*sa,v.y,-v.x*sa+v.z*ca);
+ if(axis==3)return vec3(v.x*ca-v.y*sa,v.x*sa+v.y*ca,v.z);
+ return v;
+}
 void main(){
  vec3 p=aPosition;
+ vec3 normal=aNormal;
  if(uActor>1.5){
   // The soft ground footprint uses the same aircraft orientation but stays
   // just above the runway/helipad surface rather than rising with the craft.
   float c=cos(uCraftYaw),s=sin(uCraftYaw);
   p=vec3(p.x*c+p.z*s+uCraft.x,.24,-p.x*s+p.z*c+uCraft.z);
+  normal=vec3(0.,1.,0.);
  }else if(uActor>.5){
   // Rotate illustrated flap/aileron/elevator surfaces around their hinges,
   // or propeller/rotor parts around their hub. Static body/world have axis 0.
   if(uPartAxis>0){
-   vec3 q=p-uPartPivot;
-   float ca=cos(uPartAngle),sa=sin(uPartAngle);
-   if(uPartAxis==1)q=vec3(q.x,q.y*ca-q.z*sa,q.y*sa+q.z*ca);
-   else if(uPartAxis==2)q=vec3(q.x*ca+q.z*sa,q.y,-q.x*sa+q.z*ca);
-   else if(uPartAxis==3)q=vec3(q.x*ca-q.y*sa,q.x*sa+q.y*ca,q.z);
-   p=q+uPartPivot;
+   p=rotatePart(p-uPartPivot,uPartAxis,uPartAngle)+uPartPivot;
+   normal=rotatePart(normal,uPartAxis,uPartAngle);
   }
   float c=cos(uCraftRoll),s=sin(uCraftRoll);
   p=vec3(p.x*c+p.y*s,-p.x*s+p.y*c,p.z);
+  normal=vec3(normal.x*c+normal.y*s,-normal.x*s+normal.y*c,normal.z);
   c=cos(uCraftPitch);s=sin(uCraftPitch);
   p=vec3(p.x,p.y*c+p.z*s,-p.y*s+p.z*c);
+  normal=vec3(normal.x,normal.y*c+normal.z*s,-normal.y*s+normal.z*c);
   c=cos(uCraftYaw);s=sin(uCraftYaw);
   p=vec3(p.x*c+p.z*s,p.y,-p.x*s+p.z*c)+uCraft;
+  normal=vec3(normal.x*c+normal.z*s,normal.y,-normal.x*s+normal.z*c);
  }
  vec3 r=p-uEye;
  float cy=cos(uYaw),sy=sin(uYaw),cp=cos(uPitch),sp=sin(uPitch);
@@ -378,7 +388,7 @@ void main(){
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
    1.000080003*depth-0.800032001,depth);
  vColor=aColor;vDistance=depth;
- vLight=.55+.45*max(0.,dot(normalize(aNormal),normalize(vec3(.28,1.,.36))));
+ vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;

@@ -1,9 +1,23 @@
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
+import {readFileSync} from "node:fs";
 const require=createRequire(import.meta.url);
 const Three=require("../flight-sim-3d.js");
 const M=require("../flight-sim-model.js");
 
+// Regression guard: the GPU lighting must follow aircraft attitude and hinge
+// rotation, not illuminate the fixed untransformed original mesh normals.
+const vertexSource=readFileSync(new URL("../flight-sim-3d.js",import.meta.url),"utf8");
+assert.match(vertexSource,/normal=rotatePart\(normal,uPartAxis,uPartAngle\)/,
+ "hinged propeller, rotors and flight controls rotate their lighting normals");
+assert.match(vertexSource,/normal=vec3\(normal\.x\*c\+normal\.y\*s/,
+ "aircraft roll rotates outward-facing wing normals");
+assert.match(vertexSource,/normal=vec3\(normal\.x,normal\.y\*c\+normal\.z\*s/,
+ "aircraft pitch rotates surface normals");
+assert.match(vertexSource,/normal=vec3\(normal\.x\*c\+normal\.z\*s/,
+ "aircraft yaw rotates surface normals");
+assert.match(vertexSource,/dot\(normalize\(normal\)/,
+ "directional light uses the transformed normal, not the source normal");
 const empty=new Three.Mesh();
 assert.equal(empty.finish().triangles,0);
 empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
