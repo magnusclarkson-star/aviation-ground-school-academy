@@ -101,6 +101,38 @@ try{
  assert.equal(await desktop.locator("#flapPanel").isVisible(),false);
  assert.equal(await desktop.locator("#startApproach").isDisabled(),true,"rotorcraft must not enter airplane approach");
  assert.equal(await desktop.locator("#offsetLabel").textContent(),"PAD OFFSET");
+ const groundRefs=await desktop.evaluate(()=>{
+  const H=window.AGSAHelipadDetail,S=window.AGSAFlightScenery,M=window.AGSAImmersiveFlight;
+  const state=M.makeState("helicopter");
+  Object.assign(state,{altitudeM:6,onGround:false,phase:"hover",headingDeg:30,time:5});
+  const c=document.createElement("canvas");c.width=480;c.height=270;
+  const sig=()=>{
+   assertMarker();
+   S.draw(c,state,{view:"cockpit",lighting:"day",reducedMotion:true});
+   const pix=c.getContext("2d").getImageData(0,0,c.width,c.height).data;
+   let hash=2166136261>>>0;
+   for(let i=0;i<pix.length;i+=197)hash=Math.imul(hash^pix[i],16777619)>>>0;
+   return hash;
+  };
+  function assertMarker(){
+   if(!H||H.rings.length!==2||H.pylons.length!==6)throw Error("Shared heliport landmarks missing");
+  }
+  const marker=H.pylons[1],projected=S.project(state,marker.x,marker.height,marker.z,c.width,c.height);
+  const first=sig();
+  state.xM+=11;const drifting=sig();
+  const move=S.project(state,marker.x,marker.height,marker.z,c.width,c.height);
+  state.headingDeg=65;const turning=sig();
+  return {first,drifting,turning,projected,move};
+ });
+ assert.ok(groundRefs.projected?.depth>0,"R44 reference marker projects ahead of helicopter");
+ assert.ok(groundRefs.projected.x>0&&groundRefs.projected.x<480,
+  "a coloured fixed-world marker is in the R44 outside-view field");
+ assert.ok(groundRefs.move.x<groundRefs.projected.x,
+  "actual lateral drift moves the fixed marker across the fallback scenery");
+ assert.notEqual(groundRefs.first,groundRefs.drifting,
+  "mobile 2D scene changes as helicopter moves sideways above helipad");
+ assert.notEqual(groundRefs.drifting,groundRefs.turning,
+  "mobile 2D scenery rotates past the helicopter in a pedal turn");
  assert.match(await desktop.locator("#coachPhase").textContent(),/ROTORCRAFT/);
  await setRange(desktop,"#collective",82);
  await desktop.waitForTimeout(4400);
