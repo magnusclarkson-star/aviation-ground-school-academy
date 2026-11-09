@@ -77,6 +77,21 @@ try{
   "rotating the main and tail rotor must visibly change fallback images");
   assert.notEqual(rotatingR44.stopped,rotatingR44.blurred,
    "R44 rotor sweep must appear in the 2D fallback even without GPU");
+ const propellerImages=await desktop.evaluate(()=>{
+  const canvas=document.createElement("canvas");
+  canvas.width=740;canvas.height=450;
+  const ctx=canvas.getContext("2d");
+  const state={rollDeg:0,pitchDeg:0,altitudeM:30};
+  const render=opacity=>{
+   ctx.clearRect(0,0,740,450);
+   window.AGSAExteriorChase2D.paint(ctx,state,{id:"c172",width:740,height:450,
+    view:"chase",animation:{propeller:.72,propBlurOpacity:opacity}});
+   return canvas.toDataURL();
+  };
+  return {normal:render(0),spinning:render(.13)};
+ });
+ assert.notEqual(propellerImages.normal,propellerImages.spinning,
+  "Cessna two-blade propeller motion sweep is visible on non-WebGL phone fallback");
  await desktop.locator("#cameraMode").selectOption("top");
  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"top");
  const topFallback=await shot(desktop,"#outsideView");
