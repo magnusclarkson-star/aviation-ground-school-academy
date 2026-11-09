@@ -21,6 +21,15 @@ assert.equal(O.pinchStep(initial,30,300).distance,17,"pinch-in stays inside clos
 assert.equal(O.pinchStep(initial,300,30).distance,70,"pinch-out stays inside far limit");
 assert.deepEqual(O.pinchStep(initial,0,90),initial,"zero span cannot break camera");
 assert.deepEqual(O.pinchStep(initial,NaN,90),initial,"non-finite span is ignored");
+assert.deepEqual(O.doubleTapZoom(initial),
+ {azimuth:0,elevation:26,distance:21.6},
+ "double tap brings aircraft closer without losing its orientation");
+assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(initial)),initial,
+ "a second double tap restores the original fitted viewing distance");
+assert.deepEqual(O.doubleTapZoom({azimuth:145,elevation:-14,distance:18}),
+ {azimuth:145,elevation:-14,distance:30},
+ "double tap restores fit even after manual pinch zoom");
+
 
 const state={mode:"helicopter",xM:0,zM:0,altitudeM:0,headingDeg:0,pitchDeg:0,rollDeg:0};
 const back=A.cameraPose(state,"inspect",{azimuth:0,elevation:0,distance:30});
