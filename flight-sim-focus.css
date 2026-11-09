@@ -252,3 +252,26 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
   min-height:15px;padding:1px;font-size:6px
  }
 }
+
+
+/* The radio stack's intrinsic SVG aspect ratio must not stretch the six-pack
+   in a 390px-high focused landscape screen. The map enlarges on tap. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-avionics{
+  height:112px!important;min-height:0!important;max-height:112px!important;
+  overflow:hidden!important
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  flex:1 1 42px;min-height:42px!important;max-height:52px!important;
+  overflow:hidden
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-nav-scene{
+  min-height:0;overflow:hidden
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-nav-scene svg{
+  min-height:0!important;height:36px!important;flex:1 1 auto
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-nav-readouts{
+  font-size:5px;min-height:13px!important;padding:1px!important
+ }
+}
