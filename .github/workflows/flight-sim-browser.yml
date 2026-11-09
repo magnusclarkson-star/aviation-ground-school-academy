@@ -42,6 +42,10 @@ on:
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
       - 'flight-sim-cockpit.js'
+      - 'flight-sim-aircraft-gallery.js'
+      - 'flight-sim-aircraft-gallery.css'
+      - 'aircraft-*.webp'
+      - 'scripts/test-flight-aircraft-gallery-browser.mjs'
       - 'flight-sim-navigation.js'
       - 'scripts/test-flight-sim-navigation.mjs'
       - 'scripts/test-flight-navigation-browser.mjs'
@@ -110,6 +114,10 @@ on:
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
       - 'flight-sim-cockpit.js'
+      - 'flight-sim-aircraft-gallery.js'
+      - 'flight-sim-aircraft-gallery.css'
+      - 'aircraft-*.webp'
+      - 'scripts/test-flight-aircraft-gallery-browser.mjs'
       - 'flight-sim-navigation.js'
       - 'scripts/test-flight-sim-navigation.mjs'
       - 'scripts/test-flight-navigation-browser.mjs'
@@ -165,6 +173,7 @@ jobs:
           node --check flight-sim-aircraft-systems.js
           node --check flight-sim-instruments.js
           node --check flight-sim-cockpit.js
+          node --check flight-sim-aircraft-gallery.js
           node --check flight-sim-navigation.js
           node --check flight-sim-switchgear.js
           node --check flight-sim-focus.js
@@ -204,6 +213,7 @@ jobs:
           node scripts/test-flight-switchgear-browser.mjs
           node scripts/test-flight-focus-browser.mjs
           node scripts/test-flight-cockpit-zoom-browser.mjs
+          node scripts/test-flight-aircraft-gallery-browser.mjs
           node scripts/test-flight-navigation-browser.mjs
           node scripts/test-flight-sim-gamepad-browser.mjs
           node scripts/test-flight-sim-environment-browser.mjs
