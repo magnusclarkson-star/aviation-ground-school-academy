@@ -265,15 +265,21 @@ function buildMovingParts(mode="airplane"){
 }
 function cameraPose(state,view="cockpit"){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
- if(!["cockpit","chase"].includes(view))throw Error("Unknown 3D camera mode");
+ if(!["cockpit","chase","side","top"].includes(view))throw Error("Unknown 3D camera mode");
  const yaw=(state.headingDeg||0)*RAD;
  const craft=[state.xM,state.altitudeM+(state.mode==="airplane"?1.5:2),state.zM];
- return view==="cockpit"?
-  {view,eye:[state.xM,state.altitudeM+2.2,state.zM],yaw,
-   pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft}:
-  {view,eye:[state.xM-30*Math.sin(yaw),state.altitudeM+13,
+ if(view==="cockpit")return {view,eye:[state.xM,state.altitudeM+2.2,state.zM],
+  yaw,pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft};
+ if(view==="side")return {view,
+  eye:[state.xM-27*Math.cos(yaw),state.altitudeM+10,
+    state.zM+27*Math.sin(yaw)],
+  yaw:yaw+Math.PI/2,pitch:-.28,roll:0,craft};
+ if(view==="top")return {view,
+  eye:[state.xM,state.altitudeM+40,state.zM-4],
+  yaw,pitch:-1.46,roll:0,craft};
+ return {view,eye:[state.xM-30*Math.sin(yaw),state.altitudeM+13,
     state.zM-30*Math.cos(yaw)],yaw,pitch:-.31,
-   roll:(state.rollDeg||0)*RAD*.13,craft};
+    roll:(state.rollDeg||0)*RAD*.13,craft};
 }
 const VERTEX=`#version 300 es
 precision highp float;
