@@ -266,3 +266,39 @@
 body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-visual-panel{
  grid-template-columns:minmax(0,1.7fr) minmax(105px,1fr)!important;
 }
+
+/* Short phone landscape is a flight deck, not a scrolling instrument gallery.
+ * Fit both rows, right-hand map, yoke AND pedals into the available viewport. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack{
+  max-width:205px!important;
+  align-self:center!important;
+  gap:2px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack>.cockpit-gauge{
+  width:min(100%,59px)!important;
+  height:59px!important;
+  max-width:59px!important;
+  max-height:59px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-avionics{
+  min-height:0!important;
+  max-height:125px!important;
+  padding:2px!important;
+  gap:1px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-radio,
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-buttons{
+  display:none!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-topline{
+  font-size:7px!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  min-height:105px!important;
+  max-height:110px!important;
+  flex:1 1 auto!important;
+ }
+}
