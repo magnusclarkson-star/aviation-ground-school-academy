@@ -67,6 +67,7 @@ function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
   Math.max(0,Math.min(1,(systems?.powerPct??0)/100));
 }
+const audioAirspeed=()=>Math.max(0,Number(state.speedKt)||0);
 function syncEngineAudioUI(message){
  const info=engineAudio.status();
  $("engineAudioToggle").disabled=!info.supported;
@@ -118,7 +119,7 @@ async function startFullFlight(){
  const vibTest=vibSupported?haptics.test():{accepted:false};
  // Web Audio and speech must be initiated before any await: mobile browsers
  // require an actual tap, and playing during page load is not dependable.
- const engineStart=engineAudio.start(audioMode(),audioPower());
+ const engineStart=engineAudio.start(audioMode(),audioPower(),audioAirspeed());
  engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  const cueStarted=radioTone.enable(true);
@@ -780,7 +781,7 @@ $("engineAudioToggle").addEventListener("click",async()=>{
   engineAudio.stop();syncEngineAudioUI("Engine sound stopped by learner.");syncPhoneFeedbackUI();return;
  }
  $("engineAudioToggle").disabled=true;
- const started=await engineAudio.start(audioMode(),audioPower());
+ const started=await engineAudio.start(audioMode(),audioPower(),audioAirspeed());
  engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  syncEngineAudioUI(started?
@@ -827,7 +828,7 @@ document.addEventListener("agsa:aircraft-changed",()=>{
  show("profileWrap",trainer);
  show("physicsWrap",trainer);
  $("physicsSelect").disabled=!trainer;
- if(engineAudio.status().active){engineAudio.update(audioMode(),audioPower());syncEngineAudioUI();}
+ if(engineAudio.status().active){engineAudio.update(audioMode(),audioPower(),audioAirspeed());syncEngineAudioUI();}
  syncCockpitFrame();
  prev2D=0;prev3D=0;
  drawScenery(performance.now());
@@ -980,7 +981,7 @@ function frame(now){
   G.observe(practice,state,result.events);
   trace.sample(state,input,dt);
   if(now-lastEngineAudioFrame>110){
-   engineAudio.update(audioMode(),audioPower());lastEngineAudioFrame=now;
+   engineAudio.update(audioMode(),audioPower(),audioAirspeed());lastEngineAudioFrame=now;
   }
   // Prioritise distinctive short events, then occasional runway/airflow.
   // Visual feedback always renders even when browser vibration is unavailable.
