@@ -1,0 +1,111 @@
+/* Compact cockpit command bar: keep the flying controls and gauges large;
+ * reduce only ancillary navigation/help buttons. Full info remains on demand. */
+#cockpitStation #cockpitHelpToggle{display:none}
+#cockpitStation .cockpit-help-choices{display:contents}
+
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  position:relative;
+  align-items:stretch;
+  width:100%;
+  column-gap:4px!important;
+  row-gap:0!important;
+  margin:2px auto 4px!important;
+  padding:0!important;
+ }
+ #cockpitStation .cockpit-actions #restartFlight,
+ #cockpitStation .cockpit-actions #aircraftInspectOpen,
+ #cockpitStation .cockpit-actions #cockpitFocusButton,
+ #cockpitStation .cockpit-actions #cockpitHelpToggle{
+  box-sizing:border-box;
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  flex:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:44px!important;
+  min-height:44px!important;
+  max-height:44px!important;
+  margin:0!important;
+  padding:3px 2px!important;
+  border-radius:5px!important;
+  font:750 10px/1.05 system-ui,sans-serif!important;
+  letter-spacing:0!important;
+  text-align:center;
+  white-space:normal;
+  overflow-wrap:normal;
+ }
+ #cockpitStation .cockpit-actions #restartFlight{
+  border-width:2px!important;
+ }
+ #cockpitStation .cockpit-actions #cockpitHelpToggle[aria-expanded="true"]{
+  border-color:#f0d08a;
+  color:#ffecbc;
+  background:#214452;
+ }
+ /* The radio, controls and instrument explanations remain available,
+  * but don't require a whole second row of buttons. */
+ #cockpitStation .cockpit-help-choices{
+  position:absolute;
+  z-index:25;
+  top:calc(100% + 3px);
+  right:0;
+  display:none;
+  flex-direction:column;
+  gap:4px;
+  width:min(260px,100%);
+  padding:6px;
+  border:1px solid #74919a;
+  border-radius:7px;
+  background:#102632;
+  box-shadow:0 10px 20px #000b;
+ }
+ #cockpitStation .cockpit-help-choices[data-open="true"]{display:flex}
+ #cockpitStation .cockpit-help-choices [data-cockpit-help]{
+  flex:none;
+  display:block;
+  width:100%;
+  min-height:40px;
+  margin:0;
+  padding:5px 8px;
+  font-size:11px;
+  text-align:left;
+  border-radius:5px;
+ }
+ /* Large aircraft-family selection cards are duplicated by the selector
+  * inside the cockpit. Keep their touch area, remove decorative height. */
+ .type-choices button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  height:44px;
+  padding:3px 4px;
+  font-size:10px;
+  line-height:1.1;
+  gap:4px;
+ }
+ .type-choices button span{
+  display:inline;
+  flex:none;
+  font-size:16px;
+  margin:0;
+ }
+ .scenario-controls{gap:5px;margin:8px 0}
+ .scenario-controls button{padding:5px 6px;font-size:11px;line-height:1.1;min-height:42px}
+}
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions{margin:1px auto 2px!important}
+ #cockpitStation .cockpit-actions #restartFlight,
+ #cockpitStation .cockpit-actions #aircraftInspectOpen,
+ #cockpitStation .cockpit-actions #cockpitFocusButton,
+ #cockpitStation .cockpit-actions #cockpitHelpToggle{
+  height:33px!important;min-height:33px!important;max-height:33px!important;
+  font-size:10px!important;
+ }
+ #cockpitStation .cockpit-help-choices{width:min(240px,100%);padding:4px}
+}
