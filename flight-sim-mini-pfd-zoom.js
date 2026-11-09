@@ -12,7 +12,7 @@
   close.textContent="Close ×";
   close.setAttribute("aria-label","Close enlarged primary flight display");
   close.hidden=true;
-  panel.appendChild(close);
+  panel.insertBefore(close,panel.firstChild);
   panel.tabIndex=0;
   panel.setAttribute("role","button");
   panel.setAttribute("aria-expanded","false");
