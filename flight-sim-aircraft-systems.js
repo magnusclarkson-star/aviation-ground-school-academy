@@ -40,6 +40,9 @@ function step(system,state,input,seconds){
  if(heli){
   r.mainRotor=system.rotation;
   r.tailRotor=system.tailRotation;
+  // Fade the sweep in during the first simulated rotor revolutions.
+  r.rotorBlurOpacity=clamp((system.time-.05)*.31,0,.14)*
+   clamp(system.powerPct/80,0,1);
   // Rudder pedals represent tail-rotor collective pitch, not RPM.
   r.rotorPitch=(collective-.48)*.13;
   r.tailPitch=rudder*.17;
