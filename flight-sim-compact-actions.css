@@ -195,3 +195,42 @@
  }
  #cockpitStation .cockpit-help-choices{grid-column:1/-1}
 }
+
+/* Aircraft photograph is a first-class visible selector, not buried in More.
+   Exactly four main controls fit across a narrow phone. */
+#cockpitStation .cockpit-actions>.aircraft-photo-button{
+ order:0;
+ min-width:0;
+ max-width:150px;
+ min-height:36px;
+ height:36px;
+ padding:2px 5px 2px 2px;
+}
+#cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-preview{
+ width:44px;height:30px;object-fit:cover;
+}
+#cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-label{
+ font-size:9px;line-height:1.1;max-width:70px;
+}
+#cockpitStation .cockpit-help-choices #aircraftInspectOpen{
+ display:flex!important;align-items:center;justify-content:flex-start;
+ width:100%!important;min-height:36px!important;height:auto!important;
+ max-height:none!important;font-size:11px!important;text-align:left;
+ padding:5px 8px!important;
+}
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+   grid-template-columns:minmax(95px,1.45fr) repeat(3,minmax(0,1fr))!important;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button{
+   display:flex!important;width:100%!important;min-width:0!important;
+   max-width:none!important;height:34px!important;min-height:34px!important;
+   max-height:34px!important;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-preview{
+   width:43px;height:28px;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-label{
+   font-size:8px;max-width:none;overflow-wrap:anywhere;
+ }
+}
