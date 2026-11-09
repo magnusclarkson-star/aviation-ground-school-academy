@@ -61,6 +61,20 @@ try{
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-backlight'),'blue');
  assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(212, 234, 255)');
  assert.equal(await desktop.locator('#cockpitBacklightPicker [data-cockpit-backlight="blue"]').getAttribute('aria-pressed'),'true');
+ // The inline dimmer stays in More; each step must change illumination,
+ // not tile dimensions or any of the flight model's instrument values.
+ const dimmer=desktop.locator('#cockpitBacklightDimmer');
+ assert.equal(await dimmer.inputValue(),'2','normal brightness is the initial selection');
+ await dimmer.fill('1');
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'dim');
+ assert.equal(await desktop.locator('#cockpitBacklightLevel').textContent(),'DIM');
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(145, 169, 189)');
+ await dimmer.fill('3');
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'bright');
+ assert.equal(await desktop.locator('#cockpitBacklightLevel').textContent(),'BRIGHT');
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(224, 243, 255)');
+ await dimmer.fill('2');
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(212, 234, 255)');
  const litGauge=await firstGauge.boundingBox();
  assert.ok(Math.abs(originalGauge.height-litGauge.height)<1,
   'backlighting must not resize round instruments or shift flight controls');
@@ -347,6 +361,14 @@ try{
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge-title').first().evaluate(
   el=>getComputedStyle(el).color),'rgb(212, 234, 255)',
   'R44 dials illuminate blue on phone screens');
+ await phone.locator('#cockpitBacklightDimmer').fill('1');
+ assert.equal(await phone.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'dim');
+ assert.equal(await phone.locator('#cockpitBacklightLevel').textContent(),'DIM');
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge-title').first().evaluate(
+  el=>getComputedStyle(el).color),'rgb(145, 169, 189)');
+ await phone.locator('#cockpitBacklightDimmer').fill('2');
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
+  'compact phone dimmer does not cause horizontal scrolling');
  await phone.locator('#cockpitHelpToggle').tap();
  assert.ok(await phone.evaluate(()=>{
   const c=document.getElementById('collectivePanel').getBoundingClientRect();
