@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="flight-sim-aircraft-gallery.css">
 <link rel="stylesheet" href="flight-sim-inspection.css">
 <link rel="stylesheet" href="flight-sim-r44.css">
+<link rel="stylesheet" href="flight-sim-compact-actions.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -132,9 +133,12 @@
     <button type="button" id="cockpitFocusButton" class="cockpit-info-button cockpit-focus-button" aria-pressed="false" aria-label="Enter cockpit-only flight view">⛶ Cockpit view</button>
     <span id="cockpitFocusStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
     <span id="cockpitRestartStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
-    <button type="button" class="cockpit-info-button" data-cockpit-help="panel" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Instruments</button>
-    <button type="button" class="cockpit-info-button" data-cockpit-help="controls" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Controls</button>
-    <button type="button" class="cockpit-info-button" data-cockpit-help="radio" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Radio</button>
+    <button type="button" id="cockpitHelpToggle" class="cockpit-info-button" aria-expanded="false" aria-controls="cockpitHelpChoices" aria-label="Open more cockpit tools and help">ⓘ More</button>
+    <div id="cockpitHelpChoices" class="cockpit-help-choices" data-open="false" role="group" aria-label="More cockpit tools and information">
+     <button type="button" class="cockpit-info-button" data-cockpit-help="panel" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Instruments</button>
+     <button type="button" class="cockpit-info-button" data-cockpit-help="controls" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Controls</button>
+     <button type="button" class="cockpit-info-button" data-cockpit-help="radio" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Radio</button>
+    </div>
    </div>
    <section id="cockpitInfoPanel" class="cockpit-info-panel" aria-label="Cockpit learning information" aria-live="polite" hidden>
     <div class="cockpit-info-head"><strong id="cockpitInfoTitle">Cockpit</strong><button type="button" id="cockpitInfoClose" aria-label="Close cockpit information">✕</button></div>

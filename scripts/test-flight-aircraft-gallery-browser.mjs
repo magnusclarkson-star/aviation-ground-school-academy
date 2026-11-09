@@ -58,9 +58,13 @@ try{
  phone.on("pageerror",e=>errors.push("phone "+e.message));
  await phone.goto(url,{waitUntil:"load"});
  const thumb=phone.locator("#cockpitAircraftPhotoButton");
+ assert.equal(await thumb.isVisible(),false,"phone aircraft photos are tucked into More, not an extra oversized button");
+ assert.equal(await thumb.evaluate(el=>el.parentElement.id),"cockpitHelpChoices");
+ await phone.locator("#cockpitHelpToggle").tap();
  assert.equal(await thumb.isVisible(),true);
  assert.ok((await thumb.boundingBox()).height>=38);
  await thumb.tap();
+ assert.equal(await phone.locator("#cockpitHelpToggle").getAttribute("aria-expanded"),"false");
  assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  const overlay=await phone.locator("#cockpitAircraftGallery").boundingBox();
@@ -74,6 +78,8 @@ try{
  assert.equal(await phone.locator("body").getAttribute("data-cockpit-focus"),"on");
  await phone.setViewportSize({width:844,height:390});
  await phone.waitForTimeout(100);
+ assert.equal(await thumb.isVisible(),false,"landscape gallery also remains behind More");
+ await phone.locator("#cockpitHelpToggle").tap();
  assert.equal(await thumb.isVisible(),true);
  await thumb.tap();
  assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),true);

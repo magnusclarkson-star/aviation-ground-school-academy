@@ -29,8 +29,24 @@ function attach({documentLike}={}){
  buttonPhoto.width=64;buttonPhoto.height=46;buttonPhoto.decoding="async";buttonPhoto.src=FRAMES[0].src;
  const buttonCaption=element("span","aircraft-photo-label");buttonCaption.textContent="AIRCRAFT PICTURES";
  button.append(buttonPhoto,buttonCaption);
- const after=actions.querySelector(".cockpit-info-button:not(.cockpit-focus-button)");
- actions.insertBefore(button,after);
+ const after=actions.querySelector("#cockpitHelpToggle")||
+  actions.querySelector(".cockpit-info-button:not(.cockpit-focus-button)");
+ const more=doc.getElementById("cockpitHelpChoices");
+ const win=doc.defaultView||root;
+ const narrow=()=>win?.matchMedia?.(
+  "(max-width:740px), (orientation:landscape) and (max-height:620px) and (min-width:600px)"
+ )?.matches??false;
+ function placePhotoAction(){
+  // Photo browsing stays available, but becomes a More-menu item on phones
+  // instead of occupying an entire extra action-row cell.
+  if(narrow()&&more){
+   if(button.parentElement!==more)more.insertBefore(button,more.firstChild);
+  }else if(button.parentElement!==actions){
+   actions.insertBefore(button,after);
+  }
+ }
+ placePhotoAction();
+ win?.addEventListener?.("resize",placePhotoAction);
 
  const overlay=element("div","aircraft-gallery-overlay");
  overlay.id="cockpitAircraftGallery";overlay.hidden=true;
