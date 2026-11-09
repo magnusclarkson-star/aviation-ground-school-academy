@@ -136,3 +136,46 @@ test("compact PFD opens and closes through touch without cloning the live SVG",(
  listeners.get("doc:keydown")({key:"Escape",preventDefault(){}});
  assert.equal(zoom.isExpanded(),false);
 });
+
+
+test("a complete departure, two return turns and runway landing remain possible",()=>{
+ const state=Flight.makeState("airplane","runway",{airframeId:"c172"});
+ const input=Flight.makeInput("airplane");
+ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+ let segment="takeoff",rejoined=false;
+ for(let n=0;n<8000;n++){
+  if(segment==="takeoff"){
+   input.throttle=1;input.pitch=-.5;input.bank=0;
+   if(state.zM>1900&&!state.onGround){segment="firstTurn";}
+  }else if(segment==="firstTurn"){
+   input.bank=1;input.throttle=.7;input.pitch=-.05;
+   if(state.headingDeg>=175&&state.headingDeg<210){
+    segment="downwind";input.bank=0;
+   }
+  }else if(segment==="downwind"){
+   input.bank=0;input.throttle=.6;input.pitch=-.12;
+   if(state.zM< -1900)segment="secondTurn";
+  }else if(segment==="secondTurn"){
+   input.bank=1;input.throttle=.57;input.pitch=.12;
+   if(state.headingDeg>=356||state.headingDeg<12){
+    segment="final";input.bank=0;rejoined=true;
+   }
+  }else{
+   const target=(((-state.xM/450*28)%360)+360)%360;
+   const diff=((target-state.headingDeg+540)%360)-180;
+   input.bank=clamp(diff*.07,-.5,.5);
+   const desiredAlt=clamp((-state.zM)/18,0,130);
+   input.pitch=clamp(.03+(state.altitudeM-desiredAlt)*.013+
+    state.verticalMs*.03,-.3,.64);
+   input.throttle=.45;
+  }
+  Flight.step(state,input,.05);
+  if(state.phase==="halted")break;
+  if(state.phase==="rollout")break;
+ }
+ assert.equal(rejoined,true,"the aircraft should reach a runway return leg");
+ assert.equal(state.phase,"rollout","the aircraft should touch down without a reset");
+ assert.ok(Math.abs(state.xM)<24,"runway centreline is 48 m wide");
+ assert.ok(state.zM>=0&&state.zM<=1800,"touchdown is on the original runway");
+ assert.ok(state.time<300,"circuit is achievable inside a normal exercise");
+});
