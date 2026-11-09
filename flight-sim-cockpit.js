@@ -413,6 +413,23 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  const about=doc.querySelector(".sim-about");
  const main=doc.querySelector("main");
  if(about&&main)main.appendChild(about);
+ const restartButton=$("restartFlight");
+ const actionBar=cockpitStation.querySelector(".cockpit-actions");
+ const collectivePanel=$("collectivePanel");
+ const restartDock=doc.createElement("div");
+ restartDock.className="restart-by-collective";
+ restartDock.hidden=true;
+ if(collectivePanel)collectivePanel.insertAdjacentElement("afterend",restartDock);
+ function placeRestart(profile){
+  if(!restartButton||!actionBar||!collectivePanel)return;
+  if(profile.family==="rotor"){
+   restartDock.hidden=false;
+   restartDock.appendChild(restartButton);
+  }else{
+   restartDock.hidden=true;
+   actionBar.insertBefore(restartButton,actionBar.firstElementChild);
+  }
+ }
  const select=$("cockpitAircraftSelect");
  select.replaceChildren();
  for(const frame of FRAMES){
@@ -543,6 +560,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   const profile=byId(id);active=profile.id;select.value=active;
   const deck=$("cockpitStation");
   deck.dataset.airframe=profile.id;deck.dataset.family=profile.family;
+  placeRestart(profile);
   $("cockpitAircraftLabel").textContent=profile.title;
   $("cockpitAircraftCaption").textContent=profile.caption+" · "+profile.pilot;
   $("cockpitAircraftNotice").textContent=profile.family==="jet"?"FLIGHT DISPLAYS":profile.family==="rotor"?"ROTORCRAFT INSTRUMENTS":"PRIMARY FLIGHT INSTRUMENTS";
