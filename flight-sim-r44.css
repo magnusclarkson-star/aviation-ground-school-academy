@@ -345,3 +345,35 @@
   width:25px;height:25px;min-height:25px;right:29px;
  }
 }
+
+/* Phone flight-deck refinement: the eight live gauges already give a full
+   scan. Avoid duplicating their values below them and preserve the tappable
+   lesson/instrument information control. */
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-family="rotor"] .r44-quick-scan{
+  display:none!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-visual-panel{
+  margin-bottom:2px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel{
+  margin-top:2px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain #cockpitRestartDock{
+  margin-top:2px!important;
+ }
+}
+/* Shallow landscape displays: avoid clipping control handles while ensuring
+   the instrument faces remain visible without horizontal page scrolling. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:2px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge{
+  width:min(100%,110px);
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel .control-pad{
+  height:116px!important;
+ }
+}
