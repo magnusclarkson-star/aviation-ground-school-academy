@@ -110,3 +110,32 @@
  .aircraft-gallery-choice img{height:43px}
  .aircraft-gallery-choice span{font-size:8px}
 }
+
+
+/* Restore prominent entry to the rotating 360° aircraft viewer without
+   adding another large button beneath the cockpit instruments. */
+.aircraft-gallery-inspect{
+ flex:0 0 auto;
+ min-height:36px;
+ min-width:101px;
+ padding:5px 9px;
+ border:1px solid #a9cdda;
+ border-radius:7px;
+ background:#244f67;
+ color:#f6faf7;
+ font:800 11px/1.12 system-ui,sans-serif;
+ white-space:nowrap;
+ cursor:pointer;
+ touch-action:manipulation;
+}
+.aircraft-gallery-inspect:focus-visible,
+.aircraft-gallery-image[role="button"]:focus-visible{
+ outline:3px solid #ffe0a0;outline-offset:2px;
+}
+.aircraft-gallery-image[role="button"]{cursor:zoom-in;touch-action:manipulation}
+@media(max-width:740px){
+ .aircraft-gallery-inspect{min-height:34px;min-width:91px;padding:4px 6px;font-size:10px}
+}
+@media(orientation:landscape) and (max-height:510px){
+ .aircraft-gallery-inspect{min-height:28px;min-width:87px;padding:3px 5px;font-size:9px}
+}
