@@ -65,15 +65,15 @@ try{
  // not tile dimensions or any of the flight model's instrument values.
  const dimmer=desktop.locator('#cockpitBacklightDimmer');
  assert.equal(await dimmer.inputValue(),'2','normal brightness is the initial selection');
- await dimmer.fill('1');
+ await dimmer.evaluate(el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'dim');
  assert.equal(await desktop.locator('#cockpitBacklightLevel').textContent(),'DIM');
  assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(145, 169, 189)');
- await dimmer.fill('3');
+ await dimmer.evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'bright');
  assert.equal(await desktop.locator('#cockpitBacklightLevel').textContent(),'BRIGHT');
  assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(224, 243, 255)');
- await dimmer.fill('2');
+ await dimmer.evaluate(el=>{el.value='2';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(212, 234, 255)');
  const litGauge=await firstGauge.boundingBox();
  assert.ok(Math.abs(originalGauge.height-litGauge.height)<1,
@@ -361,12 +361,12 @@ try{
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge-title').first().evaluate(
   el=>getComputedStyle(el).color),'rgb(212, 234, 255)',
   'R44 dials illuminate blue on phone screens');
- await phone.locator('#cockpitBacklightDimmer').fill('1');
+ await phone.locator('#cockpitBacklightDimmer').evaluate(el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await phone.locator('#cockpitStation').getAttribute('data-instrument-dimmer'),'dim');
  assert.equal(await phone.locator('#cockpitBacklightLevel').textContent(),'DIM');
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge-title').first().evaluate(
   el=>getComputedStyle(el).color),'rgb(145, 169, 189)');
- await phone.locator('#cockpitBacklightDimmer').fill('2');
+ await phone.locator('#cockpitBacklightDimmer').evaluate(el=>{el.value='2';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   'compact phone dimmer does not cause horizontal scrolling');
  await phone.locator('#cockpitHelpToggle').tap();
