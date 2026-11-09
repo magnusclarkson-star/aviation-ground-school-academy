@@ -9,67 +9,67 @@
   padding:3px!important;
   margin-bottom:1px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid{
   width:100%!important;
   max-width:100%!important;
   gap:3px!important;
   align-items:stretch!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd{
   min-width:0!important;
   min-height:0!important;
   padding:2px!important;
   border-width:2px!important;
   border-radius:4px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-head{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-head{
   font-size:clamp(7px,1.9vw,9px)!important;
   min-height:12px!important;
   letter-spacing:0!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-foot{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-foot{
   display:none!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-body{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-body{
   min-height:54px!important;
   padding:2px!important;
   overflow:hidden;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-attitude{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-attitude{
   height:clamp(52px,16vw,73px)!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-readouts{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-readouts{
   margin-top:2px!important;
   gap:2px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-readouts span,
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-line{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-readouts span,
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-line{
   font-size:clamp(7px,1.8vw,9px)!important;
   margin-bottom:2px!important;
   gap:2px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-map-body,
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-map-body .cockpit-nav-scene{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body,
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-scene{
   min-height:61px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-map-body .cockpit-nav-scene svg{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-scene svg{
   height:clamp(57px,16vw,76px)!important;
   min-height:0!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-nav-readouts{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-nav-readouts{
   min-height:16px!important;
   padding:1px!important;
  }
  /* F35 panoramic screen normally spans the whole panel and pushes navigation
     down. On a phone keep the primary PFD and navigation side by side. */
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-panoramic{
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic{
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
  }
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{
   grid-column:auto!important;
   min-height:0!important;
  }
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-panoramic .cockpit-mfd-pfd{
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic .cockpit-mfd-pfd{
   grid-row:auto!important;
  }
 }
@@ -81,59 +81,59 @@
  #cockpitStation[data-family="rotor"][data-instruments="glass"] #cockpitMain .cockpit-visual-panel{
   padding:2px 4px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid{
   width:100%!important;
   max-width:700px!important;
   margin-inline:auto!important;
   gap:3px!important;
  }
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-panoramic,
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-quad{
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic,
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-quad{
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
  }
- #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic>.cockpit-mfd:first-child{
   grid-column:auto!important;
   min-height:0!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd{
   min-height:0!important;
   padding:2px!important;
   border-width:2px!important;
   border-radius:4px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-head{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-head{
   min-height:10px!important;
   font-size:7px!important;
   letter-spacing:0!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-body{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-body{
   min-height:40px!important;
   padding:1px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-foot{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-foot{
   display:none!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-attitude{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-attitude{
   height:42px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-readouts{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-readouts{
   margin-top:1px!important;
   gap:1px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-readouts span,
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-line{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-readouts span,
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-line{
   font-size:7px!important;
   margin-bottom:1px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-map-body{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body{
   min-height:47px!important;
   padding:1px!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-map-body .cockpit-nav-scene svg{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-scene svg{
   height:45px!important;
   min-height:0!important;
  }
- #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-nav-readouts{
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-nav-readouts{
   padding:1px!important;
   min-height:13px!important;
  }
