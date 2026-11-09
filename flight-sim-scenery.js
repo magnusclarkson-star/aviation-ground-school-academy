@@ -19,7 +19,7 @@ function project(state,x,y,z,width=960,height=540){
  const focal=height*1.2;
  return {x:width/2+lateral*focal/depth,y:height*.49-heightAxis*focal/depth,depth};
 }
-function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
+function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",airframeId=null}={}){
  const palette=root?.AGSAFlightLighting?.choose?.(lighting)||{
   sky2d:["#175784","#78c4e0","#dceaf0"],clouds:"#e0f4f4a1",
   hills:"#587e85",grass:["#729576","#507c5c","#355f4b"]
@@ -240,6 +240,12 @@ function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
  // Grade only the illustrated outside scenery. The cockpit PFD/controls remain
  // outside this canvas, and the stationary white reference cue stays legible.
  if(palette.overlay){ctx.fillStyle=palette.overlay;ctx.fillRect(0,0,w,h);}
+ if(view==="chase"){
+  const Chase=root?.AGSAExteriorChase2D||
+   (typeof module!=="undefined"&&module.exports?require("./flight-sim-exterior-2d.js"):null);
+  Chase?.paint(ctx,state,{id:airframeId||(state.mode==="helicopter"?"r44":"c172"),width:w,height:h});
+ }
+ if(view!=="chase"){
  // Fixed airframe reference cue and non-certified horizon tick marks.
  ctx.strokeStyle="#ffffffc4";ctx.lineWidth=2;
  ctx.beginPath();ctx.moveTo(w*.43,h*.53);ctx.lineTo(w*.485,h*.53);
@@ -248,6 +254,7 @@ function draw(canvas,state,{reducedMotion=false,lighting="day"}={}){
  ctx.strokeStyle="#ffffff45";ctx.lineWidth=1;
  for(const x of [.1,.9]){
   ctx.beginPath();ctx.moveTo(w*x,h*.1);ctx.lineTo(w*x,h*.9);ctx.stroke();
+ }
  }
  return true;
 }
