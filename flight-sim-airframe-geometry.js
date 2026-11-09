@@ -124,8 +124,17 @@ function addC172(m){
   [0,.52,-6.40]],c,.16);
  sheet(m,[[0,.69,-6.08],[0,2.08,-6.08],[0,2.40,-6.38],
   [0,.70,-6.43]],strip,.08);
- m.box(-.70,.62,.4,1.4,.34,2.0,palette.window);
- m.box(-.75,.53,2.2,1.5,.24,.8,palette.window);
+ // Two sloped windshield panes, a centre pillar and solid cabin roof.
+ // Previously a large blue rectangular block concealed the trainer shape.
+ for(const side of [-1,1]){
+  sheet(m,[[side*.07,.83,1.92],[side*.71,.73,1.93],
+   [side*.72,.27,3.08],[side*.07,.29,3.10]],palette.window,.025);
+  sheet(m,[[side*.74,.69,1.91],[side*.78,.48,2.49],
+   [side*.73,.30,3.05],[side*.70,.73,1.92]],tint(palette.window,.79),.025);
+ }
+ m.box(-.045,.28,2.86,.09,.55,.16,palette.metal);
+ m.box(-.75,.76,.60,1.5,.13,1.39,c);
+ m.box(-.74,.73,1.86,1.48,.10,.10,palette.metal);
  // Wing struts and undercarriage help distinguish trainer from fighters.
  for(const sign of [-1,1]){
   const s=sign;
@@ -137,6 +146,13 @@ function addC172(m){
  // Trim along each wing rather than a square bar spanning the aircraft.
  mirrored(m,[[.83,1.04,-1.41],[7.25,1.04,-1.77],
   [7.24,1.04,-1.52],[.84,1.04,-1.20]],strip,.035);
+ // Slim trailing-edge hinge seams divide inboard flaps from ailerons;
+ // the existing animated flap and aileron meshes remain independent.
+ mirrored(m,[[1.03,1.025,-1.46],[4.74,1.025,-1.60],
+  [4.74,1.025,-1.53],[1.03,1.025,-1.39]],tint(c,.65),.017);
+ mirrored(m,[[5.06,1.03,-1.66],[7.28,1.03,-1.76],
+  [7.28,1.03,-1.70],[5.06,1.03,-1.59]],tint(c,.73),.017);
+ m.box(-2.85,.87,.66,.46,.10,.08,palette.ivory);
  // Separate cabin windows and doors with realistic wing root spacing.
  for(const side of [-1,1]){
   const x=side*.90;
@@ -145,6 +161,8 @@ function addC172(m){
   sheet(m,[[x,.32,-1.04],[x,.74,-1.01],[x,.74,-.03],
    [x,.32,-.01]],palette.window,.04);
   m.box(x-.048,.23,.06,.096,.11,.18,palette.metal);
+  m.box(x-.055,.25,-1.04,.11,.06,2.17,tint(c,.79));
+  m.box(x-.055,.69,-1.04,.11,.055,2.10,tint(c,.89));
   m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,side>0?palette.red:palette.blue);
   sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
    [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
