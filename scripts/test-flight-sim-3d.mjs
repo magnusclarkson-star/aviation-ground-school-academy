@@ -67,6 +67,19 @@ assert.ok(top.eye[1]>side.eye[1]+20,"overhead camera clears main rotor");
 assert.equal(top.view,"top");
 assert.throws(()=>Three.cameraPose(null),/state required/);
 assert.throws(()=>Three.cameraPose(rotor,"satellite"),/Unknown 3D camera/);
+for(const id of Three.airframeIds){
+ const shadow=Three.buildShadow(id);
+ assert.equal(shadow.triangles,28,id+" projected footprint is a low-cost 28-facet ellipse");
+ assert.ok(shadow.positions.every(Number.isFinite),id+" shadow geometry finite");
+ for(let j=1;j<shadow.positions.length;j+=3)
+  assert.equal(shadow.positions[j],0,"shadow stays at zero relative height");
+ const aircraft=Three.buildVehicle(id);
+ const span=Math.max(...Array.from(aircraft.positions).filter((_,i)=>i%3===0))-
+  Math.min(...Array.from(aircraft.positions).filter((_,i)=>i%3===0));
+ const shadowSpan=Math.max(...Array.from(shadow.positions).filter((_,i)=>i%3===0))-
+  Math.min(...Array.from(shadow.positions).filter((_,i)=>i%3===0));
+ assert.ok(shadowSpan>=span*.8||id==="r44",id+" shadow footprint follows wing span");
+}
 assert.equal(Three.createRenderer(null),null);
 assert.equal(Three.createRenderer({getContext(){return null}}),null);
 assert.equal(Three.createRenderer({getContext(){throw Error("WebGL blocked")}}),null);

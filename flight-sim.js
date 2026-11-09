@@ -281,6 +281,8 @@ function syncCockpitFrame(){
   " windscreen visible. Instruments and touch controls remain unobstructed.";
 }
 function drawScenery(now){
+ // Avoid unnecessary GPU/Canvas work when Android or desktop hides the tab.
+ if(document.hidden)return;
  if(renderer3D){
   if(now-prev3D>=33){
    try{if(!renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId(),airframeId:airframeId()})){
