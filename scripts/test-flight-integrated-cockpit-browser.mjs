@@ -217,36 +217,51 @@ try{
  assert.deepEqual(precisionCues,{counting:'HOVER 3/8 S · GS 0 KT',
   landed:'PRECISION LANDING'},
   'phone hover mini-panel shows measured hold time and precision landing result');
- const primary=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
+ const visibleGauges=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
   els=>els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.dataset.gauge));
- assert.deepEqual(primary,['speed','attitude','alt','rpm'],
-  'R44 phone keeps four readable live primary analog gauges beside the controls');
- const primaryWidth=await phone.locator('#cockpitVisualPanel [data-gauge="attitude"]').evaluate(
-  el=>el.getBoundingClientRect().width);
- assert.ok(primaryWidth>=55,'helicopter portrait gauges must not shrink to tiny 4-column thumbnails');
+ assert.deepEqual(visibleGauges,
+  ['speed','attitude','alt','rpm','heading','vsi','power','turn'],
+  'all eight R44 instruments must be visible together without a hidden/expand action');
+ const panelLayout=await phone.evaluate(()=>{
+  const panel=document.querySelector('#cockpitVisualPanel');
+  const deck=document.querySelector('#cockpitMain');
+  const gauges=[...panel.querySelectorAll('.cockpit-gauge')];
+  const box=panel.getBoundingClientRect(),r=el=>el.getBoundingClientRect();
+  const faces=gauges.map(g=>r(g)),cs=getComputedStyle(panel);
+  return {screen:innerWidth,bodyWidth:document.documentElement.scrollWidth,
+   borderRadius:parseFloat(cs.borderTopLeftRadius),
+   background:cs.backgroundImage,
+   top:box.top,bottom:box.bottom,
+   widths:faces.map(g=>g.width),lefts:faces.map(g=>g.left),
+   rights:faces.map(g=>g.right),tops:faces.map(g=>g.top),
+   deckRadius:parseFloat(getComputedStyle(deck).borderTopLeftRadius)};
+ });
+ assert.ok(panelLayout.borderRadius<=8&&panelLayout.deckRadius<=8,
+  'the unnecessary oval dashboard frame is flat on the R44');
+ assert.equal(panelLayout.background,'none',
+  'oversized oval background decoration has been removed from instrument panel');
+ assert.ok(Math.min(...panelLayout.widths)>=65,
+  'eight individual phone gauges remain finger-readable, not tiny thumbnails');
+ assert.ok(panelLayout.rights.every(x=>x<=panelLayout.screen+1)&&
+  panelLayout.lefts.every(x=>x>=0),
+  'no R44 instrument is cut off horizontally at 390 px');
+ assert.ok(Math.max(...panelLayout.tops)-Math.min(...panelLayout.tops)<220,
+  'all eight R44 gauges fit into two compact rows instead of a tall oval');
+ assert.ok(panelLayout.bodyWidth<=panelLayout.screen+2,'R44 cockpit must not overflow phone');
+ assert.equal(await phone.locator('#cockpitVisualPanel .r44-secondary-toggle').count(),0,
+  'obsolete show-all control no longer wastes screen height');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="heading"]').textContent(),'000°');
  await phone.waitForFunction(()=>
   document.querySelector('#cockpitVisualPanel [data-r44-live="power"]').textContent==='48%');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="power"]').textContent(),'48%');
- const more=phone.locator('#cockpitVisualPanel .r44-secondary-toggle');
- assert.equal(await more.isVisible(),true,'secondary instruments have a native finger-sized toggle');
- assert.ok((await more.boundingBox()).height>=38);
- await more.tap();
- assert.equal(await more.getAttribute('aria-expanded'),'true');
- assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
-  els=>els.filter(el=>getComputedStyle(el).display!=='none').length),8);
- const secondaryHeading=phone.locator('#cockpitVisualPanel [data-gauge="heading"]');
- const headingBounds=await secondaryHeading.boundingBox();
- assert.ok(headingBounds.width>=55&&headingBounds.height>=55,
-  'expanded R44 heading retains a proper individually tappable instrument face: '+JSON.stringify(headingBounds));
- await secondaryHeading.tap();
+ const heading=phone.locator('#cockpitVisualPanel [data-gauge="heading"]');
+ const headingBounds=await heading.boundingBox();
+ assert.ok(headingBounds.width>=65&&headingBounds.height>=65,
+  'the visible heading dial remains individually tappable: '+JSON.stringify(headingBounds));
+ await heading.tap();
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true,
-  'secondary R44 heading dial retains tap-only individual instrument enlargement');
+  'tapping the visible R44 heading instrument still enlarges only that instrument');
  await phone.locator('#cockpitZoomClose').tap();
- await more.tap();
- assert.equal(await more.getAttribute('aria-expanded'),'false');
- assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
-  els=>els.filter(el=>getComputedStyle(el).display!=='none').length),4);
  const rotorPhone=await phone.evaluate(()=>{
   const rect=id=>document.querySelector(id).getBoundingClientRect();
   return {collective:rect('#collectivePanel'),cyclic:rect('#controlPad'),
