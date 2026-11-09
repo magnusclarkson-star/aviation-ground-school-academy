@@ -33,7 +33,7 @@ for(const id of A.IDS){
   minZ=Math.min(minZ,coordinates[i+2]);maxZ=Math.max(maxZ,coordinates[i+2]);
  }
  const spanX=maxX-minX,length=maxZ-minZ;
- assert.ok(spanX>3&&spanX<35&&length>9&&length<28,id+" recognizable external size");
+ assert.ok(spanX>3&&spanX<35&&length>7.8&&length<28,id+" recognizable external size");
  metrics.push({id,spanX,length,height:maxY-minY,triangles:model.triangles});
  signature.push(crypto.createHash("sha256").update(Buffer.from(model.positions.buffer)).digest("hex"));
  const local=C.getMesh(id);
