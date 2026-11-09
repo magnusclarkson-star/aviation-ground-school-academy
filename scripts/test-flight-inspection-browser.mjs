@@ -104,6 +104,7 @@ try{
  assert.ok(Number.parseInt(pinchZoom)>110,"two fingers expanding zoom toward selected aircraft: "+pinchZoom);
  assert.match(await mobile.locator("#aircraftInspectAngles").textContent(),/AZ 000/,
   "pinch zoom does not unexpectedly orbit the aircraft");
+ await cdp.detach();
  assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "portrait inspector does not introduce horizontal scroll");
  await mobile.setViewportSize({width:844,height:390});
@@ -113,7 +114,9 @@ try{
  assert.ok(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "landscape inspector fits screen");
  await mobile.locator("#aircraftInspectClose").tap();
- assert.equal(await mobile.locator("#aircraftInspectDialog").isVisible(),false);
+ await mobile.locator("#aircraftInspectDialog").waitFor({state:"hidden",timeout:2000});
+ assert.equal(await mobile.locator("#aircraftInspectDialog").isVisible(),false,
+  "touching Close after a pinch dismisses the inspector");
  assert.ok(await mobile.locator("#controlPad").isVisible());
  assert.deepEqual(errors,[],"no crashes on desktop, phone or 2D fallback");
  console.log("Aircraft inspection browser checks passed: seven distinct orbit renders, drag, zoom, auto-spin, Escape, phone layout and rotorcraft 2D fallback.");
