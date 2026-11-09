@@ -317,3 +317,85 @@
   font-size:10px!important;
  }
 }
+
+/* Reliable fixed-position restart: the actual button lives in HTML directly
+   after the collective slider, independent of viewport or script timing. */
+#cockpitStation #cockpitMain .side-controls #cockpitRestartDock{
+ display:flex!important;
+ justify-content:center;
+ align-items:center;
+ width:100%;
+ margin:3px 0 0;
+ padding:0!important;
+}
+#cockpitStation #cockpitMain .side-controls #cockpitRestartDock #restartFlight{
+ box-sizing:border-box;
+ display:inline-flex!important;
+ align-items:center;justify-content:center;
+ flex:0 1 auto!important;
+ width:auto!important;max-width:100%!important;min-width:0!important;
+ height:34px!important;min-height:34px!important;max-height:34px!important;
+ margin:0!important;padding:3px 10px!important;
+ border-radius:6px!important;
+ background:linear-gradient(160deg,#f4c368,#d9973e);
+ color:#202019;font:750 11px/1 system-ui,sans-serif!important;
+ white-space:nowrap;touch-action:manipulation;
+}
+#cockpitStation .cockpit-actions #cockpitInstrumentStyle{
+ display:inline-flex!important;
+ align-items:center;justify-content:center;
+ flex:0 1 auto!important;
+ width:auto!important;min-width:0!important;max-width:none!important;
+ height:36px!important;min-height:36px!important;max-height:36px!important;
+ padding:3px 6px!important;
+ border-radius:6px!important;
+ font:750 10px/1.1 system-ui,sans-serif!important;
+ white-space:nowrap!important;
+}
+#cockpitStation .cockpit-actions #cockpitInstrumentStyle[aria-pressed="true"]{
+ background:#214856;border-color:#f4d28f;color:#fff0bf;
+}
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions,
+ #cockpitStation[data-family="rotor"] .cockpit-info-toolbar.cockpit-actions{
+  grid-template-columns:minmax(120px,2.25fr) minmax(58px,.8fr) minmax(68px,.96fr) minmax(45px,.65fr)!important;
+ }
+ #cockpitStation .cockpit-actions #cockpitInstrumentStyle{
+  width:100%!important;min-height:34px!important;height:34px!important;max-height:34px!important;
+  font-size:9px!important;padding:2px!important;
+ }
+ #cockpitStation #cockpitMain .side-controls #cockpitRestartDock #restartFlight{
+  min-height:32px!important;height:32px!important;max-height:32px!important;
+  font-size:10px!important;padding:2px 6px!important;
+ }
+}
+@media(max-width:375px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions,
+ #cockpitStation[data-family="rotor"] .cockpit-info-toolbar.cockpit-actions{
+  grid-template-columns:minmax(111px,2fr) minmax(49px,.75fr) minmax(57px,.9fr) minmax(43px,.65fr)!important;
+ }
+}
+/* Both analogue and glass panels occupy the same instrument well,
+   preserving flight controls and the live position-based navigation. */
+#cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-triple{
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ width:100%;
+}
+#cockpitStation[data-instruments="glass"][data-family="rotor"] #cockpitMain .cockpit-mfd{
+ border-radius:5px;
+}
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-triple{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;
+ }
+ #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-triple>.cockpit-mfd-pfd{
+  grid-column:1/-1;
+ }
+ #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-triple .cockpit-mfd{
+  min-width:0;
+ }
+ #cockpitStation[data-instruments="glass"] #cockpitMain .cockpit-mfd-grid.cockpit-mfd-triple .cockpit-mfd-body{
+  min-height:64px;
+ }
+}
