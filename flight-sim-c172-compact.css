@@ -136,3 +136,133 @@
 }
 /* Only the tapped gauge expands via the existing live instrument overlay.
  * Never apply the six-pack size limits to #cockpitZoomContent. */
+
+/* C172 round-cockpit revision: navigation belongs to the RIGHT of the
+ * smaller 3x2 analogue six-pack, in portrait as well as landscape.
+ * Do not touch the R44, fighter aircraft, glass panel or expanded popover.
+ */
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-visual-panel{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.75fr) minmax(125px,1fr)!important;
+ max-width:630px!important;
+ width:100%;
+ align-items:stretch!important;
+ gap:4px!important;
+ padding:4px!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack{
+ max-width:324px!important;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ grid-auto-flow:row!important;
+ gap:3px!important;
+ justify-items:center!important;
+ align-content:center!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack>.cockpit-gauge{
+ width:min(100%,100px);
+ max-width:100px;
+ aspect-ratio:1!important;
+ box-sizing:border-box!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-avionics{
+ min-width:0!important;
+ width:100%!important;
+ display:flex!important;
+ flex-direction:column!important;
+ align-self:stretch!important;
+ gap:2px!important;
+ padding:3px!important;
+ border-width:2px!important;
+ border-radius:4px!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+ flex:1 1 auto!important;
+ width:100%!important;
+ min-width:0!important;
+ min-height:124px!important;
+ max-height:none!important;
+ grid-column:auto!important;
+ grid-row:auto!important;
+}
+/* Keep the real-time map visible and its click-to-enlarge behavior intact. */
+#cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-nav-scene{
+ flex:1 1 auto;
+ min-height:0;
+}
+@media(max-width:740px) and (orientation:portrait){
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-visual-panel{
+  grid-template-columns:minmax(0,1.6fr) minmax(105px,1fr)!important;
+  max-width:100%!important;
+  align-items:stretch!important;
+  gap:3px!important;
+  padding:3px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack{
+  width:100%!important;
+  max-width:100%!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:2px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack>.cockpit-gauge{
+  width:min(100%,78px)!important;
+  height:auto!important;
+  max-width:78px!important;
+  aspect-ratio:1!important;
+  padding:1px!important;
+  border-width:2px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-avionics{
+  grid-column:2!important;
+  grid-row:1!important;
+  min-height:0!important;
+  padding:2px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-topline{
+  font-size:8px!important;
+  line-height:1.1!important;
+  letter-spacing:0!important;
+  text-align:center!important;
+ }
+ /* Static COM/NAV frequency decoration would crush the moving map in this
+  * narrow column; these values remain accessible in the wider cockpit. */
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-radio,
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-buttons{
+  display:none!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  min-height:clamp(118px,31vw,157px)!important;
+  max-height:none!important;
+  grid-column:auto!important;
+  grid-row:auto!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-nav-readouts{
+  font-size:clamp(6px,1.65vw,8px)!important;
+  min-height:18px!important;
+ }
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-visual-panel{
+  grid-template-columns:minmax(0,1.7fr) minmax(125px,1fr)!important;
+  max-width:610px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack{
+  max-width:280px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack>.cockpit-gauge{
+  width:min(100%,82px)!important;
+  height:auto!important;
+  max-width:82px!important;
+  aspect-ratio:1!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-avionics{
+  max-height:178px!important;
+ }
+ #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  min-height:107px!important;
+ }
+}
+/* In cockpit focus, preserve the two-column arrangement; the previous
+ * generic focus rules otherwise turn the navigator back into a side stack. */
+body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-visual-panel{
+ grid-template-columns:minmax(0,1.7fr) minmax(105px,1fr)!important;
+}
