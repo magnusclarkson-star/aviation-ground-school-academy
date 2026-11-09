@@ -105,54 +105,68 @@
   ctx.restore();
   return true;
  }
+ // Sort by the selected camera direction rather than the original
+ // nose/tail Z axis. This fixes surfaces incorrectly covering the helicopter
+ // rotors and windows in side/overhead non-WebGL views.
+ function viewDepth(point,view){
+  const [x,y,z]=point;
+  if(view==="top")return -y;
+  if(view==="side")return x;
+  return z*.87-y*.48;
+ }
+ function projectedFaces(id,view="chase",animation={}){
+  const faces=[];
+  let order=0;
+  function append(shape,part=null,opacity=1){
+   const points=part?shape.points.map(point=>rotate(point,part.pivot,part.axis,part.angle)):shape.points;
+   faces.push({points,color:shape.color,
+    depth:points.reduce((sum,p)=>sum+viewDepth(p,view),0)/3,
+    opacity,order:order++});
+  }
+  for(const tri of geometry(id))append(tri);
+  const blur=rotorBlurOpacity(animation);
+  if(blur>0)for(const tri of rotorSweepTriangles(id))append(tri,null,blur);
+  for(const part of movingParts(id)){
+   const angle=Number.isFinite(animation?.[part.name])?animation[part.name]:0;
+   for(const tri of part.triangles)append(tri,{...part,angle});
+  }
+  faces.sort((a,b)=>b.depth-a.depth||a.order-b.order);
+  return faces;
+ }
  function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={},orbit={}}={}){
   if(view==="inspect")return paintInspection(ctx,{id,width,height,orbit,animation});
   if(!ctx||!state)return false;
-  const triangles=geometry(id),parts=movingParts(id);
   const scale=Math.max(2,Math.min(width/24,height/17));
   const roll=Number.isFinite(state.rollDeg)?state.rollDeg:0;
   const pitch=Number.isFinite(state.pitchDeg)?state.pitchDeg:0;
+  const altitude=Math.max(0,Number(state.altitudeM)||0);
   ctx.save();
   ctx.translate(width/2,height*.60);
   ctx.rotate(view==="top"?0:-roll*RAD*.55);
-  const altitude=Math.max(0,Number(state.altitudeM)||0);
   if(view!=="top"){
-   ctx.save();
-   ctx.translate(0,height*.25);
+   ctx.save();ctx.translate(0,height*.25);
    ctx.fillStyle="rgba(12,29,39,"+(Math.max(.03,.18-altitude/800)).toFixed(2)+")";
-   ctx.beginPath();
-   ctx.ellipse(0,0,scale*7.0,scale*1.4,0,0,Math.PI*2);
-   ctx.fill();
-   ctx.restore();
+   ctx.beginPath();ctx.ellipse(0,0,scale*7.0,scale*1.4,0,0,Math.PI*2);
+   ctx.fill();ctx.restore();
   }
   const project=([x,y,z])=>view==="top"?
    [x*scale,-z*scale*.92]:
    view==="side"?
    [z*scale*.91,(-y*.95-x*.17)*scale]:
    [(x+z*.12)*scale,(-y*.91-z*(.43+pitch/350))*scale];
-  const fill=(shape,transform)=> {
-   const pts=shape.points.map(p=>project(transform?transform(p):p));
-   const [r,g,b]=shape.color;
-   ctx.beginPath();ctx.moveTo(...pts[0]);ctx.lineTo(...pts[1]);
-   ctx.lineTo(...pts[2]);ctx.closePath();
-   ctx.fillStyle=rgb(r,g,b);ctx.fill();
-  };
-  for(const tri of triangles)fill(tri);
-   const blur=rotorBlurOpacity(animation);
-   if(blur>0){
-    ctx.save();ctx.globalAlpha=blur;
-    for(const tri of rotorSweepTriangles(id))fill(tri);
-    ctx.restore();
-   }
-  for(const part of parts){
-   const angle=Number.isFinite(animation?.[part.name])?animation[part.name]:0;
-   for(const tri of part.triangles)
-    fill(tri,p=>rotate(p,part.pivot,part.axis,angle));
+  // One painter pass for body, rotating blades and hinged surfaces preserves
+  // the correct near/far layer when the camera or selected aircraft changes.
+  for(const face of projectedFaces(id,view,animation)){
+   const [a,b,d]=face.points.map(project);
+   ctx.globalAlpha=face.opacity;
+   ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineTo(...d);
+   ctx.closePath();ctx.fillStyle=rgb(...face.color);ctx.fill();
   }
+  ctx.globalAlpha=1;
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,rotate,paint,paintInspection});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,rotate,viewDepth,projectedFaces,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);
