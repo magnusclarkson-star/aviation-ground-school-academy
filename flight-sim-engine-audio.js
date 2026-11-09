@@ -4,12 +4,15 @@
  */
 (function(root){"use strict";
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number.isFinite(n)?n:a));
-const model=(mode,power)=>{
+const model=(mode,power,airspeedKt=0)=>{
  const p=clamp(Number(power),0,1),heli=mode==="helicopter",jet=mode==="jet";
+ const airflow=clamp(Number(airspeedKt)/170,0,1);
  return Object.freeze({
   primaryHz:heli?95+70*p:jet?116+95*p:118+175*p,
   harmonicHz:heli?235+175*p:jet?510+920*p:275+245*p,
   chopHz:heli?12+8*p:0,
+  airflowGain:airflow*.20,
+  airflowHz:420+920*airflow,
   engineLevel:heli?.14+.065*p:jet?.085+.08*p:.13+.11*p
  });
 };
@@ -17,7 +20,7 @@ function createEngine({windowLike,documentLike}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  const Audio=win?.AudioContext||win?.webkitAudioContext;
  const supported=typeof Audio==="function";
- let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=100,duck=false,mode="airplane",texture="textured",grainGain=null,filterNode=null;
+ let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=100,duck=false,mode="airplane",texture="textured",grainGain=null,filterNode=null,windSource=null,windGain=null,windFilter=null,currentAirspeedKt=0;
  function setTarget(parameter,value){
   if(parameter&&ctx){
    try{parameter.setTargetAtTime(value,ctx.currentTime,.06);}
@@ -32,13 +35,14 @@ function createEngine({windowLike,documentLike}={}){
  function stop(){
   active=false;
   for(const o of osc){try{o.stop()}catch{}try{o.disconnect()}catch{}}
+  if(windSource){try{windSource.stop()}catch{}try{windSource.disconnect()}catch{}}
   for(const n of nodes){try{n.disconnect()}catch{}}
-  osc=[];nodes=[];gain=null;chopGain=null;grainGain=null;filterNode=null;
+  osc=[];nodes=[];gain=null;chopGain=null;grainGain=null;filterNode=null;windSource=null;windGain=null;windFilter=null;
   if(ctx){try{void ctx.close()?.catch?.(()=>{});}catch{}ctx=null;}
  }
- async function start(nextMode="airplane",power=0){
+ async function start(nextMode="airplane",power=0,airspeedKt=0){
   if(!supported||doc?.hidden)return false;
-  if(active){update(nextMode,power);return true;}
+  if(active){update(nextMode,power,airspeedKt);return true;}
   try{
    // All oscillators are created only within the user's click handler.
    ctx=new Audio();mode=["helicopter","jet"].includes(nextMode)?nextMode:"airplane";
@@ -56,27 +60,48 @@ function createEngine({windowLike,documentLike}={}){
    chopGain=ctx.createGain();chopGain.gain.value=0;
    lfo.connect(chopGain);chopGain.connect(gain.gain);
    osc=[primary,harmonic,lfo,grain];nodes=[pGain,hGain,grainGain,filter,gain,chopGain];
+   // Moving air adds a softly filtered rush proportional to indicated speed.
+   // This is locally generated noise and uses no microphone or audio files.
+   // Skip gracefully on browsers and test environments without buffer APIs.
+   if(typeof ctx.createBuffer==="function"&&typeof ctx.createBufferSource==="function"){
+    const rate=clamp(ctx.sampleRate||44100,8000,48000);
+    const buffer=ctx.createBuffer(1,Math.round(rate*.6),rate);
+    const samples=buffer.getChannelData(0);
+    let seed=7937;
+    for(let i=0;i<samples.length;i++){
+     seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+     samples[i]=(seed/2147483648-1)*.60;
+    }
+    windSource=ctx.createBufferSource();windSource.buffer=buffer;windSource.loop=true;
+    windGain=ctx.createGain();windGain.gain.value=0;
+    windFilter=ctx.createBiquadFilter();windFilter.type="lowpass";windFilter.frequency.value=450;
+    windSource.connect(windFilter);windFilter.connect(windGain);windGain.connect(gain);
+    nodes.push(windFilter,windGain);windSource.start();
+   }
    osc.forEach(o=>o.start());
-   active=true;update(mode,power);
+   active=true;update(mode,power,airspeedKt);
    if(typeof ctx.resume==="function")await ctx.resume();
    if(ctx?.state==="suspended"){stop();return false;}
    return active;
   }catch{stop();return false;}
  }
- function update(nextMode,power){
+ function update(nextMode,power,airspeedKt=currentAirspeedKt){
   if(!active||!ctx)return false;
+  currentAirspeedKt=clamp(Number(airspeedKt),0,400);
   mode=["helicopter","jet"].includes(nextMode)?nextMode:"airplane";
   osc[0].type=mode==="jet"?"sine":"triangle";
   osc[1].type=mode==="jet"?"sine":"sawtooth";
   osc[3].type=mode==="jet"?"sawtooth":"triangle";
   setTarget(filterNode?.frequency,mode==="jet"?2600:1100);
-  const p=clamp(Number(power),0,1),v=model(mode,p);
+  const p=clamp(Number(power),0,1),v=model(mode,p,currentAirspeedKt);
   setTarget(osc[0].frequency,v.primaryHz);
   setTarget(osc[1].frequency,v.harmonicHz);
   setTarget(osc[2].frequency,Math.max(1,v.chopHz));
   setTarget(osc[3].frequency,v.harmonicHz*1.58);
   setTarget(grainGain.gain,texture==="textured"?(mode==="helicopter"?.20:mode==="jet"?.08:.13):.015);
   setTarget(chopGain.gain,mode==="helicopter"?(texture==="textured"?.019:.012):mode==="jet"?0:(texture==="textured"?.004:.001));
+  setTarget(windGain?.gain,v.airflowGain);
+  setTarget(windFilter?.frequency,v.airflowHz);
   level(p);
   return true;
  }
