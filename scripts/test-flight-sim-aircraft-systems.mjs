@@ -100,6 +100,32 @@ assert.ok(jetSystem.parts.noseGear<.4,"jet nosewheel extends ahead of landing");
 assert.equal(jetSystem.parts.mainGearLeft,jetSystem.parts.noseGear);
 assert.equal(sys.parts.noseGear,0,"Cessna fixed gear never retracts");
 
+// Landing and liftoff animate the airframe without affecting the physics.
+for(const mode of ["airplane","helicopter"]){
+ const land=A.create(mode),craft=M.makeState(mode),pilot=M.makeInput(mode);
+ craft.onGround=false;craft.altitudeM=5;craft.verticalMs=-6;
+ A.step(land,craft,pilot,.05);
+ assert.equal(land.parts.touchdownBounce,0,mode+" has no airborne landing rebound");
+ craft.onGround=true;craft.altitudeM=0;craft.verticalMs=0;
+ A.step(land,craft,pilot,.05);
+ const rebound=land.parts.touchdownBounce;
+ assert.ok(rebound>.02&&rebound<=.22,
+  mode+" landing gives a gentle short visual airframe rebound");
+ assert.equal(craft.altitudeM,0,"visual bounce must not change real flight altitude");
+ A.step(land,craft,pilot,0);
+ assert.equal(land.parts.touchdownBounce,rebound,"pause freezes the landing animation");
+ for(let i=0;i<32;i++)A.step(land,craft,pilot,.05);
+ assert.equal(land.parts.touchdownBounce,0,"touchdown motion settles in under two seconds");
+ craft.onGround=false;craft.altitudeM=4;craft.verticalMs=3;
+ A.step(land,craft,pilot,.05);
+ assert.equal(land.parts.touchdownBounce,0,"liftoff clears the landing animation");
+}
+const independent=A.create("airplane");
+const demo=M.makeState("airplane"),pilot=M.makeInput("airplane");
+A.step(independent,demo,pilot,.05);
+assert.equal(independent.parts.touchdownBounce,0,
+ "standing on runway must not constantly shake the model");
+
 const planeParts=T.buildMovingParts("airplane");
 const rotorParts=T.buildMovingParts("helicopter");
 assert.deepEqual(planeParts.map(p=>p.name),[
