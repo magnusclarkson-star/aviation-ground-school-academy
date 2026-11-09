@@ -40,7 +40,9 @@
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
+<script src="flight-sim-airframe-geometry.js" defer></script>
 <script src="flight-sim-3d.js" defer></script>
+<script src="flight-sim-exterior-2d.js" defer></script>
 <script src="flight-sim-aircraft-systems.js" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
@@ -93,7 +95,7 @@
     <span class="cockpit-left-post"></span><span class="cockpit-right-post"></span>
     <span class="cockpit-dashboard"></span><span class="cockpit-propeller"></span>
    </div>
-   <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span></div>
+   <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span><span id="sceneAircraftType">Cessna 172</span></div>
    <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
    <div id="cockpitJetHud" class="cockpit-jet-hud" hidden aria-label="Non-tactical fictional fighter head-up flight indications">
     <div class="hud-top"><span>IAS <strong id="cockpitHudSpeed">0</strong> KT</span><span>FT <strong id="cockpitHudAlt">0</strong></span></div>
@@ -535,10 +537,10 @@
      <option value="off">Off · unobstructed outside view</option>
     </select>
     <p id="cockpitFrameStatus" class="hint" role="status">Cockpit framing is enabled. The fictional airfield remains visible, and instruments and touch controls are unaffected.</p>
-    <label for="cameraMode">3D camera viewpoint</label>
+    <label for="cameraMode">Outside camera viewpoint</label>
     <select id="cameraMode">
      <option value="cockpit" selected>Forward pilot view</option>
-     <option value="chase">Outside chase view · 3D aircraft</option>
+     <option value="chase">Outside chase view · selected aircraft</option>
     </select>
     <p id="visualStatus" class="visual-status" role="status" aria-live="polite">Checking 3D graphics support. The original 2D airfield remains available.</p>
     <p class="hint">Lighting choices are artistic and cannot represent actual sunset, meteorological visibility, night-flying conditions or safe operating limits. They never change the moving aircraft, weather model, vibration or readable instruments.</p>
