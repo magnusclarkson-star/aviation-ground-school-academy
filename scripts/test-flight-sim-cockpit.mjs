@@ -36,6 +36,7 @@ const heli=UI.snapshot({...state,mode:"helicopter"},{powerPct:84},inputs,"r44");
 assert.equal(heli.values.rpm,84);
 assert.equal(heli.values.power,55);
 assert.equal(heli.values.alt,300);
+assert.equal(heli.values.heading,'185','R44 heading instrument tracks the same aircraft heading');
 assert.ok(Number.isFinite(heli.angles.rpm));
 const fighter=UI.snapshot(state,{powerPct:91},inputs,"f35");
 assert.equal(fighter.profile,"f35");

@@ -1,0 +1,145 @@
+/* Robinson R44 flightdeck. Real cyclic is a pivoting T-bar; collective is
+   beside the pilot, pedals are beneath the cyclic. The existing INPUTS stay
+   authoritative and are never replaced by decoration. */
+#cockpitStation[data-family="rotor"] #cockpitMain .cockpit-visual-panel{
+ grid-template-columns:minmax(0,1fr)!important;
+ background:radial-gradient(ellipse at 50% 10%,#52565b,#2b3036 53%,#15191e 100%);
+ padding:clamp(4px,1.2vw,12px)!important;
+ border-radius:34px 34px 15px 15px;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack{
+ grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ width:100%;max-width:875px;justify-items:center;
+ gap:clamp(3px,.8vw,9px);
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge{
+ width:min(100%,153px);aspect-ratio:1;border-radius:50%;
+ border-color:#6b7177;box-shadow:0 3px 9px #000c,inset 0 0 0 3px #11181f;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge:focus-visible{
+ outline:3px solid #ffdb8a;outline-offset:2px;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel{
+ background:radial-gradient(ellipse at 50% 0,#3c444b88,transparent 76%)!important;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel .control-assembly{
+ grid-column:2!important;grid-row:1!important;max-width:400px;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel .control-pad{
+ height:clamp(145px,19vw,235px)!important;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel .flight-grip{
+ filter:drop-shadow(0 9px 6px #000c);
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel>.rudder-deck{
+ grid-column:2!important;grid-row:2!important;
+ width:min(89%,325px);margin-top:-1px!important;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .control-panel .side-controls{
+ grid-column:1!important;grid-row:1/span 2!important;
+ max-width:190px;justify-self:stretch;align-self:center;
+ margin:4px 2px 0!important;z-index:3;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel{
+ background:linear-gradient(145deg,#394247,#161f26)!important;
+ border:2px ridge #738188!important;border-radius:12px!important;
+ box-shadow:0 3px 8px #0007,inset 0 2px 6px #0007;
+ padding:7px 5px!important;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel label{
+ display:flex;gap:3px;flex-wrap:wrap;justify-content:center;
+ font-weight:850;letter-spacing:.025em;text-align:center;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel output{
+ color:#f3d69b;font-variant-numeric:tabular-nums;
+ margin:0!important;
+}
+.r44-collective-mechanism{
+ display:none;position:relative;height:90px;margin:5px auto 2px;
+ width:100%;max-width:180px;overflow:hidden;
+ border-radius:9px;
+ background:radial-gradient(circle at 24% 76%,#52616a 0,#242e38 36%,#121920 90%);
+ border:1px solid #667982;
+}
+#cockpitStation[data-family="rotor"] .r44-collective-mechanism{display:block}
+.r44-collective-arc{
+ position:absolute;left:3%;top:2%;width:92%;height:152%;
+ border:2px dashed #748a9955;border-radius:50%;
+ transform:rotate(-15deg);pointer-events:none;
+}
+.r44-collective-base{
+ position:absolute;left:15%;bottom:16%;width:22px;height:22px;
+ background:radial-gradient(circle,#788a96 0 28%,#222b34 30% 68%,#8a969f 70%);
+ border:3px ridge #667780;border-radius:50%;z-index:3;
+}
+.r44-collective-arm{
+ position:absolute;left:calc(15% + 10px);bottom:calc(16% + 11px);
+ width:69%;height:12px;border:2px solid #aab8c1;border-radius:7px;
+ background:linear-gradient(#a4b2b9,#334550 47%,#1b2934 100%);
+ box-shadow:0 4px 6px #000b;
+ transform:rotate(var(--r44-collective-angle,1.4deg));
+ transform-origin:0 50%;pointer-events:none;
+}
+.r44-collective-twist-grip{
+ position:absolute;right:-4px;top:-8px;width:32%;min-width:19px;
+ height:26px;border-radius:7px 8px 8px 7px;
+ border:2px solid #7b919e;
+ background:repeating-linear-gradient(90deg,#18232d 0 4px,#3d4e59 4px 7px);
+ box-shadow:0 2px 4px #000b;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel .lever-track{
+ padding:2px 1px!important;margin:3px 0 0!important;
+ background:#101821!important;border:1px solid #52636d;border-radius:8px;
+}
+#cockpitStation[data-family="rotor"] #collective{
+ width:100%;min-height:43px;cursor:pointer;accent-color:#e5bb75;touch-action:pan-x;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .rudder-pedals button{
+ border-radius:9px 9px 14px 14px;
+ background:repeating-linear-gradient(90deg,#182127 0 7px,#69727b 7px 9px,#27333d 9px 16px);
+ box-shadow:inset 0 0 0 2px #101920,0 5px 5px #0009;
+}
+#cockpitStation[data-family="rotor"] #cockpitMain .rudder-pedals button.held{
+ transform:perspective(150px) rotateX(10deg) translateY(4px);
+ background-color:#576774;
+}
+@media(max-width:740px){
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-visual-panel{
+  padding:3px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack{
+  gap:2px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-gauge{
+  border-width:2px;min-width:0;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel .control-pad{
+  height:clamp(120px,21dvh,170px)!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel .side-controls{
+  margin:2px 1px 0!important;
+ }
+ #cockpitStation[data-family="rotor"] .r44-collective-mechanism{
+  height:69px;margin:2px auto;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel{
+  padding:3px 2px!important;border-width:2px!important;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain #collectivePanel label{
+  font-size:8px;
+ }
+ #cockpitStation[data-family="rotor"] #collective{
+  min-height:38px;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel>.rudder-deck{
+  width:94%;margin-top:-3px!important;
+ }
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation[data-family="rotor"] #cockpitMain .control-panel .control-pad{
+  height:108px!important;
+ }
+ #cockpitStation[data-family="rotor"] .r44-collective-mechanism{
+  height:63px;
+ }
+}
