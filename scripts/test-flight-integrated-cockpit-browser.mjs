@@ -39,6 +39,16 @@ try{
   return readouts.left>=pedal.right-3&&readouts.top>=grip.top;
  }), 'Cessna tiny bank/pitch sit right of rudder pedals');
  assert.equal(await desktop.locator('.cockpit-avionics').count(),1,'Cessna radio stack beside six-pack');
+ const cessnaDesktop=await desktop.evaluate(()=>{
+  const box=sel=>document.querySelector(sel).getBoundingClientRect();
+  const dial=box('#cockpitVisualPanel .cockpit-gauge');
+  const cluster=box('#cockpitVisualPanel .cockpit-sixpack');
+  const nav=box('#cockpitVisualPanel .cockpit-nav-screen');
+  return {dialWidth:dial.width,navRight:nav.left>=cluster.right-3,navVisible:nav.width>=120};
+ });
+ assert.ok(cessnaDesktop.dialWidth<=104,'Cessna round gauges are smaller than the old 148px dials');
+ assert.ok(cessnaDesktop.navRight&&cessnaDesktop.navVisible,
+  'Cessna navigator must sit to the right of the six-pack, not below');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'help is hidden until learner taps ⓘ');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'instrument is normal size initially');
  assert.equal(await desktop.locator('#cockpitControlFocusToggle').count(),0,'no control expansion button');
@@ -183,6 +193,23 @@ try{
   return box('#axisReadouts').left>=box('.rudder-pedals').right-3;
  }), 'phone Cessna bank/pitch are right of pedals, not under yoke');
  assert.ok(await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().isVisible());
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),6);
+ const cessnaPhone=await phone.evaluate(()=>{
+  const box=sel=>document.querySelector(sel).getBoundingClientRect();
+  const panel=box('#cockpitVisualPanel'),cluster=box('#cockpitVisualPanel .cockpit-sixpack');
+  const nav=box('#cockpitVisualPanel .cockpit-nav-screen');
+  const gauges=[...document.querySelectorAll('#cockpitVisualPanel .cockpit-gauge')];
+  return {
+   dialMax:Math.max(...gauges.map(el=>el.getBoundingClientRect().width)),
+   rightSide:nav.left>=cluster.right-3&&nav.top<cluster.bottom,
+   mapFits:nav.right<=panel.right+2&&nav.width>=100,
+   noOverflow:document.documentElement.scrollWidth<=innerWidth+2
+  };
+ });
+ assert.ok(cessnaPhone.dialMax<=80,'Cessna phone dials are smaller, two rows of three');
+ assert.ok(cessnaPhone.rightSide&&cessnaPhone.mapFits,
+  'Cessna moving navigator must share the same row to the right of six smaller dials');
+ assert.ok(cessnaPhone.noOverflow,'Cessna navigator must not create horizontal phone scrolling');
  assert.ok(await phone.locator('#flightGrip').isVisible());
  const restart=phone.locator('#restartFlight');
  assert.equal(await restart.evaluate(el=>!!el.closest('#cockpitStation')),true);
