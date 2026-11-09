@@ -70,7 +70,7 @@ try{
  await phone.locator(".cockpit-nav-screen").tap();
  assert.equal(await phone.locator("#cockpitZoomPanel").isVisible(),true,"phone tap expands Cessna moving map");
  assert.ok((await phone.locator("#cockpitZoomContent .cockpit-nav-scene svg").boundingBox()).height>=100);
- assert.ok(Math.abs((await relativeY(phone,"#controlPad"))-(await relativeY(phone,"#controlPad")))<1);
+ assert.ok(Math.abs((await relativeY(phone,"#controlPad"))-phoneYoke)<1,"enlarging nav map never moves the yoke");
  await phone.locator("#cockpitZoomClose").tap();
  await phone.setViewportSize({width:844,height:390});
  await phone.waitForTimeout(120);
