@@ -161,6 +161,30 @@ try{
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
+ const primary=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
+  els=>els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.dataset.gauge));
+ assert.deepEqual(primary,['speed','attitude','alt','rpm'],
+  'R44 phone keeps four readable live primary analog gauges beside the controls');
+ const primaryWidth=await phone.locator('#cockpitVisualPanel [data-gauge="attitude"]').evaluate(
+  el=>el.getBoundingClientRect().width);
+ assert.ok(primaryWidth>=55,'helicopter portrait gauges must not shrink to tiny 4-column thumbnails');
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="heading"]').textContent(),'000°');
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="power"]').textContent(),'48%');
+ const more=phone.locator('#cockpitVisualPanel .r44-secondary-toggle');
+ assert.equal(await more.isVisible(),true,'secondary instruments have a native finger-sized toggle');
+ assert.ok((await more.boundingBox()).height>=38);
+ await more.tap();
+ assert.equal(await more.getAttribute('aria-expanded'),'true');
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
+  els=>els.filter(el=>getComputedStyle(el).display!=='none').length),8);
+ await phone.locator('#cockpitVisualPanel [data-gauge="heading"]').tap({position:{x:23,y:43}});
+ assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true,
+  'secondary R44 heading dial retains tap-only individual instrument enlargement');
+ await phone.locator('#cockpitZoomClose').tap();
+ await more.tap();
+ assert.equal(await more.getAttribute('aria-expanded'),'false');
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
+  els=>els.filter(el=>getComputedStyle(el).display!=='none').length),4);
  const rotorPhone=await phone.evaluate(()=>{
   const rect=id=>document.querySelector(id).getBoundingClientRect();
   return {collective:rect('#collectivePanel'),cyclic:rect('#controlPad'),
@@ -175,6 +199,9 @@ try{
   el.value='85';el.dispatchEvent(new Event('input',{bubbles:true}));
  });
  assert.equal(await phone.locator('#collectiveValue').textContent(),'85%');
+ await phone.waitForTimeout(150);
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="power"]').textContent(),'85%',
+  'compact R44 collective readout tracks the real live input');
  const leverUp=await phone.locator('#collectivePanel').evaluate(el=>
   el.style.getPropertyValue('--r44-collective-angle'));
  await phone.locator('#collective').evaluate(el=>{
