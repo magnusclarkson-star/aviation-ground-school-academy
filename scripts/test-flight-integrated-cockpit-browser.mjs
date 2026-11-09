@@ -173,6 +173,24 @@ try{
  });
  assert.equal(flightCue,'DRIFTING · GS 7 KT',
   'live R44 mini instrument announces measured ground drift during hover');
+ const precisionCues=await phone.evaluate(()=>{
+  const panel=document.getElementById('cockpitVisualPanel');
+  const st=window.AGSAImmersiveFlight.makeState('helicopter');
+  Object.assign(st,{onGround:false,phase:'hover',altitudeM:4,
+   verticalMs:0,groundSpeedKt:.4,hoverHoldSec:3.2,hoverBestSec:3.2});
+  const draw=()=>window.AGSACockpitIntegrated.paint(panel,st,
+   {powerPct:85},{throttle:0,collective:.495,rudder:0},'r44',document);
+  draw();
+  const counting=panel.querySelector('[data-r44-hover]').textContent;
+  Object.assign(st,{onGround:true,phase:'landed',landingGrade:'precision',
+   hoverHoldSec:0,groundSpeedKt:0});
+  draw();
+  const landed=panel.querySelector('[data-r44-hover]').textContent;
+  return {counting,landed};
+ });
+ assert.deepEqual(precisionCues,{counting:'HOVER 3/8 S · GS 0 KT',
+  landed:'PRECISION LANDING'},
+  'phone hover mini-panel shows measured hold time and precision landing result');
  const primary=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
   els=>els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.dataset.gauge));
  assert.deepEqual(primary,['speed','attitude','alt','rpm'],
