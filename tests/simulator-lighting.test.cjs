@@ -32,7 +32,7 @@ test('scenery only changes light, not aircraft physics, instrument panels or hap
  for(const val of ['day','golden','dusk'])assert.ok(html.includes('option value="'+val+'"'));
  assert.ok(s.includes('lighting:lightingId()'));
  assert.ok(s.includes('L.choose($("lightingMode").value)'));
- assert.ok(s.includes('S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId()})'));
+ assert.ok(s.includes('S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()})'));
  assert.ok(canvas.includes('sky.addColorStop(0,palette.sky2d[0])'));
  assert.ok(canvas.includes('grass.addColorStop(1,palette.grass[2])'));
  for(const key of ['uSkyLow','uSkyHigh','uFogColor','uLightColor'])

@@ -74,14 +74,14 @@ try{
   assert.equal(await desktop.locator("#cameraMode").inputValue(),"chase");
  }else{
   assert.equal(active,false);
-  assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+  assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft chase works in 2D fallback");
   assert.match(await desktop.locator("#visualStatus").textContent(),/Automatically using 2D/);
   console.log("WebGL2 unavailable on this runner; asserted normal 2D auto fallback.");
  }
  await desktop.locator("#visualMode").selectOption("2d");
  assert.equal(await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional")),false);
  assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
- assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+ assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft chase works in 2D fallback");
  assert.ok(await desktop.locator("#outsideView").isVisible());
  assert.equal(await desktop.evaluate(()=>!!document.getElementById("outsideView").getContext("2d")),true);
  await desktop.locator("#visualMode").selectOption("3d");
@@ -108,7 +108,7 @@ try{
    assert.match(await desktop.locator("#visualStatus").textContent(),/2D/i);
    assert.equal(await desktop.locator("#visualStatus").getAttribute("data-status"),"fallback",
     "regardless of async context-loss event timing, a user must see the active fallback state");
-   assert.equal(await desktop.locator("#cameraMode").isDisabled(),true);
+   assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft chase works in 2D fallback");
   }
  }
  assert.deepEqual(errors,[]);
@@ -128,7 +128,7 @@ try{
  assert.equal(await fallback.locator("#visualMode").inputValue(),"3d");
  assert.equal(await fallback.locator("#outsideView3D").isVisible(),false);
  assert.match(await fallback.locator("#visualStatus").textContent(),/2D scenery/);
- assert.equal(await fallback.locator("#cameraMode").isDisabled(),true);
+ assert.equal(await fallback.locator("#cameraMode").isEnabled(),true,"outside aircraft remains viewable without WebGL on Android");
  assert.ok(await fallback.locator("#outsideView").isVisible());
  assert.ok(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  await fallback.locator("#typeStick").tap();
