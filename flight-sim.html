@@ -28,7 +28,64 @@
 <link rel="stylesheet" href="flight-sim-pfd-zoom.css?v=20261109-pfdfix3">
 <link rel="stylesheet" href="flight-sim-return-circuit.css?v=20261109-circuit2">
 <link rel="stylesheet" href="flight-sim-c172-compact.css?v=20261109-c172cluster1">
-<link rel="stylesheet" href="flight-sim-mini-switches.css?v=20261109-miniswitch1">
+<link rel="stylesheet" href="flight-sim-mini-switches.css?v=20261109-micro2">
+<style id="agsa-micro-switch-inline" data-version="micro2">
+/* 2026-11-09 micro pass: make the entire switch module genuinely tiny,
+   rather than merely shrinking the four buttons inside a full-width box. */
+#cockpitStation #cockpitMain #cockpitSwitchPanel{
+ width:max-content!important;
+ max-width:100%!important;
+ min-height:0!important;
+ margin:0 auto!important;
+ padding:1px 2px!important;
+ border:1px solid #4c575d!important;
+ flex-wrap:nowrap!important;
+ gap:1px!important;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch-bank{
+ width:auto!important;
+ min-width:0!important;
+ flex:0 0 auto!important;
+ justify-content:center!important;
+ gap:2px!important;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch,
+body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch{
+ box-sizing:border-box!important;
+ width:40px!important;
+ min-width:40px!important;
+ height:24px!important;
+ min-height:24px!important;
+ max-height:24px!important;
+ padding:1px 2px!important;
+ grid-template-columns:minmax(0,1fr) 6px!important;
+ grid-template-rows:9px 9px!important;
+ gap:1px!important;
+ position:relative;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch span{
+ font-size:6px!important;
+ letter-spacing:0!important;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch .cockpit-switch-value{
+ font-size:7px!important;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch .cockpit-switch-lever{
+ width:5px!important;
+ height:9px!important;
+ border-width:1px!important;
+}
+#cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-annunciators{
+ display:none!important;
+}
+@media(max-width:360px){
+ #cockpitStation #cockpitMain #cockpitSwitchPanel .cockpit-switch{
+  width:38px!important;
+  min-width:38px!important;
+ }
+}
+
+</style>
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -157,7 +214,7 @@
    <div id="cockpitMain" class="cockpit-main">
     <div id="cockpitInstrumentWell" class="cockpit-instrument-well">
      <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Tap individual live aircraft-style instruments to enlarge"></div>
-     <div id="cockpitSwitchPanel" class="cockpit-switch-panel" aria-label="Cockpit visual controls and indications">
+     <div id="cockpitSwitchPanel" class="cockpit-switch-panel" data-switch-size="micro2" aria-label="Cockpit visual controls and indications">
       <div class="cockpit-switch-bank" role="group" aria-label="Cockpit view and lighting switches">
        <button id="cockpitSwitch_view" class="cockpit-switch" type="button"><span>VIEW</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">PILOT</strong></button>
        <button id="cockpitSwitch_graphics" class="cockpit-switch" type="button"><span>SCENE</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">3D</strong></button>
