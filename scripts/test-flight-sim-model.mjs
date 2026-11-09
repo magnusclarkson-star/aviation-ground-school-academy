@@ -17,6 +17,36 @@ assert.equal(slow.state.time,0);
 assert.deepEqual(slow.events,[]);
 assert.throws(()=>M.makeState("jetliner"),/Unsupported/);
 
+// Choosing the aircraft changes Classic response, not just the outside model.
+assert.deepEqual(M.AIRFRAME_IDS,["c172","r44","fa18","f22","f35","typhoon","su37"]);
+assert.equal(M.makeState("airplane").airframeId,"c172");
+assert.equal(M.makeState("helicopter").airframeId,"r44");
+assert.throws(()=>M.makeState("airplane","runway",{airframeId:"r44"}),/airframe/);
+assert.throws(()=>M.makeState("airplane","runway",{airframeId:"mig29"}),/airframe/);
+assert.equal(new Set(Object.values(M.JET_SETTINGS).map(p=>p.rotationKt)).size,5,
+ "Five jets have distinct fictional rotation speeds");
+const jetApproach=M.makeState("airplane","approach",{airframeId:"f22"});
+assert.equal(jetApproach.speedKt,M.JET_SETTINGS.f22.approachKt);
+assert.ok(jetApproach.speedKt>M.makeState("airplane","approach").speedKt+30);
+for(const id of Object.keys(M.JET_SETTINGS)){
+ const p=M.flightProfile(M.makeState("airplane","runway",{airframeId:id}));
+ assert.equal(p,M.JET_SETTINGS[id]);
+ const trainerGround=M.makeState("airplane","runway");
+ const fighterGround=M.makeState("airplane","runway",{airframeId:id});
+ const full=M.makeInput();full.throttle=1;
+ simulate(trainerGround,full,4);simulate(fighterGround,full,4);
+ assert.ok(fighterGround.speedKt>trainerGround.speedKt+18,
+  id+" should accelerate differently from the C172");
+ assert.ok(fighterGround.speedKt<p.rotationKt,id+" should not take off without rotation");
+ const rotate=M.makeInput();rotate.throttle=1;rotate.pitch=-.72;
+ const events=[];simulate(fighterGround,rotate,16,events);
+ assert.ok(events.includes("liftoff"),id+" should still take off with appropriate simulated pitch");
+ assert.ok(Number.isFinite(fighterGround.altitudeM)&&fighterGround.altitudeM>0);
+}
+const experimental=M.makeState("airplane","approach",{airframeId:"f22",physicsId:"aero"});
+assert.equal(M.flightProfile(experimental).id,"trainer",
+ "The optional experimental force laboratory keeps the established trainer model");
+
 const runway=M.makeState("airplane");
 const depart=M.makeInput("airplane");
 depart.throttle=1;depart.pitch=-.72;depart.flaps=10;
