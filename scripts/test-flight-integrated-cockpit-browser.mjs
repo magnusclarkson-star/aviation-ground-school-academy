@@ -182,7 +182,7 @@ try{
   G.observe(session,{...hovering,time:12,hoverAchieved:true,hoverHoldSec:8},['hoverHeld']);
   const panel=document.querySelector('#cockpitVisualPanel');
   window.AGSACockpitIntegrated.paint(panel,hovering,{powerPct:85},
-   {throttle:0,collective:.495,rudder:0},'r44',document,session);
+   {throttle:0,collective:.48,rudder:0},'r44',document,session);
   return {label:panel.querySelector('[data-r44-lesson]').textContent,
    hint:panel.querySelector('[data-r44-lesson]').getAttribute('aria-label')};
  });
@@ -225,6 +225,8 @@ try{
   el=>el.getBoundingClientRect().width);
  assert.ok(primaryWidth>=55,'helicopter portrait gauges must not shrink to tiny 4-column thumbnails');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="heading"]').textContent(),'000°');
+ await phone.waitForFunction(()=>
+  document.querySelector('#cockpitVisualPanel [data-r44-live="power"]').textContent==='48%');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-live="power"]').textContent(),'48%');
  const more=phone.locator('#cockpitVisualPanel .r44-secondary-toggle');
  assert.equal(await more.isVisible(),true,'secondary instruments have a native finger-sized toggle');
