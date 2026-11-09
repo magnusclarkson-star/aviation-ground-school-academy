@@ -201,6 +201,24 @@ function buildVehicle(mode="airplane"){
  Exterior.populate(m,mode);
  return scaleMesh(m.finish(),mode);
 }
+function buildShadow(mode="c172"){
+ const mesh=buildVehicle(mode),position=mesh.positions;
+ let xMin=Infinity,xMax=-Infinity,zMin=Infinity,zMax=-Infinity;
+ for(let i=0;i<position.length;i+=3){
+  xMin=Math.min(xMin,position[i]);xMax=Math.max(xMax,position[i]);
+  zMin=Math.min(zMin,position[i+2]);zMax=Math.max(zMax,position[i+2]);
+ }
+ const rx=mode==="r44"||mode==="helicopter"?5.03:(xMax-xMin)*.47;
+ const rz=(zMax-zMin)*.48;
+ const cx=(xMax+xMin)/2,cz=(zMax+zMin)/2;
+ const m=new Mesh(),shade=rgb(17,28,30);
+ for(let i=0;i<28;i++){
+  const a=i*2*Math.PI/28,b=(i+1)*2*Math.PI/28;
+  m.tri([cx,0,cz],[cx+rx*Math.cos(a),0,cz+rz*Math.sin(a)],
+   [cx+rx*Math.cos(b),0,cz+rz*Math.sin(b)],shade);
+ }
+ return m.finish();
+}
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
@@ -325,7 +343,12 @@ out vec3 vColor;
 out float vDistance,vLight;
 void main(){
  vec3 p=aPosition;
- if(uActor>.5){
+ if(uActor>1.5){
+  // The soft ground footprint uses the same aircraft orientation but stays
+  // just above the runway/helipad surface rather than rising with the craft.
+  float c=cos(uCraftYaw),s=sin(uCraftYaw);
+  p=vec3(p.x*c+p.z*s+uCraft.x,.24,-p.x*s+p.z*c+uCraft.z);
+ }else if(uActor>.5){
   // Rotate illustrated flap/aileron/elevator surfaces around their hinges,
   // or propeller/rotor parts around their hub. Static body/world have axis 0.
   if(uPartAxis>0){
@@ -355,18 +378,19 @@ void main(){
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
    1.000080003*depth-0.800032001,depth);
  vColor=aColor;vDistance=depth;
- vLight=.70+.30*abs(dot(normalize(aNormal),normalize(vec3(.28,1.,.36))));
+ vLight=.55+.45*max(0.,dot(normalize(aNormal),normalize(vec3(.28,1.,.36))));
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
 in vec3 vColor;
 in float vDistance,vLight;
 uniform vec3 uFogColor,uLightColor;
+uniform float uOpacity;
 out vec4 outColor;
 void main(){
  float fog=clamp((vDistance-1150.)/5000.,0.,.8);
  vec3 shaded=clamp(vColor*vLight*uLightColor,0.,1.);
- outColor=vec4(mix(shaded,uFogColor,fog),1.);
+ outColor=vec4(mix(shaded,uFogColor,fog),uOpacity);
 }`;
 const SKY_VERTEX=`#version 300 es
 precision mediump float;
@@ -419,7 +443,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   };
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal",
-   "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor"])
+   "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -436,7 +460,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const id of Exterior.IDS){
    airframes[id]={
     body:upload(buildVehicle(id)),
-    parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)}))
+    parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
+    shadow:inspectionOnly?null:upload(buildShadow(id))
    };
   }
   function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null,orbit={}}={}){
@@ -462,6 +487,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.useProgram(program);
    gl.uniform3fv(uni.uFogColor,palette.fog);
    gl.uniform3fv(uni.uLightColor,palette.light);
+   gl.uniform1f(uni.uOpacity,1);
    const camera=cameraPose(state,view,orbit);
    gl.uniform3fv(uni.uEye,camera.eye);
    gl.uniform3fv(uni.uCraft,camera.craft);
@@ -484,6 +510,17 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const selected=Exterior.normalize(airframeId||state.mode);
     const id=state.mode==="helicopter"?"r44":selected==="r44"?"c172":selected;
     const model=airframes[id];
+    if(!inspectionOnly&&model.shadow&&Number(state.altitudeM)<120){
+     const height=Math.max(0,Number(state.altitudeM)||0);
+     gl.uniform1f(uni.uActor,2);
+     gl.uniform1f(uni.uOpacity,.25/(1+height/24));
+     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+     gl.depthMask(false);
+     gl.bindVertexArray(model.shadow.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.shadow.count);
+     gl.depthMask(true);gl.disable(gl.BLEND);
+     gl.uniform1f(uni.uOpacity,1);
+    }
     gl.uniform1f(uni.uActor,1);gl.bindVertexArray(model.body.vao);
     gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     for(const part of model.parts){
@@ -515,7 +552,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,airportDetails,buildVehicle,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
