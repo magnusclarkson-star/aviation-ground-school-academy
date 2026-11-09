@@ -4,6 +4,8 @@ import {readFileSync} from "node:fs";
 const require=createRequire(import.meta.url);
 const Three=require("../flight-sim-3d.js");
 const M=require("../flight-sim-model.js");
+const PadDetail=require("../flight-sim-helipad-detail.js");
+const Scenery=require("../flight-sim-scenery.js");
 
 // Regression guard: the GPU lighting must follow aircraft attitude and hinge
 // rotation, not illuminate the fixed untransformed original mesh normals.
@@ -46,6 +48,44 @@ for(const mesh of [runway,pad]){
  assert.equal(mesh.colors.length,mesh.positions.length);
  assert.equal(mesh.normals.length,mesh.positions.length);
 }
+
+assert.deepEqual(PadDetail.rings,[9,21],"the 3D and fallback 2D reference rings share the same radii");
+assert.equal(PadDetail.pylons.length,6);
+assert.equal(PadDetail.referenceLines.length,12);
+assert.equal(PadDetail.buildings.length,2);
+assert.equal(PadDetail.fence.length,13);
+for(const ring of PadDetail.rings){
+ const sections=PadDetail.ringSegments(ring);
+ assert.equal(sections.length,40);
+ assert.ok(sections.every(q=>[q.ax,q.az,q.bx,q.bz].every(Number.isFinite)));
+ assert.ok(sections.every(q=>Math.abs(Math.hypot(q.ax,q.az)-ring)<1e-8));
+}
+const hasPoint=(mesh,x,y,z)=>{
+ for(let i=0;i<mesh.positions.length;i+=3){
+  if(Math.abs(mesh.positions[i]-x)<.015&&
+   Math.abs(mesh.positions[i+1]-y)<.015&&
+   Math.abs(mesh.positions[i+2]-z)<.015)return true;
+ }
+ return false;
+};
+const firstPylon=PadDetail.pylons[0];
+assert.ok(hasPoint(pad,firstPylon.x-1.3,.16,firstPylon.z-1.3),
+ "3D world includes the same fixed-world pylon footprint as mobile scenery");
+assert.ok(!hasPoint(runway,firstPylon.x-1.3,.16,firstPylon.z-1.3),
+ "runway scenery does not inherit helicopter-only markers");
+const heliPosition=M.makeState("helicopter");
+Object.assign(heliPosition,{altitudeM:6,headingDeg:0,xM:0,zM:0});
+const marker=PadDetail.pylons[1];
+const original=Scenery.project(heliPosition,marker.x,marker.height,marker.z);
+const lateral=Scenery.project({...heliPosition,xM:10},marker.x,marker.height,marker.z);
+const yawed=Scenery.project({...heliPosition,headingDeg:30},marker.x,marker.height,marker.z);
+assert.ok(original&&lateral&&yawed);
+assert.ok(lateral.x<original.x-50,"helicopter lateral movement shifts fixed landmark left");
+assert.ok(Math.abs(yawed.x-original.x)>100,
+ "turning helicopter rotates the marker across the outside view");
+assert.ok(PadDetail.pylons.every(p=>Math.hypot(p.x,p.z)>35),
+ "near markers remain outside the landing pad and rotor disc");
+
 assert.notEqual(runway.triangles,pad.triangles,"runway/helipad are different 3D places");
 assert.throws(()=>Three.buildWorld("submarine"),/Unknown 3D/);
 assert.throws(()=>Three.buildVehicle("balloon"),/Unknown 3D/);
