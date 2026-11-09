@@ -34,6 +34,19 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  const sky=ctx.createLinearGradient(0,0,0,h);
  sky.addColorStop(0,palette.sky2d[0]);sky.addColorStop(.55,palette.sky2d[1]);sky.addColorStop(1,palette.sky2d[2]);
  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+ function lamp(x,y,r,color="#ffe6a3",cool=false){
+  const radius=Math.max(1,r);
+  if(lighting==="golden"||lighting==="dusk"){
+   const glow=ctx.createRadialGradient(x,y,0,x,y,radius*(lighting==="dusk"?6:4));
+   const core=cool?"rgba(133,232,246,.65)":"rgba(255,224,162,.70)";
+   glow.addColorStop(0,core);
+   glow.addColorStop(.28,cool?"rgba(131,222,239,.23)":"rgba(255,201,107,.22)");
+   glow.addColorStop(1,"rgba(255,214,137,0)");
+   ctx.fillStyle=glow;ctx.beginPath();
+   ctx.arc(x,y,radius*(lighting==="dusk"?6:4),0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+ }
  ctx.save();
  ctx.translate(w/2,h/2);
  ctx.rotate(-state.rollDeg*RAD);
@@ -101,13 +114,13 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    const p=project(state,light.x,.18,light.z,w,h);
    if(!p||p.depth>2100||p.x<0||p.x>w||p.y<0||p.y>h)continue;
    const r=Math.max(1,Math.min(4,170/p.depth+1));
-   ctx.fillStyle="#ffe8b6";ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+   lamp(p.x,p.y,r,"#ffe8b6");
   }
   for(const light of config.rampLights){
    line([light.x,0,light.z],[light.x,12,light.z],"#9fb5bd",2);
    const p=project(state,light.x,12,light.z,w,h);
    if(!p||p.depth>1800||p.x<0||p.x>w||p.y<0||p.y>h)continue;
-   ctx.fillStyle="#ffe6ad";ctx.beginPath();ctx.arc(p.x,p.y,Math.min(5,260/p.depth+1),0,Math.PI*2);ctx.fill();
+   lamp(p.x,p.y,Math.min(5,260/p.depth+1),"#ffe6ad");
   }
   return true;
  }
@@ -171,8 +184,7 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
     const cap=project(state,p.x,p.height+.4,p.z,w,h);
     if(cap&&cap.depth<2100&&cap.x>-20&&cap.x<w+20&&cap.y>-20&&cap.y<h+20){
      const radius=Math.min(10,Math.max(3,180/cap.depth));
-     ctx.fillStyle=p.color;ctx.beginPath();
-     ctx.arc(cap.x,cap.y,radius,0,Math.PI*2);ctx.fill();
+     lamp(cap.x,cap.y,radius,p.color,p.color==="#80dfe4");
     }
    }
    for(const b of PadDetail.buildings){
@@ -255,7 +267,7 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
     const p=project(state,x,.4,z,w,h);
     if(!p||p.depth>1900||p.x<-20||p.x>w+20||p.y<0||p.y>h)continue;
     const r=Math.min(5,260/p.depth+1);
-    ctx.fillStyle="#ffe6a3";ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+    lamp(p.x,p.y,r);
    }
   }
   // Lightweight tropical trees, fences and hangars form a moving horizon.
