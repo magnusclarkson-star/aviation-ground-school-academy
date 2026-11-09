@@ -4,7 +4,7 @@
  */
 (function(root){"use strict";
  const RAD=Math.PI/180;
- const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map();
+ const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map(),PROP_CACHE=new Map();
  const rgb=(r,g,b)=>"rgb("+Math.round(r*255)+","+Math.round(g*255)+","+Math.round(b*255)+")";
  const modelApi=()=>root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
   require("./flight-sim-3d.js"):null);
@@ -52,6 +52,17 @@
   if(!SWEEP_CACHE.has(resolved))
    SWEEP_CACHE.set(resolved,trianglesOf(modelApi().buildRotorSweep(resolved)));
   return SWEEP_CACHE.get(resolved);
+ }
+ function propellerSweepTriangles(id){
+  const resolved=exterior().normalize(id);
+  if(resolved!=="c172")return [];
+  if(!PROP_CACHE.has(resolved))
+   PROP_CACHE.set(resolved,trianglesOf(modelApi().buildPropellerSweep(resolved)));
+  return PROP_CACHE.get(resolved);
+ }
+ function propBlurOpacity(animation){
+  const value=animation?.propBlurOpacity;
+  return Number.isFinite(value)?Math.max(0,Math.min(.16,value)):0;
  }
  function rotorBlurOpacity(animation){
   const value=animation?.rotorBlurOpacity;
@@ -126,6 +137,8 @@
   for(const tri of geometry(id))append(tri);
   const blur=rotorBlurOpacity(animation);
   if(blur>0)for(const tri of rotorSweepTriangles(id))append(tri,null,blur);
+  const propBlur=propBlurOpacity(animation);
+  if(propBlur>0)for(const tri of propellerSweepTriangles(id))append(tri,null,propBlur);
   for(const part of movingParts(id)){
    const angle=Number.isFinite(animation?.[part.name])?animation[part.name]:0;
    for(const tri of part.triangles)append(tri,{...part,angle});
@@ -166,7 +179,7 @@
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,rotate,viewDepth,projectedFaces,paint,paintInspection});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,propellerSweepTriangles,rotate,viewDepth,projectedFaces,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);
