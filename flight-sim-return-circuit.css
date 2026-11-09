@@ -45,3 +45,15 @@
 #cockpitStation .cockpit-nav-readouts [data-nav-field="runway"]{
  line-height:1.25;overflow-wrap:anywhere;
 }
+
+/* On compact two-column phone cockpits the bank indicator can be less than
+ * 100px wide. Give HOLD its own shared bank line, never overlap pitch. */
+@media(max-width:740px){
+ #cockpitStation .control-assembly .axis-values{
+  flex-direction:column;align-items:stretch;gap:1px;
+ }
+ #cockpitStation .control-assembly .axis-values>span{
+  display:flex;flex:0 0 auto;width:100%;box-sizing:border-box;
+  justify-content:space-between;padding:0 2px;min-height:15px;
+ }
+}
