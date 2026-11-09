@@ -420,6 +420,21 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   select.appendChild(option);
  }
  let active="c172";
+ const helpToggle=$("cockpitHelpToggle"),helpChoices=$("cockpitHelpChoices");
+ function closeHelpMenu(){
+  if(!helpChoices||!helpToggle)return;
+  helpChoices.dataset.open="false";
+  helpToggle.setAttribute("aria-expanded","false");
+ }
+ helpToggle?.addEventListener("click",()=>{
+  const open=helpChoices?.dataset.open!=="true";
+  if(helpChoices)helpChoices.dataset.open=String(open);
+  helpToggle.setAttribute("aria-expanded",String(open));
+ });
+ doc.addEventListener("pointerdown",event=>{
+  if(helpChoices?.dataset.open==="true"&&!helpChoices.contains(event.target)&&
+   !helpToggle?.contains(event.target))closeHelpMenu();
+ });
  function closeInfo(){
   infoPanel.hidden=true;
   for(const button of cockpitStation.querySelectorAll("[data-cockpit-help]"))button.setAttribute("aria-expanded","false");
@@ -500,10 +515,12 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
    const key=button.dataset.cockpitHelp;
    if(!infoPanel.hidden&&button.getAttribute("aria-expanded")==="true")closeInfo();
    else openInfo(key,button);
+   closeHelpMenu();
   });
  }
  doc.addEventListener("keydown",event=>{
   if(event.key!=="Escape")return;
+  closeHelpMenu();
   if(!zoomPanel.hidden)closeZoom();
   if(!infoPanel.hidden)closeInfo();
  });
@@ -529,6 +546,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
   buildPanel(doc,profile,holder);
+  closeHelpMenu();
   closeZoom();
   closeInfo();
   if(notify)onSelect(profile.control,profile.id);
