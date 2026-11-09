@@ -52,6 +52,8 @@ on:
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
       - 'flight-sim-cockpit.js'
+      - 'flight-sim-instrument-backlight.js'
+      - 'flight-sim-instrument-backlight.css'
       - 'flight-sim-aircraft-gallery.js'
       - 'flight-sim-aircraft-gallery.css'
       - 'aircraft-*.webp'
@@ -132,6 +134,8 @@ on:
       - 'scripts/test-flight-sim-3d-browser.mjs'
       - 'flight-sim-instruments.js'
       - 'flight-sim-cockpit.js'
+      - 'flight-sim-instrument-backlight.js'
+      - 'flight-sim-instrument-backlight.css'
       - 'flight-sim-aircraft-gallery.js'
       - 'flight-sim-aircraft-gallery.css'
       - 'aircraft-*.webp'
@@ -195,6 +199,7 @@ jobs:
           node --check flight-sim-aircraft-systems.js
           node --check flight-sim-instruments.js
           node --check flight-sim-cockpit.js
+          node --check flight-sim-instrument-backlight.js
           node --check flight-sim-aircraft-gallery.js
           node --check flight-sim-navigation.js
           node --check flight-sim-switchgear.js
