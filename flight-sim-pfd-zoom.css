@@ -1,0 +1,75 @@
+/* Two independent live PFD enlargement targets. Fixed positioning keeps
+ * the chosen screen visible on small Android displays without scrolling the
+ * controls or duplicating SVG ids. Only the touched display expands.
+ */
+#cockpitStation #cockpitZoomPanel:not([hidden]){
+ position:fixed!important;
+ top:50%!important;left:50%!important;
+ transform:translate(-50%,-50%)!important;
+ z-index:2147483000!important;
+ width:min(92vw,540px)!important;
+ max-width:none!important;
+ max-height:84dvh!important;
+ overflow-y:auto!important;
+ box-sizing:border-box!important;
+ border:2px solid #f0d18b!important;
+ border-radius:12px!important;
+ box-shadow:0 0 0 200vmax #020b15a3,0 16px 46px #000c!important;
+ background:linear-gradient(160deg,#152d3b,#071b28)!important;
+ padding:10px!important;
+}
+#cockpitStation #cockpitZoomPanel .cockpit-zoom-content>.cockpit-mfd{
+ width:100%!important;max-width:none!important;min-height:0;
+}
+#cockpitStation #cockpitZoomPanel .cockpit-mfd-attitude{
+ height:clamp(135px,32dvh,280px)!important;
+}
+#cockpitStation #cockpitZoomPanel .cockpit-mfd-head{font-size:14px!important}
+#cockpitStation #cockpitZoomPanel .cockpit-mfd-readouts span{font-size:13px!important}
+#cockpitStation #cockpitZoomPanel .cockpit-zoom-head button{
+ min-height:36px;padding:4px 10px;font-size:12px
+}
+#flightInstruments .mini-pfd{cursor:zoom-in;touch-action:manipulation}
+#flightInstruments .mini-pfd.agsa-mini-pfd-expanded{
+ position:fixed!important;
+ top:50%!important;left:50%!important;
+ transform:translate(-50%,-50%)!important;
+ z-index:2147483001!important;
+ width:min(92vw,540px)!important;
+ max-width:none!important;
+ max-height:84dvh!important;
+ min-height:0!important;
+ overflow-y:auto!important;
+ box-sizing:border-box!important;
+ padding:12px!important;
+ border:2px solid #f3d28f!important;
+ border-radius:12px!important;
+ background:#071c2c!important;
+ box-shadow:0 0 0 200vmax #020b15a3,0 16px 46px #000c!important;
+ cursor:zoom-out;
+}
+#flightInstruments .mini-pfd.agsa-mini-pfd-expanded svg{
+ width:100%!important;
+ height:auto!important;
+ max-width:100%!important;
+ max-height:min(58dvh,390px)!important;
+}
+#flightInstruments .mini-pfd.agsa-mini-pfd-expanded .mini-pfd-top,
+#flightInstruments .mini-pfd.agsa-mini-pfd-expanded .mini-pfd-footer{
+ font-size:clamp(10px,2vw,14px)!important;
+ line-height:1.5!important;
+}
+#flightInstruments .mini-pfd .agsa-mini-pfd-close{display:none}
+#flightInstruments .mini-pfd.agsa-mini-pfd-expanded .agsa-mini-pfd-close:not([hidden]){
+ display:block!important;
+ position:sticky;top:0;margin:0 0 5px auto;
+ background:#24475b;color:#fff2cc;border:1px solid #e5c885;
+ border-radius:7px;padding:5px 10px;min-height:36px;
+ font:700 12px system-ui,sans-serif;cursor:pointer;
+}
+@media(max-height:430px){
+ #cockpitStation #cockpitZoomPanel:not([hidden]),
+ #flightInstruments .mini-pfd.agsa-mini-pfd-expanded{max-height:94dvh!important;padding:5px!important}
+ #flightInstruments .mini-pfd.agsa-mini-pfd-expanded svg{max-height:52dvh!important}
+ #cockpitStation #cockpitZoomPanel .cockpit-mfd-attitude{height:36dvh!important}
+}
