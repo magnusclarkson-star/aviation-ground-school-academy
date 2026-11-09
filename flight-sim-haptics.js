@@ -5,13 +5,13 @@
 const patterns=Object.freeze({
  control:[45],rudder:[45],flap:[55],runwayRumble:[55,30,50],
  turn:[50],climb:[50],descent:[55,25,45],turbulence:[65,35,65],
- stall:[80,35,75],liftoff:[70,35,65],touchdown:[75,35,70],
+ stall:[80,35,75],liftoff:[70,35,65],hoverHeld:[45,25,45],touchdown:[75,35,70],
  hardLanding:[80,35,80],completed:[60,35,60],airflow:[55,30,55]
 });
 const gaps=Object.freeze({
  control:350,rudder:350,flap:450,runwayRumble:1700,turn:1700,
  climb:2200,descent:2200,turbulence:1900,stall:1800,
- liftoff:550,touchdown:550,hardLanding:550,completed:550,airflow:3200
+ liftoff:550,hoverHeld:3000,touchdown:550,hardLanding:550,completed:550,airflow:3200
 });
 const sum=items=>items.reduce((a,b)=>a+b,0);
 function createHaptics({navigatorLike,documentLike,clock}={}){

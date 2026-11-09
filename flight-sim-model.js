@@ -8,6 +8,8 @@ if(!E)throw Error("Fictional aircraft/environment profiles unavailable");
 const D=root?.AGSAFlightAerodynamics||(typeof module!=="undefined"?require("./flight-sim-aerodynamics.js"):null);
 if(!D)throw Error("Experimental aerodynamic engine unavailable");
 const RAD=Math.PI/180;
+// Continuous positional hold near the exercise helipad, in simulated seconds.
+const HOVER_HOLD_SECONDS=8;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number.isFinite(x)?x:0));
 const smooth=(x,target,rate,dt)=>x+(target-x)*(1-Math.exp(-rate*dt));
 const KNOT=0.514444;
@@ -45,13 +47,16 @@ function flightProfile(state){
 // never by the last joystick command. Shared by cockpit and flight status.
 function rotorHoverCue(state){
  if(!state||state.mode!=="helicopter")return null;
- if(state.onGround)return state.phase==="landed"?"LANDED":
+ if(state.onGround)return state.phase==="landed"?
+  state.landingGrade==="precision"?"PRECISION LANDING":"LANDED":
   state.phase==="halted"?"HARD CONTACT":"ON PAD";
  const rise=clamp(state.verticalMs,-10,10),drift=clamp(state.groundSpeedKt,0,200);
  if(rise>.7)return "CLIMBING";
  if(rise<-.7)return "DESCENDING";
  if(drift>4)return "DRIFTING";
  if(Math.abs(state.yawRateDegS||0)>4)return "TURNING";
+ if(state.hoverHoldSec>=HOVER_HOLD_SECONDS)return "HOVER HELD 8 S";
+ if(state.hoverHoldSec>=.5)return "HOVER "+Math.floor(state.hoverHoldSec)+"/8 S";
  if(drift<2&&Math.abs(rise)<.4)return "STEADY HOVER";
  return "ADJUST HOVER";
 }
@@ -74,7 +79,8 @@ function makeState(mode="airplane",scenario="runway",options={}){
  if(mode==="helicopter"){
   return {mode,airframeId,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
    groundSpeedKt:0,trackDeg:0,windXMps:0,windZMps:0,verticalMs:0,pitchDeg:0,rollDeg:0,headingDeg:0,
-   lateralMs:0,forwardMs:0,yawRateDegS:0,time:0,turbulence:0,onGround:true,
+   lateralMs:0,forwardMs:0,yawRateDegS:0,hoverHoldSec:0,
+   hoverBestSec:0,hoverAchieved:false,landingGrade:null,time:0,turbulence:0,onGround:true,
    message:"A fictional helipad exercise. Increase collective for a gentle vertical lift."};
  }
  const approach=scenario==="approach";
@@ -148,6 +154,16 @@ function step(state,input,seconds){
    state.speedKt=Math.hypot(forward,lateral)/KNOT;
    if(state.altitudeM>=2&&state.phase==="lift")state.phase="hover";
    if(state.altitudeM>15||Math.hypot(state.xM,state.zM)>70)state.phase="flight";
+   // The hover timer runs only while height, position, drift and yaw are
+   // controlled together. Moving away resets the continuous hold.
+   const hoverStable=state.altitudeM>=2&&state.altitudeM<=9&&
+    Math.hypot(state.xM,state.zM)<=10&&state.groundSpeedKt<2&&
+    Math.abs(state.verticalMs)<.45&&Math.abs(state.yawRateDegS)<3;
+   state.hoverHoldSec=hoverStable?Math.min(HOVER_HOLD_SECONDS,state.hoverHoldSec+dt):0;
+   state.hoverBestSec=Math.max(state.hoverBestSec,state.hoverHoldSec);
+   if(!state.hoverAchieved&&state.hoverHoldSec>=HOVER_HOLD_SECONDS){
+    state.hoverAchieved=true;events.push("hoverHeld");
+   }
    if(state.verticalMs>.65)events.push("climb");
    if(state.verticalMs<-.65)events.push("descent");
    if(state.altitudeM<=0){
@@ -158,10 +174,17 @@ function step(state,input,seconds){
     const insidePad=Math.hypot(state.xM,state.zM)<27;
     const gentle=impactVS>=-1.75&&state.groundSpeedKt<9&&
      Math.abs(state.rollDeg)<10&&insidePad;
+    const precision=gentle&&state.hoverAchieved&&
+     Math.hypot(state.xM,state.zM)<=6&&impactVS>=-1.4&&
+     state.groundSpeedKt<3&&Math.abs(state.rollDeg)<6&&
+     Math.abs(state.yawRateDegS)<4;
     state.altitudeM=0;state.onGround=true;state.verticalMs=0;
+    state.hoverHoldSec=0;
     state.phase=gentle?"landed":"halted";
-    state.message=gentle?"Gentle fictional helipad landing. Review your collective coordination.":
-     "Hard or off-pad rotorcraft contact. Restart and practise a stabilised descent.";
+    state.landingGrade=gentle?(precision?"precision":"standard"):"hard";
+    state.message=precision?"Precision hover and centre-pad landing completed.":
+     gentle?"Gentle helipad landing. Try holding a stable hover before touchdown.":
+      "Hard or off-pad rotorcraft contact. Restart and practise a stabilised descent.";
     events.push(gentle?"touchdown":"hardLanding");
    }
   }else{
