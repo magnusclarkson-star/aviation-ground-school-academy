@@ -735,6 +735,14 @@
   <section class="aircraft-inspect-card">
    <header class="aircraft-inspect-header">
     <div><span class="aircraft-inspect-label">360° AIRCRAFT INSPECTION</span><strong id="aircraftInspectModel">Cessna 172</strong></div>
+    <label class="aircraft-inspect-select-label" for="aircraftInspectModelSelect">Aircraft
+     <select id="aircraftInspectModelSelect" aria-label="Choose aircraft to inspect">
+      <option value="c172">Cessna 172</option><option value="r44">Robinson R44</option>
+      <option value="fa18">F/A-18</option><option value="f22">F-22</option>
+      <option value="f35">F-35</option><option value="typhoon">Typhoon</option>
+      <option value="su37">Su-37</option>
+     </select>
+    </label>
     <button type="button" id="aircraftInspectClose" aria-label="Close aircraft inspection">Close ✕</button>
    </header>
    <div id="aircraftInspectViewport" class="aircraft-inspect-viewport" role="img" aria-label="Drag to rotate the selected aircraft and inspect its exterior from any angle">
