@@ -4,7 +4,7 @@
  */
 (function(root){"use strict";
  const RAD=Math.PI/180;
- const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map();
+ const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map();
  const rgb=(r,g,b)=>"rgb("+Math.round(r*255)+","+Math.round(g*255)+","+Math.round(b*255)+")";
  const modelApi=()=>root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
   require("./flight-sim-3d.js"):null);
@@ -46,6 +46,17 @@
   }
   return PART_CACHE.get(resolved);
  }
+ function rotorSweepTriangles(id){
+  const resolved=exterior().normalize(id);
+  if(resolved!=="r44")return [];
+  if(!SWEEP_CACHE.has(resolved))
+   SWEEP_CACHE.set(resolved,trianglesOf(modelApi().buildRotorSweep(resolved)));
+  return SWEEP_CACHE.get(resolved);
+ }
+ function rotorBlurOpacity(animation){
+  const value=animation?.rotorBlurOpacity;
+  return Number.isFinite(value)?Math.max(0,Math.min(.18,value)):0;
+ }
  // Exactly the same local axis definitions as the WebGL shader.
  function rotate(point,pivot,axis,angle){
   if(!angle)return point;
@@ -63,7 +74,7 @@
   const ca=Math.cos(azimuth),sa=Math.sin(azimuth),ce=Math.cos(elevation),se=Math.sin(elevation);
   const scale=Math.min(width/25,height/22)*(29/distance);
   const vertices=[];
-  function put(tri,part){
+  function put(tri,part,opacity=1){
    const coords=tri.points.map(source=>{
     const p=part?rotate(source,part.pivot,part.axis,part.angle):source;
     const forward=-p[0]*sa+p[2]*ca;
@@ -72,9 +83,11 @@
      depth:forward*ce-p[1]*se};
    });
    vertices.push({coords,depth:(coords[0].depth+coords[1].depth+coords[2].depth)/3,
-    color:tri.color});
+    color:tri.color,opacity});
   }
   for(const tri of geometry(id))put(tri,null);
+   const blur=rotorBlurOpacity(animation);
+   if(blur>0)for(const tri of rotorSweepTriangles(id))put(tri,null,blur);
   for(const part of movingParts(id)){
    const angle=Number.isFinite(animation[part.name])?animation[part.name]:0;
    for(const tri of part.triangles)put(tri,{...part,angle});
@@ -87,7 +100,7 @@
    ctx.moveTo(tri.coords[0].x,tri.coords[0].y);
    ctx.lineTo(tri.coords[1].x,tri.coords[1].y);
    ctx.lineTo(tri.coords[2].x,tri.coords[2].y);
-   ctx.closePath();ctx.fillStyle=rgb(...tri.color);ctx.fill();
+   ctx.closePath();ctx.fillStyle=rgb(...tri.color);ctx.globalAlpha=tri.opacity;ctx.fill();
   }
   ctx.restore();
   return true;
@@ -125,6 +138,12 @@
    ctx.fillStyle=rgb(r,g,b);ctx.fill();
   };
   for(const tri of triangles)fill(tri);
+   const blur=rotorBlurOpacity(animation);
+   if(blur>0){
+    ctx.save();ctx.globalAlpha=blur;
+    for(const tri of rotorSweepTriangles(id))fill(tri);
+    ctx.restore();
+   }
   for(const part of parts){
    const angle=Number.isFinite(animation?.[part.name])?animation[part.name]:0;
    for(const tri of part.triangles)
@@ -133,7 +152,7 @@
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotate,paint,paintInspection});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,rotate,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);

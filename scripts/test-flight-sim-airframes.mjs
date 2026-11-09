@@ -86,6 +86,17 @@ const extent=(m,axis)=>{
  for(let i=axis;i<v.length;i+=3){lo=Math.min(lo,v[i]);hi=Math.max(hi,v[i]);}
  return hi-lo;
 };
+const sweep=T.buildRotorSweep("r44");
+assert.ok(sweep&&sweep.triangles===128,"R44 sweep uses only 128 triangles");
+assert.ok(Math.abs(extent(sweep,0)-10.06)<.10,
+ "blur disc spans the actual main rotor diameter");
+assert.ok(Math.abs(extent(sweep,2)-10.06)<.10,
+ "motion disc covers the rotor's full circular sweep");
+assert.ok(sweep.positions.every(Number.isFinite));
+assert.equal(T.buildRotorSweep("c172"),null);
+assert.equal(C.rotorSweepTriangles("r44").length,128,
+ "2D fallback reuses the same round sweep geometry as WebGL");
+assert.equal(C.rotorSweepTriangles("c172").length,0);
 assert.ok(Math.abs(extent(mainRotor.mesh,0)-10.06)<.10,
  "R44 must have a recognisable TWO-blade 10.06 m main rotor span");
 assert.ok(extent(mainRotor.mesh,2)<1.2,

@@ -67,7 +67,7 @@
     Math.min(.08,(now-last)/1000)*17)};
    last=now;
    const spin=now/1000;
-   const animation=id==="r44"?{mainRotor:spin*35,tailRotor:spin*122}:
+   const animation=id==="r44"?{mainRotor:spin*35,tailRotor:spin*122,rotorBlurOpacity:.14}:
     id==="c172"?{propeller:spin*43}:{};
    const state={mode:id==="r44"?"helicopter":"airplane",xM:0,zM:0,
     altitudeM:0,headingDeg:0,pitchDeg:0,rollDeg:0};

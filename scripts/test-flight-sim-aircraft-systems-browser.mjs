@@ -35,8 +35,10 @@ async function isolated3DAnimation(page){
   const first=signature();
   renderer.draw(state,{view:"chase",animation:{mainRotor:.88,tailRotor:1.2}});
   const second=signature();
+  renderer.draw(state,{view:"chase",animation:{mainRotor:0,tailRotor:0,rotorBlurOpacity:.17}});
+  const blurred=signature();
   renderer.destroy();canvas.remove();
-  return {supported:true,first,second};
+  return {supported:true,first,second,blurred};
  });
 }
 try{
@@ -94,6 +96,8 @@ try{
  if(gpu.supported){
   assert.notEqual(gpu.first,gpu.second,
    "the rotor meshes must really move on the GPU when the blade angles change");
+   assert.notEqual(gpu.first,gpu.blurred,
+    "GPU rotor-sweep opacity must visibly change the outside helicopter view");
  }
  assert.deepEqual(errors,[]);
  await page.close();
