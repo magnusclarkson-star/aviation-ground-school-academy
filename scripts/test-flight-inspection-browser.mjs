@@ -37,6 +37,12 @@ try{
  await desktop.locator("#aircraftInspectZoomOut").click();
  await desktop.locator("#aircraftInspectReset").click();
  assert.match(await desktop.locator("#aircraftInspectAngles").textContent(),/AZ 000/);
+ await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
+ assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"139%",
+  "double clicking the aircraft zooms in without adding a new control");
+ await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
+ assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
+  "second double click restores fitted aircraft view");
  const frames=new Set();
  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
   await desktop.locator("#aircraftInspectModelSelect").selectOption(id);
@@ -91,6 +97,14 @@ try{
  await wait(mobile);
  assert.notEqual(await shot(mobile),initial,"phone zoom changes actual fallback model rendering");
  await mobile.locator("#aircraftInspectReset").tap();
+ await mobile.locator("#aircraftInspectViewport").tap();
+ await mobile.locator("#aircraftInspectViewport").tap();
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"139%",
+  "double tapping the aircraft enlarges it on Android");
+ await mobile.locator("#aircraftInspectViewport").tap();
+ await mobile.locator("#aircraftInspectViewport").tap();
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"100%",
+  "a second double tap fits the aircraft on Android");
  // Android two-thumb pinch zoom, including the low-end Canvas 2D fallback.
  const bounds=await mobile.locator("#aircraftInspectViewport").boundingBox();
  const first={x:Math.round(bounds.x+bounds.width*.35),
