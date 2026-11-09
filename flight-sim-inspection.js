@@ -15,6 +15,16 @@
   return Object.freeze({...orbit,distance:clamp(orbit.distance*factor,
    limits.minDistance,limits.maxDistance)});
  }
+ // Enlarging the gap between two fingers zooms in, just like an aircraft photo.
+ function pinchStep(orbit,previousSpan,nextSpan){
+  if(!Number.isFinite(previousSpan)||!Number.isFinite(nextSpan)||
+     previousSpan<=0||nextSpan<=0)return Object.freeze({...orbit});
+  return zoomStep(orbit,previousSpan/nextSpan);
+ }
+ function separation(points){
+  const [a,b]=Array.from(points.values());
+  return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;
+ }
  function attach({documentLike,windowLike}={}){
   const doc=documentLike||root?.document,win=windowLike||root;
   const $=id=>doc.getElementById(id);
@@ -25,6 +35,10 @@
    throw Error("360° inspector requires its cockpit controls and canvases");
   let orbit={azimuth:0,elevation:26,distance:30};
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
+  // Pointer IDs are tracked independently so a second touch changes zoom,
+  // rather than making the model unexpectedly spin or the flight yoke move.
+  const pointers=new Map();
+  let pinchSpan=0;
   const ctx=canvas2D.getContext("2d",{alpha:false});
   const engine=win.AGSAFlight3D,exterior=win.AGSAExteriorChase2D,types=win.AGSAExteriorAirframes;
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
@@ -101,7 +115,7 @@
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;
-   drag=null;
+   drag=null;pointers.clear();pinchSpan=0;
    trigger.focus({preventScroll:true});
   }
   function reset(){
@@ -125,22 +139,42 @@
   $("aircraftInspectSpin").addEventListener("click",()=>{autoRotate=!autoRotate;updateHeading()});
   modal.addEventListener("click",event=>{if(event.target===modal)close()});
   viewport.addEventListener("pointerdown",event=>{
-   if(event.pointerType==="mouse"&&event.button!==0)return;
-   if(drag!==null)return;
-   drag={id:event.pointerId,x:event.clientX,y:event.clientY};
+   if(modal.hidden||(event.pointerType==="mouse"&&event.button!==0)||
+      pointers.has(event.pointerId))return;
+   pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
    viewport.setPointerCapture(event.pointerId);
+   if(pointers.size===1){
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY};pinchSpan=0;
+   }else{
+    drag=null;pinchSpan=separation(pointers);
+   }
    autoRotate=false;
    event.preventDefault();
   });
   viewport.addEventListener("pointermove",event=>{
-   if(!drag||event.pointerId!==drag.id)return;
-   const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
-   orbit=orbitStep(orbit,dx,dy);
-   drag.x=event.clientX;drag.y=event.clientY;
+   const pointer=pointers.get(event.pointerId);
+   if(!pointer)return;
+   pointer.x=event.clientX;pointer.y=event.clientY;
+   if(pointers.size>=2){
+    const span=separation(pointers);
+    if(pinchSpan>0&&span>0)orbit=pinchStep(orbit,pinchSpan,span);
+    pinchSpan=span;drag=null;
+   }else if(drag?.id===event.pointerId){
+    orbit=orbitStep(orbit,event.clientX-drag.x,event.clientY-drag.y);
+    drag.x=event.clientX;drag.y=event.clientY;
+   }
    event.preventDefault();
   });
   for(const type of ["pointerup","pointercancel","lostpointercapture"])
-   viewport.addEventListener(type,event=>{if(drag?.id===event.pointerId)drag=null});
+   viewport.addEventListener(type,event=>{
+    if(!pointers.delete(event.pointerId))return;
+    if(pointers.size===1){
+     const [id,point]=pointers.entries().next().value;
+     drag={id,x:point.x,y:point.y};pinchSpan=0;
+    }else{
+     drag=null;pinchSpan=separation(pointers);
+    }
+   });
   viewport.addEventListener("wheel",event=>{
    if(modal.hidden)return;
    event.preventDefault();
@@ -172,7 +206,7 @@
    root.document.addEventListener("DOMContentLoaded",()=>attach({documentLike:root.document,windowLike:root}),{once:true});
   else attach({documentLike:root.document,windowLike:root});
  }
- const api=Object.freeze({orbitStep,zoomStep,attach});
+ const api=Object.freeze({orbitStep,zoomStep,pinchStep,attach});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root){root.AGSAInspection=api;start();}
 })(typeof window!=="undefined"?window:null);
