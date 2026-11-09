@@ -99,10 +99,10 @@ test('engine texture setting adds an optional power-responsive oscillator withou
 test('simulator audio controls remain opt-in, local and independent of instruments',()=>{
  for(const id of ['engineAudioToggle','engineAudioTexture','engineAudioVolume','engineAudioVolumeValue','engineAudioStatus','atcStatus'])
   assert.ok(html.includes('id="'+id+'"'));
- assert.ok(html.includes('src="flight-sim-engine-audio.js"'));
+ assert.ok(/src="flight-sim-engine-audio\.js(?:\?[^"]*)?"/.test(html));
  assert.ok(script.includes('N.createEngine({windowLike:window,documentLike:document})'));
- assert.ok(script.includes('engineAudio.update(audioMode(),audioPower())'));
- assert.ok(script.includes('const engineStart=engineAudio.start(audioMode(),audioPower())'), 'one-tap full flight uses aircraft-selected engine sound');
+ assert.ok(script.includes('engineAudio.update(audioMode(),audioPower(),audioAirspeed())'));
+ assert.ok(script.includes('const engineStart=engineAudio.start(audioMode(),audioPower(),audioAirspeed())'), 'one-tap full flight uses aircraft-selected engine sound');
  assert.ok(script.includes('airframeId()==="c172"?"airplane":"jet"'), 'selected jet uses a distinct synthesized engine voice');
  assert.ok(script.includes('engineAudio.stop()'));
  assert.ok(html.includes('id="flightInstruments"'));
