@@ -39,7 +39,8 @@ try{
  assert.match(await desktop.locator("#aircraftInspectAngles").textContent(),/AZ 000/);
  const frames=new Set();
  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
-  await desktop.locator("#cockpitAircraftSelect").selectOption(id);
+  await desktop.locator("#aircraftInspectModelSelect").selectOption(id);
+  assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,"inspector switches the flight simulator model");
   assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),
    (await desktop.evaluate(id=>window.AGSAExteriorAirframes.LABELS[id],id)));
   await wait(desktop);
@@ -48,7 +49,7 @@ try{
   frames.add(png);
  }
  assert.equal(frames.size,7,"all seven aircraft have distinct 360-degree renders");
- await desktop.locator("#cockpitAircraftSelect").selectOption("r44");
+ await desktop.locator("#aircraftInspectModelSelect").selectOption("r44");
  await desktop.locator("#aircraftInspectSpin").click();
  assert.equal(await desktop.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
  await desktop.waitForTimeout(250);
