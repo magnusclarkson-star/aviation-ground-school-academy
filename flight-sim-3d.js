@@ -114,6 +114,28 @@ function runway(mesh){
  mesh.quad([20,.08,250],[270,.08,250],[270,.08,310],[20,.08,310],tarmac);
  mesh.quad([125,.08,310],[370,.08,310],[370,.08,700],[125,.08,700],tint(tarmac,.93));
 }
+// Low-cost crossed light cards; drawn only in golden/dusk modes. These are
+// artistic ground cues, not actual airport light positions or specifications.
+function buildGroundGlow(mode){
+ const m=new Mesh(),warm=rgb(255,218,132),blue=rgb(137,226,237);
+ function bulb(x,z,color){
+  const y=.28,r=.75,h=1.8;
+  m.quad([x-r,y,z],[x+r,y,z],[x+r,y+h,z],[x-r,y+h,z],color);
+  m.quad([x,y,z-r],[x,y,z+r],[x,y+h,z+r],[x,y+h,z-r],color);
+ }
+ if(mode==="helicopter"){
+  for(let i=0;i<20;i++){
+   const angle=i*Math.PI*2/20;
+   bulb(33*Math.cos(angle),33*Math.sin(angle),i%5===0?warm:blue);
+  }
+ }else{
+  for(let z=0;z<=1800;z+=75)
+   for(const x of [-24,24])bulb(x,z,warm);
+  // A short synthetic approach-light string creates a perspective reference.
+  for(let z=-300;z<0;z+=50)bulb(0,z,warm);
+ }
+ return m.finish();
+}
 function helipad(mesh){
  const r=30,inside=27,n=32;
  for(let i=0;i<n;i++){
@@ -503,7 +525,7 @@ uniform vec3 uPartPivot;
 uniform float uPartAngle;
 uniform int uPartAxis;
 out vec3 vColor;
-out float vDistance,vLight;
+out float vDistance,vLight,vEmissive;
 // Surface illumination must follow the surface, including animated hinges,
 // rather than remaining fixed when the aircraft rolls, pitches or turns.
 vec3 rotatePart(vec3 v,int axis,float angle){
@@ -516,7 +538,11 @@ vec3 rotatePart(vec3 v,int axis,float angle){
 void main(){
  vec3 p=aPosition;
  vec3 normal=aNormal;
- if(uActor>1.5){
+ if(uActor>2.5){
+  // Artistic light cards stay in world coordinates rather than following
+  // the moving aircraft. They are shaded as emissive in the fragment shader.
+  normal=vec3(0.,1.,0.);
+ }else if(uActor>1.5){
   // The soft ground footprint uses the same aircraft orientation but stays
   // just above the runway/helipad surface rather than rising with the craft.
   float c=cos(uCraftYaw),s=sin(uCraftYaw);
@@ -552,17 +578,18 @@ void main(){
    1.000080003*depth-0.800032001,depth);
  vColor=aColor;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
+ vEmissive=uActor>2.5?1.:0.;
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
 in vec3 vColor;
-in float vDistance,vLight;
+in float vDistance,vLight,vEmissive;
 uniform vec3 uFogColor,uLightColor;
 uniform float uOpacity;
 out vec4 outColor;
 void main(){
  float fog=clamp((vDistance-1150.)/5000.,0.,.8);
- vec3 shaded=clamp(vColor*vLight*uLightColor,0.,1.);
+ vec3 shaded=mix(clamp(vColor*vLight*uLightColor,0.,1.),vColor,vEmissive);
  outColor=vec4(mix(shaded,uFogColor,fog),uOpacity);
 }`;
 const SKY_VERTEX=`#version 300 es
@@ -630,6 +657,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   };
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
+  const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
+   glowHeli=inspectionOnly?null:upload(buildGroundGlow("helicopter"));
   const airframes=Object.create(null);
   for(const id of Exterior.IDS){
    airframes[id]={
@@ -666,7 +695,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uOpacity,1);
    const targetCamera=cameraPose(state,view,orbit);
    const clock=root?.performance?.now?.()??Date.now();
-   const camera=cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera;
+   const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
+   const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera);
    gl.uniform3fv(uni.uEye,camera.eye);
    gl.uniform3fv(uni.uCraft,camera.craft);
    gl.uniform1f(uni.uYaw,camera.yaw);
@@ -683,6 +713,18 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    if(!inspectionOnly&&view!=="inspect"){
     gl.bindVertexArray(world.vao);
     gl.drawArrays(gl.TRIANGLES,0,world.count);
+    if(lighting==="dusk"||lighting==="golden"){
+     gl.uniform1f(uni.uActor,3);
+     gl.uniform1f(uni.uOpacity,lighting==="dusk"?.88:.51);
+     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+     gl.depthMask(false);
+     const lamps=state.mode==="helicopter"?glowHeli:glowPlane;
+     gl.bindVertexArray(lamps.vao);
+     gl.drawArrays(gl.TRIANGLES,0,lamps.count);
+     gl.depthMask(true);gl.disable(gl.BLEND);
+     gl.uniform1f(uni.uOpacity,1);
+     gl.uniform1f(uni.uActor,0);
+    }
    }
    if(view!=="cockpit"){
     const selected=Exterior.normalize(airframeId||state.mode);
