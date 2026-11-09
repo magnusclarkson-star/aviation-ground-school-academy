@@ -73,3 +73,20 @@
  #flightInstruments .mini-pfd.agsa-mini-pfd-expanded svg{max-height:52dvh!important}
  #cockpitStation #cockpitZoomPanel .cockpit-mfd-attitude{height:36dvh!important}
 }
+
+/* Runway-home cue belongs to the navigation screen, not a large cockpit
+ * toolbar or a second distracting information panel. */
+#cockpitStation .cockpit-nav-readouts [data-nav-field="runway"]{
+ display:block!important;
+ flex:1 1 100%!important;
+ width:100%;
+ color:#ffe3a0;
+ font-weight:750;
+ font-size:clamp(9px,1.5vw,12px)!important;
+ letter-spacing:0;
+ white-space:normal;
+ text-align:center;
+}
+#cockpitStation #cockpitZoomPanel .cockpit-nav-readouts [data-nav-field="runway"]{
+ font-size:13px!important;
+}
