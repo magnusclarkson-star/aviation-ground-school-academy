@@ -455,34 +455,58 @@ function buildMovingParts(mode="airplane"){
   // have slight coning, tapered tips and contrasting edges for legibility.
   // Both rotate around their real geometric hubs (Y and X respectively).
   add("mainRotor",[0,3.16,-.4],2,m=>{
-   const y=3.16,hubZ=-.40;
-   const tip=5.03;
-   for(const side of [-1,1]){
-    const A=[side*.32,y,hubZ-.24],B=[side*4.65,y+.15,hubZ-.26];
-    const C=[side*tip,y+.18,hubZ-.14],D=[side*tip,y+.18,hubZ+.08];
-    const E=[side*4.65,y+.15,hubZ+.12],F=[side*.32,y,hubZ+.24];
-    m.quad(A,B,E,F,metal);
-    m.tri(B,C,D,tint(metal,1.16));m.tri(B,D,E,tint(metal,1.05));
-    // Flat underside keeps rotor visible from a camera below the disc.
-    const under=v=>[v[0],v[1]-.042,v[2]];
-    m.quad(under(F),under(E),under(B),under(A),tint(metal,.72));
-    m.tri(under(E),under(D),under(B),tint(metal,.76));
-    m.box(side>0?4.57:-4.85,y+.13,hubZ-.30,.28,.07,.48,yellow);
-    m.box(side>0?.36:-.70,y-.045,hubZ-.22,.34,.08,.44,blue);
+   // An actual two-blade rotor: broad, tapered chord, contrasting upper
+   // face and darker underside. The hub, tips and root hardware all share
+   // the rotation transform, so chase/top/inspection agree with the model.
+   const y=3.16,hubZ=-.40,tip=5.03;
+   const upper=rgb(218,231,232),leading=rgb(242,246,231);
+   const underside=rgb(87,104,117),tipPaint=rgb(231,187,82);
+   for(const sign of [-1,1]){
+    const A=[sign*.32,y,hubZ-.23],B=[sign*4.65,y+.15,hubZ-.25];
+    const C=[sign*tip,y+.18,hubZ-.13],D=[sign*tip,y+.18,hubZ+.08];
+    const E=[sign*4.65,y+.15,hubZ+.13],F=[sign*.32,y,hubZ+.23];
+    // Airfoil broad surface with a bright chordwise leading edge.
+    m.quad(A,B,E,F,upper);
+    m.tri(B,C,D,tint(upper,1.04));m.tri(B,D,E,upper);
+    const frontA=[sign*.32,y+.014,hubZ-.23],
+     frontB=[sign*4.65,y+.164,hubZ-.25],
+     frontE=[sign*4.65,y+.164,hubZ-.18],
+     frontF=[sign*.32,y+.014,hubZ-.16];
+    m.quad(frontA,frontB,frontE,frontF,leading);
+    // Full underside and a dark trailing edge read from a low side camera.
+    const under=v=>[v[0],v[1]-.065,v[2]];
+    m.quad(under(F),under(E),under(B),under(A),underside);
+    m.tri(under(E),under(D),under(B),tint(underside,1.12));
+    m.quad(under(A),under(B),B,A,tint(underside,.86));
+    m.quad(under(F),F,E,under(E),tint(underside,.72));
+    // Each yellow tip is part of its OWN blade (not extra blades).
+    m.box(sign>0?4.64:-4.98,y+.13,hubZ-.26,.34,.075,.40,tipPaint);
+    // Rotor root cuffs and metal blade hinges remain visible in rotation.
+    m.box(sign>0?.34:-.72,y-.045,hubZ-.24,.38,.10,.48,blue);
+    m.box(sign>0?.69:-.87,y-.025,hubZ-.27,.17,.12,.54,tint(metal,.82));
    }
-   m.box(-.37,y-.08,hubZ-.31,.74,.18,.62,yellow);
-   m.box(-.22,y+.10,hubZ-.18,.44,.15,.36,tint(metal,.82));
+   m.box(-.39,y-.12,hubZ-.35,.78,.23,.70,blue);
+   m.box(-.24,y+.10,hubZ-.19,.48,.18,.38,yellow);
+   m.box(-.12,y+.26,hubZ-.12,.24,.09,.24,metal);
   });
   add("tailRotor",[-.77,1.19,-8.18],1,m=>{
+   // Distinct, opaque two-blade anti-torque rotor on the left of the boom.
+   // Paint both faces: WebGL2 and the mobile 2D fallback share this mesh.
    const x=-.77,z=-8.18,y=1.19,r=.735;
-   // Rotor turns in the YZ plane, mounted on the LEFT of the tail fin.
+   const front=rgb(229,238,230),back=rgb(91,111,126);
    for(const sign of [-1,1]){
-    const tip=sign*r;
-    m.quad([x,y+sign*.10,z-.10],[x,y+tip,z-.10],
-     [x,y+tip,z+.10],[x,y+sign*.10,z+.15],metal);
-    m.box(x-.04,y+Math.min(sign*.50,sign*.65),z-.115,.11,.16,.25,yellow);
+    const inner=sign*.12,outer=sign*r;
+    const A=[x-.035,y+inner,z-.14],B=[x-.035,y+outer,z-.095],
+     C=[x-.035,y+outer,z+.10],D=[x-.035,y+inner,z+.16];
+    m.quad(A,B,C,D,front);
+    m.quad([x+.035,A[1],A[2]],[x+.035,D[1],D[2]],
+     [x+.035,C[1],C[2]],[x+.035,B[1],B[2]],back);
+    const paintY=sign>0?y+.54:y-.70;
+    m.box(x-.075,paintY,z-.13,.15,.15,.25,yellow);
    }
-   m.box(x-.12,y-.13,z-.15,.24,.26,.30,blue);
+   // This circular-looking hub stays at the same shaft as the tail rotor.
+   m.box(x-.12,y-.14,z-.16,.24,.28,.32,blue);
+   m.box(x-.145,y-.065,z-.08,.05,.13,.16,yellow);
   });
  }
  return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
