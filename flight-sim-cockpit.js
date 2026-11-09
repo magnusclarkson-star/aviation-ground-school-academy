@@ -42,8 +42,11 @@ function snapshot(state,systems,input,profileId){
 const ANALOG={
  trainer:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],
   ["turn","TURN COORD.","BANK · SIM"],["heading","HEADING","DEG"],["vsi","VERTICAL SPEED","FT/MIN"]],
- rotor:[["vsi","VERTICAL SPEED","FT/MIN"],["speed","AIRSPEED","KT"],["rpm","DUAL TACH","% · SIM"],
-  ["attitude","ATTITUDE · OPT.","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],["power","MANIFOLD PROXY","POWER %"]]
+ // The R44-style panel retains a visible compass/heading and vertical speed
+ // as well as dual tach, airspeed, altitude and manifold proxy. Eight compact
+ // dials fit in two rows so the controls remain visible below on phones.
+ rotor:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],["vsi","VERTICAL SPEED","FT/MIN"],
+  ["heading","HEADING","DEG"],["rpm","DUAL TACH","% · SIM"],["power","MANIFOLD PROXY","POWER %"],["turn","TURN / SLIP","BANK · SIM"]]
 };
 const HELP=Object.freeze({
  speed:{title:"Airspeed",text:"Shows airspeed in knots. Compare it with the attitude and height while flying."},
