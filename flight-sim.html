@@ -112,7 +112,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-camera-rig.js?v=20261109-camera1" defer></script>
 <script src="flight-sim-3d.js?v=20261109-landingcam1" defer></script>
 <script src="flight-sim-exterior-2d.js?v=20261109-landingcam1" defer></script>
-<script src="flight-sim-inspection.js" defer></script>
+<script src="flight-sim-inspection.js?v=20261109-zoomtap2" defer></script>
 <script src="flight-sim-aircraft-systems.js?v=20261109-landingcam1" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
@@ -841,7 +841,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
     </label>
     <button type="button" id="aircraftInspectClose" aria-label="Close aircraft inspection">Close ✕</button>
    </header>
-   <div id="aircraftInspectViewport" class="aircraft-inspect-viewport" role="img" aria-label="Drag to rotate the selected aircraft and inspect its exterior from any angle">
+   <div id="aircraftInspectViewport" class="aircraft-inspect-viewport" role="img" aria-label="Drag to rotate the selected aircraft; pinch or double tap to zoom">
     <canvas id="aircraftInspectCanvas2D" width="960" height="540"></canvas>
     <canvas id="aircraftInspectCanvas3D" width="960" height="540" hidden></canvas>
    </div>
@@ -854,7 +854,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
     <button type="button" id="aircraftInspectReset">Reset view</button>
     <button type="button" id="aircraftInspectSpin" aria-pressed="false">Auto rotate</button>
    </div>
-   <p id="aircraftInspectDescription" class="aircraft-inspect-hint">Drag the aircraft to rotate. Use + or − to zoom. Select another aircraft from the cockpit to inspect it.</p>
+   <p id="aircraftInspectDescription" class="aircraft-inspect-hint">Drag to rotate · Pinch or double-tap to zoom · Auto rotate for a full turn.</p>
   </section>
  </div>
  <footer>Aviation Ground School Academy · Educational technology demonstrator · No pilot licence, actual flight credit, real airfield/GPS, or safety-critical guidance.</footer>
