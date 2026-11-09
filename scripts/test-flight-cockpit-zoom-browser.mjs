@@ -19,6 +19,30 @@ try{
   'no extra automatic flight controls');
  const pad=desktop.locator('#controlPad');
  const originalSize=await pad.evaluate(el=>el.getBoundingClientRect().height);
+ const controlPosition=await pad.boundingBox();
+ const pedalPosition=await desktop.locator('#leftRudder').boundingBox();
+ assert.ok(await desktop.locator('#cockpitVisualPanel [data-live-heading-card]').count()===1,
+   'a rotating compass card replaces the old fake heading needle');
+ assert.equal(await desktop.locator('#cockpitVisualPanel [data-live-alt-hundreds]').count(),1);
+ assert.equal(await desktop.locator('#cockpitVisualPanel [data-live-alt-thousands]').count(),1);
+ assert.equal(await desktop.locator('#cockpitVisualPanel [data-live-slip]').count(),1);
+ const instrumentMechanics=await desktop.evaluate(()=>{
+  const panel=document.querySelector('#cockpitVisualPanel');
+  window.AGSACockpitIntegrated.paint(panel,{
+   speedKt:82,groundSpeedKt:79,altitudeM:152.4,verticalMs:1,
+   headingDeg:90,pitchDeg:5,rollDeg:0
+  },{powerPct:70},{throttle:.75,collective:0,rudder:1},'c172',document);
+  return {
+   card:panel.querySelector('[data-live-heading-card]').getAttribute('transform'),
+   hundreds:panel.querySelector('[data-live-alt-hundreds]').getAttribute('transform'),
+   thousands:panel.querySelector('[data-live-alt-thousands]').getAttribute('transform'),
+   slip:panel.querySelector('[data-live-slip]').getAttribute('cx')
+  };
+ });
+ assert.equal(instrumentMechanics.card,'rotate(-90.00 50 50)');
+ assert.equal(instrumentMechanics.hundreds,'rotate(180.00 50 50)');
+ assert.equal(instrumentMechanics.thousands,'rotate(18.00 50 50)');
+ assert.ok(Number(instrumentMechanics.slip)>58,'rudder moves slip ball');
 
  await desktop.locator('#cockpitVisualPanel .cockpit-info-dot').first().click();
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),true);
@@ -27,6 +51,12 @@ try{
   'instrument ⓘ button opens description without enlarging gauge');
  await desktop.locator('#cockpitInfoClose').click();
  await gauge.click({position:{x:65,y:75}});
+ assert.equal(await desktop.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute',
+   'enlarged gauge floats over the dashboard rather than entering the layout');
+ const shiftedPad=await pad.boundingBox();
+ const shiftedPedal=await desktop.locator('#leftRudder').boundingBox();
+ assert.ok(Math.abs(shiftedPad.y-controlPosition.y)<1,'zoom does not move centered yoke');
+ assert.ok(Math.abs(shiftedPedal.y-pedalPosition.y)<1,'zoom does not move rudder pedals');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),true,
   'tapping instrument face enlarges only that instrument');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false);
@@ -75,10 +105,18 @@ try{
   'touching yoke does not expand flight control area');
  assert.equal(await phone.locator('#cockpitStation').getAttribute('data-control-focus'),null);
  assert.equal(await phone.locator('#cockpitExtraControls').count(),0);
+ const phonePadPosition=await phonePad.boundingBox();
  await phone.locator('#cockpitVisualPanel .cockpit-info-dot').first().tap();
  assert.equal(await phone.locator('#cockpitInfoPanel').isVisible(),true);
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),false);
  await phone.locator('#cockpitInfoClose').tap();
+ await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().tap({position:{x:32,y:35}});
+ assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true);
+ assert.equal(await phone.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute');
+ const phonePadAfterZoom=await phonePad.boundingBox();
+ assert.ok(Math.abs(phonePadPosition.y-phonePadAfterZoom.y)<1,
+  'phone instrument zoom never moves the yoke touch target');
+ await phone.locator('#cockpitZoomClose').tap();
  const inCockpit=await phone.evaluate(()=>{
   const c=document.getElementById('cockpitStation');
   return ['controlPad','leftRudder','rightRudder','power'].every(id=>c.contains(document.getElementById(id)));
