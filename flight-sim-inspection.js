@@ -21,6 +21,12 @@
      previousSpan<=0||nextSpan<=0)return Object.freeze({...orbit});
   return zoomStep(orbit,previousSpan/nextSpan);
  }
+ // Double-tap toggles a useful close view while preserving the exact
+ // aircraft bearing and elevation. Fitted size returns to 100% on second use.
+ function doubleTapZoom(orbit){
+  const far=30,close=far*.72;
+  return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
+ }
  function separation(points){
   const [a,b]=Array.from(points.values());
   return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;
@@ -37,8 +43,8 @@
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
   // Pointer IDs are tracked independently so a second touch changes zoom,
   // rather than making the model unexpectedly spin or the flight yoke move.
-  const pointers=new Map();
-  let pinchSpan=0;
+  const pointers=new Map(),tapStarts=new Map();
+  let pinchSpan=0,lastTap=null;
   const ctx=canvas2D.getContext("2d",{alpha:false});
   const engine=win.AGSAFlight3D,exterior=win.AGSAExteriorChase2D,types=win.AGSAExteriorAirframes;
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
@@ -115,7 +121,7 @@
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;
-   drag=null;pointers.clear();pinchSpan=0;
+   drag=null;pointers.clear();tapStarts.clear();pinchSpan=0;lastTap=null;
    trigger.focus({preventScroll:true});
   }
   function reset(){
@@ -149,11 +155,14 @@
    if(modal.hidden||(event.pointerType==="mouse"&&event.button!==0)||
       pointers.has(event.pointerId))return;
    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+   tapStarts.set(event.pointerId,{x:event.clientX,y:event.clientY,
+    time:event.timeStamp,moved:false});
    viewport.setPointerCapture(event.pointerId);
    if(pointers.size===1){
     drag={id:event.pointerId,x:event.clientX,y:event.clientY};pinchSpan=0;
    }else{
-    drag=null;pinchSpan=separation(pointers);
+    drag=null;pinchSpan=separation(pointers);lastTap=null;
+    for(const start of tapStarts.values())start.moved=true;
    }
    autoRotate=false;
    event.preventDefault();
@@ -161,6 +170,10 @@
   viewport.addEventListener("pointermove",event=>{
    const pointer=pointers.get(event.pointerId);
    if(!pointer)return;
+   const start=tapStarts.get(event.pointerId);
+   if(start&&Math.hypot(event.clientX-start.x,event.clientY-start.y)>12){
+    start.moved=true;lastTap=null;
+   }
    pointer.x=event.clientX;pointer.y=event.clientY;
    if(pointers.size>=2){
     const span=separation(pointers);
@@ -174,7 +187,19 @@
   });
   for(const type of ["pointerup","pointercancel","lostpointercapture"])
    viewport.addEventListener(type,event=>{
+    const wasSingle=pointers.size===1,start=tapStarts.get(event.pointerId);
     if(!pointers.delete(event.pointerId))return;
+    tapStarts.delete(event.pointerId);
+    // Two quick, stationary taps enlarge or fit the selected aircraft.
+    // A drag or pinch never counts toward this gesture.
+    const valid=type==="pointerup"&&wasSingle&&start&&!start.moved&&
+     event.timeStamp-start.time<350;
+    if(valid&&lastTap&&event.timeStamp-lastTap.time<360&&
+       Math.hypot(event.clientX-lastTap.x,event.clientY-lastTap.y)<36){
+     orbit=doubleTapZoom(orbit);lastTap=null;updateHeading();
+    }else if(valid){
+     lastTap={x:event.clientX,y:event.clientY,time:event.timeStamp};
+    }else lastTap=null;
     if(pointers.size===1){
      const [id,point]=pointers.entries().next().value;
      drag={id,x:point.x,y:point.y};pinchSpan=0;
@@ -213,7 +238,7 @@
    root.document.addEventListener("DOMContentLoaded",()=>attach({documentLike:root.document,windowLike:root}),{once:true});
   else attach({documentLike:root.document,windowLike:root});
  }
- const api=Object.freeze({orbitStep,zoomStep,pinchStep,attach});
+ const api=Object.freeze({orbitStep,zoomStep,pinchStep,doubleTapZoom,attach});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root){root.AGSAInspection=api;start();}
 })(typeof window!=="undefined"?window:null);
