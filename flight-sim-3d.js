@@ -16,6 +16,9 @@ if(!Exterior)throw Error("Exterior aircraft geometry module missing");
 const Airport=root?.AGSAFlightAirportDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-airport-detail.js"):null);
+const PadDetail=root?.AGSAHelipadDetail||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-helipad-detail.js"):null);
 
 class Mesh{
  constructor(){this.p=[];this.c=[];this.n=[];this.triangles=0}
@@ -94,6 +97,54 @@ function helipad(mesh){
  }
  for(const [x,z,w,d] of [[-10,-10,3,20],[7,-10,3,20],[-10,-2,20,4]])
   mesh.quad([x,.13,z],[x+w,.13,z],[x+w,.13,z+d],[x,.13,z+d],white);
+ helipadReferences(mesh);
+}
+function hexRgb(hex){
+ const n=Number.parseInt(hex.slice(1),16);
+ return rgb((n>>>16)&255,(n>>>8)&255,n&255);
+}
+function helipadReferences(mesh){
+ if(!PadDetail)return;
+ // Landmarks are painted into fixed world coordinates and do not follow
+ // the camera or aircraft. They produce actual depth and drift cues.
+ for(const a of PadDetail.hardstands){
+  const c=hexRgb(a.color);
+  mesh.quad([a.x,.13,a.z],[a.x+a.w,.13,a.z],
+   [a.x+a.w,.13,a.z+a.d],[a.x,.13,a.z+a.d],c);
+ }
+ for(const radius of PadDetail.rings){
+  const c=radius<12?rgb(128,223,228):rgb(238,241,221);
+  for(const q of PadDetail.ringSegments(radius)){
+   const r=.32/radius;
+   mesh.quad([q.ax*(1-r),.17,q.az*(1-r)],
+    [q.ax*(1+r),.17,q.az*(1+r)],
+    [q.bx*(1+r),.17,q.bz*(1+r)],
+    [q.bx*(1-r),.17,q.bz*(1-r)],c);
+  }
+ }
+ for(const l of PadDetail.referenceLines){
+  const dx=l.bx-l.ax,dz=l.bz-l.az,len=Math.hypot(dx,dz)||1;
+  const nx=-dz/len*.38,nz=dx/len*.38,c=hexRgb(l.color);
+  mesh.quad([l.ax+nx,.18,l.az+nz],[l.bx+nx,.18,l.bz+nz],
+   [l.bx-nx,.18,l.bz-nz],[l.ax-nx,.18,l.az-nz],c);
+ }
+ for(const p of PadDetail.pylons){
+  mesh.box(p.x-1.3,.16,p.z-1.3,2.6,.18,2.6,rgb(233,233,204));
+  mesh.box(p.x-.45,.34,p.z-.45,.9,p.height,.9,rgb(117,131,137));
+  mesh.box(p.x-.95,p.height-.3,p.z-.95,1.9,1,1.9,hexRgb(p.color));
+ }
+ for(const p of PadDetail.buildings){
+  mesh.box(p.x,0,p.z,p.w,p.h,p.d,hexRgb(p.color),hexRgb(p.roof));
+  mesh.box(p.x+4,1,p.z-.25,p.w-8,p.h*.62,.5,rgb(49,75,84));
+ }
+ for(const p of PadDetail.fence){
+  mesh.box(p.x-.2,0,p.z-.2,.4,p.height,.4,rgb(189,201,191));
+ }
+ const lineFrom=PadDetail.fence[0],lineTo=PadDetail.fence.at(-1);
+ for(const y of [1.3,2.7]){
+  mesh.box(lineFrom.x,y,lineFrom.z-.12,lineTo.x-lineFrom.x,.2,.24,
+   rgb(177,186,175));
+ }
 }
 function airfield(mesh){
  for(const [x,z,w,h,d] of [[125,420,67,16,85],[-220,980,90,21,100],

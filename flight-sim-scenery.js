@@ -7,6 +7,9 @@ const RAD=Math.PI/180;
 const Airport=root?.AGSAFlightAirportDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-airport-detail.js"):null);
+const PadDetail=root?.AGSAHelipadDetail||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-helipad-detail.js"):null);
 
 function project(state,x,y,z,width=960,height=540){
  const dx=x-state.xM,dz=z-state.zM,yaw=state.headingDeg*RAD;
@@ -132,21 +135,65 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   poly([[70,0,z],[800,0,z],[800,0,z+75],[70,0,z+75]],shade);
  }
  if(state.mode==="helicopter"){
+  // A shared fixed X/Z environment matches the 3D helipad geometry. Every
+  // projected reference responds to aircraft drift and heading changes.
+  if(PadDetail)for(const a of PadDetail.hardstands){
+   poly([[a.x,.13,a.z],[a.x+a.w,.13,a.z],
+    [a.x+a.w,.13,a.z+a.d],[a.x,.13,a.z+a.d]],a.color);
+  }
   // Distinct rotorcraft scenario: an abstract helipad, never a real-world
   // helipad marking or airport data.
   const sides=12,outer=[];
   for(let i=0;i<sides;i++){
    const theta=i*2*Math.PI/sides;
-   outer.push([33*Math.cos(theta),0,33*Math.sin(theta)]);
+   outer.push([30*Math.cos(theta),0,30*Math.sin(theta)]);
   }
   poly(outer,"#303d48","#eef6d9",4);
   for(let i=0;i<sides;i++){
    const a=outer[i],b=outer[(i+1)%sides];
-   line([a[0]*.82,.08,a[2]*.82],[b[0]*.82,.08,b[2]*.82],"#f2d274",4);
+   line([a[0]*.9,.08,a[2]*.9],[b[0]*.9,.08,b[2]*.9],"#f2d274",4);
   }
   // Enclosed H on the helipad plane.
   for(const x of [-8,8])line([x,.15,-12],[x,.15,12],"#f6f8ef",8);
   line([-8,.15,0],[8,.15,0],"#f6f8ef",8);
+  if(PadDetail){
+   for(const radius of PadDetail.rings){
+    const shade=radius<12?"#80dfe4":"#eef1dd";
+    for(const segment of PadDetail.ringSegments(radius))
+     line([segment.ax,.18,segment.az],[segment.bx,.18,segment.bz],shade,2);
+   }
+   for(const mark of PadDetail.referenceLines)
+    line([mark.ax,.18,mark.az],[mark.bx,.18,mark.bz],mark.color,3);
+   for(const p of PadDetail.pylons){
+    poly([[p.x-1.3,.17,p.z-1.3],[p.x+1.3,.17,p.z-1.3],
+     [p.x+1.3,.17,p.z+1.3],[p.x-1.3,.17,p.z+1.3]],"#e9e9cc");
+    line([p.x,.34,p.z],[p.x,p.height+.4,p.z],"#758389",4);
+    const cap=project(state,p.x,p.height+.4,p.z,w,h);
+    if(cap&&cap.depth<2100&&cap.x>-20&&cap.x<w+20&&cap.y>-20&&cap.y<h+20){
+     const radius=Math.min(10,Math.max(3,180/cap.depth));
+     ctx.fillStyle=p.color;ctx.beginPath();
+     ctx.arc(cap.x,cap.y,radius,0,Math.PI*2);ctx.fill();
+    }
+   }
+   for(const b of PadDetail.buildings){
+    poly([[b.x,0,b.z],[b.x+b.w,0,b.z],
+     [b.x+b.w,b.h,b.z],[b.x,b.h,b.z]],b.color);
+    poly([[b.x+b.w,0,b.z],[b.x+b.w,0,b.z+b.d],
+     [b.x+b.w,b.h,b.z+b.d],[b.x+b.w,b.h,b.z]],"#425966");
+    poly([[b.x,b.h,b.z],[b.x+b.w,b.h,b.z],
+     [b.x+b.w,b.h,b.z+b.d],[b.x,b.h,b.z+b.d]],b.roof);
+   }
+   const posts=PadDetail.fence;
+   for(let i=0;i<posts.length;i++){
+    const p=posts[i];
+    line([p.x,0,p.z],[p.x,p.height,p.z],"#b9c9bf",2);
+    if(i<posts.length-1){
+     const q=posts[i+1];
+     for(const height of [1.3,2.7])
+      line([p.x,height,p.z],[q.x,height,q.z],"#9faeaa",2);
+    }
+   }
+  }
   for(let i=0;i<20;i++){
    const angle=i*2*Math.PI/20;
    const x=140*Math.cos(angle),z=140*Math.sin(angle);
