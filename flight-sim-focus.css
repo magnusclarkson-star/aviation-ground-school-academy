@@ -8,6 +8,11 @@ body[data-cockpit-focus="on"] .scene-panel{
  display:flex!important;flex-direction:column!important;overflow:hidden!important;
  box-shadow:none!important;background:#10171c!important
 }
+/* Duplicate telemetry and instructional panels must not compete for the
+   fixed viewport: only the windscreen and instrument/control station remain. */
+body[data-cockpit-focus="on"] .scene-panel > :not(.scene-shell):not(#cockpitStation){
+ display:none!important
+}
 body[data-cockpit-focus="on"] .scene-shell{
  position:relative!important;top:auto!important;flex:0 0 clamp(105px,22dvh,205px);
  width:100%!important;height:clamp(105px,22dvh,205px)!important;
