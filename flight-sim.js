@@ -538,6 +538,7 @@ function setMode(next){
   radioTone.stop();syncRadioToneUI("Aircraft changed: radio cue tone off.");
   startExercise("Aircraft mode changed. Apply Reference and Comparison again if you return to the experimental aeroplane.");
   state=makeConfiguredState(newMode);
+  renderer3D?.resetCamera?.();
   input=M.makeInput(newMode);
   paused=false;$("pauseFlight").setAttribute("aria-pressed","false");
   $("pauseFlight").textContent="Pause simulation";
@@ -588,6 +589,7 @@ function reset(scenario){
  radioTone.stop();syncRadioToneUI("Scenario reset: radio cue tone off.");
  const newMode=type==="cyclic"?"helicopter":"airplane";
  state=makeConfiguredState(newMode,scenario==="approach"?"approach":"runway");
+ renderer3D?.resetCamera?.();
  input=M.makeInput(newMode);
  if(newMode==="airplane"&&scenario==="approach"){
   input.throttle=.49;input.flaps=20;input.pitch=.22;
