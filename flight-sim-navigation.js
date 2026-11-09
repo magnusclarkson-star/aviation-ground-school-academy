@@ -29,7 +29,7 @@
    circuitText:leg?leg.label+" · "+leg.courseText+" · "+leg.turn+" · RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m"):null,
    runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
     " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
-   worldTransform:"translate(110 82) rotate("+heading.toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
+   worldTransform:"translate(110 82) rotate("+(-heading).toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
    trackRotation:"rotate("+(track-heading).toFixed(2)+" 110 82)",
    positionText:(x<0?"W":"E")+Math.round(Math.abs(x))+" "+(z<0?"S":"N")+Math.round(Math.abs(z))
   });
