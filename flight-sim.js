@@ -234,7 +234,7 @@ function fallbackTo2D(message){
  $("cameraMode").disabled=false;
  visualMessage(message,"fallback");
  prev2D=0;
- S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 // No private API, hidden service or remote rendering. When WebGL2 is not
 // available (including context loss), the original Canvas 2D keeps working.
@@ -264,7 +264,10 @@ function chooseVisual(){
 }
 function syncCockpitFrame(){
  const frame=$("cockpitFrame"),enabled=$("cockpitFrameToggle").value==="on";
- const chase=$("cameraMode").value==="chase";
+ const selectedView=$("cameraMode").value;
+ const chase=selectedView!=="cockpit";
+ document.querySelector(".scene-shell").dataset.exteriorView=chase?"on":"off";
+ document.querySelector(".scene-shell").dataset.cameraView=selectedView;
  frame.dataset.aircraft=state.mode==="helicopter"?"helicopter":"airplane";
  frame.dataset.airframe=airframeId();
  document.querySelector(".scene-shell").dataset.airframe=airframeId();
@@ -273,7 +276,7 @@ function syncCockpitFrame(){
  frame.dataset.enabled=enabled?"on":"off";
  $("cockpitFrameStatus").textContent=!enabled?
   "Illustrated cockpit frame hidden; full outside scene available.":
-  chase?"Chase camera selected: windscreen hidden to show the outside aircraft.":
+  chase?selectedView.toUpperCase()+" CAMERA · "+airframeLabel()+" exterior visible.":
   "Illustrated "+(state.mode==="helicopter"?"rotorcraft":"airplane")+
   " windscreen visible. Instruments and touch controls remain unobstructed.";
 }
@@ -287,16 +290,16 @@ function drawScenery(now){
   }
   // Keep a warm 2D fallback without rendering it at full frame rate on phones.
   if(now-prev2D>=300){
-   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});prev2D=now;
+   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});prev2D=now;
   }
  }else if(now-prev2D>=42){
-  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});prev2D=now;
+  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});prev2D=now;
  }
 }
 $("lightingMode").addEventListener("change",()=>{
  prev2D=0;prev3D=0;
  $("lightingStatus").textContent=lightingChoice().label+" selected. Fictional outside light only; instruments and flight dynamics unchanged.";
- if(!renderer3D)S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});
+ if(!renderer3D)S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 });
 function setValues(){
  $("power").value=String(round(input.throttle*100));
@@ -545,7 +548,7 @@ function setMode(next){
   "Drag fictional "+(type==="cyclic"?"cyclic":type==="yoke"?"yoke":"joystick")+" left/right for bank and up/down for pitch. Arrow keys on desktop.");
  releaseControls();
  hardware?.resetPower();
- setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});
+ setValues();gripTransform();updateReadouts();S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 function reset(scenario){
  engineAudio.stop();syncEngineAudioUI("Practice reset. Engine sound off until enabled again.");
@@ -568,7 +571,7 @@ function reset(scenario){
  $("pauseFlight").setAttribute("aria-pressed","false");$("pauseFlight").textContent="Pause simulation";
  releaseControls();hardware?.resetPower();setValues();updateReadouts();
  haptics.stop();
- S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});
+ S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
@@ -785,7 +788,7 @@ $("cameraMode").addEventListener("change",()=>{
  syncCockpitFrame();
  if(renderer3D)try{renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId(),airframeId:airframeId()})}
  catch{fallbackTo2D("3D camera unavailable; switched to 2D scenery.")}
- else S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId()});
+ else S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 });
 $("instrumentToggle").addEventListener("click",()=>{
  const isCompact=$("flightInstruments").classList.toggle("compact");
