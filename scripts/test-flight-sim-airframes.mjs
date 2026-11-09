@@ -60,8 +60,8 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const parts=T.buildMovingParts(id);
  assert.deepEqual(parts.map(x=>x.name),[
   "leftAileron","leftFlap","elevatorLeft","rightAileron",
-  "rightFlap","elevatorRight","rudder"
- ],id+" has control-surface animations without the trainer propeller");
+  "rightFlap","elevatorRight",...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"])
+ ],id+" has the correct individual animated jet surfaces");
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
  const names=parts.map(x=>x.name);
  const rudders=names.filter(name=>name.toLowerCase().includes("rudder"));
