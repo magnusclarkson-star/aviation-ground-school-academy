@@ -45,6 +45,21 @@ test('engine starts only on explicit opt-in, follows fictional power and stays b
  assert.equal(env.contexts[0].closed,true);
  assert.ok(env.contexts[0].oscillators.every(x=>x.stopped));
 });
+test('jet engine texture follows aircraft selection without opening another context',async()=>{
+ const env=audioWorld(),engine=Engine.createEngine({windowLike:env.win,documentLike:env.doc});
+ const turbine=Engine.model('jet',.75);
+ assert.ok(turbine.harmonicHz>Engine.model('airplane',.75).harmonicHz,'jet turbine whine is different');
+ assert.equal(turbine.chopHz,0,'jet has no helicopter rotor chop');
+ assert.equal(await engine.start('airplane',.5),true);
+ const count=env.contexts.length;
+ engine.update('jet',.75);
+ assert.equal(env.contexts.length,count,'changing aircraft does not unlock extra audio contexts');
+ assert.equal(engine.status().mode,'jet');
+ assert.equal(env.contexts[0].oscillators[1].frequency.value,turbine.harmonicHz);
+ engine.update('airplane',.5);
+ assert.equal(engine.status().mode,'airplane');
+ engine.stop();
+});
 test('hidden tab stops audio and unsupported browser cannot open context',async()=>{
  const env=audioWorld(),e=Engine.createEngine({windowLike:env.win,documentLike:env.doc});
  await e.start('airplane',.5);env.doc.hidden=true;env.listeners.visibilitychange();
@@ -86,7 +101,8 @@ test('simulator audio controls remain opt-in, local and independent of instrumen
   assert.ok(html.includes('id="'+id+'"'));
  assert.ok(html.includes('src="flight-sim-engine-audio.js"'));
  assert.ok(script.includes('N.createEngine({windowLike:window,documentLike:document})'));
- assert.ok(script.includes('engineAudio.update(state.mode,audioPower())'));
+ assert.ok(script.includes('engineAudio.update(audioMode(),audioPower())'));
+ assert.ok(script.includes('airframeId()==="c172"?"airplane":"jet"'), 'selected jet uses a distinct synthesized engine voice');
  assert.ok(script.includes('engineAudio.stop()'));
  assert.ok(html.includes('id="flightInstruments"'));
  assert.ok(html.includes('id="controlPad"'));
