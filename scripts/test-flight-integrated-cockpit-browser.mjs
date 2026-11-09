@@ -266,6 +266,28 @@ try{
  await phone.locator('#cockpitAircraftSelect').selectOption('f35');
  assert.equal(await phone.locator('#cockpitJetHud').isVisible(),true);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd').count(),3);
+ for(const id of ['fa18','f22','f35','typhoon','su37']){
+  await phone.locator('#cockpitAircraftSelect').selectOption(id);
+  const layout=await phone.evaluate(()=>{
+   const panel=document.querySelector('#cockpitVisualPanel').getBoundingClientRect();
+   const screens=[...document.querySelectorAll('#cockpitVisualPanel .cockpit-mfd')]
+    .map(el=>el.getBoundingClientRect());
+   const map=document.querySelector('#cockpitVisualPanel .cockpit-mfd-nav');
+   const pfd=document.querySelector('#cockpitVisualPanel .cockpit-mfd-pfd');
+   const nav=map?.getBoundingClientRect(),flight=pfd?.getBoundingClientRect();
+   return {
+    panelHeight:panel.height,screenCount:screens.length,
+    allVisible:screens.every(v=>v.width>=75&&v.height>=55&&v.right<=panel.right+2),
+    noOverflow:document.documentElement.scrollWidth<=innerWidth+2,
+    navWithPfd:!nav||!flight||Math.abs(nav.top-flight.top)<=8
+   };
+  });
+  assert.ok(layout.allVisible&&layout.noOverflow,
+   id+' phone glass displays fit dashboard with no clipping '+JSON.stringify(layout));
+  assert.ok(layout.panelHeight<=280,id+' phone screens must not push yoke too far down');
+  if(id==='fa18'||id==='f35'||id==='typhoon')
+   assert.ok(layout.navWithPfd,id+' navigation should share top row with PFD');
+ }
  await phone.locator('#cockpitAircraftSelect').selectOption('r44');
  assert.equal(await phone.locator('#axisReadouts').evaluate(el=>el.parentElement.id),'axisCollectiveDock',
   'phone helicopter moves same bank/pitch above collective');
@@ -412,6 +434,29 @@ try{
  assert.ok(Number.parseFloat(leverUp)<Number.parseFloat(leverDown),
   'collective handle physically moves as the flight lift command changes');
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ // Re-enter glass style after checking analogue helicopter, then rotate the
+ // phone and verify that glass fighter displays remain horizontally visible.
+ await phone.locator('#cockpitInstrumentStyle').tap();
+ await phone.setViewportSize({width:844,height:390});
+ for(const id of ['fa18','f22','f35','typhoon','su37']){
+  await phone.locator('#cockpitAircraftSelect').selectOption(id);
+  const fit=await phone.evaluate(()=>{
+   const panel=document.querySelector('#cockpitVisualPanel').getBoundingClientRect();
+   const controls=document.querySelector('#controlPad').getBoundingClientRect();
+   const screens=[...document.querySelectorAll('#cockpitVisualPanel .cockpit-mfd')]
+    .map(el=>el.getBoundingClientRect());
+   return {
+    horizontal:document.documentElement.scrollWidth<=innerWidth+2,
+    instrumentsAboveControls:panel.bottom<=controls.top+15,
+    allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
+    heights:screens.map(v=>Math.round(v.height)),
+    panelHeight:panel.height
+   };
+  });
+  assert.ok(fit.horizontal&&fit.instrumentsAboveControls&&fit.allInside,
+   id+' landscape glass displays remain inside cockpit above flight controls '+JSON.stringify(fit));
+  assert.ok(fit.panelHeight<=185,id+' glass panel fits shallow screen');
+ }
  assert.deepEqual(errors,[],'no JS runtime errors');
  console.log('Unified cockpit passed: 7 aircraft styles, analog T layout, rotorcraft gauges, fighter MFDs, cockpit controls and phone geometry.');
 }finally{await browser.close();}
