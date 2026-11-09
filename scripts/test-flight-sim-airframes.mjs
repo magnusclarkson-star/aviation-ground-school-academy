@@ -60,9 +60,23 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const parts=T.buildMovingParts(id);
  assert.deepEqual(parts.map(x=>x.name),[
   "leftAileron","leftFlap","elevatorLeft","rightAileron",
-  "rightFlap","elevatorRight","rudder"
- ],id+" has control-surface animations without the trainer propeller");
+  "rightFlap","elevatorRight",...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"])
+ ],id+" has the correct individual animated jet surfaces");
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
+ const names=parts.map(x=>x.name);
+ const rudders=names.filter(name=>name.toLowerCase().includes("rudder"));
+ if(id==="typhoon"){
+  assert.deepEqual(rudders,["rudder"],"Typhoon has one central fin");
+  for(const part of parts.filter(p=>p.name.startsWith("elevator"))){
+   assert.ok(part.pivot[2]>2.5,"Typhoon pitch control is on front canards, not an imaginary horizontal tail");
+  }
+ }else{
+  assert.deepEqual(rudders,["rudderLeft","rudderRight"],id+" animates its two canted fin rudders");
+  const left=parts.find(x=>x.name==="rudderLeft"),right=parts.find(x=>x.name==="rudderRight");
+  assert.ok(left.pivot[0]<-.4&&right.pivot[0]>.4,id+" twin rudders are outside the centreline");
+  assert.ok(left.mesh.positions[0]<0&&right.mesh.positions[0]>0);
+ }
+
 }
 assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),["mainRotor","tailRotor"]);
 const [mainRotor,tailRotor]=T.buildMovingParts("r44");

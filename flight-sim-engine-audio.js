@@ -5,19 +5,19 @@
 (function(root){"use strict";
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number.isFinite(n)?n:a));
 const model=(mode,power)=>{
- const p=clamp(Number(power),0,1),heli=mode==="helicopter";
+ const p=clamp(Number(power),0,1),heli=mode==="helicopter",jet=mode==="jet";
  return Object.freeze({
-  primaryHz:heli?95+70*p:118+175*p,
-  harmonicHz:heli?235+175*p:275+245*p,
+  primaryHz:heli?95+70*p:jet?116+95*p:118+175*p,
+  harmonicHz:heli?235+175*p:jet?510+920*p:275+245*p,
   chopHz:heli?12+8*p:0,
-  engineLevel:heli?.14+.065*p:.13+.11*p
+  engineLevel:heli?.14+.065*p:jet?.085+.08*p:.13+.11*p
  });
 };
 function createEngine({windowLike,documentLike}={}){
  const win=windowLike||root,doc=documentLike||win?.document;
  const Audio=win?.AudioContext||win?.webkitAudioContext;
  const supported=typeof Audio==="function";
- let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=100,duck=false,mode="airplane",texture="textured",grainGain=null;
+ let active=false,ctx=null,osc=[],nodes=[],gain=null,chopGain=null,volume=100,duck=false,mode="airplane",texture="textured",grainGain=null,filterNode=null;
  function setTarget(parameter,value){
   if(parameter&&ctx){
    try{parameter.setTargetAtTime(value,ctx.currentTime,.06);}
@@ -33,7 +33,7 @@ function createEngine({windowLike,documentLike}={}){
   active=false;
   for(const o of osc){try{o.stop()}catch{}try{o.disconnect()}catch{}}
   for(const n of nodes){try{n.disconnect()}catch{}}
-  osc=[];nodes=[];gain=null;chopGain=null;grainGain=null;
+  osc=[];nodes=[];gain=null;chopGain=null;grainGain=null;filterNode=null;
   if(ctx){try{void ctx.close()?.catch?.(()=>{});}catch{}ctx=null;}
  }
  async function start(nextMode="airplane",power=0){
@@ -41,13 +41,13 @@ function createEngine({windowLike,documentLike}={}){
   if(active){update(nextMode,power);return true;}
   try{
    // All oscillators are created only within the user's click handler.
-   ctx=new Audio();mode=nextMode==="helicopter"?"helicopter":"airplane";
+   ctx=new Audio();mode=["helicopter","jet"].includes(nextMode)?nextMode:"airplane";
    const primary=ctx.createOscillator(),harmonic=ctx.createOscillator(),lfo=ctx.createOscillator(),grain=ctx.createOscillator();
    primary.type="triangle";harmonic.type="sawtooth";grain.type="triangle";
    const pGain=ctx.createGain(),hGain=ctx.createGain();
    grainGain=ctx.createGain();
    pGain.gain.value=.8;hGain.gain.value=.18;grainGain.gain.value=0;
-   const filter=ctx.createBiquadFilter();
+   const filter=ctx.createBiquadFilter();filterNode=filter;
    filter.type="lowpass";filter.frequency.value=1100;
    gain=ctx.createGain();gain.gain.value=0;
    primary.connect(pGain);harmonic.connect(hGain);
@@ -65,14 +65,18 @@ function createEngine({windowLike,documentLike}={}){
  }
  function update(nextMode,power){
   if(!active||!ctx)return false;
-  mode=nextMode==="helicopter"?"helicopter":"airplane";
+  mode=["helicopter","jet"].includes(nextMode)?nextMode:"airplane";
+  osc[0].type=mode==="jet"?"sine":"triangle";
+  osc[1].type=mode==="jet"?"sine":"sawtooth";
+  osc[3].type=mode==="jet"?"sawtooth":"triangle";
+  setTarget(filterNode?.frequency,mode==="jet"?2600:1100);
   const p=clamp(Number(power),0,1),v=model(mode,p);
   setTarget(osc[0].frequency,v.primaryHz);
   setTarget(osc[1].frequency,v.harmonicHz);
   setTarget(osc[2].frequency,Math.max(1,v.chopHz));
   setTarget(osc[3].frequency,v.harmonicHz*1.58);
-  setTarget(grainGain.gain,texture==="textured"?(mode==="helicopter"?.20:.13):.015);
-  setTarget(chopGain.gain,mode==="helicopter"?(texture==="textured"?.019:.012):(texture==="textured"?.004:.001));
+  setTarget(grainGain.gain,texture==="textured"?(mode==="helicopter"?.20:mode==="jet"?.08:.13):.015);
+  setTarget(chopGain.gain,mode==="helicopter"?(texture==="textured"?.019:.012):mode==="jet"?0:(texture==="textured"?.004:.001));
   level(p);
   return true;
  }

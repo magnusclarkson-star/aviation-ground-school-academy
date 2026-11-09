@@ -65,6 +65,14 @@ try{
  await phone.waitForTimeout(350);
  const second=await phone.evaluate(()=>window.__audioTrial.contexts.at(-1).oscillators[0].frequency.value);
  assert.ok(second>first,'engine pitch follows simulated power');
+ await phone.locator('#cockpitAircraftSelect').selectOption('f22');
+ await phone.waitForFunction(()=>window.AGSAFlightEngineAudio&&document.querySelector('#engineAudioStatus').textContent.includes('jet engine'));
+ const selectedJet=await phone.evaluate(()=>window.AGSAFlightEngineAudio.model('jet',.95));
+ assert.ok(selectedJet.harmonicHz>1000,'jet audio uses a distinctive higher turbine whine');
+ const liveJet=await phone.evaluate(()=>window.__audioTrial.contexts.at(-1).oscillators[1].frequency.value);
+ assert.ok(liveJet>600,'active sound switches from piston to selected F-22 jet without reopening audio');
+ assert.equal(await phone.locator('#engineAudioToggle').getAttribute('aria-pressed'),'true');
+
  await phone.locator('#pauseFlight').click();
  assert.equal(await phone.locator('#engineAudioToggle').getAttribute('aria-pressed'),'false','pause stops engine audio');
  assert.equal(await phone.evaluate(()=>window.__audioTrial.contexts.at(-1).closed),true);

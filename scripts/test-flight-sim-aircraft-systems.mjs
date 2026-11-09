@@ -30,6 +30,8 @@ assert.equal(sys.parts.leftAileron,-sys.parts.rightAileron);
 assert.ok(sys.parts.elevatorLeft>0&&sys.parts.elevatorRight>0,
  "simulated nose-up command moves both elevator surfaces");
 assert.ok(sys.parts.rudder<0);
+assert.equal(sys.parts.rudderLeft,sys.parts.rudder);
+assert.equal(sys.parts.rudderRight,sys.parts.rudder);
 assert.ok(Math.abs(sys.parts.leftFlap+Math.PI/6)<1e-12,"full flap selection moves illustrated flap geometry");
 assert.equal(sys.parts.rightFlap,sys.parts.leftFlap);
 assert.equal(A.snapshot(sys).engineLabel,"ENGINE MOTION · SIM");

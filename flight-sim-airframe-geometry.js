@@ -313,28 +313,57 @@ function buildJetParts(Mesh,id){
  const span=variant==="su37"?6.7:variant==="typhoon"?6.2:variant==="f35"?4.3:5.4;
  const trailing=variant==="su37"?-4.4:-3.8;
  for(const sign of [-1,1]){
-  const start=sign===-1?-span:1.35;
-  const name=sign===-1?"leftAileron":"rightAileron";
-  add(name,[sign*(span*.72),.27,trailing],1,m=>{
-   const x1=sign*span,x2=sign*(span*.52);
-   sheet(m,[[x1,.28,trailing-.55],[x2,.28,trailing-.22],
-    [x2,.28,trailing+.10],[x1,.28,trailing+.04]],wing,.12);
-  });
-  add(sign===-1?"leftFlap":"rightFlap",
+  const side=sign<0?"Left":"Right";
+  add("leftAileron".replace("left",sign<0?"left":"right"),
+   [sign*(span*.72),.27,trailing],1,m=>{
+    const x1=sign*span,x2=sign*(span*.52);
+    sheet(m,[[x1,.28,trailing-.55],[x2,.28,trailing-.22],
+     [x2,.28,trailing+.10],[x1,.28,trailing+.04]],wing,.12);
+   });
+  add("leftFlap".replace("left",sign<0?"left":"right"),
    [sign*2.35,.26,trailing+.55],1,m=>{
     sheet(m,[[sign*1.2,.29,trailing],[sign*(span*.53),.29,trailing-.16],
      [sign*(span*.53),.29,trailing+.30],[sign*1.2,.29,trailing+.70]],white,.12);
    });
-  const tail=variant==="typhoon"?-5.8:-6.8;
-  add(sign===-1?"elevatorLeft":"elevatorRight",[sign*1.55,.40,tail],1,m=>{
-   sheet(m,[[sign*.6,.45,tail+.8],[sign*2.8,.45,tail+.1],
-    [sign*2.8,.45,tail-.7],[sign*.6,.45,tail-.54]],white,.12);
-  });
+  if(variant==="typhoon"){
+   // The Typhoon is a canard-delta: animate the forward all-moving
+   // canards for pitch, not imaginary conventional aft elevators.
+   add("elevator"+side,[sign*1.35,.70,3.45],1,m=>{
+    sheet(m,[[sign*.70,.77,4.48],[sign*3.14,.77,3.72],
+     [sign*2.48,.77,2.61],[sign*.70,.77,2.76]],tint(wing,1.04),.10);
+   });
+  }else{
+   const tail=-6.8;
+   add("elevator"+side,[sign*1.55,.40,tail],1,m=>{
+    sheet(m,[[sign*.6,.45,tail+.8],[sign*2.8,.45,tail+.1],
+     [sign*2.8,.45,tail-.7],[sign*.6,.45,tail-.54]],white,.12);
+   });
+  }
  }
- add("rudder",[0,1.5,-6.2],2,m=>{
-  sheet(m,[[0,.7,-6.0],[0,2.15,-6.35],[0,2.0,-7.5],
-   [0,.7,-7.2]],palette.blue,.1);
- });
+ if(variant==="typhoon"){
+  // The single vertical tail carries one yaw rudder.
+  add("rudder",[0,1.75,-7.25],2,m=>{
+   sheet(m,[[0,.84,-7.04],[0,2.85,-7.27],
+    [0,2.57,-8.45],[0,.78,-8.28]],tint(palette.typhoon,.83),.10);
+  });
+ }else{
+  // F/A-18, F-22, F-35 and Su-37 have two outward-canted fins.
+  // Each fin has a separate rear rudder; none floats on the centreline.
+  const base=variant==="f35"?.67:1;
+  const height=variant==="su37"?3.2:2.5;
+  const tail=variant==="su37"?-9.4:-7.8;
+  for(const sign of [-1,1]){
+   const side=sign<0?"Left":"Right";
+   add("rudder"+side,[sign*(base+.55),.25+height*.63,tail+.88],2,m=>{
+    sheet(m,[
+     [sign*(base+.40),.25+height*.58,tail+1.22],
+     [sign*(base+.64),.25+height*.87,tail+.92],
+     [sign*(base+.82),.25+height*.70,tail+.25],
+     [sign*(base+.22),.35,tail+.12]
+    ],tint(palette.stealth,.92),.07);
+   });
+  }
+ }
  return props;
 }
 const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts});

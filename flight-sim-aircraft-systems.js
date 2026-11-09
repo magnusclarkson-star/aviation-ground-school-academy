@@ -52,6 +52,8 @@ function step(system,state,input,seconds){
   r.elevatorLeft=pitch===0?0:-pitch*16*RAD;
   r.elevatorRight=pitch===0?0:-pitch*16*RAD;
   r.rudder=rudder*24*RAD;
+  r.rudderLeft=r.rudder;
+  r.rudderRight=r.rudder;
  }
  return system;
 }

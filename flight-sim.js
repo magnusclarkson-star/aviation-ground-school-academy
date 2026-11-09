@@ -62,6 +62,7 @@ function syncRadioToneUI(message){
   "Web Audio not supported on this device. Written transcripts remain available.");
 }
 let atcRadio=null,atcPractice=null,atcMissions=null,lastEngineAudioFrame=0,fullFlightWanted=false,fullFlightBusy=false;
+const audioMode=()=>state.mode==="helicopter"?"helicopter":airframeId()==="c172"?"airplane":"jet";
 function audioPower(){
  return state.mode==="helicopter"?Math.min(1,.75+.15*(input.collective||0)):
   Math.max(0,Math.min(1,(systems?.powerPct??0)/100));
@@ -72,7 +73,7 @@ function syncEngineAudioUI(message){
  $("engineAudioToggle").setAttribute("aria-pressed",String(info.active));
  $("engineAudioToggle").textContent=info.active?"Stop engine sound":"Enable engine sound";
  $("engineAudioStatus").textContent=message||(info.active?
-  "Locally synthesized fictional "+(info.mode==="helicopter"?"rotor":"piston engine")+" sound active. Stop or pause to mute.":
+  "Locally synthesized fictional "+(info.mode==="helicopter"?"rotor":info.mode==="jet"?"jet engine":"piston engine")+" sound active. Stop or pause to mute.":
   info.supported?"Engine sound off. Tap Enable to start.":
   "Web Audio is unavailable. Flight simulation and scripted radio transcripts still work.");
 }
@@ -747,11 +748,11 @@ $("engineAudioToggle").addEventListener("click",async()=>{
   engineAudio.stop();syncEngineAudioUI("Engine sound stopped by learner.");syncPhoneFeedbackUI();return;
  }
  $("engineAudioToggle").disabled=true;
- const started=await engineAudio.start(state.mode,audioPower());
+ const started=await engineAudio.start(audioMode(),audioPower());
  engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  syncEngineAudioUI(started?
-  "Fictional "+(state.mode==="helicopter"?"helicopter rotor":"piston engine")+
+  "Fictional "+(audioMode()==="helicopter"?"helicopter rotor":audioMode()==="jet"?"jet engine":"piston engine")+
   " audio playing. Use the volume slider or Stop engine sound.":
   "Device audio unavailable or blocked. The simulator still works silently.");
  syncPhoneFeedbackUI();
@@ -782,6 +783,7 @@ $("engineAudioVolume").addEventListener("input",()=>{
 $("visualMode").addEventListener("change",()=>{chooseVisual();syncCockpitFrame();});
 $("cockpitFrameToggle").addEventListener("change",syncCockpitFrame);
 document.addEventListener("agsa:aircraft-changed",()=>{
+ if(engineAudio.status().active){engineAudio.update(audioMode(),audioPower());syncEngineAudioUI();}
  syncCockpitFrame();
  prev2D=0;prev3D=0;
  drawScenery(performance.now());
@@ -934,7 +936,7 @@ function frame(now){
   G.observe(practice,state,result.events);
   trace.sample(state,input,dt);
   if(now-lastEngineAudioFrame>110){
-   engineAudio.update(state.mode,audioPower());lastEngineAudioFrame=now;
+   engineAudio.update(audioMode(),audioPower());lastEngineAudioFrame=now;
   }
   // Prioritise distinctive short events, then occasional runway/airflow.
   // Visual feedback always renders even when browser vibration is unavailable.
