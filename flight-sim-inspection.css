@@ -86,3 +86,20 @@ body[data-aircraft-inspect="on"]{overflow:hidden}
  .aircraft-inspect-controls button{min-height:29px;padding:3px 6px}
  .aircraft-inspect-hint{display:none}
 }
+
+
+.aircraft-inspect-select-label{display:flex;flex-direction:column;gap:2px;flex:0 1 190px;
+ min-width:110px;font:700 9px/1.15 system-ui;color:#b8d5e1}
+#aircraftInspectModelSelect{display:block;width:100%;max-width:190px;
+ min-height:36px;border-radius:6px;border:1px solid #7d9dac;
+ padding:5px;background:#112d40;color:#f1f5f4;font:700 12px system-ui}
+#aircraftInspectModelSelect:focus-visible{outline:3px solid #f4d28b;outline-offset:2px}
+@media(max-width:740px){
+ .aircraft-inspect-select-label{flex-basis:113px;min-width:90px;font-size:8px}
+ #aircraftInspectModelSelect{min-height:33px;font-size:10px;padding:3px}
+ .aircraft-inspect-header>div:first-child{flex:1;min-width:80px}
+}
+@media(orientation:landscape) and (max-height:620px){
+ .aircraft-inspect-select-label{flex-direction:row;align-items:center;flex-basis:175px}
+ #aircraftInspectModelSelect{min-height:27px;font-size:10px}
+}
