@@ -238,11 +238,22 @@ function addR44(m){
  for(const z of [-1.52,1.16])
   curvedTube(m,[[-1.36,-1.01,z],[0,-.91,z],
    [1.36,-1.01,z]],.085,palette.metal,8);
- // Tall mast and unmistakable rotor head; the actual blades are separately
- // animated in buildMovingParts(), so there are exactly TWO main blades.
+ // Tall exposed rotor mast and driven teetering head. These brackets
+ // stay on the airframe; the two large blades rotate separately above them.
  m.box(-.16,1.18,-.52,.32,1.80,.28,palette.metal);
+ // The paired diagonal mast braces make the shaft recognisable in chase and
+ // side views instead of reading as a floating rotor disc on mobile.
+ for(const side of [-1,1]){
+  curvedTube(m,[[side*.60,1.40,-.62],[side*.28,2.11,-.51],
+   [side*.15,2.67,-.45]],.048,palette.metal,6);
+  m.box(side>0?.14:-.27,2.67,-.55,.13,.13,.22,palette.dark);
+ }
  m.box(-.38,2.85,-.73,.76,.29,.72,palette.dark);
  m.box(-.26,3.08,-.61,.52,.12,.48,palette.gold);
+ // A slim tail-rotor guard support remains behind the boom rather than
+ // extending over the actual moving anti-torque rotor.
+ curvedTube(m,[[-.23,.92,-7.92],[-.47,1.00,-8.13],
+  [-.66,1.09,-8.21]],.04,palette.metal,6);
  // Tail boom accent, navigation lights and tail-rotor drive cover.
  m.box(-.20,.58,-6.70,.40,.085,3.40,trim);
  m.box(-.14,1.81,-8.10,.28,.11,.30,palette.red);
