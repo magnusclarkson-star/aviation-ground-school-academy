@@ -29,20 +29,22 @@ function attach({documentLike}={}){
  buttonPhoto.width=64;buttonPhoto.height=46;buttonPhoto.decoding="async";buttonPhoto.src=FRAMES[0].src;
  const buttonCaption=element("span","aircraft-photo-label");buttonCaption.textContent="AIRCRAFT PICTURES";
  button.append(buttonPhoto,buttonCaption);
- const after=actions.querySelector("#cockpitHelpToggle")||
-  actions.querySelector(".cockpit-info-button:not(.cockpit-focus-button)");
  const more=doc.getElementById("cockpitHelpChoices");
+ const helpToggle=doc.getElementById("cockpitHelpToggle");
+ const inspect=doc.getElementById("aircraftInspectOpen");
+ const focus=doc.getElementById("cockpitFocusButton");
  const win=doc.defaultView||root;
  const narrow=()=>win?.matchMedia?.(
   "(max-width:740px), (orientation:landscape) and (max-height:620px) and (min-width:600px)"
  )?.matches??false;
  function placePhotoAction(){
-  // Photo browsing stays available, but becomes a More-menu item on phones
-  // instead of occupying an entire extra action-row cell.
-  if(narrow()&&more){
-   if(button.parentElement!==more)more.insertBefore(button,more.firstChild);
-  }else if(button.parentElement!==actions){
-   actions.insertBefore(button,after);
+  // Aircraft picture is the main selector and must stay visible on phones.
+  if(button.parentElement!==actions)actions.insertBefore(button,focus||helpToggle);
+  // Move only the secondary 360-degree inspection control into More.
+  if(narrow()&&more&&inspect&&inspect.parentElement!==more){
+   more.appendChild(inspect);
+  }else if(!narrow()&&inspect&&inspect.parentElement!==actions){
+   actions.insertBefore(inspect,focus||helpToggle);
   }
  }
  placePhotoAction();
