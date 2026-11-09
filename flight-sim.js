@@ -309,9 +309,15 @@ function setValues(){
  $("powerValue").textContent=round(input.throttle*100)+"%";
  $("collective").value=String(round(input.collective*100));
  $("collectiveValue").textContent=round(input.collective*100)+"%";
+ syncCollectiveHardware();
  $("flaps").value=String(input.flaps);
  $("turbulence").value=String(intensity.indexOf(input.turbulence)<0?1:intensity.indexOf(input.turbulence));
  $("turbulenceValue").textContent=intensityNames[Number($("turbulence").value)];
+}
+function syncCollectiveHardware(){
+ const lever=$("collectivePanel");
+ if(lever)lever.style.setProperty("--r44-collective-angle",
+  (34-68*input.collective).toFixed(1)+"deg");
 }
 function gripTransform(){
  const pad=$("controlPad").getBoundingClientRect();
@@ -681,6 +687,7 @@ $("power").addEventListener("input",e=>{
 $("collective").addEventListener("input",e=>{
  input.collective=M.clamp(Number(e.target.value)/100,0,1);
  $("collectiveValue").textContent=round(input.collective*100)+"%";
+ syncCollectiveHardware();
  hardware?.resetPower();haptics.pulse("control");
 });
 $("flaps").addEventListener("change",e=>{
