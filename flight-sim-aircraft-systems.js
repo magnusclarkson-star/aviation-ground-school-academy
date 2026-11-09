@@ -48,6 +48,10 @@ function step(system,state,input,seconds){
   r.tailPitch=rudder*.17;
  }else{
   r.propeller=system.rotation;
+  // A small transparent sweep complements, but never replaces, the actual
+  // two-blade Cessna propeller as the simulated engine speeds up.
+  r.propBlurOpacity=clamp((system.powerPct-26)/70,0,1)*
+   clamp((system.time-.08)*.23,0,.14);
   r.leftAileron=bank===0?0:-bank*19*RAD;
   r.rightAileron=bank*19*RAD;
   r.leftFlap=-system.flapDeg*RAD;
