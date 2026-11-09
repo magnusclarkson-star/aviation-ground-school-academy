@@ -234,3 +234,49 @@
    font-size:8px;max-width:none;overflow-wrap:anywhere;
  }
 }
+
+/* Main cockpit toolbar: enlarge the aircraft photograph by borrowing width
+   from Restart and More, not from the gauges. */
+#cockpitStation .cockpit-actions>.aircraft-photo-button{
+ max-width:205px;
+ min-height:42px;
+ height:42px;
+ padding:2px 7px 2px 2px;
+ gap:7px;
+}
+#cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-preview{
+ width:69px;height:37px;
+}
+#cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-label{
+ font-size:10px;max-width:104px;
+}
+#cockpitStation .cockpit-actions #restartFlight,
+#cockpitStation .cockpit-actions #cockpitHelpToggle{
+ flex:0 0 auto!important;
+ padding-inline:5px!important;
+ font-size:10px!important;
+}
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  grid-template-columns:minmax(57px,.75fr) minmax(125px,2.15fr) minmax(67px,.95fr) minmax(49px,.65fr)!important;
+  gap:3px!important;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button{
+  min-height:42px!important;height:42px!important;max-height:42px!important;
+  padding:2px 3px 2px 2px!important;
+  gap:4px;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-preview{
+  width:55px;height:36px;
+ }
+ #cockpitStation .cockpit-actions>.aircraft-photo-button .aircraft-photo-label{
+  font-size:9px;line-height:1.1;
+ }
+ #cockpitStation .cockpit-actions #restartFlight,
+ #cockpitStation .cockpit-actions #cockpitHelpToggle{
+  font-size:9px!important;
+  padding:2px 1px!important;
+  white-space:normal;
+  line-height:1.05!important;
+ }
+}
