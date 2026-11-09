@@ -78,7 +78,7 @@ try{
  await thumb.tap();
  assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),true);
  const landscape=await phone.locator("#cockpitAircraftGalleryImage").boundingBox();
- assert.ok(landscape.height>100&&landscape.bottom<=391,"landscape photo visible without clipping: "+JSON.stringify(landscape));
+ assert.ok(landscape.height>100&&landscape.y+landscape.height<=391,"landscape photo visible without clipping: "+JSON.stringify(landscape));
  await phone.locator("#cockpitAircraftGalleryClose").tap();
  assert.ok(await phone.locator("#controlPad").isVisible(),"flight controls usable after closing gallery");
  assert.deepEqual(errors,[],"no browser runtime errors");
