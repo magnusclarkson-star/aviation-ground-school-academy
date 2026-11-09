@@ -497,7 +497,8 @@ function makeConfiguredState(mode,scenario="runway"){
  return M.makeState(mode,scenario,{
   profileId:$("profileSelect").value,
   windId:$("windSelect").value,
-  physicsId:$("physicsSelect").value,
+  physicsId:mode==="airplane"&&airframeId()!=="c172"?"classic":$("physicsSelect").value,
+  airframeId:airframeId(),
   loadout:currentLoadout()
  });
 }
@@ -783,6 +784,18 @@ $("engineAudioVolume").addEventListener("input",()=>{
 $("visualMode").addEventListener("change",()=>{chooseVisual();syncCockpitFrame();});
 $("cockpitFrameToggle").addEventListener("change",syncCockpitFrame);
 document.addEventListener("agsa:aircraft-changed",()=>{
+ const id=airframeId(),isJet=state.mode==="airplane"&&id!=="c172";
+ // Selecting a model updates its motion as well as its picture. Preserve
+ // an ongoing Classic flight, but reset an incompatible experimental lab.
+ if(isJet&&state.physicsId==="aero"){
+  $("physicsSelect").value="classic";
+  reset(state.scenario);
+ }
+ state.airframeId=id;
+ const trainer=state.mode==="airplane"&&!isJet;
+ show("profileWrap",trainer);
+ show("physicsWrap",trainer);
+ $("physicsSelect").disabled=!trainer;
  if(engineAudio.status().active){engineAudio.update(audioMode(),audioPower());syncEngineAudioUI();}
  syncCockpitFrame();
  prev2D=0;prev3D=0;
