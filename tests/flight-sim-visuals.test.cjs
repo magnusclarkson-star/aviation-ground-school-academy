@@ -253,3 +253,25 @@ test("Cessna round six-pack stays tightly grouped without changing R44 or glass 
  assert.ok(!css.includes('#cockpitStation[data-family="rotor"]'),
   "Cessna spacing must not affect the R44");
 });
+
+test("all aircraft use the slim view/scene/light/frame switch strip",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-mini-switches.css"),"utf8");
+ const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
+ const gear=fs.readFileSync(path.join(__dirname,"..","flight-sim-switchgear.js"),"utf8");
+ assert.ok(html.includes('flight-sim-mini-switches.css?v=20261109-miniswitch1'));
+ assert.ok(html.indexOf("flight-sim-mini-switches.css")>
+  html.indexOf("flight-sim-c172-compact.css"),"compact styles must load last");
+ for(const id of ["view","graphics","light","frame"])
+  assert.ok(html.includes('id="cockpitSwitch_'+id+'"'),"missing "+id);
+ assert.ok(css.includes("#cockpitStation #cockpitMain .cockpit-switch-panel"));
+ assert.ok(css.includes("#cockpitStation #cockpitMain .cockpit-switch-bank"));
+ assert.ok(css.includes("height:27px!important")&&css.includes("height:28px!important"));
+ assert.ok(css.includes(".cockpit-annunciators{\n  display:none!important"),
+  "duplicate mobile annunciators should not waste a second row");
+ assert.ok(!css.includes('[data-airframe="c172"]')&&!css.includes('[data-family="rotor"]'),
+  "switch reduction must apply to every aircraft");
+ assert.ok(gear.includes('button.addEventListener("click"')&&
+  gear.includes('select.dispatchEvent(new win.Event("change"'),
+  "existing functional selector wiring must be preserved");
+});
