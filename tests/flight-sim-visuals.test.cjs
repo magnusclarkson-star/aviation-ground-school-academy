@@ -313,7 +313,7 @@ test("compact glass fighter layouts preserve clickable instrument zoom and phone
  const fs=require("node:fs"),path=require("node:path");
  const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-all-aircraft-fit.css"),"utf8");
  const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
- assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-fit3"));
+ assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-sunav4"));
  assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-panoramic"));
  assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-triple>.cockpit-mfd-pfd"));
  assert.ok(css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important"));
@@ -327,4 +327,20 @@ test("compact glass fighter layouts preserve clickable instrument zoom and phone
    assert.ok(line.includes("#cockpitVisualPanel"),
     "compact glass styling must only target cockpit screens, not the zoom overlay");
  }
+});
+
+test("Su-37 dual cockpit includes a live navigation map and original systems readouts",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const js=fs.readFileSync(path.join(__dirname,"..","flight-sim-cockpit.js"),"utf8");
+ const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-all-aircraft-fit.css"),"utf8");
+ const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
+ assert.ok(js.includes('profile.layout==="dual"?["pfd","sysnav"]'),
+   "two Su-37 displays: primary flight plus combined navigation/systems");
+ assert.ok(js.includes('if(kind==="nav"||kind==="sysnav")'),
+   "new screen reuses real position-linked NAV.build");
+ for(const key of ["power","rpm","vsi"])assert.ok(js.includes('["'+key+'",'));
+ assert.ok(css.includes(".cockpit-mfd-sysnav"));
+ assert.ok(css.includes(".cockpit-sysnav-strip"));
+ assert.ok(html.includes("flight-sim-cockpit.js?v=20261109-sunav4"));
+ assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-sunav4"));
 });
