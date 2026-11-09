@@ -385,6 +385,42 @@ function genericJet(m,id){
  }else{
   for(const x of [-1.3,.78])m.box(x,-.40,-1.5,.50,.35,2.8,palette.dark);
  }
+ // Aircraft-specific intake lips and exhaust fairings add visible
+ // silhouettes in side and rear views without changing the flight physics.
+ if(id==="f22"){
+  // Wide flattened stealth intakes with broad rectangular aft fairings.
+  for(const sign of [-1,1]){
+   sheet(m,[[sign*.86,-.14,1.86],[sign*1.76,-.14,1.24],
+    [sign*1.70,-.34,.46],[sign*.94,-.34,.88]],tint(c,.78),.065);
+   m.box(sign*.65-.45,-.57,-7.57,.90,.14,.37,tint(c,.67));
+   m.box(sign*.65-.43,-.41,-7.52,.86,.10,.24,palette.black);
+  }
+ }else if(id==="f35"){
+  // Diverterless side-intake shoulders and single rear nozzle fairing.
+  mirrored(m,[[.72,-.12,2.01],[1.28,-.05,1.41],
+   [1.20,-.29,.25],[.80,-.30,.79]],tint(c,.71),.07);
+  m.box(-.44,-.50,-7.54,.88,.12,.38,tint(c,.66));
+ }else if(id==="typhoon"){
+  // Single chin intake beneath the sharp nose of the canard delta.
+  sheet(m,[[-.83,-.49,2.52],[.83,-.49,2.52],
+   [.62,-.64,.76],[-.62,-.64,.76]],palette.dark,.09);
+  m.box(-.83,-.54,2.49,1.66,.10,.11,tint(c,.80));
+ }else if(id==="su37"){
+  // Widely spaced intake trunks and distinct wing-panel tones.
+  for(const sign of [-1,1]){
+   const x=sign*1.15;
+   m.box(x-.39,-.54,-1.28,.78,.10,2.43,tint(c,.70));
+   sheet(m,[[sign*1.26,.38,-2.23],[sign*4.67,.39,-2.83],
+    [sign*4.40,.39,-3.10],[sign*1.28,.38,-2.66]],tint(c,.66),.023);
+  }
+ }else if(id==="fa18"){
+  // Shoulder intakes and reinforced leading-edge wing-root extensions.
+  for(const sign of [-1,1]){
+   sheet(m,[[sign*1.01,-.12,1.49],[sign*1.67,-.12,1.15],
+    [sign*1.56,-.44,-.06],[sign*1.01,-.44,.06]],tint(c,.70),.065);
+   m.box(sign*1.05-.32,-.54,.98,.64,.10,.16,tint(c,1.04));
+  }
+ }
  m.box(-.11,-.17,nose-.15,.22,.25,.31,palette.dark);
 }
 function populate(mesh,variant){
