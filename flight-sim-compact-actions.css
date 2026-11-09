@@ -280,3 +280,40 @@
   line-height:1.05!important;
  }
 }
+
+/* Helicopter: move Restart down beside the collective. Keep the aircraft
+   photo prominent and make the top command strip only three buttons wide. */
+#cockpitStation .restart-by-collective[hidden]{display:none!important}
+#cockpitStation[data-family="rotor"] .restart-by-collective{
+ display:flex;
+ justify-content:flex-start;
+ margin:3px 0 0;
+ padding:0;
+}
+#cockpitStation[data-family="rotor"] .restart-by-collective #restartFlight{
+ display:inline-flex!important;
+ align-items:center;
+ justify-content:center;
+ width:auto!important;
+ max-width:100%!important;
+ min-height:34px!important;
+ height:34px!important;
+ max-height:34px!important;
+ margin:0!important;
+ padding:3px 10px!important;
+ border-radius:6px!important;
+ font:750 11px/1 system-ui,sans-serif!important;
+ white-space:nowrap;
+}
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation[data-family="rotor"] .cockpit-info-toolbar.cockpit-actions{
+  grid-template-columns:minmax(134px,2.5fr) minmax(65px,1fr) minmax(47px,.65fr)!important;
+ }
+ #cockpitStation[data-family="rotor"] .restart-by-collective #restartFlight{
+  min-height:32px!important;
+  height:32px!important;
+  max-height:32px!important;
+  padding:2px 8px!important;
+  font-size:10px!important;
+ }
+}
