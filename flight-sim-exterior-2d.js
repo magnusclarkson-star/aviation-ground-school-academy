@@ -67,7 +67,7 @@
  }
  function rotorBlurOpacity(animation){
   const value=animation?.rotorBlurOpacity;
-  return Number.isFinite(value)?Math.max(0,Math.min(.18,value)):0;
+  return Number.isFinite(value)?Math.max(0,Math.min(.22,value)):0;
  }
  // Exactly the same local axis definitions as the WebGL shader.
  function rotate(point,pivot,axis,angle){
