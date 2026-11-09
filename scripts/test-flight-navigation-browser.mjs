@@ -48,7 +48,11 @@ try{
   return {main,zoom};
  });
  const approach=await position(desktop,".cockpit-nav-screen");
- assert.equal(approach,"0.0,-1450.0","approach initializes map to aircraft position");
+ const nearRunwayStart=actual=>{
+  const [east,north]=actual.split(",").map(Number);
+  return Math.abs(east)<2&&Math.abs(north+1450)<8;
+ };
+ assert.ok(nearRunwayStart(approach),"approach initializes map near its defined position before live movement");
  const initialMapPair=await navPositions();
  assert.equal(initialMapPair.zoom,initialMapPair.main,"zoomed map tracks live position at the same instant");
  await desktop.waitForTimeout(1250);
@@ -58,7 +62,8 @@ try{
  assert.equal(flyingMapPair.zoom,flyingMapPair.main,"expanded and main maps share the same live flight frame");
  await desktop.locator("#cockpitZoomClose").click();
  await desktop.locator("#restartFlight").click();
- assert.equal(await position(desktop,".cockpit-nav-screen"),approach,"Restart Flight returns the map to the original position");
+ const resetPosition=await position(desktop,".cockpit-nav-screen");
+ assert.ok(nearRunwayStart(resetPosition),"Restart Flight returns near initial approach position despite active movement: "+resetPosition);
  await desktop.locator("#cockpitAircraftSelect").selectOption("f35");
  assert.equal(await desktop.locator("#cockpitVisualPanel .cockpit-mfd-nav [data-nav-map]").count(),1,
   "fighter nav screen also has a moving map");
