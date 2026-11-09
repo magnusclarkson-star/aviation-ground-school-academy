@@ -52,6 +52,40 @@ for(const [id,[span,length]] of Object.entries(expected)){
  assert.ok(Math.abs(actual.spanX-span)<.6,id+" corrected relative wingspan: "+actual.spanX);
  assert.ok(Math.abs(actual.length-length)<.5,id+" corrected relative length: "+actual.length);
 }
+// The trainer's windscreen is now two separate, slanted glazed panes rather
+// than the former opaque blue box extending across the entire cabin roof.
+const c172Exterior=T.buildVehicle("c172"),c172P=c172Exterior.positions;
+const nearVertex=(p,x,y,z,tolerance=.009)=>{
+ for(let i=0;i<p.length;i+=3)
+  if(Math.abs(p[i]-x)<tolerance&&Math.abs(p[i+1]-y)<tolerance&&
+   Math.abs(p[i+2]-z)<tolerance)return true;
+ return false;
+};
+for(const side of [-1,1]){
+ assert.ok(nearVertex(c172P,side*.72*A.SCALE.c172[0],.27,3.08*A.SCALE.c172[2]),
+  "Cessna has a distinct "+(side<0?"left":"right")+" sloped windshield pane");
+}
+const noseSupport=Array.from({length:c172P.length/3},(_,j)=>j*3).filter(i=>
+ Math.abs(c172P[i])<.25&&c172P[i+1]>=-1.3&&c172P[i+1]<-.42&&
+ c172P[i+2]>=4.35*A.SCALE.c172[2]&&c172P[i+2]<5.03*A.SCALE.c172[2]);
+assert.ok(noseSupport.length>60,"Cessna nose wheel has a curved, attached gear fork");
+assert.ok(c172Exterior.vertices<4000,"extra Cessna geometry remains mobile-friendly");
+
+// A visible annular exhaust rear face should exist at the end of each
+// engine, with exactly one nacelle for F-35 and pairs for the other jets.
+for(const id of ["fa18","f22","f35","typhoon","su37"]){
+ const mesh=T.buildVehicle(id),p=mesh.positions,c=mesh.colors;
+ const twin=id!=="f35",exhaustZ=((twin?-5.7:-5.85)-1.64)*A.SCALE[id][2];
+ let rimVertices=0;
+ for(let i=0;i<p.length;i+=3){
+  if(Math.abs(p[i+2]-exhaustZ)>.008)continue;
+  if(Math.abs(c[i]-151/255)<.005&&Math.abs(c[i+1]-162/255)<.005&&
+   Math.abs(c[i+2]-172/255)<.005)rimVertices++;
+ }
+ assert.ok(rimVertices>=(twin?60:30),
+  id+" has "+(twin?"two recessed turbine nozzles":"one turbine nozzle")+" visible from rear");
+}
+
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,
  "trainer has a broader high wing compared with the fighter model");
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
