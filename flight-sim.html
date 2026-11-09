@@ -114,7 +114,9 @@
     </label>
    </div>
    <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
-   <div class="cockpit-info-toolbar" role="group" aria-label="Optional cockpit learning information">
+   <div class="cockpit-info-toolbar cockpit-actions" role="group" aria-label="Flight controls and optional help">
+    <button type="button" id="restartFlight" class="cockpit-restart" aria-label="Restart the current flight from its starting position">↻ RESTART FLIGHT</button>
+    <span id="cockpitRestartStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
     <button type="button" class="cockpit-info-button" data-cockpit-help="panel" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Instruments</button>
     <button type="button" class="cockpit-info-button" data-cockpit-help="controls" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Controls</button>
     <button type="button" class="cockpit-info-button" data-cockpit-help="radio" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Radio</button>
@@ -504,7 +506,6 @@
    <div class="scenario-controls">
     <button type="button" id="startRunway" class="major">Runway takeoff</button>
     <button type="button" id="startApproach">Set up final approach</button>
-    <button type="button" id="restartFlight">Reset scenario</button>
     <button type="button" id="pauseFlight" aria-pressed="false">Pause simulation</button>
    </div>
    <p id="scenarioNote" class="hint">The final-approach button repositions the fictional aircraft to short final. It is a practice setup, not a flown traffic circuit.</p>

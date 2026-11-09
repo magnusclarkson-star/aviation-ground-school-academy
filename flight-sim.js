@@ -713,7 +713,10 @@ function resetFromUserGesture(scenario){
 }
 $("startRunway").addEventListener("click",()=>resetFromUserGesture("runway"));
 $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")resetFromUserGesture("approach")});
-$("restartFlight").addEventListener("click",()=>resetFromUserGesture(state.scenario));
+$("restartFlight").addEventListener("click",()=>{
+ resetFromUserGesture(state.scenario);
+ $("cockpitRestartStatus").textContent="Flight restarted";
+});
 $("pauseFlight").addEventListener("click",()=>{
  paused=!paused;lastFrame=0;releaseControls();haptics.stop();
  if(paused){

@@ -11,6 +11,11 @@ try{
  desktop.on('pageerror',e=>errors.push('desktop '+e.message));
  await desktop.goto(url,{waitUntil:'load'});
  assert.equal(await desktop.locator('#cockpitAircraftSelect').inputValue(),'c172');
+ assert.equal(await desktop.locator('#restartFlight').count(),1,'there is one live restart control');
+ assert.equal(await desktop.locator('#restartFlight').evaluate(el=>!!el.closest('#cockpitStation')),true,'restart is visibly inside cockpit');
+ assert.equal(await desktop.locator('#restartFlight').isVisible(),true);
+ assert.match(await desktop.locator('#restartFlight').textContent(),/RESTART FLIGHT/);
+ assert.ok((await desktop.locator('#restartFlight').boundingBox()).height>=44,'restart is an easy touch target');
  const layout=await desktop.evaluate(()=>{
   const box=id=>document.querySelector(id).getBoundingClientRect();
   const d=box('#cockpitVisualPanel'),y=box('#controlPad'),p=box('#leftRudder'),t=box('#powerPanel');
@@ -56,6 +61,11 @@ try{
  await desktop.waitForTimeout(350);
  assert.ok(Number(await desktop.locator('[data-live-value="alt"]').textContent())>150,'analog height follows flight model in feet');
  assert.ok(Number(await desktop.locator('#readAlt').textContent())>40,'original numeric height remains available');
+ await desktop.locator('#pauseFlight').click();
+ assert.equal(await desktop.locator('#pauseFlight').getAttribute('aria-pressed'),'true');
+ await desktop.locator('#restartFlight').click();
+ assert.equal(await desktop.locator('#pauseFlight').getAttribute('aria-pressed'),'false','restart resumes a paused flight');
+ assert.equal(await desktop.locator('#cockpitRestartStatus').textContent(),'Flight restarted');
  assert.ok(await desktop.locator('#miniAttitude').isVisible(),'legacy synthetic attitude remains present');
  await desktop.locator('#cockpitAircraftSelect').selectOption('r44');
  await desktop.locator('[data-cockpit-help="controls"]').click();
@@ -100,6 +110,12 @@ try{
  await phone.goto(url,{waitUntil:'load'});
  assert.ok(await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().isVisible());
  assert.ok(await phone.locator('#flightGrip').isVisible());
+ const restart=phone.locator('#restartFlight');
+ assert.equal(await restart.evaluate(el=>!!el.closest('#cockpitStation')),true);
+ assert.ok((await restart.boundingBox()).width>=280,'phone restart stretches across cockpit');
+ assert.ok((await restart.boundingBox()).height>=44,'phone restart is finger-sized');
+ await restart.tap();
+ assert.equal(await phone.locator('#cockpitRestartStatus').textContent(),'Flight restarted');
  const value=await phone.evaluate(()=>{
   const station=document.querySelector('#cockpitStation'),pad=document.querySelector('#controlPad'),
    pedals=document.querySelector('#rightRudder'),scene=document.querySelector('.scene-panel'),
