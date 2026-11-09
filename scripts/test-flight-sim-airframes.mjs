@@ -43,6 +43,15 @@ for(const id of A.IDS){
  assert.ok(tris.every(t=>t.points.length===3));
 }
 assert.equal(new Set(signature).size,7,"ALL seven aircraft exterior meshes are different, not colour variants of one mock-up");
+const expected={
+ c172:[10.97,8.29],fa18:[13.71,18.37],f22:[13.60,18.91],
+ f35:[10.70,15.70],typhoon:[10.95,15.97],su37:[14.71,22.18]
+};
+for(const [id,[span,length]] of Object.entries(expected)){
+ const actual=metrics.find(m=>m.id===id);
+ assert.ok(Math.abs(actual.spanX-span)<.22,id+" corrected relative wingspan: "+actual.spanX);
+ assert.ok(Math.abs(actual.length-length)<.28,id+" corrected relative length: "+actual.length);
+}
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,
  "trainer has a broader high wing compared with the fighter model");
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
