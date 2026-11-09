@@ -376,7 +376,7 @@ function paint(holder,state,systems,input,profileId,doc,progress){
  for(const el of holder.querySelectorAll("[data-live-slip]")){
   el.setAttribute("cx",(50+s.slip*12).toFixed(2));
  }
- NAV.paint(holder,state);
+ NAV.paint(holder,state,progress?.circuit);
  for(const el of holder.querySelectorAll("[data-live-needle]")){
   const id=el.closest("[data-gauge]")?.dataset.gauge||"speed";
   el.setAttribute("transform","rotate("+(s.angles[id]??0).toFixed(2)+" 50 50)");
