@@ -76,8 +76,10 @@ try{
  await mobile.goto(url,{waitUntil:"load"});
  await mobile.locator("#cockpitAircraftSelect").selectOption("r44");
  const button=mobile.locator("#aircraftInspectOpen");
+ assert.equal(await button.isVisible(),false,"360° inspection starts in compact More menu");
+ await mobile.locator("#cockpitHelpToggle").tap();
  assert.equal(await button.isVisible(),true);
- assert.ok((await button.boundingBox()).height>=38);
+ assert.ok((await button.boundingBox()).height>=34);
  await button.tap();
  assert.equal(await mobile.locator("#aircraftInspectRenderMode").textContent(),"2D view",
   "inspection works on Android browsers without WebGL");
