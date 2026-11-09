@@ -494,11 +494,15 @@ function reportEnvironment(){
   "Classic: the original guided takeoff/landing behaviour. Choose Experimental for invented aerodynamic forces and energy trends.";
 }
 function makeConfiguredState(mode,scenario="runway"){
+ // A control-mode button may fire before the cockpit selector changes
+ // from the old model. Use a compatible temporary type while switching.
+ const requested=airframeId();
+ const selected=mode==="helicopter"?"r44":requested==="r44"?"c172":requested;
  return M.makeState(mode,scenario,{
   profileId:$("profileSelect").value,
   windId:$("windSelect").value,
-  physicsId:mode==="airplane"&&airframeId()!=="c172"?"classic":$("physicsSelect").value,
-  airframeId:airframeId(),
+  physicsId:mode==="airplane"&&selected!=="c172"?"classic":$("physicsSelect").value,
+  airframeId:selected,
   loadout:currentLoadout()
  });
 }
