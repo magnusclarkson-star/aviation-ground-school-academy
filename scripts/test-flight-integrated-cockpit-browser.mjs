@@ -170,6 +170,7 @@ try{
    bodyWidth:document.documentElement.scrollWidth,viewport:innerWidth,
    typeHeight:document.getElementById('typeCyclic').getBoundingClientRect().height};
  });
+ console.log("Mobile cockpit toolbar geometry:",JSON.stringify(row));
  assert.ok(row.boxes.every(b=>b.height>=30&&b.height<=44),
   'aircraft photo, instrument selector, cockpit and More fit in a slim toolbar');
  assert.ok(row.boxes[0].width>row.boxes[1].width,
