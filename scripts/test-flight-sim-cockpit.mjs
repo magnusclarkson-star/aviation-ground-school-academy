@@ -30,7 +30,7 @@ const eastern=UI.snapshot({...state,headingDeg:90,altitudeM:152.4,rollDeg:0},
  {powerPct:71},{...inputs,rudder:1},"c172");
 assert.equal(eastern.heading,90);
 assert.equal(eastern.values.heading,"090");
-assert.equal(eastern.angles.alt,180,"500 ft long altimeter needle points down");
+assert.ok(Math.abs(eastern.angles.alt-180)<.01,"500 ft long altimeter needle points down");
 assert.equal(eastern.slip,.72,"rudder offset moves the slip ball");
 const heli=UI.snapshot({...state,mode:"helicopter"},{powerPct:84},inputs,"r44");
 assert.equal(heli.values.rpm,84);
