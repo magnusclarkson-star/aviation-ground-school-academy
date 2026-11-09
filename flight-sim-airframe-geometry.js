@@ -85,6 +85,19 @@ function engine(m,x,z,w=.9,color=palette.dark){
   }
  }
  m.box(x-w*.62,-.35,z-1.55,w*1.24,.48,.18,palette.black);
+ // Recessed circular turbine exhaust: a metallic ring and a dark opening.
+ // Each engine keeps its own nozzle, so twin-engine fighters remain distinct
+ // from the F-35's single exhaust in rear/chase/360-degree views.
+ const exhaustZ=z-1.64,hubY=-.12,outer=w*.63,inner=w*.42;
+ for(let i=0;i<12;i++){
+  const a=i*Math.PI/6,b=(i+1)*Math.PI/6;
+  const p=(rad,angle,depth)=>[x+Math.cos(angle)*rad,
+   hubY+Math.sin(angle)*rad,depth];
+  m.quad(p(outer,a,exhaustZ),p(outer,b,exhaustZ),
+   p(inner,b,exhaustZ-.025),p(inner,a,exhaustZ-.025),palette.metal);
+  m.tri([x,hubY,exhaustZ-.045],p(inner,a,exhaustZ-.03),
+   p(inner,b,exhaustZ-.03),palette.black);
+ }
 }
 // Thin, round, fixed tricycle wheels rather than rectangular landing-gear
 // blocks. The wheel rolls in the local YZ plane around a lateral X axle.
