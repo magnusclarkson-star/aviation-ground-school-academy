@@ -269,6 +269,9 @@ function buildMovingParts(mode="airplane"){
      panel(m,[sign*5.10,.94,-1.32],[sign*7.26,.95,-1.52],
       [sign*7.26,.92,-1.85],[sign*5.10,.91,-1.69],pale);
     });
+  }
+  for(const sign of [-1,1]){
+   const side=sign<0?"left":"right";
    add(side==="left"?"leftFlap":"rightFlap",
     [sign*2.6,.94,-1.27],1,m=>{
      panel(m,[sign*.94,.93,-1.15],[sign*4.78,.94,-1.24],
