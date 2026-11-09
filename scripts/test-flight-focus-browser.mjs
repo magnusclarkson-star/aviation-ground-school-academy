@@ -17,7 +17,7 @@ const metrics=async page=>page.evaluate(()=>{
   focus:document.body.dataset.cockpitFocus,
   scenery:rect(".scene-shell"),scene:rect(".scene-panel"),
   instruments:rect("#cockpitVisualPanel"),gauges:[...document.querySelectorAll("#cockpitVisualPanel .cockpit-gauge")].map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height}}),
-  switches:rect("#cockpitSwitchPanel"),yoke:rect("#controlPad"),
+  switches:rect("#cockpitSwitchPanel"),control:rect("#cockpitMain .control-panel"),side:rect("#cockpitMain .side-controls"),flaps:rect("#flapPanel"),brake:rect("#brake"),yoke:rect("#controlPad"),
   left:rect("#leftRudder"),right:rect("#rightRudder"),power:rect("#powerPanel"),
   stationClient:station.clientHeight,stationScroll:station.scrollHeight,stationScrollTop:station.scrollTop};
 });
