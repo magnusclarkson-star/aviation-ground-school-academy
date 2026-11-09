@@ -15,6 +15,12 @@ assert.equal(O.zoomStep(initial,.1).distance,17);
 assert.equal(O.zoomStep(initial,100).distance,70);
 assert.equal(O.zoomStep(initial,.8).distance,24);
 assert.equal(O.zoomStep(initial,1.22).azimuth,0);
+assert.equal(O.pinchStep(initial,100,125).distance,24,"fingers apart zoom into airframe");
+assert.equal(O.pinchStep(initial,100,80).distance,37.5,"fingers together zoom out");
+assert.equal(O.pinchStep(initial,30,300).distance,17,"pinch-in stays inside close limit");
+assert.equal(O.pinchStep(initial,300,30).distance,70,"pinch-out stays inside far limit");
+assert.deepEqual(O.pinchStep(initial,0,90),initial,"zero span cannot break camera");
+assert.deepEqual(O.pinchStep(initial,NaN,90),initial,"non-finite span is ignored");
 
 const state={mode:"helicopter",xM:0,zM:0,altitudeM:0,headingDeg:0,pitchDeg:0,rollDeg:0};
 const back=A.cameraPose(state,"inspect",{azimuth:0,elevation:0,distance:30});
