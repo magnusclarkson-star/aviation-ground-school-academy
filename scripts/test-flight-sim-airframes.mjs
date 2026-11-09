@@ -137,6 +137,23 @@ assert.ok(extent(mainRotor.mesh,2)<1.2,
  "R44 main rotor has two blades on a single axis, not the old four-blade cross");
 assert.ok(Math.abs(extent(tailRotor.mesh,1)-1.47)<.1,
  "R44 2-blade tail rotor diameter is approximately 1.47 m");
+const rotorHasColor=(mesh,r,g,b)=>{
+ const p=mesh.colors,targets=[r/255,g/255,b/255];
+ for(let i=0;i<p.length;i+=3)
+  if(targets.every((v,j)=>Math.abs(p[i+j]-v)<.006))return true;
+ return false;
+};
+assert.ok(rotorHasColor(mainRotor.mesh,218,231,232),
+ "R44 main rotor's high-contrast pale upper airfoil is visible from above");
+assert.ok(rotorHasColor(mainRotor.mesh,87,104,117),
+ "R44 main rotor includes a dark underside visible from low chase");
+assert.ok(rotorHasColor(mainRotor.mesh,231,187,82),
+ "R44 yellow blade tips make rotor length and spinning edges apparent");
+assert.ok(rotorHasColor(tailRotor.mesh,229,238,230)&&
+ rotorHasColor(tailRotor.mesh,91,111,126),
+ "R44 two-blade tail rotor has distinct visible front and rear surfaces");
+assert.ok(mainRotor.mesh.triangles>=70&&tailRotor.mesh.triangles>=40,
+ "R44 rotor blades and hubs have detailed low-cost geometry");
 assert.ok(C.movingParts("r44").some(p=>p.name==="mainRotor"&&p.triangles.length>5),
  "lightweight 2D chase includes actual main rotor triangles");
 assert.notDeepEqual(C.rotate([1,3.16,-.4],[0,3.16,-.4],2,1.2),[1,3.16,-.4],
