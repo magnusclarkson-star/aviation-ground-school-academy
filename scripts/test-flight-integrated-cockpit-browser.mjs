@@ -163,6 +163,32 @@ try{
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-hover]').textContent(),'ON PAD',
   'on-pad hover cue reflects the grounded state');
+
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-lesson]').textContent(),
+  '1/4 · TAKEOFF','the integrated R44 lesson begins automatically');
+ const detail=phone.locator('#cockpitVisualPanel .r44-lesson-strip .cockpit-info-dot');
+ await detail.tap();
+ assert.equal(await phone.locator('#cockpitInfoTitle').textContent(),'R44 guided lesson');
+ assert.match(await phone.locator('#cockpitInfoText').textContent(),/hover/i);
+ await phone.locator('#cockpitInfoClose').tap();
+ const turnInstruction=await phone.evaluate(()=>{
+  const G=window.AGSAFlightGuidance;
+  const state=window.AGSAImmersiveFlight.makeState('helicopter');
+  const session=G.start(state);
+  const hovering={...state,onGround:false,phase:'hover',altitudeM:4,
+   headingDeg:350,verticalMs:0,groundSpeedKt:.4,yawRateDegS:0,
+   time:3,hoverAchieved:false};
+  G.observe(session,hovering,['liftoff']);
+  G.observe(session,{...hovering,time:12,hoverAchieved:true,hoverHoldSec:8},['hoverHeld']);
+  const panel=document.querySelector('#cockpitVisualPanel');
+  window.AGSACockpitIntegrated.paint(panel,hovering,{powerPct:85},
+   {throttle:0,collective:.495,rudder:0},'r44',document,session);
+  return {label:panel.querySelector('[data-r44-lesson]').textContent,
+   hint:panel.querySelector('[data-r44-lesson]').getAttribute('aria-label')};
+ });
+ assert.equal(turnInstruction.label,'3/4 · 90° TURN');
+ assert.match(turnInstruction.hint,/90°/);
+
  const flightCue=await phone.evaluate(()=>{
   const state=window.AGSAImmersiveFlight.makeState('helicopter');
   Object.assign(state,{onGround:false,phase:'hover',altitudeM:3,
