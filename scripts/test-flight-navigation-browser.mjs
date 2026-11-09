@@ -42,13 +42,20 @@ try{
  assert.ok(Math.abs((await relativeY(desktop,"#controlPad"))-yokeY)<1,"nav zoom does not move yoke");
  assert.ok(Math.abs((await relativeY(desktop,"#leftRudder"))-pedalY)<1,"nav zoom does not move pedals");
  await desktop.locator("#startApproach").click();
+ const navPositions=()=>desktop.evaluate(()=>{
+  const main=document.querySelector(".cockpit-nav-screen [data-nav-map]").dataset.navPosition;
+  const zoom=document.querySelector("#cockpitZoomContent [data-nav-map]").dataset.navPosition;
+  return {main,zoom};
+ });
  const approach=await position(desktop,".cockpit-nav-screen");
  assert.equal(approach,"0.0,-1450.0","approach initializes map to aircraft position");
- assert.equal(await position(desktop,"#cockpitZoomContent"),approach,"zoomed map tracks same initial position");
+ const initialMapPair=await navPositions();
+ assert.equal(initialMapPair.zoom,initialMapPair.main,"zoomed map tracks live position at the same instant");
  await desktop.waitForTimeout(1250);
  const flown=await position(desktop,".cockpit-nav-screen");
  assert.notEqual(flown,approach,"aircraft advances and the map moves during real simulator flight");
- assert.equal(await position(desktop,"#cockpitZoomContent"),flown,"expanded map stays in sync while flying");
+ const flyingMapPair=await navPositions();
+ assert.equal(flyingMapPair.zoom,flyingMapPair.main,"expanded and main maps share the same live flight frame");
  await desktop.locator("#cockpitZoomClose").click();
  await desktop.locator("#restartFlight").click();
  assert.equal(await position(desktop,".cockpit-nav-screen"),approach,"Restart Flight returns the map to the original position");
