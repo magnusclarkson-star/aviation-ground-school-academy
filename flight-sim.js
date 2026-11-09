@@ -12,6 +12,7 @@ const M=window.AGSAImmersiveFlight,S=window.AGSAFlightScenery,H=window.AGSAFligh
 const $=id=>document.getElementById(id);
 if(!M||!S||!H||!I||!CI||!SW||!FO||!G||!P||!U||!E||!T||!A||!D||!W||!X||!V||!RV||!L||!FX||!N||!K||!J||!F||!AP||!AM||!RF||!Y||!R||!Q||!Z||!O||!C||!B){document.body.insertAdjacentText("afterbegin","Simulator assets could not load.");return}
 const canvas=$("outsideView"),canvas3D=$("outsideView3D"),haptics=H.createHaptics();
+const bankHold=window.AGSABankHold?.create?.()||null;
 const touchdownFX=window.AGSATouchdownFX?.create({documentLike:document})||{update(){}};
 const engineAudio=N.createEngine({windowLike:window,documentLike:document});
 const phoneProbe=K.createProbe({windowLike:window,documentLike:document});
@@ -234,6 +235,17 @@ let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const keys=new Set();
 let lastPhase=state.phase;
+function syncBankHoldUI(){
+ const button=$("bankHoldToggle");
+ if(!button)return;
+ const held=bankHold?.status()||{armed:false,bank:0};
+ button.hidden=state.mode!=="airplane"||!bankHold;
+ button.setAttribute("aria-pressed",String(held.armed));
+ button.textContent=held.armed?(Math.abs(held.bank)>.08?"LEVEL":"ARMED"):"HOLD";
+ button.setAttribute("aria-label",held.armed?
+  "Level the wings and stop holding the yoke bank":
+  "Arm bank hold: after moving and releasing the yoke, keep that bank for a longer turn");
+ }
 const round=x=>Math.round(Number(x)||0);
 function show(id,value){$(id).classList.toggle("hidden",!value)}
 function visualMessage(message,status){
@@ -630,7 +642,9 @@ $("controlPad").addEventListener("pointermove",e=>{
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  $("controlPad").addEventListener(eventType,e=>{
   if(dragPointer!==e.pointerId)return;
-  dragPointer=null;input.bank=0;input.pitch=0;syncKeys();gripTransform();
+  if(bankHold?.status().armed&&state.mode==="airplane")bankHold.release(input.bank);
+  dragPointer=null;input.bank=0;input.pitch=0;
+  syncKeys();syncBankHoldUI();gripTransform();
  });
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
@@ -659,15 +673,26 @@ function hold(id,key){
   });
 }
 hold("leftRudder","left");hold("rightRudder","right");hold("brake","brake");
+$("bankHoldToggle")?.addEventListener("click",()=>{
+ if(!bankHold||state.mode!=="airplane")return;
+ const activate=!bankHold.status().armed;
+ bankHold.setArmed(activate);
+ if(activate&&dragPointer!==null)bankHold.release(input.bank);
+ if(dragPointer===null)syncKeys();
+ syncBankHoldUI();gripTransform();
+});
 function syncKeys(){
  if(dragPointer===null){
-  input.bank=(keys.has("ArrowRight")? .66:0)-(keys.has("ArrowLeft")?.66:0);
+  const keyboardBank=(keys.has("ArrowRight")?.66:0)-(keys.has("ArrowLeft")?.66:0);
+  const arrowHeld=keys.has("ArrowRight")||keys.has("ArrowLeft");
+  input.bank=bankHold?.value(arrowHeld?keyboardBank:null)??keyboardBank;
   input.pitch=(keys.has("ArrowDown")?.66:0)-(keys.has("ArrowUp")?.66:0);
  }
  updateHeld();
  gripTransform();
 }
 function releaseControls(){
+ bankHold?.clear();syncBankHoldUI();
  dragPointer=null;for(const key of Object.keys(pointers))pointers[key]=null;
  keys.clear();input.bank=0;input.pitch=0;input.rudder=0;input.brake=false;
  updateHeld();gripTransform();
@@ -819,6 +844,7 @@ $("engineAudioVolume").addEventListener("input",()=>{
 $("visualMode").addEventListener("change",()=>{chooseVisual();syncCockpitFrame();});
 $("cockpitFrameToggle").addEventListener("change",syncCockpitFrame);
 document.addEventListener("agsa:aircraft-changed",()=>{
+ bankHold?.clear();syncBankHoldUI();
  const id=airframeId(),isJet=state.mode==="airplane"&&id!=="c172";
  // Selecting a model updates its motion as well as its picture. Preserve
  // an ongoing Classic flight, but reset an incompatible experimental lab.
