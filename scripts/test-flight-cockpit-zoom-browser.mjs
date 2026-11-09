@@ -79,10 +79,12 @@ try{
   'touching or clicking flight controls does not enlarge them');
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-control-focus'),null);
  assert.equal(await desktop.locator('#cockpitStation').evaluate(el=>el.contains(document.getElementById('leftRudder'))),true);
- await desktop.locator('[data-cockpit-help="controls"]').click();
+ await desktop.locator("#cockpitHelpToggle").click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').click();
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),true);
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Yoke/);
- await desktop.locator('[data-cockpit-help="controls"]').click();
+ await desktop.locator("#cockpitHelpToggle").click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').click();
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'tapping same info button closes it');
 
  await desktop.locator('#cockpitAircraftSelect').selectOption('f35');
@@ -92,7 +94,8 @@ try{
  await desktop.locator('#cockpitAircraftSelect').selectOption('r44');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'aircraft switching resets enlarged instrument');
  assert.equal(await desktop.locator('#collectivePanel').isVisible(),true);
- await desktop.locator('[data-cockpit-help="controls"]').click();
+ await desktop.locator("#cockpitHelpToggle").click();
+ await desktop.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').click();
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Cyclic/,'rotorcraft info is contextual');
  await desktop.keyboard.press('Escape');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false);
