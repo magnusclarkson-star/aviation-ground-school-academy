@@ -154,8 +154,17 @@ function addC172(m){
   sheet(m,[[s*.67,-.39,.15],[s*4.7,.76,-.55],[s*4.7,.94,-.38],
    [s*.67,-.13,.50]],palette.metal,.09);
   gear(m,s*2.10,-.8,.35);
+  // Tubular spring-steel strut reaches the actual wheel hub, replacing the
+  // disjoint appearance of a simple floating metal sheet.
+  curvedTube(m,[[s*.66,-.39,.13],[s*1.14,-.62,-.16],
+   [s*2.10,-1.23,-.80]],.078,palette.metal,7);
  }
  gear(m,0,4.45,.26);
+ // Nose gear fork attaches beneath the forward cowling, with an exposed
+ // strut and wheel rather than a rectangular black landing-gear block.
+ curvedTube(m,[[0,-.45,4.88],[0,-.81,4.62],
+  [0,-1.18,4.45]],.085,palette.metal,8);
+ m.box(-.26,-1.21,4.39,.52,.10,.12,tint(palette.metal,.80));
  // Trim along each wing rather than a square bar spanning the aircraft.
  mirrored(m,[[.83,1.04,-1.41],[7.25,1.04,-1.77],
   [7.24,1.04,-1.52],[.84,1.04,-1.20]],strip,.035);
