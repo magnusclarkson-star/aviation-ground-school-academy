@@ -216,6 +216,32 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    if((z>=70&&z<1740)&&Math.floor(z/60)%2===0)
     poly([[-1.2,.15,near+11],[1.2,.15,near+11],[1.2,.15,near+42],[-1.2,.15,near+42]],"#f5f5e3");
   }
+  // Match the WebGL strip's depth cues on phones using Canvas 2D.
+  // Every mark is world-projected, so it moves with the aircraft rather
+  // than staying fixed on the glass cockpit display.
+  for(let z=0;z<1800;z+=90){
+   for(const x of [-23,20.4])
+    poly([[x,.06,z],[x+2.6,.06,z],[x+2.6,.06,z+90],[x,.06,z+90]],"#39454d");
+   if(z>0&&z<1750)for(const x of [-17,5.5])
+    poly([[x,.075,z-.12],[x+11.5,.075,z-.12],
+     [x+11.5,.075,z+.12],[x,.075,z+.12]],"#485359");
+  }
+  for(const end of [0,1800]){
+   for(const distance of [130,270,430]){
+    const z=end===0?distance:1800-distance-18;
+    for(const x of [-12.5,10])
+     poly([[x,.115,z],[x+2.5,.115,z],
+      [x+2.5,.115,z+18],[x,.115,z+18]],"#cfdad4");
+   }
+   for(let i=0;i<9;i++){
+    const distance=82+i*29,z=end===0?distance:1800-distance-12;
+    for(const x of [-6.9,5.3]){
+     const shift=(Math.sin(i*11+x)*.5)*.65;
+     poly([[x+shift,.105,z],[x+shift+1.2,.105,z],
+      [x+shift+1.2,.105,z+8],[x+shift,.105,z+8]],"#465056");
+    }
+   }
+  }
   // Threshold bars and number-like symbols are intentionally fictional.
   for(const threshold of [0,1750]){
    for(const x of [-15,-10,-5,5,10,15]){
