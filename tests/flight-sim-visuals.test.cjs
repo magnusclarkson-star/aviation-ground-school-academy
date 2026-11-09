@@ -281,3 +281,22 @@ test("all aircraft use the slim view/scene/light/frame switch strip",()=>{
   gear.includes('select.dispatchEvent(new win.Event("change"'),
   "existing functional selector wiring must be preserved");
 });
+
+test("mini axis readouts dock beside Cessna pedals and at R44 collective",()=>{
+ const fs=require("node:fs"),path=require("node:path");
+ const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
+ const js=fs.readFileSync(path.join(__dirname,"..","flight-sim.js"),"utf8");
+ const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-axis-placement.css"),"utf8");
+ for(const id of ["axisReadouts","axisPedalDock","axisCollectiveDock","cmdBank","cmdPitch","bankHoldToggle"]){
+  assert.equal(html.split('id="'+id+'"').length-1,1,id+" should not be duplicated");
+ }
+ assert.ok(html.indexOf('id="axisPedalDock"')>html.indexOf('class="rudder-pedals"'));
+ assert.ok(html.indexOf('id="axisCollectiveDock"')>html.indexOf('id="collectivePanel"'));
+ assert.ok(!html.substring(html.indexOf('class="control-assembly"'),
+  html.indexOf('class="side-controls"')).includes('id="axisReadouts"'));
+ assert.ok(html.includes("flight-sim-axis-placement.css?v=20261109-axis1"));
+ assert.ok(js.includes('state.mode==="helicopter"?$("axisCollectiveDock"):$("axisPedalDock")'));
+ assert.ok(js.includes("target.appendChild(readouts)"));
+ assert.ok(css.includes('grid-template-columns:minmax(0,1fr) auto!important'));
+ assert.ok(css.includes('flex-direction:row!important'));
+});
