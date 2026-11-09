@@ -237,3 +237,19 @@ test("optional phone bank hold sustains a user-commanded turn, then levels on de
  assert.equal(hold.status().armed,false);
  assert.equal(hold.value(),0);
 });
+
+test("Cessna round six-pack stays tightly grouped without changing R44 or glass layout",()=>{
+ const fs=require("node:fs");
+ const path=require("node:path");
+ const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-c172-compact.css"),"utf8");
+ const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
+ assert.ok(html.includes("flight-sim-c172-compact.css?v=20261109-c172cluster1"));
+ assert.ok(css.includes('#cockpitStation[data-airframe="c172"][data-instruments="round"]'));
+ assert.ok(css.includes("grid-template-columns:repeat(3,minmax(0,1fr))"));
+ assert.ok(css.includes("grid-template-columns:minmax(0,1fr)!important"));
+ assert.ok(css.includes("grid-row:1/4"));
+ for(const gauge of ["speed","attitude","alt","turn","heading","vsi"])
+  assert.ok(css.includes('[data-gauge="'+gauge+'"]'),"missing "+gauge);
+ assert.ok(!css.includes('#cockpitStation[data-family="rotor"]'),
+  "Cessna spacing must not affect the R44");
+});
