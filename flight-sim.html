@@ -72,7 +72,8 @@
 <script src="flight-sim-track.js" defer></script>
 <script src="flight-sim-touchdown-fx.js?v=20261109-touchdown1" defer></script>
 <script src="flight-sim-mini-pfd-zoom.js?v=20261109-pfdfix2" defer></script>
-<script src="flight-sim.js?v=20261109-return1" defer></script>
+<script src="flight-sim-bank-hold.js?v=20261109-circuit1" defer></script>
+<script src="flight-sim.js?v=20261109-circuit2" defer></script>
 </head>
 <body>
 <header class="site-head">
@@ -652,7 +653,7 @@
        </svg>
       </button>
      </div>
-     <div class="axis-values"><span>BANK <strong id="cmdBank">0%</strong></span><span>PITCH <strong id="cmdPitch">0%</strong></span></div>
+     <div class="axis-values"><span>BANK <strong id="cmdBank">0%</strong> <button id="bankHoldToggle" type="button" aria-pressed="false" aria-label="Hold bank after releasing the yoke, then tap again to level the wings" title="Optional: keep bank after releasing the yoke. Tap LEVEL to stop turning.">HOLD</button></span><span>PITCH <strong id="cmdPitch">0%</strong></span></div>
     </div>
     <div class="side-controls">
      <div id="powerPanel" class="lever-panel">
