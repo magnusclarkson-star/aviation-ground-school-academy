@@ -58,7 +58,20 @@ function canopy(m,zStart,zEnd,width,height,y,window){
   [zEnd-.45,width,height,y],[zEnd,.14,.08,y]],window,8);
 }
 function engine(m,x,z,w=.9,color=palette.dark){
- fuselage(m,[[z-1.2,w*.85,w*.67,-.12],[z+.8,w,w*.75,-.10],[z+1.1,w*.8,w*.55,-.10]],color,8);
+ // Each nacelle has its own X centreline, not one overlapping centre engine.
+ const n=new Array();
+ for(const [dz,radius,height,centreY] of [
+  [-1.2,w*.85,w*.67,-.12],[.8,w,w*.75,-.10],[1.1,w*.8,w*.55,-.10]
+ ])n.push([z+dz,radius,height,centreY]);
+ const segments=8;
+ for(let k=0;k<n.length-1;k++){
+  const A=n[k],B=n[k+1];
+  for(let i=0;i<segments;i++){
+   const a=i*2*Math.PI/segments,b=(i+1)*2*Math.PI/segments;
+   const p=(v,t)=>[x+Math.cos(t)*v[1],v[3]+Math.sin(t)*v[2],v[0]];
+   m.quad(p(A,a),p(B,a),p(B,b),p(A,b),tint(color,.68+.28*Math.max(0,Math.sin((a+b)/2))));
+  }
+ }
  m.box(x-w*.62,-.35,z-1.55,w*1.24,.48,.18,palette.black);
 }
 function gear(m,x,z,r=.35){
