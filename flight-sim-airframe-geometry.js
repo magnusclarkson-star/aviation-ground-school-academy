@@ -98,7 +98,11 @@ function addC172(m){
  mirrored(m,[[.72,.95,1.25],[7.4,.99,.7],[7.4,.99,-1.75],
   [.72,.95,-1.40]],c,.2);
  mirrored(m,[[.4,.9,-4.75],[2.9,.9,-5.10],[2.9,.9,-6.0],[.36,.9,-5.78]],c,.16);
- m.box(-.11,.55,-6.07,.22,2.05,1.42,strip);
+ // Swept vertical tail and rudder outline (not the previous rectangular block).
+ sheet(m,[[0,.52,-4.63],[0,2.26,-5.71],[0,2.49,-6.35],
+  [0,.52,-6.40]],c,.16);
+ sheet(m,[[0,.69,-6.08],[0,2.08,-6.08],[0,2.40,-6.38],
+  [0,.70,-6.43]],strip,.08);
  m.box(-.70,.62,.4,1.4,.34,2.0,palette.window);
  m.box(-.75,.53,2.2,1.5,.24,.8,palette.window);
  // Wing struts and undercarriage help distinguish trainer from fighters.
@@ -109,8 +113,29 @@ function addC172(m){
   gear(m,s*2.10,-.8,.35);
  }
  gear(m,0,4.45,.26);
- m.box(-7.35,.99,-1.2,14.7,.13,.22,strip);
- m.box(-.21,-.15,6.13,.42,.37,.25,palette.dark);
+ // Trim along each wing rather than a square bar spanning the aircraft.
+ mirrored(m,[[.83,1.04,-1.41],[7.25,1.04,-1.77],
+  [7.24,1.04,-1.52],[.84,1.04,-1.20]],strip,.035);
+ // Separate cabin windows and doors with realistic wing root spacing.
+ for(const side of [-1,1]){
+  const x=side*.90;
+  sheet(m,[[x,.29,.08],[x,.72,.09],[x,.68,1.16],
+   [x,.28,1.18]],palette.window,.04);
+  sheet(m,[[x,.32,-1.04],[x,.74,-1.01],[x,.74,-.03],
+   [x,.32,-.01]],palette.window,.04);
+  m.box(x-.048,.23,.06,.096,.11,.18,palette.metal);
+  m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,side>0?palette.red:palette.blue);
+  sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
+   [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
+ }
+ m.box(-.42,-.45,5.05,.84,.14,.48,palette.dark);
+ m.box(-.38,-.24,5.56,.76,.12,.21,palette.metal);
+ const spinner=[0,-.04,6.50],spinnerZ=6.14;
+ for(let j=0;j<10;j++){
+  const a=j*Math.PI/5,b=(j+1)*Math.PI/5;
+  m.tri([.24*Math.cos(a),-.04+.24*Math.sin(a),spinnerZ],
+   [.24*Math.cos(b),-.04+.24*Math.sin(b),spinnerZ],spinner,palette.metal);
+ }
 }
 function addR44(m){
  const ivory=palette.ivory,trim=palette.navy,glass=palette.window;
@@ -130,6 +155,14 @@ function addR44(m){
   m.box(x-.065,.37,-.78,.13,1.01,.10,palette.metal);
   m.box(x-.08,-.62,-1.45,.16,.15,2.85,trim);
   for(let i=0;i<4;i++)m.box(x-.065,.15,-2.32+i*.27,.13,.08,.18,palette.dark);
+ }
+ // Separate engine cooling grille, cowling vents and skid steps.
+ m.box(-.80,.92,-2.22,1.60,.14,.55,palette.metal);
+ m.box(-.66,.98,-2.09,1.32,.09,.28,palette.dark);
+ for(const side of [-1,1]){
+  const x=side*1.04;
+  m.box(x-.065,-.68,-1.45,.13,.16,1.1,palette.metal);
+  m.box(x-.06,.11,.96,.12,.10,.22,trim);
  }
  // A slim, tapered tailcone and upper/lower vertical stabilizers.
  fuselage(m,[[-8.52,.08,.12,.56],[-7.67,.20,.20,.52],
@@ -158,6 +191,10 @@ function addR44(m){
  m.box(-.16,1.18,-.52,.32,1.80,.28,palette.metal);
  m.box(-.38,2.85,-.73,.76,.29,.72,palette.dark);
  m.box(-.26,3.08,-.61,.52,.12,.48,palette.gold);
+ // Tail boom accent, navigation lights and tail-rotor drive cover.
+ m.box(-.20,.58,-6.70,.40,.085,3.40,trim);
+ m.box(-.14,1.81,-8.10,.28,.11,.30,palette.red);
+ m.box(-.25,.79,-8.57,.50,.09,.24,palette.gold);
  // Tail-rotor shaft and hinge on left side of empennage.
  m.box(-.72,1.01,-8.34,.24,.30,.24,palette.metal);
  m.box(-.83,1.11,-8.27,.18,.14,.19,palette.dark);
@@ -184,6 +221,40 @@ function genericJet(m,id){
   su37:[[1.25,.30,3.35],[8.65,.30,-2.8],[7.7,.30,-5.5],[1.35,.30,-4.25]]
  };
  mirrored(m,planforms[id],c,.19);
+ // Aircraft-specific wing roots, leading-edge extensions and discrete panels.
+ if(id==="fa18"){
+  mirrored(m,[[1.06,.34,3.60],[2.55,.34,2.35],
+   [2.83,.34,.22],[1.25,.34,.68]],tint(c,.87),.05);
+  mirrored(m,[[3.20,.36,-1.85],[6.18,.36,-2.06],
+   [6.35,.36,-2.40],[3.25,.36,-2.35]],tint(c,.74),.025);
+ }else if(id==="f22"){
+  mirrored(m,[[1.10,.35,2.70],[3.18,.35,.13],
+   [2.85,.35,-1.22],[1.10,.35,-.62]],tint(c,.89),.055);
+  mirrored(m,[[3.36,.37,-2.55],[5.85,.37,-3.46],
+   [5.93,.37,-3.72],[3.29,.37,-3.08]],tint(c,.80),.03);
+ }else if(id==="f35"){
+  mirrored(m,[[1.02,.30,2.88],[2.16,.30,1.65],
+   [2.02,.30,-.64],[1.05,.30,-.46]],tint(c,.85),.03);
+  mirrored(m,[[2.38,.31,-1.72],[4.62,.31,-3.18],
+   [4.46,.31,-3.43],[2.40,.31,-2.08]],tint(c,.77),.03);
+ }else if(id==="typhoon"){
+  mirrored(m,[[1.02,.39,2.92],[2.12,.39,1.10],
+   [4.10,.39,-1.55],[1.06,.39,.06]],tint(c,.85),.035);
+  mirrored(m,[[3.72,.38,-2.10],[6.70,.38,-4.31],
+   [6.30,.38,-4.60],[3.64,.38,-2.64]],tint(c,.74),.03);
+ }else{
+  mirrored(m,[[1.33,.39,2.50],[4.10,.39,.28],
+   [5.07,.39,-1.42],[1.38,.39,-.83]],tint(c,.83),.04);
+  mirrored(m,[[4.10,.40,-2.10],[6.90,.40,-3.67],
+   [6.53,.40,-4.11],[3.95,.40,-2.64]],tint(c,.66),.04);
+ }
+ // Wingtip navigation lights and underwing hinge panels.
+ for(const sign of [-1,1]){
+  const point=planforms[id][1];
+  const tipX=sign*point[0],tipZ=point[2];
+  m.box(tipX-.12,.18,tipZ-.12,.24,.18,.25,
+    sign===-1?palette.red:palette.blue);
+ }
  // Tailplanes: canted twin fins for F/A-18, F-22, F-35 and Su-37,
  // single tall fin for Eurofighter Typhoon.
  if(id==="typhoon"){
@@ -207,6 +278,10 @@ function genericJet(m,id){
    [.65,.70,z-.78]],tint(c,1.04),.12);
  }
  canopy(m,.95,4.8,id==="fa18"?.68:.56,.49,.70,palette.window);
+ // Canopy hood framing and a slim dorsal spine.
+ sheet(m,[[-.10,1.22,1.10],[-.10,1.34,3.62],
+  [-.10,1.20,4.65],[-.10,1.07,1.10]],palette.dark,.06);
+ m.box(-.15,.76,-3.78,.30,.14,4.12,tint(c,.75));
  // F-22 has angular black intake shoulders; F-35 single large nose intake.
  if(id==="f22"){
   mirrored(m,[[.9,-.06,1.8],[2.0,-.06,.4],[1.7,-.06,-2.3],

@@ -280,11 +280,22 @@ function buildMovingParts(mode="airplane"){
  }
  return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
 }
-function cameraPose(state,view="cockpit"){
+function cameraPose(state,view="cockpit",orbit={}){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
- if(!["cockpit","chase","side","top"].includes(view))throw Error("Unknown 3D camera mode");
+ if(!["cockpit","chase","side","top","inspect"].includes(view))throw Error("Unknown 3D camera mode");
  const yaw=(state.headingDeg||0)*RAD;
  const craft=[state.xM,state.altitudeM+(state.mode==="airplane"?1.5:2),state.zM];
+ if(view==="inspect"){
+  const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
+  const elevation=limit(orbit.elevation??28,-70,78)*RAD;
+  const distance=limit(orbit.distance??29,17,70);
+  const direction=yaw+Math.PI+azimuth;
+  const horizontal=distance*Math.cos(elevation);
+  return {view,eye:[craft[0]+Math.sin(direction)*horizontal,
+   craft[1]+Math.sin(elevation)*distance,
+   craft[2]+Math.cos(direction)*horizontal],
+   yaw:direction+Math.PI,pitch:-elevation,roll:0,craft};
+ }
  if(view==="cockpit")return {view,eye:[state.xM,state.altitudeM+2.2,state.zM],
   yaw,pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft};
  if(view==="side")return {view,
@@ -387,7 +398,7 @@ function compile(gl,vsSource,fsSource){
  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p)||"Shader link failed");
  return p;
 }
-function createRenderer(canvas,{onLost=()=>{}}={}){
+function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  if(!canvas||typeof canvas.getContext!=="function")return null;
  let gl;
  try{gl=canvas.getContext("webgl2",{alpha:false,depth:true,antialias:true,
@@ -419,7 +430,8 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    });gl.bindVertexArray(null);
    const object={vao,count:mesh.vertices};objects.push(object);return object;
   };
-  const worldPlane=upload(buildWorld("airplane")),worldHeli=upload(buildWorld("helicopter"));
+  const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
+   worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const airframes=Object.create(null);
   for(const id of Exterior.IDS){
    airframes[id]={
@@ -427,7 +439,7 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)}))
    };
   }
-  function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null}={}){
+  function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null,orbit={}}={}){
    const palette=root?.AGSAFlightLighting?.choose?.(lighting)||{
     skyLow:[.68,.82,.87],skyHigh:[.055,.25,.43],
     fog:[.60,.76,.82],light:[1,1,1]
@@ -450,7 +462,7 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    gl.useProgram(program);
    gl.uniform3fv(uni.uFogColor,palette.fog);
    gl.uniform3fv(uni.uLightColor,palette.light);
-   const camera=cameraPose(state,view);
+   const camera=cameraPose(state,view,orbit);
    gl.uniform3fv(uni.uEye,camera.eye);
    gl.uniform3fv(uni.uCraft,camera.craft);
    gl.uniform1f(uni.uYaw,camera.yaw);
@@ -464,9 +476,11 @@ function createRenderer(canvas,{onLost=()=>{}}={}){
    gl.uniform1f(uni.uActor,0);
    gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
    gl.uniform3fv(uni.uPartPivot,[0,0,0]);
-   gl.bindVertexArray(world.vao);
-   gl.drawArrays(gl.TRIANGLES,0,world.count);
-   if(view==="chase"){
+   if(!inspectionOnly&&view!=="inspect"){
+    gl.bindVertexArray(world.vao);
+    gl.drawArrays(gl.TRIANGLES,0,world.count);
+   }
+   if(view!=="cockpit"){
     const selected=Exterior.normalize(airframeId||state.mode);
     const id=state.mode==="helicopter"?"r44":selected==="r44"?"c172":selected;
     const model=airframes[id];

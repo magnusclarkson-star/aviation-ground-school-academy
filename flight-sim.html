@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="flight-sim-authentic.css">
 <link rel="stylesheet" href="flight-sim-focus.css">
 <link rel="stylesheet" href="flight-sim-aircraft-gallery.css">
+<link rel="stylesheet" href="flight-sim-inspection.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -43,6 +44,7 @@
 <script src="flight-sim-airframe-geometry.js" defer></script>
 <script src="flight-sim-3d.js" defer></script>
 <script src="flight-sim-exterior-2d.js" defer></script>
+<script src="flight-sim-inspection.js" defer></script>
 <script src="flight-sim-aircraft-systems.js" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
@@ -123,6 +125,7 @@
    <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
    <div class="cockpit-info-toolbar cockpit-actions" role="group" aria-label="Flight controls and optional help">
     <button type="button" id="restartFlight" class="cockpit-restart" aria-label="Restart the current flight from its starting position">↻ RESTART FLIGHT</button>
+    <button type="button" id="aircraftInspectOpen" class="aircraft-inspect-button" aria-expanded="false" aria-controls="aircraftInspectDialog" aria-label="Inspect selected aircraft in 360 degrees">⟳ 360° INSPECT</button>
     <button type="button" id="cockpitFocusButton" class="cockpit-info-button cockpit-focus-button" aria-pressed="false" aria-label="Enter cockpit-only flight view">⛶ Cockpit view</button>
     <span id="cockpitFocusStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
     <span id="cockpitRestartStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
@@ -728,6 +731,36 @@
   </div>
   <p class="disclaimer">These exercises use a deliberately simplified fictional flight model. The visual scenery and controls resemble aviation hardware but are not accurate aircraft type reproductions. Real helicopter flight requires specialised instruction. Phone vibration is optional, brief and dependent on browser/device support; it is not genuine force feedback.</p>
  </section>
+ <div id="aircraftInspectDialog" class="aircraft-inspect-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="aircraftInspectModel" aria-describedby="aircraftInspectDescription">
+  <section class="aircraft-inspect-card">
+   <header class="aircraft-inspect-header">
+    <div><span class="aircraft-inspect-label">360° AIRCRAFT INSPECTION</span><strong id="aircraftInspectModel">Cessna 172</strong></div>
+    <label class="aircraft-inspect-select-label" for="aircraftInspectModelSelect">Aircraft
+     <select id="aircraftInspectModelSelect" aria-label="Choose aircraft to inspect">
+      <option value="c172">Cessna 172</option><option value="r44">Robinson R44</option>
+      <option value="fa18">F/A-18</option><option value="f22">F-22</option>
+      <option value="f35">F-35</option><option value="typhoon">Typhoon</option>
+      <option value="su37">Su-37</option>
+     </select>
+    </label>
+    <button type="button" id="aircraftInspectClose" aria-label="Close aircraft inspection">Close ✕</button>
+   </header>
+   <div id="aircraftInspectViewport" class="aircraft-inspect-viewport" role="img" aria-label="Drag to rotate the selected aircraft and inspect its exterior from any angle">
+    <canvas id="aircraftInspectCanvas2D" width="960" height="540"></canvas>
+    <canvas id="aircraftInspectCanvas3D" width="960" height="540" hidden></canvas>
+   </div>
+   <div class="aircraft-inspect-controls">
+    <span id="aircraftInspectAngles" class="aircraft-inspect-metadata">AZ 000° · EL 026°</span>
+    <span id="aircraftInspectRenderMode" class="aircraft-inspect-metadata">3D view</span>
+    <button type="button" id="aircraftInspectZoomOut" aria-label="Zoom out aircraft">−</button>
+    <span id="aircraftInspectZoomValue" class="aircraft-inspect-metadata">100%</span>
+    <button type="button" id="aircraftInspectZoomIn" aria-label="Zoom in aircraft">+</button>
+    <button type="button" id="aircraftInspectReset">Reset view</button>
+    <button type="button" id="aircraftInspectSpin" aria-pressed="false">Auto rotate</button>
+   </div>
+   <p id="aircraftInspectDescription" class="aircraft-inspect-hint">Drag the aircraft to rotate. Use + or − to zoom. Select another aircraft from the cockpit to inspect it.</p>
+  </section>
+ </div>
  <footer>Aviation Ground School Academy · Educational technology demonstrator · No pilot licence, actual flight credit, real airfield/GPS, or safety-critical guidance.</footer>
 </main>
 </body>
