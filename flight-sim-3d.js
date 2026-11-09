@@ -285,6 +285,22 @@ function buildRotorSweep(mode="r44"){
  }
  return scaleMesh(m.finish(),"r44");
 }
+// An unobtrusive translucent propeller sweep prevents the trainer's two
+// rapidly spinning blades from vanishing between frames on mobile displays.
+// The actual animated two-blade propeller is still drawn over the sweep.
+function buildPropellerSweep(mode="c172"){
+ if(Exterior.normalize(mode)!=="c172")return null;
+ const m=new Mesh(),inner=rgb(140,161,174),tip=rgb(230,202,153);
+ const count=24,radius=.965,hubZ=6.125;
+ const sx=Exterior.SCALE.c172[0];
+ const at=(r,a)=>[r*Math.cos(a)/sx,r*Math.sin(a),hubZ];
+ for(let i=0;i<count;i++){
+  const a=i*2*Math.PI/count,b=(i+1)*2*Math.PI/count;
+  m.quad(at(.20,a),at(.84,a),at(.84,b),at(.20,b),inner);
+  m.quad(at(.84,a),at(radius,a),at(radius,b),at(.84,b),tip);
+ }
+ return scaleMesh(m.finish(),"c172");
+}
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
@@ -564,6 +580,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     body:upload(buildVehicle(id)),
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
     rotorSweep:id==="r44"?upload(buildRotorSweep(id)):null,
+    propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
     shadow:inspectionOnly?null:upload(buildShadow(id))
    };
   }
@@ -639,6 +656,19 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
+    // Draw this sweep only when the propeller is turning fast enough; the
+    // actual blades remain distinct at startup and low power.
+    const propOpacity=Number.isFinite(animation?.propBlurOpacity)?
+     limit(animation.propBlurOpacity,0,.16):0;
+    if(model.propSweep&&propOpacity>0){
+     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+     gl.uniform1f(uni.uOpacity,propOpacity);
+     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+     gl.depthMask(false);
+     gl.bindVertexArray(model.propSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.propSweep.count);
+     gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
+    }
     for(const part of model.parts){
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
@@ -668,7 +698,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
