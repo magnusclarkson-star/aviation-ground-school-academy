@@ -102,7 +102,7 @@ function guidance(state,input,progress){
  const base={tag:"LEARNING CUE",level:"normal",text:"Observe the fictional scenery and instruments together.",complete:false};
  if(heli&&progress?.r44Lesson){
   const lesson=r44LessonStatus(progress,state);
-  return {...base,tag:"R44 · "+lesson.short,
+  return {...base,tag:"ROTORCRAFT · "+lesson.short,
    level:lesson.status==="completed"?"positive":
     lesson.status==="active"?"normal":"caution",
    text:lesson.hint,complete:lesson.status!=="active"};
