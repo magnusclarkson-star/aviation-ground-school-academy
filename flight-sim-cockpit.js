@@ -292,6 +292,18 @@ function buildPanel(doc,profile,holder){
    lessonValue.dataset.r44Lesson="true";
    lessonValue.textContent="1/4 · TAKEOFF";
    lesson.appendChild(lessonValue);
+   const voice=doc.createElement("button");
+   voice.type="button";voice.id="r44VoiceToggle";
+   voice.className="r44-voice-toggle";
+   voice.textContent="🔊";
+   voice.setAttribute("aria-pressed","true");
+   voice.setAttribute("aria-label","Mute R44 spoken instructor");
+   voice.title="Instructor speech on. Tap to mute.";
+   voice.addEventListener("click",event=>{
+    event.stopPropagation();
+    doc.dispatchEvent(new CustomEvent("agsa:r44-voice-toggle"));
+   });
+   lesson.appendChild(voice);
    addInfoDot(doc,lesson,"lesson","R44 guided flight lesson");
    holder.appendChild(lesson);
    const expand=doc.createElement("button");
