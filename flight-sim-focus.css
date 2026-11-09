@@ -190,7 +190,15 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
   font-size:9px
  }
  body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls{
-  margin:1px 0 0;gap:2px;max-width:none
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-flow:row;align-items:start;align-content:start;
+  margin:1px 0 0;gap:2px;max-width:none;min-width:0
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls .lever-panel{
+  min-width:0
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls #collectivePanel:not(.hidden){
+  grid-column:1/-1
  }
  body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls .lever-panel{
   padding:2px 3px;border-width:1px
