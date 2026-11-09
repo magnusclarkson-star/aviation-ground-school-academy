@@ -557,10 +557,10 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   event.preventDefault();openZoom(tile);
  });
  $("cockpitZoomClose").addEventListener("click",closeZoom);
- doc.addEventListener("pointerdown",event=>{
-  if(!zoomPanel.hidden&&!zoomPanel.contains(event.target)&&
-    !holder.contains(event.target))closeZoom();
- });
+ // Keep an enlarged instrument visible while the learner manipulates the
+ // yoke, collective or throttle. Explicit Close, Escape, or aircraft changes
+ // dismiss it; tapping a flight control must not make the PFD disappear.
+
  $("cockpitInfoClose").addEventListener("click",closeInfo);
  for(const button of cockpitStation.querySelectorAll(".cockpit-info-toolbar [data-cockpit-help]")){
   button.addEventListener("click",()=>{
