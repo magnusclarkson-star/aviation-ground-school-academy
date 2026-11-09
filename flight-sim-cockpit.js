@@ -52,7 +52,9 @@ const ANALOG={
  // as well as dual tach, airspeed, altitude and manifold proxy. Eight compact
  // dials fit in two rows so the controls remain visible below on phones.
  rotor:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],["vsi","VERTICAL SPEED","FT/MIN"],
-  ["heading","HEADING","DEG"],["rpm","DUAL TACH","% · SIM"],["power","MANIFOLD PROXY","POWER %"],["turn","TURN / SLIP","BANK · SIM"]]
+  ["heading","HEADING","DEG"],["rpm","DUAL TACH","% · SIM"],["power","MANIFOLD PROXY","POWER %"],["turn","TURN / SLIP","BANK · SIM"]],
+ jet:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],
+  ["heading","HEADING","DEG"],["vsi","VERTICAL SPEED","FT/MIN"],["power","ENGINE POWER","% · SIM"]]
 };
 const HELP=Object.freeze({
  speed:{title:"Airspeed",text:"Shows airspeed in knots. Compare it with the attitude and height while flying."},
@@ -245,22 +247,28 @@ function digitalScreen(doc,kind,index){
  addInfoDot(doc,screen,"mfd-"+kind,header.textContent);
  return screen;
 }
-function buildPanel(doc,profile,holder){
+function buildPanel(doc,profile,holder,instrumentStyle="auto"){
  holder.replaceChildren();
  holder.dataset.airframe=profile.id;holder.dataset.family=profile.family;
- if(profile.family==="jet"){
-  const screenKinds=profile.layout==="panoramic"?["pfd","nav","engine"]:
-   profile.layout==="quad"?["nav","pfd","att","engine"]:
-   profile.layout==="dual"?["pfd","engine"]:["nav","pfd","engine"];
+ const useGlass=instrumentStyle==="glass"||(instrumentStyle==="auto"&&profile.family==="jet");
+ holder.dataset.instruments=useGlass?"glass":"round";
+ if(useGlass){
+  const screenKinds=profile.family==="jet"?
+   (profile.layout==="panoramic"?["pfd","nav","engine"]:
+    profile.layout==="quad"?["nav","pfd","att","engine"]:
+    profile.layout==="dual"?["pfd","engine"]:["nav","pfd","engine"]):
+   ["pfd","nav","engine"];
+  const layout=profile.family==="jet"?profile.layout:"triple";
   const row=doc.createElement("div");
-  row.className="cockpit-mfd-grid cockpit-mfd-"+profile.layout;
+  row.className="cockpit-mfd-grid cockpit-mfd-"+layout;
   for(let i=0;i<screenKinds.length;i++)row.appendChild(digitalScreen(doc,screenKinds[i],i));
   holder.appendChild(row);
  }else{
   const grid=doc.createElement("div");grid.className="cockpit-sixpack";
   for(const [id,name,unit] of ANALOG[profile.family])grid.appendChild(makeAnalogFace(doc,id,name,unit));
   holder.appendChild(grid);
-  if(profile.id==="r44"){
+ }
+ if(profile.id==="r44"){
    // All eight analogue instruments now fit in two compact phone rows;
    // touch any individual dial to enlarge its moving display.
    const scan=doc.createElement("div");
@@ -304,7 +312,7 @@ function buildPanel(doc,profile,holder){
    addInfoDot(doc,lesson,"lesson","R44 guided flight lesson");
    holder.appendChild(lesson);
   }
-  if(profile.id==="c172"){
+  if(profile.id==="c172"&&!useGlass){
    const avionics=doc.createElement("div");
    avionics.className="cockpit-avionics";
    avionics.innerHTML=`<div class="avionics-topline">NAV / COM</div>
@@ -324,7 +332,6 @@ function buildPanel(doc,profile,holder){
    avionics.insertBefore(map,avionics.querySelector(".avionics-buttons"));
    holder.appendChild(avionics);
   }
- }
 }
 function paint(holder,state,systems,input,profileId,doc,progress){
  const s=snapshot(state,systems,input,profileId);
@@ -413,23 +420,6 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  const about=doc.querySelector(".sim-about");
  const main=doc.querySelector("main");
  if(about&&main)main.appendChild(about);
- const restartButton=$("restartFlight");
- const actionBar=cockpitStation.querySelector(".cockpit-actions");
- const collectivePanel=$("collectivePanel");
- const restartDock=doc.createElement("div");
- restartDock.className="restart-by-collective";
- restartDock.hidden=true;
- if(collectivePanel)collectivePanel.insertAdjacentElement("afterend",restartDock);
- function placeRestart(profile){
-  if(!restartButton||!actionBar||!collectivePanel)return;
-  if(profile.family==="rotor"){
-   restartDock.hidden=false;
-   restartDock.appendChild(restartButton);
-  }else{
-   restartDock.hidden=true;
-   actionBar.insertBefore(restartButton,actionBar.firstElementChild);
-  }
- }
  const select=$("cockpitAircraftSelect");
  select.replaceChildren();
  for(const frame of FRAMES){
@@ -437,6 +427,28 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   select.appendChild(option);
  }
  let active="c172";
+ let instrumentStyle="auto";
+ const styleToggle=$("cockpitInstrumentStyle");
+ function currentStyle(profile){
+  return instrumentStyle==="auto"?(profile.family==="jet"?"glass":"round"):instrumentStyle;
+ }
+ function refreshStyleButton(profile){
+  const style=currentStyle(profile);
+  cockpitStation.dataset.instruments=style;
+  if(!styleToggle)return;
+  styleToggle.textContent=style==="glass"?"◉ Round":"▣ Glass";
+  styleToggle.setAttribute("aria-label","Switch to "+(style==="glass"?"round":"glass")+" cockpit instruments");
+  styleToggle.setAttribute("aria-pressed",String(style==="glass"));
+  styleToggle.title="Currently "+style+" instruments. Tap to switch.";
+ }
+ styleToggle?.addEventListener("click",()=>{
+  instrumentStyle=currentStyle(byId(active))==="glass"?"round":"glass";
+  refreshStyleButton(byId(active));
+  buildPanel(doc,byId(active),holder,instrumentStyle);
+  closeZoom();
+  closeInfo();
+  update();
+ });
  const helpToggle=$("cockpitHelpToggle"),helpChoices=$("cockpitHelpChoices");
  function closeHelpMenu(){
   if(!helpChoices||!helpToggle)return;
@@ -560,13 +572,13 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   const profile=byId(id);active=profile.id;select.value=active;
   const deck=$("cockpitStation");
   deck.dataset.airframe=profile.id;deck.dataset.family=profile.family;
-  placeRestart(profile);
   $("cockpitAircraftLabel").textContent=profile.title;
   $("cockpitAircraftCaption").textContent=profile.caption+" · "+profile.pilot;
   $("cockpitAircraftNotice").textContent=profile.family==="jet"?"FLIGHT DISPLAYS":profile.family==="rotor"?"ROTORCRAFT INSTRUMENTS":"PRIMARY FLIGHT INSTRUMENTS";
   $("cockpitGripLabel").textContent=profile.pilot;
   $("cockpitJetHud").hidden=profile.family!=="jet";
-  buildPanel(doc,profile,holder);
+  refreshStyleButton(profile);
+  buildPanel(doc,profile,holder,instrumentStyle);
   closeHelpMenu();
   closeZoom();
   closeInfo();
