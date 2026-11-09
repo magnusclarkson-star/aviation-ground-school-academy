@@ -179,17 +179,34 @@ function buildWorld(mode="airplane"){
  if(out.vertices>130000)throw Error("3D mesh exceeds mobile geometry budget");
  return out;
 }
+function scaleMesh(mesh,mode){
+ const [sx,sy,sz]=Exterior.SCALE[Exterior.normalize(mode)];
+ if(sx===1&&sy===1&&sz===1)return mesh;
+ const p=mesh.positions,n=mesh.normals;
+ for(let i=0;i<p.length;i+=3){
+  p[i]*=sx;p[i+1]*=sy;p[i+2]*=sz;
+  const nx=n[i]/sx,ny=n[i+1]/sy,nz=n[i+2]/sz;
+  const length=Math.hypot(nx,ny,nz)||1;
+  n[i]=nx/length;n[i+1]=ny/length;n[i+2]=nz/length;
+ }
+ return mesh;
+}
+function scalePart(part,mode){
+ const scale=Exterior.SCALE[Exterior.normalize(mode)];
+ return {...part,pivot:part.pivot.map((v,i)=>v*scale[i]),
+  mesh:scaleMesh(part.mesh,mode)};
+}
 function buildVehicle(mode="airplane"){
  const m=new Mesh();
  Exterior.populate(m,mode);
- return m.finish();
+ return scaleMesh(m.finish(),mode);
 }
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
 function buildMovingParts(mode="airplane"){
  if(Exterior.IDS.includes(mode)&&mode!=="c172"&&mode!=="r44"){
-  return Exterior.buildJetParts(Mesh,mode);
+  return Exterior.buildJetParts(Mesh,mode).map(part=>scalePart(part,mode));
  }
  if(mode==="r44")mode="helicopter";
  if(mode==="c172")mode="airplane";
@@ -226,29 +243,60 @@ function buildMovingParts(mode="airplane"){
    m.box(-.12,1.2,-6.12,.24,1.65,.55,yellow);
   });
  }else{
-  add("mainRotor",[0,2.96,-.4],2,m=>{
-   m.box(-8.9,2.93,-.79,17.8,.11,.77,metal);
-   m.box(-.38,2.93,-8.7,.77,.11,16.6,tint(metal,.88));
-   m.box(-.58,2.95,-.98,1.16,.18,1.16,yellow);
+  // R44 rotor arrangement: one teetering TWO-blade main rotor, 10.06 m
+  // diameter; one TWO-blade tail rotor, 1.47 m diameter. Blade sections
+  // have slight coning, tapered tips and contrasting edges for legibility.
+  // Both rotate around their real geometric hubs (Y and X respectively).
+  add("mainRotor",[0,3.16,-.4],2,m=>{
+   const y=3.16,hubZ=-.40;
+   const tip=5.03;
+   for(const side of [-1,1]){
+    const A=[side*.32,y,hubZ-.24],B=[side*4.65,y+.15,hubZ-.26];
+    const C=[side*tip,y+.18,hubZ-.14],D=[side*tip,y+.18,hubZ+.08];
+    const E=[side*4.65,y+.15,hubZ+.12],F=[side*.32,y,hubZ+.24];
+    m.quad(A,B,E,F,metal);
+    m.tri(B,C,D,tint(metal,1.16));m.tri(B,D,E,tint(metal,1.05));
+    // Flat underside keeps rotor visible from a camera below the disc.
+    const under=v=>[v[0],v[1]-.042,v[2]];
+    m.quad(under(F),under(E),under(B),under(A),tint(metal,.72));
+    m.tri(under(E),under(D),under(B),tint(metal,.76));
+    m.box(side>0?4.57:-4.85,y+.13,hubZ-.30,.28,.07,.48,yellow);
+    m.box(side>0?.36:-.70,y-.045,hubZ-.22,.34,.08,.44,blue);
+   }
+   m.box(-.37,y-.08,hubZ-.31,.74,.18,.62,yellow);
+   m.box(-.22,y+.10,hubZ-.18,.44,.15,.36,tint(metal,.82));
   });
-  add("tailRotor",[-.29,1.22,-8.4],1,m=>{
-   m.box(-.37,.08,-8.57,.17,2.35,.3,metal);
-   m.box(-.37,1.12,-9.55,.17,.3,2.32,yellow);
+  add("tailRotor",[-.77,1.19,-8.18],1,m=>{
+   const x=-.77,z=-8.18,y=1.19,r=.735;
+   // Rotor turns in the YZ plane, mounted on the LEFT of the tail fin.
+   for(const sign of [-1,1]){
+    const tip=sign*r;
+    m.quad([x,y+sign*.10,z-.10],[x,y+tip,z-.10],
+     [x,y+tip,z+.10],[x,y+sign*.10,z+.15],metal);
+    m.box(x-.04,y+Math.min(sign*.50,sign*.65),z-.115,.11,.16,.25,yellow);
+   }
+   m.box(x-.12,y-.13,z-.15,.24,.26,.30,blue);
   });
  }
- return result;
+ return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
 }
 function cameraPose(state,view="cockpit"){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
- if(!["cockpit","chase"].includes(view))throw Error("Unknown 3D camera mode");
+ if(!["cockpit","chase","side","top"].includes(view))throw Error("Unknown 3D camera mode");
  const yaw=(state.headingDeg||0)*RAD;
  const craft=[state.xM,state.altitudeM+(state.mode==="airplane"?1.5:2),state.zM];
- return view==="cockpit"?
-  {view,eye:[state.xM,state.altitudeM+2.2,state.zM],yaw,
-   pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft}:
-  {view,eye:[state.xM-30*Math.sin(yaw),state.altitudeM+13,
+ if(view==="cockpit")return {view,eye:[state.xM,state.altitudeM+2.2,state.zM],
+  yaw,pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft};
+ if(view==="side")return {view,
+  eye:[state.xM-27*Math.cos(yaw),state.altitudeM+10,
+    state.zM+27*Math.sin(yaw)],
+  yaw:yaw+Math.PI/2,pitch:-.28,roll:0,craft};
+ if(view==="top")return {view,
+  eye:[state.xM,state.altitudeM+40,state.zM-4],
+  yaw,pitch:-1.46,roll:0,craft};
+ return {view,eye:[state.xM-30*Math.sin(yaw),state.altitudeM+13,
     state.zM-30*Math.cos(yaw)],yaw,pitch:-.31,
-   roll:(state.rollDeg||0)*RAD*.13,craft};
+    roll:(state.rollDeg||0)*RAD*.13,craft};
 }
 const VERTEX=`#version 300 es
 precision highp float;

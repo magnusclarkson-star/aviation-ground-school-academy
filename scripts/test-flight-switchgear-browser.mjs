@@ -14,7 +14,7 @@ try{
  assert.ok(await panel.isVisible());
  assert.equal(await desktop.locator(".cockpit-switch").count(),4);
  for(const [button,source,after,again] of [
-  ["view","cameraMode","chase","cockpit"],
+  ["view","cameraMode","chase","side"],
   ["graphics","visualMode","2d","3d"],
   ["frame","cockpitFrameToggle","off","on"]
  ]){
@@ -23,6 +23,10 @@ try{
   await desktop.locator("#cockpitSwitch_"+button).click();
   assert.equal(await desktop.locator("#"+source).inputValue(),again,button+" cycles back");
  }
+ await desktop.locator("#cockpitSwitch_view").click();
+ assert.equal(await desktop.locator("#cameraMode").inputValue(),"top","VIEW cycles to overhead inspection");
+ await desktop.locator("#cockpitSwitch_view").click();
+ assert.equal(await desktop.locator("#cameraMode").inputValue(),"cockpit","VIEW returns to pilot after four positions");
  for(const value of ["golden","dusk","day"]){
   await desktop.locator("#cockpitSwitch_light").click();
   assert.equal(await desktop.locator("#lightingMode").inputValue(),value);

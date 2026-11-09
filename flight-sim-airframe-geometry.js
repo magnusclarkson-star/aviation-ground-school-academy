@@ -6,6 +6,18 @@
 const IDS=Object.freeze(["c172","r44","fa18","f22","f35","typhoon","su37"]);
 const LABELS=Object.freeze({c172:"Cessna 172",r44:"Robinson R44",fa18:"F/A-18 Super Hornet",
  f22:"F-22 Raptor",f35:"F-35 Lightning II",typhoon:"Eurofighter Typhoon",su37:"Su-37"});
+// Geometry is authored in unit-friendly local coordinates. Ratios are
+// adjusted to the approximate published overall span/length of each type.
+// Flight physics are unaffected; the same transform applies to hinged parts.
+const SCALE=Object.freeze({
+ c172:Object.freeze([.746,1,.653]),
+ r44:Object.freeze([1,1,1]),
+ fa18:Object.freeze([.890,1,1.148]),
+ f22:Object.freeze([1.015,1,1.139]),
+ f35:Object.freeze([.982,1,.981]),
+ typhoon:Object.freeze([.711,1,.874]),
+ su37:Object.freeze([.850,1,1.260])
+});
 const rgb=(r,g,b)=>[r/255,g/255,b/255];
 const tint=(c,m)=>c.map(n=>Math.max(0,Math.min(1,n*m)));
 const palette=Object.freeze({
@@ -101,23 +113,54 @@ function addC172(m){
  m.box(-.21,-.15,6.13,.42,.37,.25,palette.dark);
 }
 function addR44(m){
- const c=palette.ivory;
- fuselage(m,[[-2.65,.38,.5,.15],[-1.55,1.1,1.13,.14],
-  [.4,1.35,1.30,.12],[2.0,1.18,1.08,.10],[2.65,.25,.42,.10]],c);
- canopy(m,.25,2.55,1.11,1.07,.19,palette.window);
- m.box(-.25,.0,-8,.50,.58,6.25,palette.white);
- sheet(m,[[-.48,.25,-7.9],[-.5,1.65,-8.2],[-.5,1.25,-6.5],[-.48,.2,-6.7]],palette.navy,.08);
- m.box(-.12,1.18,-.05,.24,1.30,.24,palette.metal);
- m.box(-.47,2.40,-.42,.94,.28,.78,palette.dark);
- for(const x of [-1.46,1.46]){
-  m.box(x-.10,-1.56,-2.15,.20,.26,4.7,palette.dark);
-  for(const z of [-1.55,1.25]){
-   const mid=(x<0?-1:1)*.9;
-   sheet(m,[[mid,-.90,z-.1],[x,-1.45,z-.1],
-    [x,-1.30,z+.12],[mid,-.80,z+.12]],palette.metal,.1);
+ const ivory=palette.ivory,trim=palette.navy,glass=palette.window;
+ // A four-seat cabin with a rounded windscreen, engine cowling and
+ // a narrow structural tail boom. Local +Z is the helicopter nose.
+ fuselage(m,[[-2.90,.54,.53,.20],[-2.12,1.04,1.08,.18],
+  [-1.00,1.24,1.27,.18],[.70,1.26,1.28,.10],
+  [1.85,1.14,1.09,.08],[2.50,.69,.80,.06],[2.80,.18,.24,.04]],ivory,14);
+ canopy(m,.47,2.76,1.12,1.07,.15,glass);
+ // Individual door windows, centre pillar, engine ventilation and colour trim.
+ for(const sign of [-1,1]){
+  const x=sign*1.20;
+  sheet(m,[[x,.42,-.73],[x,1.17,-.54],[x,1.13,.43],
+   [x,.45,.66]],glass,.08);
+  sheet(m,[[x,.41,-1.72],[x,1.12,-1.63],[x,1.15,-.78],
+   [x,.38,-.89]],glass,.07);
+  m.box(x-.065,.37,-.78,.13,1.01,.10,palette.metal);
+  m.box(x-.08,-.62,-1.45,.16,.15,2.85,trim);
+  for(let i=0;i<4;i++)m.box(x-.065,.15,-2.32+i*.27,.13,.08,.18,palette.dark);
+ }
+ // A slim, tapered tailcone and upper/lower vertical stabilizers.
+ fuselage(m,[[-8.52,.08,.12,.56],[-7.67,.20,.20,.52],
+  [-5.10,.30,.26,.49],[-2.15,.42,.37,.39]],ivory,8);
+ sheet(m,[[0,.57,-8.54],[0,2.22,-8.17],
+  [0,1.92,-7.34],[0,.62,-7.11]],trim,.10);
+ sheet(m,[[0,.40,-8.48],[0,-.48,-8.11],
+  [0,-.55,-7.84],[0,.35,-7.27]],ivory,.08);
+ mirrored(m,[[.18,.68,-7.40],[1.65,.68,-7.55],
+  [1.22,.68,-8.18],[.16,.68,-8.03]],ivory,.12);
+ // Two undercarriage skids with forward upturned noses and cross tubes.
+ for(const side of [-1,1]){
+  const x=side*1.36;
+  m.box(x-.10,-1.63,-2.10,.20,.17,4.67,palette.dark);
+  sheet(m,[[x,-1.55,2.50],[x,-1.32,2.88],
+   [x,-1.27,3.00],[x,-1.63,2.36]],palette.metal,.09);
+  for(const z of [-1.50,1.16]){
+   sheet(m,[[side*.83,-.78,z-.10],[x,-1.48,z-.10],
+    [x,-1.39,z+.12],[side*.83,-.74,z+.12]],palette.metal,.10);
   }
  }
- m.box(-.36,.55,-8.05,.22,1.15,.34,palette.dark);
+ m.box(-1.38,-.98,-1.52,2.76,.18,.14,palette.metal);
+ m.box(-1.38,-.98,1.16,2.76,.18,.14,palette.metal);
+ // Tall mast and unmistakable rotor head; the actual blades are separately
+ // animated in buildMovingParts(), so there are exactly TWO main blades.
+ m.box(-.16,1.18,-.52,.32,1.80,.28,palette.metal);
+ m.box(-.38,2.85,-.73,.76,.29,.72,palette.dark);
+ m.box(-.26,3.08,-.61,.52,.12,.48,palette.gold);
+ // Tail-rotor shaft and hinge on left side of empennage.
+ m.box(-.72,1.01,-8.34,.24,.30,.24,palette.metal);
+ m.box(-.83,1.11,-8.27,.18,.14,.19,palette.dark);
 }
 function genericJet(m,id){
  const c=id==="f22"?palette.stealth:id==="f35"?palette.lightning:
@@ -219,7 +262,7 @@ function buildJetParts(Mesh,id){
  });
  return props;
 }
-const api=Object.freeze({IDS,LABELS,normalize,populate,buildJetParts});
+const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAExteriorAirframes=api;
 })(typeof window!=="undefined"?window:null);

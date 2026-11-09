@@ -36,6 +36,14 @@ try{
   }
   assert.equal(new Set(signatures.values()).size,7,
    "all seven 3D chase images must differ, not the original single mock-up");
+  await desktop.locator("#cameraMode").selectOption("side");
+  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"side");
+  const sideImage=await shot(desktop,"#outsideView3D");
+  await desktop.locator("#cameraMode").selectOption("top");
+  const topImage=await shot(desktop,"#outsideView3D");
+  assert.notEqual(sideImage,topImage,"side and overhead inspection must show visibly different GPU viewpoints");
+  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-exterior-view"),"on");
+  await desktop.locator("#cameraMode").selectOption("chase");
  }
  await desktop.locator("#visualMode").selectOption("2d");
  assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
@@ -51,6 +59,28 @@ try{
  }
  assert.equal(new Set(signatures2D.values()).size,7,
   "all seven 2D exterior silhouettes must differ without WebGL");
+ const rotatingR44=await desktop.evaluate(()=>{
+  const canvas=document.createElement("canvas");
+  canvas.width=760;canvas.height=490;
+  const ctx=canvas.getContext("2d");
+  const state={rollDeg:0,pitchDeg:0,altitudeM:80};
+  const render=angle=>{
+   ctx.clearRect(0,0,760,490);
+   window.AGSAExteriorChase2D.paint(ctx,state,{id:"r44",width:760,height:490,
+    view:"top",animation:{mainRotor:angle,tailRotor:angle*3}});
+   return canvas.toDataURL();
+  };
+  return {stopped:render(0),spinning:render(1.19)};
+ });
+ assert.ok(rotatingR44.stopped.length>5000,"R44 overhead 2D image includes the main rotor");
+ assert.notEqual(rotatingR44.stopped,rotatingR44.spinning,
+  "rotating the main and tail rotor must visibly change fallback images");
+ await desktop.locator("#cameraMode").selectOption("top");
+ assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"top");
+ const topFallback=await shot(desktop,"#outsideView");
+ await desktop.locator("#cameraMode").selectOption("side");
+ const sideFallback=await shot(desktop,"#outsideView");
+ assert.notEqual(topFallback,sideFallback,"2D overhead and side silhouettes are different");
  await desktop.locator("#cameraMode").selectOption("cockpit");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
  const forward=await shot(desktop,"#outsideView");

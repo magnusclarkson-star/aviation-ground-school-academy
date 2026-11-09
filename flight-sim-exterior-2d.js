@@ -1,78 +1,102 @@
-/* Canvas-2D aircraft follow camera using the SAME selected 3D mesh geometry.
- * This makes the outside-view selector work on phones without WebGL2, too.
- * Distinct outline is carried through to Cessna, R44 and all five jets.
+/* Lightweight outside camera built from the exact same mesh shapes as WebGL.
+ * Includes animated two-blade R44 main/tail rotors, trainer propeller and jet
+ * control surfaces so phones without WebGL never show a rotorless helicopter.
  */
 (function(root){"use strict";
  const RAD=Math.PI/180;
- const CACHE=new Map();
+ const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map();
  const rgb=(r,g,b)=>"rgb("+Math.round(r*255)+","+Math.round(g*255)+","+Math.round(b*255)+")";
+ const modelApi=()=>root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
+  require("./flight-sim-3d.js"):null);
+ const exterior=()=>root?.AGSAExteriorAirframes||(typeof module!=="undefined"&&module.exports?
+  require("./flight-sim-airframe-geometry.js"):null);
  function getMesh(id){
-  const engine=root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
-   require("./flight-sim-3d.js"):null);
-  const Exterior=root?.AGSAExteriorAirframes||(typeof module!=="undefined"&&module.exports?
-   require("./flight-sim-airframe-geometry.js"):null);
-  if(!engine||!Exterior)throw Error("Outside 2D view requires shared 3D airframe geometry");
-  const resolved=Exterior.normalize(id);
-  if(!CACHE.has(resolved))CACHE.set(resolved,engine.buildVehicle(resolved));
-  return CACHE.get(resolved);
+  const engine=modelApi(),A=exterior();
+  if(!engine||!A)throw Error("Outside 2D view requires shared 3D airframe geometry");
+  const resolved=A.normalize(id);
+  if(!MESH_CACHE.has(resolved))MESH_CACHE.set(resolved,engine.buildVehicle(resolved));
+  return MESH_CACHE.get(resolved);
  }
- function geometry(id){
-  const model=getMesh(id);
+ function trianglesOf(mesh){
   const triangles=[];
-  for(let i=0;i<model.vertices;i+=3){
+  for(let i=0;i<mesh.vertices;i+=3){
    const pts=[];
    for(let j=0;j<3;j++){
     const k=(i+j)*3;
-    pts.push([model.positions[k],model.positions[k+1],model.positions[k+2]]);
+    pts.push([mesh.positions[k],mesh.positions[k+1],mesh.positions[k+2]]);
    }
-   const color=[model.colors[i*3],model.colors[i*3+1],model.colors[i*3+2]];
-   const z=(pts[0][2]+pts[1][2]+pts[2][2])/3;
-   triangles.push({points:pts,color,depth:z});
+   const color=[mesh.colors[i*3],mesh.colors[i*3+1],mesh.colors[i*3+2]];
+   triangles.push({points:pts,color,depth:(pts[0][2]+pts[1][2]+pts[2][2])/3});
   }
-  // Near-to-far fuselage depth is based on +Z being the nose and the view
-  // looking forward from the tail, so far nose polygons draw first.
   triangles.sort((a,b)=>b.depth-a.depth);
   return triangles;
  }
- function paint(ctx,state,{id="c172",width=960,height=540}={}){
+ function geometry(id){
+  const resolved=exterior().normalize(id);
+  if(!TRI_CACHE.has(resolved))TRI_CACHE.set(resolved,trianglesOf(getMesh(resolved)));
+  return TRI_CACHE.get(resolved);
+ }
+ function movingParts(id){
+  const resolved=exterior().normalize(id);
+  if(!PART_CACHE.has(resolved)){
+   const parts=modelApi().buildMovingParts(resolved).map(p=>({
+    name:p.name,pivot:p.pivot,axis:p.axis,triangles:trianglesOf(p.mesh)
+   }));
+   PART_CACHE.set(resolved,parts);
+  }
+  return PART_CACHE.get(resolved);
+ }
+ // Exactly the same local axis definitions as the WebGL shader.
+ function rotate(point,pivot,axis,angle){
+  if(!angle)return point;
+  let [x,y,z]=point.map((v,i)=>v-pivot[i]);
+  const c=Math.cos(angle),s=Math.sin(angle);
+  if(axis===1)[y,z]=[y*c-z*s,y*s+z*c];
+  else if(axis===2)[x,z]=[x*c+z*s,-x*s+z*c];
+  else if(axis===3)[x,y]=[x*c-y*s,x*s+y*c];
+  return [x+pivot[0],y+pivot[1],z+pivot[2]];
+ }
+ function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={}}={}){
   if(!ctx||!state)return false;
-  const triangles=geometry(id);
+  const triangles=geometry(id),parts=movingParts(id);
   const scale=Math.max(2,Math.min(width/24,height/17));
   const roll=Number.isFinite(state.rollDeg)?state.rollDeg:0;
   const pitch=Number.isFinite(state.pitchDeg)?state.pitchDeg:0;
   ctx.save();
-  ctx.translate(width/2,height*.62);
-  ctx.rotate(-roll*RAD*.55);
-  // Reduced shadow communicates distance between airframe and runway.
+  ctx.translate(width/2,height*.60);
+  ctx.rotate(view==="top"?0:-roll*RAD*.55);
   const altitude=Math.max(0,Number(state.altitudeM)||0);
-  ctx.save();
-  ctx.translate(0,height*.24);
-  ctx.fillStyle="rgba(12,29,39,"+(Math.max(.03,.18-altitude/800)).toFixed(2)+")";
-  ctx.beginPath();
-  ctx.ellipse(0,0,scale*7.0,scale*1.4,0,0,Math.PI*2);
-  ctx.fill();
-  ctx.restore();
-  const project=([x,y,z])=>[
-   (x+z*.12)*scale,
-   (-y*.91-z*(.43+pitch/350))*scale
-  ];
-  for(const shape of triangles){
-   const pts=shape.points.map(project);
-   const [r,g,b]=shape.color;
+  if(view!=="top"){
+   ctx.save();
+   ctx.translate(0,height*.25);
+   ctx.fillStyle="rgba(12,29,39,"+(Math.max(.03,.18-altitude/800)).toFixed(2)+")";
    ctx.beginPath();
-   ctx.moveTo(...pts[0]);
-   ctx.lineTo(...pts[1]);
-   ctx.lineTo(...pts[2]);
-   ctx.closePath();
-   ctx.fillStyle=rgb(r,g,b);
+   ctx.ellipse(0,0,scale*7.0,scale*1.4,0,0,Math.PI*2);
    ctx.fill();
+   ctx.restore();
   }
-  // Heading and wings bank together; the ground and runway remain in the
-  // live scenery, generated by the existing flight-sim-scenery.js.
+  const project=([x,y,z])=>view==="top"?
+   [x*scale,-z*scale*.92]:
+   view==="side"?
+   [z*scale*.91,(-y*.95-x*.17)*scale]:
+   [(x+z*.12)*scale,(-y*.91-z*(.43+pitch/350))*scale];
+  const fill=(shape,transform)=> {
+   const pts=shape.points.map(p=>project(transform?transform(p):p));
+   const [r,g,b]=shape.color;
+   ctx.beginPath();ctx.moveTo(...pts[0]);ctx.lineTo(...pts[1]);
+   ctx.lineTo(...pts[2]);ctx.closePath();
+   ctx.fillStyle=rgb(r,g,b);ctx.fill();
+  };
+  for(const tri of triangles)fill(tri);
+  for(const part of parts){
+   const angle=Number.isFinite(animation?.[part.name])?animation[part.name]:0;
+   for(const tri of part.triangles)
+    fill(tri,p=>rotate(p,part.pivot,part.axis,angle));
+  }
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,paint});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotate,paint});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);

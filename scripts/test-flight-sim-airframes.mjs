@@ -33,7 +33,7 @@ for(const id of A.IDS){
   minZ=Math.min(minZ,coordinates[i+2]);maxZ=Math.max(maxZ,coordinates[i+2]);
  }
  const spanX=maxX-minX,length=maxZ-minZ;
- assert.ok(spanX>3&&spanX<35&&length>9&&length<28,id+" recognizable external size");
+ assert.ok(spanX>3&&spanX<35&&length>7.8&&length<28,id+" recognizable external size");
  metrics.push({id,spanX,length,height:maxY-minY,triangles:model.triangles});
  signature.push(crypto.createHash("sha256").update(Buffer.from(model.positions.buffer)).digest("hex"));
  const local=C.getMesh(id);
@@ -43,6 +43,15 @@ for(const id of A.IDS){
  assert.ok(tris.every(t=>t.points.length===3));
 }
 assert.equal(new Set(signature).size,7,"ALL seven aircraft exterior meshes are different, not colour variants of one mock-up");
+const expected={
+ c172:[10.97,8.29],fa18:[13.71,18.37],f22:[13.60,18.91],
+ f35:[10.70,15.70],typhoon:[10.95,15.97],su37:[14.71,22.18]
+};
+for(const [id,[span,length]] of Object.entries(expected)){
+ const actual=metrics.find(m=>m.id===id);
+ assert.ok(Math.abs(actual.spanX-span)<.22,id+" corrected relative wingspan: "+actual.spanX);
+ assert.ok(Math.abs(actual.length-length)<.28,id+" corrected relative length: "+actual.length);
+}
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,
  "trainer has a broader high wing compared with the fighter model");
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
@@ -56,6 +65,23 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
 }
 assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),["mainRotor","tailRotor"]);
+const [mainRotor,tailRotor]=T.buildMovingParts("r44");
+const extent=(m,axis)=>{
+ const v=m.positions;
+ let lo=Infinity,hi=-Infinity;
+ for(let i=axis;i<v.length;i+=3){lo=Math.min(lo,v[i]);hi=Math.max(hi,v[i]);}
+ return hi-lo;
+};
+assert.ok(Math.abs(extent(mainRotor.mesh,0)-10.06)<.10,
+ "R44 must have a recognisable TWO-blade 10.06 m main rotor span");
+assert.ok(extent(mainRotor.mesh,2)<1.2,
+ "R44 main rotor has two blades on a single axis, not the old four-blade cross");
+assert.ok(Math.abs(extent(tailRotor.mesh,1)-1.47)<.1,
+ "R44 2-blade tail rotor diameter is approximately 1.47 m");
+assert.ok(C.movingParts("r44").some(p=>p.name==="mainRotor"&&p.triangles.length>5),
+ "lightweight 2D chase includes actual main rotor triangles");
+assert.notDeepEqual(C.rotate([1,3.16,-.4],[0,3.16,-.4],2,1.2),[1,3.16,-.4],
+ "main rotor blade vertices rotate around the hub");
 assert.deepEqual(T.buildMovingParts("c172").map(p=>p.name),[
  "propeller","leftAileron","rightAileron","leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"]);
 const fake={count:0,save(){},restore(){},translate(){},rotate(){},beginPath(){},ellipse(){},fill(){this.count++},

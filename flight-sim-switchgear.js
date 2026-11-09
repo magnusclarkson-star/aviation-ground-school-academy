@@ -2,8 +2,8 @@
  * selectors, not a second model of the flight. Nothing touches steering input. */
 (function(root){"use strict";
 const SWITCHES=Object.freeze([
- Object.freeze({id:"view",target:"cameraMode",label:"VIEW",choices:Object.freeze(["cockpit","chase"]),
-  displays:Object.freeze({cockpit:"PILOT",chase:"CHASE"})}),
+ Object.freeze({id:"view",target:"cameraMode",label:"VIEW",choices:Object.freeze(["cockpit","chase","side","top"]),
+  displays:Object.freeze({cockpit:"PILOT",chase:"CHASE",side:"SIDE",top:"TOP"})}),
  Object.freeze({id:"graphics",target:"visualMode",label:"SCENE",choices:Object.freeze(["3d","2d"]),
   displays:Object.freeze({"3d":"3D","2d":"2D"})}),
  Object.freeze({id:"light",target:"lightingMode",label:"LIGHT",choices:Object.freeze(["day","golden","dusk"]),
