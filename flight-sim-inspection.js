@@ -132,7 +132,14 @@
    updateHeading();
   });
   trigger.addEventListener("click",open);
-  $("aircraftInspectClose").addEventListener("click",close);
+  const closeButton=$("aircraftInspectClose");
+  closeButton.addEventListener("click",close);
+  // A browser may suppress the synthetic click immediately after a pinch.
+  // Close directly on a released touch as well, without affecting keyboard
+  // or mouse clicks (close() is already safe to call more than once).
+  closeButton.addEventListener("pointerup",event=>{
+   if(event.pointerType==="touch")close();
+  });
   $("aircraftInspectReset").addEventListener("click",reset);
   $("aircraftInspectZoomIn").addEventListener("click",()=>{orbit=zoomStep(orbit,.81);updateHeading()});
   $("aircraftInspectZoomOut").addEventListener("click",()=>{orbit=zoomStep(orbit,1.22);updateHeading()});
