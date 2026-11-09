@@ -179,6 +179,44 @@ simulate(attitudeHeli,attitudeInput,.1);
 assert.ok(attitudeHeli.forwardMs>0&&attitudeHeli.forwardMs<movingBefore,
  "neutral cyclic gradually damps the helicopter's translational momentum");
 
+// Precision hover exercise uses measured position, altitude, drift and yaw.
+const precisionHeli=M.makeState("helicopter");
+const precisionInput=M.makeInput("helicopter");precisionInput.collective=.8;
+simulate(precisionHeli,precisionInput,2.5);
+assert.ok(precisionHeli.altitudeM>2&&precisionHeli.altitudeM<9);
+precisionInput.collective=.495;
+const precisionEvents=[];
+simulate(precisionHeli,precisionInput,17,precisionEvents);
+assert.equal(precisionHeli.hoverAchieved,true,"steady centre-pad hover must complete");
+assert.equal(precisionHeli.hoverBestSec,8);
+assert.ok(precisionEvents.includes("hoverHeld"),"target fires an observable completion event");
+assert.equal(precisionEvents.filter(x=>x==="hoverHeld").length,1,"hover completion fires once");
+assert.equal(M.rotorHoverCue(precisionHeli),"HOVER HELD 8 S");
+const heldState=M.makeState("helicopter");
+Object.assign(heldState,{onGround:false,phase:"hover",altitudeM:4,verticalMs:0});
+const heldInput=M.makeInput("helicopter");heldInput.collective=.495;
+simulate(heldState,heldInput,4);
+assert.ok(heldState.hoverHoldSec>3&&heldState.hoverHoldSec<5);
+heldInput.bank=.7;simulate(heldState,heldInput,1.5);
+assert.equal(heldState.hoverHoldSec,0,"cyclic drift resets continuous hover timer");
+assert.ok(heldState.hoverBestSec>3,"best completed hover duration is preserved");
+heldInput.bank=0;
+precisionInput.collective=.35;
+const precisionLandingEvents=[];
+simulate(precisionHeli,precisionInput,15,precisionLandingEvents);
+assert.equal(precisionHeli.phase,"landed","controlled precision return remains landable");
+assert.equal(precisionHeli.landingGrade,"precision","centre-pad landing after hover receives precision result");
+assert.equal(M.rotorHoverCue(precisionHeli),"PRECISION LANDING");
+assert.equal(precisionHeli.hoverHoldSec,0,"landing ends active hover timer");
+assert.ok(precisionLandingEvents.includes("touchdown"));
+const ordinaryHeli=M.makeState("helicopter"),ordinaryInput=M.makeInput("helicopter");
+ordinaryInput.collective=.8;simulate(ordinaryHeli,ordinaryInput,3);
+ordinaryInput.collective=.34;simulate(ordinaryHeli,ordinaryInput,10);
+assert.equal(ordinaryHeli.phase,"landed");
+assert.equal(ordinaryHeli.landingGrade,"standard",
+ "gentle pad landing without completing the hover drill remains a normal landing");
+assert.equal(M.rotorHoverCue(ordinaryHeli),"LANDED");
+
 const heli=M.makeState("helicopter");
 const collective=M.makeInput("helicopter");collective.collective=.82;
 const liftEvents=[];
