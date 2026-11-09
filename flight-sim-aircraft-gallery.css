@@ -1,0 +1,112 @@
+/* Compact aircraft-picture selector. The portraits are local WebP assets,
+   displayed only in the optional gallery so the instrument panel stays clear. */
+#cockpitStation .aircraft-photo-button{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ min-height:44px;max-width:190px;min-width:124px;padding:3px 9px 3px 3px;
+ border:1px solid #7da6bb;border-radius:7px;
+ background:linear-gradient(140deg,#294758,#101f2b);
+ color:#f0f6f6;box-shadow:0 2px 7px #0008;
+ cursor:pointer;touch-action:manipulation;flex:0 0 auto
+}
+#cockpitStation .aircraft-photo-preview{
+ display:block;width:64px;height:44px;object-fit:cover;border-radius:4px;
+ border:1px solid #8dbbc5;flex:0 0 auto
+}
+#cockpitStation .aircraft-photo-label{
+ font:800 10px/1.15 system-ui,sans-serif;letter-spacing:.045em;
+ white-space:normal;text-align:left;max-width:76px
+}
+#cockpitStation .aircraft-photo-button:focus-visible{
+ outline:3px solid #ffe3a6;outline-offset:3px
+}
+#cockpitStation .aircraft-photo-button:active{transform:translateY(1px)}
+.aircraft-gallery-overlay[hidden]{display:none!important}
+.aircraft-gallery-overlay{
+ position:fixed;inset:0;z-index:3200;display:grid;place-items:center;
+ padding:clamp(8px,2vw,20px);
+ background:#030c17df;backdrop-filter:blur(5px);
+ overscroll-behavior:contain
+}
+.aircraft-gallery-card{
+ display:flex;flex-direction:column;gap:9px;width:min(970px,100%);
+ max-height:calc(100dvh - 20px);min-height:0;overflow:hidden;
+ border:2px solid #7c9bae;border-radius:14px;
+ background:linear-gradient(150deg,#233745,#111d29);
+ box-shadow:0 20px 65px #02060ced;padding:10px
+}
+.aircraft-gallery-header{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ min-height:42px;padding:1px 4px;color:#eff7f3
+}
+.aircraft-gallery-heading{display:flex;flex-direction:column;gap:2px;min-width:0}
+.aircraft-gallery-heading span{font:700 9px/1.15 system-ui,sans-serif;
+ letter-spacing:.18em;color:#9bb8c1}
+.aircraft-gallery-heading strong{font:800 clamp(15px,2vw,23px)/1.1 system-ui,sans-serif}
+.aircraft-gallery-close{
+ min-height:40px;min-width:94px;padding:8px 12px;border-radius:7px;
+ color:#f7eee1;background:#4d5863;border:1px solid #a2bac1;
+ font:800 13px/1.1 system-ui,sans-serif;cursor:pointer
+}
+.aircraft-gallery-card .aircraft-gallery-image{
+ display:block;width:100%;min-width:0;min-height:0;max-height:58dvh;
+ aspect-ratio:4/3;object-fit:contain;flex:1 1 auto;
+ background:linear-gradient(160deg,#23455e,#0a1a29);
+ border:1px solid #637e8a;border-radius:9px
+}
+.aircraft-gallery-choices{
+ display:flex;gap:8px;overflow-x:auto;min-height:0;
+ padding:3px 3px 9px;scrollbar-width:thin;
+ overscroll-behavior-x:contain;scroll-snap-type:x proximity
+}
+.aircraft-gallery-choice{
+ display:flex;flex-direction:column;align-items:center;gap:5px;
+ flex:0 0 120px;min-width:0;padding:5px 5px 7px;
+ background:#182632;border:2px solid #597381;border-radius:7px;
+ color:#d1e0e4;cursor:pointer;scroll-snap-align:start
+}
+.aircraft-gallery-choice img{
+ display:block;width:100%;height:72px;object-fit:cover;
+ border-radius:4px;background:#253a4a
+}
+.aircraft-gallery-choice span{
+ font:750 10px/1.2 system-ui,sans-serif;text-align:center
+}
+.aircraft-gallery-choice[aria-pressed="true"]{
+ background:#344c5b;border-color:#ffda8c;color:#ffecbe;
+ box-shadow:inset 0 0 0 1px #ebc980
+}
+.aircraft-gallery-choice:focus-visible,.aircraft-gallery-close:focus-visible{
+ outline:3px solid #f7d38d;outline-offset:2px
+}
+@media(max-width:740px){
+ #cockpitStation .aircraft-photo-button{min-width:110px;min-height:40px;
+  max-width:135px;gap:4px;padding:2px 5px 2px 2px}
+ #cockpitStation .aircraft-photo-preview{width:52px;height:36px}
+ #cockpitStation .aircraft-photo-label{font-size:8px;max-width:65px}
+ .aircraft-gallery-card{gap:6px;padding:7px;border-radius:10px;
+  max-height:calc(100dvh - 12px)}
+ .aircraft-gallery-card .aircraft-gallery-image{max-height:55dvh}
+ .aircraft-gallery-header{min-height:36px}
+ .aircraft-gallery-close{min-height:37px;min-width:77px;font-size:12px}
+ .aircraft-gallery-choices{gap:6px;padding:1px 1px 6px}
+ .aircraft-gallery-choice{flex-basis:88px;padding:3px 3px 5px}
+ .aircraft-gallery-choice img{height:55px}
+ .aircraft-gallery-choice span{font-size:9px}
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .aircraft-photo-button{min-width:89px;min-height:27px;
+  height:28px;max-width:110px;padding:1px 4px;gap:4px}
+ #cockpitStation .aircraft-photo-preview{height:24px;width:33px}
+ #cockpitStation .aircraft-photo-label{font-size:8px}
+ .aircraft-gallery-overlay{padding:5px}
+ .aircraft-gallery-card{gap:5px;padding:5px;max-height:calc(100dvh - 10px)}
+ .aircraft-gallery-header{min-height:27px}
+ .aircraft-gallery-heading strong{font-size:14px}
+ .aircraft-gallery-heading span{font-size:8px}
+ .aircraft-gallery-close{min-height:28px;min-width:70px;padding:4px 7px;font-size:10px}
+ .aircraft-gallery-card .aircraft-gallery-image{max-height:50dvh;aspect-ratio:auto}
+ .aircraft-gallery-choices{padding-bottom:3px}
+ .aircraft-gallery-choice{flex-basis:82px;padding:2px;gap:2px}
+ .aircraft-gallery-choice img{height:43px}
+ .aircraft-gallery-choice span{font-size:8px}
+}
