@@ -226,14 +226,39 @@ function buildMovingParts(mode="airplane"){
    m.box(-.12,1.2,-6.12,.24,1.65,.55,yellow);
   });
  }else{
-  add("mainRotor",[0,2.96,-.4],2,m=>{
-   m.box(-8.9,2.93,-.79,17.8,.11,.77,metal);
-   m.box(-.38,2.93,-8.7,.77,.11,16.6,tint(metal,.88));
-   m.box(-.58,2.95,-.98,1.16,.18,1.16,yellow);
+  // R44 rotor arrangement: one teetering TWO-blade main rotor, 10.06 m
+  // diameter; one TWO-blade tail rotor, 1.47 m diameter. Blade sections
+  // have slight coning, tapered tips and contrasting edges for legibility.
+  // Both rotate around their real geometric hubs (Y and X respectively).
+  add("mainRotor",[0,3.16,-.4],2,m=>{
+   const y=3.16,hubZ=-.40;
+   const tip=5.03;
+   for(const side of [-1,1]){
+    const A=[side*.32,y,hubZ-.24],B=[side*4.65,y+.15,hubZ-.26];
+    const C=[side*tip,y+.18,hubZ-.14],D=[side*tip,y+.18,hubZ+.08];
+    const E=[side*4.65,y+.15,hubZ+.12],F=[side*.32,y,hubZ+.24];
+    m.quad(A,B,E,F,metal);
+    m.tri(B,C,D,tint(metal,1.16));m.tri(B,D,E,tint(metal,1.05));
+    // Flat underside keeps rotor visible from a camera below the disc.
+    const under=v=>[v[0],v[1]-.042,v[2]];
+    m.quad(under(F),under(E),under(B),under(A),tint(metal,.72));
+    m.tri(under(E),under(D),under(B),tint(metal,.76));
+    m.box(side>0?4.57:-4.85,y+.13,hubZ-.30,.28,.07,.48,yellow);
+    m.box(side>0?.36:-.70,y-.045,hubZ-.22,.34,.08,.44,blue);
+   }
+   m.box(-.37,y-.08,hubZ-.31,.74,.18,.62,yellow);
+   m.box(-.22,y+.10,hubZ-.18,.44,.15,.36,tint(metal,.82));
   });
-  add("tailRotor",[-.29,1.22,-8.4],1,m=>{
-   m.box(-.37,.08,-8.57,.17,2.35,.3,metal);
-   m.box(-.37,1.12,-9.55,.17,.3,2.32,yellow);
+  add("tailRotor",[-.77,1.19,-8.18],1,m=>{
+   const x=-.77,z=-8.18,y=1.19,r=.735;
+   // Rotor turns in the YZ plane, mounted on the LEFT of the tail fin.
+   for(const sign of [-1,1]){
+    const tip=sign*r;
+    m.quad([x,y+sign*.10,z-.10],[x,y+tip,z-.10],
+     [x,y+tip,z+.10],[x,y+sign*.10,z+.15],metal);
+    m.box(x-.04,y+Math.min(sign*.50,sign*.65),z-.115,.11,.16,.25,yellow);
+   }
+   m.box(x-.12,y-.13,z-.15,.24,.26,.30,blue);
   });
  }
  return result;
