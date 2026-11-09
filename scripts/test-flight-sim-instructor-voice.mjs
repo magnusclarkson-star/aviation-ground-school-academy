@@ -3,6 +3,7 @@ import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const X=require("../flight-sim-exercises.js");
 const V=require("../flight-sim-instructor-voice.js");
+const RV=require("../flight-sim-r44-voice.js");
 
 const session=X.begin("cgTransfer","trainer");
 const beginText=V.script(X,session,"lesson","scouts");
@@ -52,5 +53,65 @@ for(const id of Object.keys(X.DEFINITIONS)){
   assert.match(text,/awaiting subject-matter-expert review/);
   assert.match(text,/not an assessed pilot lesson/);
  }
+}
+// The stage speaker uses the same browser voice locally, but only after a
+// real learner action arms it. A busy ATC or exercise narrator always wins.
+let lesson={stage:"takeoff",status:"active"},busy=false,canceled=0;
+const utterances=[],listeners={};
+const fakeDoc={hidden:false,getElementById:()=>null,
+ addEventListener:(name,callback)=>{listeners[name]=callback}};
+class Utterance{constructor(text){this.text=text}}
+const voice=RV.create({documentLike:fakeDoc,
+ windowLike:{speechSynthesis:{speak:u=>utterances.push(u),cancel:()=>{canceled++}},
+  SpeechSynthesisUtterance:Utterance,addEventListener:()=>{}},
+ getLesson:()=>lesson,isBusy:()=>busy});
+assert.equal(voice.supported,true);
+assert.equal(voice.status().enabled,true);
+assert.equal(voice.update(),false,"page load must not speak without learner gesture");
+assert.equal(utterances.length,0);
+assert.equal(voice.arm(),true);
+assert.equal(utterances.length,1);
+assert.match(utterances[0].text,/Lift into a steady hover/);
+assert.equal(utterances[0].lang,"en-GB");
+assert.equal(utterances[0].rate,.9);
+assert.equal(voice.update(),false,"frame repaint must never repeat speech");
+lesson={stage:"hover",status:"active"};
+assert.equal(voice.update(),true);
+assert.match(utterances.at(-1).text,/eight seconds/);
+assert.ok(canceled>=1,"new instruction may replace the prior coach utterance");
+busy=true;lesson={stage:"turn",status:"active"};
+const beforeBusy=utterances.length;
+assert.equal(voice.update(),false);
+assert.equal(utterances.length,beforeBusy,"ATC blocks the guided voice");
+voice.interrupt();
+busy=false;
+assert.equal(voice.update(),true);
+assert.match(utterances.at(-1).text,/ninety degree turn/);
+lesson={stage:"return",status:"active"};
+assert.equal(voice.update(),true);
+assert.match(utterances.at(-1).text,/helipad/);
+lesson={stage:"return",status:"completed"};
+assert.equal(voice.update(),true);
+assert.match(utterances.at(-1).text,/completed the guided/);
+assert.equal(voice.update(),false);
+assert.equal(voice.toggle(),false);
+lesson={stage:"takeoff",status:"active"};
+assert.equal(voice.update(),false,"muted lesson must remain silent");
+assert.equal(voice.toggle(),true);
+assert.match(utterances.at(-1).text,/Robinson helicopter lesson/);
+voice.disarm();
+assert.equal(voice.update(),false,"paused or different aircraft mode must disarm speech");
+voice.arm();
+fakeDoc.hidden=true;listeners.visibilitychange();
+assert.equal(voice.status().armed,false,"background page disarms voice");
+assert.equal(voice.update(),false);
+const silent=RV.create({documentLike:fakeDoc,windowLike:{},
+ getLesson:()=>lesson});
+assert.equal(silent.supported,false);
+assert.equal(silent.arm(),false);
+assert.equal(silent.update(),false);
+for(const [stage,text] of Object.entries(RV.MESSAGES)){
+ assert.ok(["takeoff","hover","turn","return","completed","incomplete","stopped"].includes(stage));
+ assert.ok(text.length>25&&text.length<170,"stage speech is brief");
 }
 console.log("Instructor voice scripts passed: four existing lessons, Scout/pilot phrasing, comparison evidence, feedback, strict length and mandatory unapproved-use notice.");
