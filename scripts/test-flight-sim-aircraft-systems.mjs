@@ -79,6 +79,10 @@ const rotorParts=T.buildMovingParts("helicopter");
 assert.deepEqual(planeParts.map(p=>p.name),[
  "propeller","leftAileron","rightAileron","leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"
 ]);
+assert.ok(planeParts.find(p=>p.name==="propeller").mesh.vertices>=24,
+ "The rotating two-blade propeller must contain tapered 3D blade faces");
+assert.ok(planeParts.filter(p=>p.name.includes("Aileron")||p.name.includes("Flap"))
+ .every(p=>p.pivot[1]>.85),"All wing controls pivot at high-wing height");
 assert.deepEqual(rotorParts.map(p=>p.name),["mainRotor","tailRotor"]);
 for(const part of [...planeParts,...rotorParts]){
  assert.ok([1,2,3].includes(part.axis));
