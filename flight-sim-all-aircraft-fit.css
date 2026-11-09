@@ -55,6 +55,26 @@
  #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-scene svg{
   height:clamp(57px,16vw,76px)!important;
   min-height:0!important;
+  max-height:76px!important;
+  flex:0 0 clamp(57px,16vw,76px)!important;
+  aspect-ratio:auto!important;
+ }
+ /* SVG min-content sizing previously let NAV balloon to the aspect-ratio
+    height of its column, displacing pedals despite compact MFD borders. */
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body{
+  box-sizing:border-box!important;
+  height:clamp(90px,24vw,105px)!important;
+  min-height:0!important;
+  max-height:105px!important;
+  overflow:hidden!important;
+ }
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-scene{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:hidden!important;
+ }
+ #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-map-body .cockpit-nav-readouts{
+  flex:0 0 auto!important;
  }
  #cockpitStation[data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-nav-readouts{
   min-height:16px!important;
