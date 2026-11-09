@@ -75,6 +75,34 @@ try{
    rudder:system.parts.rudder,flaps:system.parts.leftFlap
   };
  });
+ const exteriorMotion=await page.evaluate(()=>{
+  const T=window.AGSAFlight3D,A=window.AGSAFlightSystems;
+  const base={mode:"airplane",airframeId:"c172",xM:0,zM:0,headingDeg:0,
+   rollDeg:0,pitchDeg:0,altitudeM:0,groundSpeedKt:0,onGround:true,verticalMs:0};
+  const near=T.cameraPose(base,"chase"),far=T.cameraPose({...base,groundSpeedKt:210},"chase");
+  const system=A.create("airplane");
+  const landing={...base,altitudeM:5,onGround:false,verticalMs:-6};
+  A.step(system,landing,{},.05);
+  A.step(system,{...landing,altitudeM:0,onGround:true,verticalMs:0},{},.05);
+  const bounce=system.parts.touchdownBounce;
+  const ctx=document.createElement("canvas").getContext("2d");
+  const scenery=window.AGSAExteriorChase2D;
+  const sampled=()=>{const data=ctx.getImageData(0,0,320,180).data;let sum=0;
+   for(let i=0;i<data.length;i+=67)sum=(Math.imul(sum^data[i],16777619))>>>0;
+   return sum;};
+  ctx.canvas.width=320;ctx.canvas.height=180;
+  scenery.paint(ctx,base,{id:"c172",width:320,height:180,view:"side",animation:{touchdownBounce:0}});
+  const before=sampled();ctx.clearRect(0,0,320,180);
+  scenery.paint(ctx,base,{id:"c172",width:320,height:180,view:"side",animation:{touchdownBounce:bounce}});
+  const after=sampled();
+  return {chaseDifference:far.eye[2]-near.eye[2],bounce,before,after};
+ });
+ assert.ok(exteriorMotion.chaseDifference< -5,
+  "WebGL chase camera expands framing at higher speed");
+ assert.ok(exteriorMotion.bounce>.02&&exteriorMotion.bounce<.23,
+  "touchdown triggers a brief visual suspension bounce");
+ assert.notEqual(exteriorMotion.before,exteriorMotion.after,
+  "fallback 2D exterior visibly raises the airframe on touchdown");
  assert.equal(moving.names.length,8);
  assert.ok(moving.port<0&&moving.starboard>0);
  assert.ok(moving.rudder>0&&moving.flaps<0);
