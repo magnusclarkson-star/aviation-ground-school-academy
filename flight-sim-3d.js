@@ -515,7 +515,8 @@ function cameraPose(state,view="cockpit",orbit={}){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
  if(!["cockpit","chase","side","top","inspect"].includes(view))throw Error("Unknown 3D camera mode");
  const yaw=(state.headingDeg||0)*RAD;
- const craft=[state.xM,state.altitudeM+(state.mode==="airplane"?1.5:2),state.zM];
+ const altitude=Number.isFinite(state.altitudeM)?Math.max(0,state.altitudeM):0;
+ const craft=[state.xM,altitude+(state.mode==="airplane"?1.5:2),state.zM];
  if(view==="inspect"){
   const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
   const elevation=limit(orbit.elevation??28,-70,78)*RAD;
@@ -527,18 +528,33 @@ function cameraPose(state,view="cockpit",orbit={}){
    craft[2]+Math.cos(direction)*horizontal],
    yaw:direction+Math.PI,pitch:-elevation,roll:0,craft};
  }
- if(view==="cockpit")return {view,eye:[state.xM,state.altitudeM+2.2,state.zM],
+ if(view==="cockpit")return {view,eye:[state.xM,altitude+2.2,state.zM],
   yaw,pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft};
- if(view==="side")return {view,
-  eye:[state.xM-27*Math.cos(yaw),state.altitudeM+10,
-    state.zM+27*Math.sin(yaw)],
-  yaw:yaw+Math.PI/2,pitch:-.28,roll:0,craft};
- if(view==="top")return {view,
-  eye:[state.xM,state.altitudeM+40,state.zM-4],
-  yaw,pitch:-1.46,roll:0,craft};
- return {view,eye:[state.xM-30*Math.sin(yaw),state.altitudeM+13,
-    state.zM-30*Math.cos(yaw)],yaw,pitch:-.31,
-    roll:(state.rollDeg||0)*RAD*.13,craft};
+ // A little more air around fast-moving aircraft makes turns, the runway
+ // and landing gear visible. Rotorcraft are framed closer for pad work.
+ // The existing camera rig then smooths these targets across frames.
+ const helicopter=state.mode==="helicopter";
+ const groundSpeed=limit(state.groundSpeedKt,0,500);
+ const movement=limit(groundSpeed/(helicopter?100:210),0,1);
+ if(view==="side"){
+  const distance=(helicopter?26:28)+movement*(helicopter?4:6);
+  const rise=(helicopter?9:10)+movement*3;
+  return {view,
+   eye:[state.xM-distance*Math.cos(yaw),Math.max(4,craft[1]+rise),
+    state.zM+distance*Math.sin(yaw)],
+   yaw:yaw+Math.PI/2,pitch:-Math.atan2(rise,distance),roll:0,craft};
+ }
+ if(view==="top"){
+  const rise=(helicopter?39:43)+movement*(helicopter?6:9);
+  return {view,eye:[state.xM,Math.max(7,craft[1]+rise),state.zM-4],
+   yaw,pitch:-1.46,roll:0,craft};
+ }
+ const distance=(helicopter?26:30)+movement*(helicopter?4:8);
+ const rise=(helicopter?10:12)+movement*(helicopter?2:4);
+ return {view,eye:[state.xM-distance*Math.sin(yaw),
+    Math.max(4,craft[1]+rise),state.zM-distance*Math.cos(yaw)],
+  yaw,pitch:-Math.atan2(rise,distance),
+  roll:(state.rollDeg||0)*RAD*.13,craft};
 }
 const VERTEX=`#version 300 es
 precision highp float;
@@ -726,7 +742,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
    const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera);
    gl.uniform3fv(uni.uEye,camera.eye);
-   gl.uniform3fv(uni.uCraft,camera.craft);
+   // Visual touchdown suspension offsets only the rendered aircraft, not
+   // the true camera target, simulated height or ground-shadow footprint.
+   const touchdownBounce=view==="inspect"?0:limit(animation?.touchdownBounce,0,.24);
+   gl.uniform3fv(uni.uCraft,[camera.craft[0],
+    camera.craft[1]+touchdownBounce,camera.craft[2]]);
    gl.uniform1f(uni.uYaw,camera.yaw);
    gl.uniform1f(uni.uPitch,camera.pitch);
    gl.uniform1f(uni.uRoll,camera.roll);
