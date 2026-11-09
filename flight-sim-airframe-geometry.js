@@ -98,7 +98,11 @@ function addC172(m){
  mirrored(m,[[.72,.95,1.25],[7.4,.99,.7],[7.4,.99,-1.75],
   [.72,.95,-1.40]],c,.2);
  mirrored(m,[[.4,.9,-4.75],[2.9,.9,-5.10],[2.9,.9,-6.0],[.36,.9,-5.78]],c,.16);
- m.box(-.11,.55,-6.07,.22,2.05,1.42,strip);
+ // Swept vertical tail and rudder outline (not the previous rectangular block).
+ sheet(m,[[0,.52,-4.63],[0,2.26,-5.71],[0,2.49,-6.35],
+  [0,.52,-6.40]],c,.16);
+ sheet(m,[[0,.69,-6.08],[0,2.08,-6.08],[0,2.40,-6.38],
+  [0,.70,-6.43]],strip,.08);
  m.box(-.70,.62,.4,1.4,.34,2.0,palette.window);
  m.box(-.75,.53,2.2,1.5,.24,.8,palette.window);
  // Wing struts and undercarriage help distinguish trainer from fighters.
@@ -109,8 +113,29 @@ function addC172(m){
   gear(m,s*2.10,-.8,.35);
  }
  gear(m,0,4.45,.26);
- m.box(-7.35,.99,-1.2,14.7,.13,.22,strip);
- m.box(-.21,-.15,6.13,.42,.37,.25,palette.dark);
+ // Trim along each wing rather than a square bar spanning the aircraft.
+ mirrored(m,[[.83,1.04,-1.41],[7.25,1.04,-1.77],
+  [7.24,1.04,-1.52],[.84,1.04,-1.20]],strip,.035);
+ // Separate cabin windows and doors with realistic wing root spacing.
+ for(const side of [-1,1]){
+  const x=side*.90;
+  sheet(m,[[x,.29,.08],[x,.72,.09],[x,.68,1.16],
+   [x,.28,1.18]],palette.window,.04);
+  sheet(m,[[x,.32,-1.04],[x,.74,-1.01],[x,.74,-.03],
+   [x,.32,-.01]],palette.window,.04);
+  m.box(x-.048,.23,.06,.096,.11,.18,palette.metal);
+  m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,side>0?palette.red:palette.blue);
+  sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
+   [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
+ }
+ m.box(-.42,-.45,5.05,.84,.14,.48,palette.dark);
+ m.box(-.38,-.24,5.56,.76,.12,.21,palette.metal);
+ const spinner=[0,-.04,6.50],spinnerZ=6.14;
+ for(let j=0;j<10;j++){
+  const a=j*Math.PI/5,b=(j+1)*Math.PI/5;
+  m.tri([.24*Math.cos(a),-.04+.24*Math.sin(a),spinnerZ],
+   [.24*Math.cos(b),-.04+.24*Math.sin(b),spinnerZ],spinner,palette.metal);
+ }
 }
 function addR44(m){
  const ivory=palette.ivory,trim=palette.navy,glass=palette.window;
