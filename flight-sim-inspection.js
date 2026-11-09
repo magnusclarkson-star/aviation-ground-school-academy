@@ -24,7 +24,7 @@
  // Double-tap toggles a useful close view while preserving the exact
  // aircraft bearing and elevation. Fitted size returns to 100% on second use.
  function doubleTapZoom(orbit){
-  const far=30,close=far*.72;
+  const far=30,close=21.6;
   return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
  }
  function separation(points){
