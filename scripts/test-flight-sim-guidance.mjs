@@ -59,6 +59,57 @@ for(const phase of ["lift","hover","flight"]){
  assert.match(cue.tag,/ROTORCRAFT/);
 }
 assert.equal(G.guidance({...heli,phase:"landed"},cyclic).complete,true);
+
+assert.equal(session.r44Lesson,null,"airplane practice retains no rotorcraft lesson");
+const mission=G.start(heli);
+assert.equal(mission.r44Lesson.stage,"takeoff");
+assert.equal(G.r44LessonStatus(mission,heli).short,"1/4 · TAKEOFF");
+assert.match(G.guidance(heli,cyclic,mission).text,/hover/i);
+assert.equal(G.guidance(heli,cyclic,mission).complete,false);
+const inHover={...heli,onGround:false,phase:"hover",altitudeM:4,
+ groundSpeedKt:.4,verticalMs:0,yawRateDegS:0,time:3,
+ headingDeg:355,xM:0,zM:0};
+G.observe(mission,inHover,["liftoff"]);
+assert.equal(mission.r44Lesson.stage,"hover","stage 2 requires the helicopter to lift");
+assert.equal(G.r44LessonStatus(mission,inHover).short,"2/4 · HOVER");
+const held={...inHover,time:12,hoverAchieved:true,hoverHoldSec:8};
+G.observe(mission,held,["hoverHeld"]);
+assert.equal(mission.r44Lesson.stage,"turn");
+assert.equal(mission.r44Lesson.turnStartHeading,355);
+assert.equal(G.r44LessonStatus(mission,held).short,"3/4 · 90° TURN");
+const excessive={...held,time:14,headingDeg:85,yawRateDegS:15};
+G.observe(mission,excessive,[]);
+assert.equal(mission.r44Lesson.stage,"turn","spinning fast is not a controlled turn");
+const overshot={...held,time:17,headingDeg:120,yawRateDegS:0};
+G.observe(mission,overshot,[]);
+assert.equal(mission.r44Lesson.stage,"turn","overshooting the target is not completion");
+const turned={...held,time:18,headingDeg:85,yawRateDegS:1,
+ groundSpeedKt:1.2,verticalMs:.1,xM:3,zM:4};
+G.observe(mission,turned,[]);
+assert.equal(mission.r44Lesson.stage,"return",
+ "wrapped 355° to 085° heading counts as exactly 90 degrees");
+assert.equal(mission.r44Lesson.turnsCompleted,1);
+assert.equal(G.r44LessonStatus(mission,turned).short,"4/4 · RETURN & LAND");
+assert.match(G.guidance(turned,cyclic,mission).text,/helipad centre/i);
+G.observe(mission,{...turned,onGround:true,phase:"landed",
+ altitudeM:0,landingGrade:"precision",time:26},["touchdown"]);
+assert.equal(mission.r44Lesson.status,"completed");
+assert.equal(G.r44LessonStatus(mission,turned).short,"LESSON COMPLETE");
+assert.equal(G.guidance({...turned,phase:"landed"},cyclic,mission).complete,true);
+G.observe(mission,{...turned,time:27},[]);
+assert.equal(mission.r44Lesson.turnsCompleted,1,"terminal mission does not repeat transitions");
+const premature=G.start(heli);
+G.observe(premature,{...heli,onGround:true,phase:"landed",landingGrade:"precision",time:6},["touchdown"]);
+assert.equal(premature.r44Lesson.status,"incomplete",
+ "a precision touchdown without guided hover and turn cannot complete the mission");
+const failedMission=G.start(heli);
+G.observe(failedMission,{...heli,onGround:true,phase:"halted",time:8},["hardLanding"]);
+assert.equal(failedMission.r44Lesson.status,"stopped");
+assert.equal(G.r44LessonStatus(failedMission,heli).short,"RESTART AFTER CONTACT");
+const newMission=G.start(heli);
+assert.equal(newMission.r44Lesson.stage,"takeoff","restart creates a fresh guided lesson");
+assert.equal(G.r44LessonStatus(session,runway),null);
+
 assert.throws(()=>G.start({phase:"unknown"}),/state required/);
 assert.throws(()=>G.observe(session,heli,[]),/Start a new practice session/);
 assert.throws(()=>G.guidance(null,controls),/required/);

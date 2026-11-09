@@ -9,6 +9,10 @@ const NAV=root?.AGSAFlightNavigation||(typeof module!=="undefined"?require("./fl
 if(!NAV)throw Error("Cockpit navigation module missing");
 const FLIGHT=root?.AGSAImmersiveFlight||
  (typeof module!=="undefined"?require("./flight-sim-model.js"):null);
+// Guidance loads after this cockpit module in flight-sim.html. Resolve it
+// when needed rather than capturing an undefined browser global at startup.
+const lessonGuidance=()=>root?.AGSAFlightGuidance||
+ (typeof module!=="undefined"?require("./flight-sim-guidance.js"):null);
 const FRAMES=Object.freeze([
  {id:"c172",title:"Cessna 172 · Classic",family:"trainer",control:"yoke",layout:"analog",caption:"Classic training-aircraft six-pack in T configuration",pilot:"Dual-handled yoke",theme:"civil"},
  {id:"r44",title:"Robinson R44 · Raven",family:"rotor",control:"cyclic",layout:"analog",caption:"Later analogue-style rotorcraft instrument cluster",pilot:"Cyclic + collective + anti-torque pedals",theme:"rotor"},
@@ -280,6 +284,16 @@ function buildPanel(doc,profile,holder){
    hoverCue.setAttribute("aria-label","Helicopter hovering and ground drift status");
    scan.appendChild(hoverCue);
    holder.appendChild(scan);
+   // A single compact, live mission step stays alongside the real controls;
+   // tap ⓘ for details rather than filling the flight deck with instructions.
+   const lesson=doc.createElement("div");
+   lesson.className="r44-lesson-strip";
+   const lessonValue=doc.createElement("strong");
+   lessonValue.dataset.r44Lesson="true";
+   lessonValue.textContent="1/4 · TAKEOFF";
+   lesson.appendChild(lessonValue);
+   addInfoDot(doc,lesson,"lesson","R44 guided flight lesson");
+   holder.appendChild(lesson);
    const expand=doc.createElement("button");
    expand.type="button";expand.className="r44-secondary-toggle";
    expand.textContent="Show all 8 instruments";
@@ -315,8 +329,14 @@ function buildPanel(doc,profile,holder){
   }
  }
 }
-function paint(holder,state,systems,input,profileId,doc){
+function paint(holder,state,systems,input,profileId,doc,progress){
  const s=snapshot(state,systems,input,profileId);
+ const mission=lessonGuidance()?.r44LessonStatus?.(progress,state);
+ for(const el of holder.querySelectorAll("[data-r44-lesson]")){
+  el.textContent=mission?.short||"1/4 · TAKEOFF";
+  el.setAttribute("aria-label",mission?.hint||"R44 guided lesson: takeoff");
+  el.dataset.lessonStatus=mission?.status||"active";
+ }
  for(const el of holder.querySelectorAll("[data-r44-hover]")){
   const cue=FLIGHT?.rotorHoverCue?.(state)||"ON PAD";
   const airborne=state?.mode==="helicopter"&&!state.onGround;
@@ -376,7 +396,8 @@ function paint(holder,state,systems,input,profileId,doc){
  }
  return s;
 }
-function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>null,getInput=()=>null}={}){
+function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>null,
+ getInput=()=>null,getPractice=()=>null}={}){
  const doc=documentLike||root?.document;if(!doc?.getElementById)throw Error("Cockpit requires the simulator document");
  const $=id=>doc.getElementById(id);
  const wrap=$("cockpitMain"),holder=$("cockpitVisualPanel"),control=$("controlTitle")?.closest(".control-panel");
@@ -416,6 +437,11 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   }
   if(key==="controls"&&byId(active).family==="rotor"){
    selected={title:"Helicopter controls",text:"Cyclic: move to change pitch and roll. Collective: change lift. Pedals: turn the nose. Keep them in view together."};
+  }
+  if(key==="lesson"&&byId(active).family==="rotor"){
+   const mission=lessonGuidance()?.r44LessonStatus?.(getPractice(),getState());
+   selected={title:"R44 guided lesson",text:mission?.hint||
+    "Take off, hold a hover for eight seconds, turn through 90 degrees, then return to land on the helipad."};
   }
   if(!selected)return false;
   closeZoom();
@@ -516,8 +542,9 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  function update(){
   const state=getState(),sys=getSystems(),input=getInput();
   if(state){
-   paint(holder,state,sys,input,active,doc);
-   if(!zoomPanel.hidden)paint(zoomContent,state,sys,input,active,doc);
+   const progress=getPractice();
+   paint(holder,state,sys,input,active,doc,progress);
+   if(!zoomPanel.hidden)paint(zoomContent,state,sys,input,active,doc,progress);
   }
  }
  select.addEventListener("change",()=>choose(select.value,{notify:true}));
