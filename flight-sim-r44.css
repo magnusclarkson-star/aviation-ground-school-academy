@@ -294,3 +294,54 @@
   right:29px;width:29px;height:32px;
  }
 }
+
+/* Slim R44 readouts beneath the instruments: neither status fills a row. */
+#cockpitStation[data-family="rotor"] .r44-lesson-strip{
+ display:inline-flex;
+ vertical-align:top;
+ width:auto!important;
+ max-width:100%;
+ min-height:30px;
+ margin:3px 0 0;
+ padding:2px 63px 2px 7px;
+ border-radius:5px;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip>strong{
+ font-size:10px;
+ white-space:nowrap;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle{
+ width:26px;height:26px;min-height:26px;right:30px;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .cockpit-info-dot{
+ width:24px;height:24px;min-width:24px;min-height:24px;
+}
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-family="rotor"] .r44-quick-scan{
+  grid-template-columns:repeat(3,minmax(0,1fr)) auto!important;
+  align-items:stretch;
+  gap:3px;
+  margin:3px auto 0;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan .r44-hover-cue{
+  grid-column:auto!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  max-width:124px;
+  padding:2px 5px;
+  white-space:normal;
+  font-size:9px;
+ }
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip{
+  min-height:29px;
+  padding:2px 61px 2px 6px;
+  margin-top:3px;
+ }
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip>strong{
+  font-size:10px;
+ }
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle{
+  width:25px;height:25px;min-height:25px;right:29px;
+ }
+}
