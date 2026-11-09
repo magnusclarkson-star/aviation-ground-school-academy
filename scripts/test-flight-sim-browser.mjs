@@ -128,7 +128,7 @@ try{
  assert.equal(await fallback.locator("#visualMode").inputValue(),"3d");
  assert.equal(await fallback.locator("#outsideView3D").isVisible(),false);
  assert.match(await fallback.locator("#visualStatus").textContent(),/2D scenery/);
- assert.equal(await fallback.locator("#cameraMode").isDisabled(),true);
+ assert.equal(await fallback.locator("#cameraMode").isEnabled(),true,"outside aircraft remains viewable without WebGL on Android");
  assert.ok(await fallback.locator("#outsideView").isVisible());
  assert.ok(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  await fallback.locator("#typeStick").tap();
