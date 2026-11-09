@@ -92,3 +92,20 @@
 #cockpitStation #cockpitZoomPanel .cockpit-nav-readouts [data-nav-field="runway"]{
  font-size:13px!important;
 }
+
+/* Enlarged NAV map must actually enlarge on Android. The base SVG uses
+ * flex:1 and min-height:0; without a fixed basis, the drawing can collapse
+ * to a tiny strip even while its popup fills the available width. */
+#cockpitStation #cockpitZoomPanel .cockpit-nav-screen .cockpit-nav-scene svg,
+#cockpitStation #cockpitZoomPanel .cockpit-mfd-nav .cockpit-nav-scene svg{
+ display:block!important;
+ height:clamp(124px,28dvh,215px)!important;
+ min-height:124px!important;
+ flex:0 0 auto!important;
+ width:100%!important;
+}
+#cockpitStation #cockpitZoomPanel .cockpit-nav-scene{
+ width:100%!important;
+ min-height:124px!important;
+ flex:1 1 auto!important;
+}
