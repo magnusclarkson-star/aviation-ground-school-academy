@@ -86,9 +86,30 @@ function engine(m,x,z,w=.9,color=palette.dark){
  }
  m.box(x-w*.62,-.35,z-1.55,w*1.24,.48,.18,palette.black);
 }
+// Thin, round, fixed tricycle wheels rather than rectangular landing-gear
+// blocks. The wheel rolls in the local YZ plane around a lateral X axle.
+function wheel(m,x,y,z,r,halfWidth=.105){
+ const slices=12;
+ const core=r*.42;
+ for(let i=0;i<slices;i++){
+  const a=i*2*Math.PI/slices,b=(i+1)*2*Math.PI/slices;
+  const point=(xx,rad,angle)=>[xx,y+rad*Math.sin(angle),z+rad*Math.cos(angle)];
+  m.quad(point(x-halfWidth,r,a),point(x+halfWidth,r,a),
+   point(x+halfWidth,r,b),point(x-halfWidth,r,b),palette.black);
+  for(const sign of [-1,1]){
+   const face=x+sign*halfWidth;
+   m.tri([face,y,z],point(face,r,sign>0?a:b),
+    point(face,r,sign>0?b:a),palette.black);
+   const hub=face+sign*.012;
+   m.tri([hub,y,z],point(hub,core,sign>0?a:b),
+    point(hub,core,sign>0?b:a),palette.metal);
+  }
+ }
+}
 function gear(m,x,z,r=.35){
- m.box(x-r,-1.55,z-r/2,r*2,r*1.4,r,palette.black);
- m.box(x-.07,-1.28,z-.07,.14,.7,.14,palette.metal);
+ const centerY=-1.25-(r-.35)*.24;
+ wheel(m,x,centerY,z,r);
+ m.box(x-.07,centerY-.03,z-.07,.14,.72,.14,palette.metal);
 }
 function addC172(m){
  const c=palette.white,strip=palette.navy;
