@@ -241,6 +241,7 @@ function digitalScreen(doc,kind,index){
 }
 function buildPanel(doc,profile,holder){
  holder.replaceChildren();
+ delete holder.dataset.r44Expanded;
  holder.dataset.airframe=profile.id;holder.dataset.family=profile.family;
  if(profile.family==="jet"){
   const screenKinds=profile.layout==="panoramic"?["pfd","nav","engine"]:
@@ -254,6 +255,36 @@ function buildPanel(doc,profile,holder){
   const grid=doc.createElement("div");grid.className="cockpit-sixpack";
   for(const [id,name,unit] of ANALOG[profile.family])grid.appendChild(makeAnalogFace(doc,id,name,unit));
   holder.appendChild(grid);
+  if(profile.id==="r44"){
+   // Keep four full-size gauges readable alongside the cyclic on portrait
+   // phones. The secondary four remain in this same live grid and can be
+   // revealed without cloning controls or interrupting instrument updates.
+   holder.dataset.r44Expanded="false";
+   const scan=doc.createElement("div");
+   scan.className="r44-quick-scan";
+   scan.setAttribute("role","group");
+   scan.setAttribute("aria-label","Live helicopter heading, vertical speed and collective");
+   for(const [key,label] of [["heading","HDG"],["vsi","V/S"],["power","COLL"]]){
+    const cell=doc.createElement("span"),caption=doc.createElement("small"),
+     reading=doc.createElement("strong");
+    caption.textContent=label;
+    reading.dataset.r44Live=key;reading.textContent="0";
+    cell.append(caption,reading);scan.appendChild(cell);
+   }
+   holder.appendChild(scan);
+   const expand=doc.createElement("button");
+   expand.type="button";expand.className="r44-secondary-toggle";
+   expand.textContent="Show all 8 instruments";
+   expand.setAttribute("aria-expanded","false");
+   expand.setAttribute("aria-label","Show all eight Robinson R44 cockpit instruments");
+   expand.addEventListener("click",()=>{
+    const expanded=holder.dataset.r44Expanded!=="true";
+    holder.dataset.r44Expanded=String(expanded);
+    expand.setAttribute("aria-expanded",String(expanded));
+    expand.textContent=expanded?"Show primary instruments":"Show all 8 instruments";
+   });
+   holder.appendChild(expand);
+  }
   if(profile.id==="c172"){
    const avionics=doc.createElement("div");
    avionics.className="cockpit-avionics";
@@ -278,6 +309,11 @@ function buildPanel(doc,profile,holder){
 }
 function paint(holder,state,systems,input,profileId,doc){
  const s=snapshot(state,systems,input,profileId);
+ for(const el of holder.querySelectorAll("[data-r44-live]")){
+  const id=el.dataset.r44Live,v=s.values[id];
+  el.textContent=id==="heading"?v+"°":id==="vsi"?
+   (v>0?"+":"")+v:String(v)+"%";
+ }
  for(const el of holder.querySelectorAll("[data-live-value]")){
   const id=el.dataset.liveValue;
   const value=id==="attitude"?s.values.pitch+"° / "+s.values.bank+"°":
