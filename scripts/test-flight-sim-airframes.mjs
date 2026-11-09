@@ -98,6 +98,35 @@ assert.notDeepEqual(C.rotate([1,3.16,-.4],[0,3.16,-.4],2,1.2),[1,3.16,-.4],
  "main rotor blade vertices rotate around the hub");
 assert.deepEqual(T.buildMovingParts("c172").map(p=>p.name),[
  "propeller","leftAileron","rightAileron","leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"]);
+const trainerParts=T.buildMovingParts("c172");
+const prop=trainerParts.find(p=>p.name==="propeller");
+const coordinates=prop.mesh.positions;
+const axisExtent=axis=>{
+ let lo=Infinity,hi=-Infinity;
+ for(let i=axis;i<coordinates.length;i+=3){lo=Math.min(lo,coordinates[i]);hi=Math.max(hi,coordinates[i]);}
+ return hi-lo;
+};
+assert.ok(axisExtent(1)>1.85&&axisExtent(1)<2.06,
+ "C172 should have an approximately 1.93 m two-blade propeller, not an oversized four-blade cross");
+assert.ok(axisExtent(0)<.6,
+ "C172 propeller blades should form a single straight pair, not a cross");
+assert.ok(axisExtent(2)<.4,"propeller faces remain close to the spinner");
+for(const name of ["leftAileron","rightAileron","leftFlap","rightFlap"]){
+ const part=trainerParts.find(p=>p.name===name);
+ assert.ok(part.pivot[1]>.85&&part.pivot[1]<1.05,name+" hinge belongs to high wing");
+ const yValues=Array.from(part.mesh.positions).filter((_,i)=>i%3===1);
+ assert.ok(Math.min(...yValues)>.85,name+" wing panel no longer floats below the cabin");
+}
+const trainerBody=T.buildVehicle("c172").positions;
+const wheelVertices=[];
+const wheelX=2.10*A.SCALE.c172[0],wheelZ=-.8*A.SCALE.c172[2];
+for(let i=0;i<trainerBody.length;i+=3){
+ const x=trainerBody[i],y=trainerBody[i+1],z=trainerBody[i+2];
+ if(Math.abs(x-wheelX)<.20&&y<-.9&&Math.abs(z-wheelZ)<.27)
+  wheelVertices.push(y.toFixed(3)+":"+z.toFixed(3));
+}
+assert.ok(new Set(wheelVertices).size>=12,
+ "C172 right main gear now has a genuinely round multi-segment tire rather than a box");
 const fake={count:0,save(){},restore(){},translate(){},rotate(){},beginPath(){},ellipse(){},fill(){this.count++},
  moveTo(){},lineTo(){},closePath(){},set fillStyle(v){this.color=v}};
 for(const id of A.IDS){
