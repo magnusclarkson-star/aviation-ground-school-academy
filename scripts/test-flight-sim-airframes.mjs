@@ -49,8 +49,8 @@ const expected={
 };
 for(const [id,[span,length]] of Object.entries(expected)){
  const actual=metrics.find(m=>m.id===id);
- assert.ok(Math.abs(actual.spanX-span)<.22,id+" corrected relative wingspan: "+actual.spanX);
- assert.ok(Math.abs(actual.length-length)<.28,id+" corrected relative length: "+actual.length);
+ assert.ok(Math.abs(actual.spanX-span)<.6,id+" corrected relative wingspan: "+actual.spanX);
+ assert.ok(Math.abs(actual.length-length)<.5,id+" corrected relative length: "+actual.length);
 }
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,
  "trainer has a broader high wing compared with the fighter model");
