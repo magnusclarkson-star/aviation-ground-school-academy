@@ -40,7 +40,6 @@ function create({windowLike,documentLike,getLesson=()=>null,isBusy=()=>false}={}
   if(hadSpeech)try{synth?.cancel()}catch{}
  }
  function update(){
-  syncUI();
   if(!supported||!enabled||!armed||doc?.hidden||isBusy())return false;
   const lesson=getLesson(),key=stageKey(lesson);
   if(!key||!Object.hasOwn(MESSAGES,key)||lastKey===key)return false;
@@ -76,7 +75,7 @@ function create({windowLike,documentLike,getLesson=()=>null,isBusy=()=>false}={}
  function toggle(){
   enabled=!enabled;
   if(!enabled)interrupt();
-  else arm();
+  else{lastKey=null;arm();}
   syncUI();
   return enabled;
  }
