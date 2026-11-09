@@ -5,6 +5,8 @@
  * No weapons, tactical logic, real flight-envelope figures or certified instruments.
  */
 (function(root){"use strict";
+const NAV=root?.AGSAFlightNavigation||(typeof module!=="undefined"?require("./flight-sim-navigation.js"):null);
+if(!NAV)throw Error("Cockpit navigation module missing");
 const FRAMES=Object.freeze([
  {id:"c172",title:"Cessna 172 · Classic",family:"trainer",control:"yoke",layout:"analog",caption:"Classic training-aircraft six-pack in T configuration",pilot:"Dual-handled yoke",theme:"civil"},
  {id:"r44",title:"Robinson R44 · Raven",family:"rotor",control:"cyclic",layout:"analog",caption:"Later analogue-style rotorcraft instrument cluster",pilot:"Cyclic + collective + anti-torque pedals",theme:"rotor"},
@@ -54,7 +56,8 @@ const HELP=Object.freeze({
  power:{title:"Power indication",text:"Watch the helicopter's simulated collective-power indication when changing lift."},
  "mfd-pfd":{title:"Flight display",text:"Shows the artificial horizon, airspeed, height and heading together."},
  "mfd-att":{title:"Attitude display",text:"Follow the horizon to see pitch and bank. The centre mark represents your reference."},
- "mfd-nav":{title:"Navigation display",text:"Shows heading and ground speed. Compare heading with the outside view."},
+ "mfd-nav":{title:"Navigation display",text:"Shows aircraft position, heading and track on a moving local airfield map. Tap it to enlarge."},
+ map:{title:"Moving navigation map",text:"The runway moves as the aircraft changes position. Aircraft stays in the middle; heading turns the map. E/W and N/S show position relative to the practice field."},
  "mfd-engine":{title:"Systems display",text:"Shows the training power, engine indication and vertical speed."},
  panel:{title:"Flight instruments",text:"Tap any gauge or screen to enlarge its live reading. Tap the small ⓘ on a gauge for what it means."},
  controls:{title:"Flight controls",text:"Yoke, stick or cyclic: drag left/right to bank and up/down to pitch. Hold a rudder pedal with another finger. Use throttle or collective to change power or lift."},
@@ -200,7 +203,10 @@ function digitalScreen(doc,kind,index){
    kind==="pfd"?"FLIGHT DISPLAY":kind==="nav"?"NAVIGATION · SIM":kind==="engine"?"SYSTEMS · SIM":
    kind==="att"?"ATTITUDE · SIM":"FLIGHT DATA";
  const body=doc.createElement("div");body.className="cockpit-mfd-body";
- if(kind==="pfd"||kind==="att"){
+ if(kind==="nav"){
+  body.classList.add("cockpit-mfd-map-body");
+  body.appendChild(NAV.build(doc));
+ }else if(kind==="pfd"||kind==="att"){
   const sky=doc.createElement("div");sky.className="cockpit-mfd-attitude";
   const horizon=doc.createElement("div");horizon.className="cockpit-mfd-horizon";horizon.dataset.mfdHorizon="true";
   const wings=doc.createElement("div");wings.className="cockpit-mfd-wings";
@@ -248,13 +254,21 @@ function buildPanel(doc,profile,holder){
   if(profile.id==="c172"){
    const avionics=doc.createElement("div");
    avionics.className="cockpit-avionics";
-   avionics.setAttribute("aria-hidden","true");
    avionics.innerHTML=`<div class="avionics-topline">NAV / COM</div>
-    <div class="avionics-radio"><small>COM 1</small><span>118.000</span><i aria-hidden="true"></i></div>
-    <div class="avionics-radio"><small>NAV 1</small><span>110.300</span><i aria-hidden="true"></i></div>
-    <div class="avionics-screen"><span class="avionics-screen-label">MAP</span>
-     <div class="avionics-track"></div><span class="avionics-plane">✈</span>
-    </div><div class="avionics-buttons"><i></i><i></i><i></i><i></i><i></i></div>`;
+    <div class="avionics-radio" aria-hidden="true"><small>COM 1</small><span>118.000</span><i></i></div>
+    <div class="avionics-radio" aria-hidden="true"><small>NAV 1</small><span>110.300</span><i></i></div>
+    <div class="avionics-buttons" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>`;
+   const map=doc.createElement("div");
+   map.className="avionics-screen cockpit-nav-screen";
+   map.setAttribute("role","button");
+   map.tabIndex=0;
+   map.setAttribute("aria-label","Enlarge moving navigation map");
+   const mapName=doc.createElement("span");
+   mapName.className="cockpit-nav-name";
+   mapName.textContent="NAV MAP";
+   map.append(mapName,NAV.build(doc));
+   addInfoDot(doc,map,"map","moving navigation map");
+   avionics.insertBefore(map,avionics.querySelector(".avionics-buttons"));
    holder.appendChild(avionics);
   }
  }
@@ -285,6 +299,7 @@ function paint(holder,state,systems,input,profileId,doc){
  for(const el of holder.querySelectorAll("[data-live-slip]")){
   el.setAttribute("cx",(50+s.slip*12).toFixed(2));
  }
+ NAV.paint(holder,state);
  for(const el of holder.querySelectorAll("[data-live-needle]")){
   const id=el.closest("[data-gauge]")?.dataset.gauge||"speed";
   el.setAttribute("transform","rotate("+(s.angles[id]??0).toFixed(2)+" 50 50)");
@@ -380,7 +395,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
    }
   }
   zoomContent.replaceChildren(clone);
-  zoomTitle.textContent=tile.querySelector(".cockpit-gauge-title, .cockpit-mfd-head")?.textContent||"Instrument";
+  zoomTitle.textContent=tile.querySelector(".cockpit-gauge-title, .cockpit-mfd-head, .cockpit-nav-name")?.textContent||"Instrument";
   zoomPanel.hidden=false;
   update();
  }
@@ -392,13 +407,13 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
    openInfo(dot.dataset.cockpitHelp,dot);
    return;
   }
-  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
+  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd, .cockpit-nav-screen");
   if(tile&&holder.contains(tile))openZoom(tile);
  });
  holder.addEventListener("keydown",event=>{
   if(event.target?.closest?.(".cockpit-info-dot"))return;
   if(event.key!=="Enter"&&event.key!==" ")return;
-  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd");
+  const tile=event.target?.closest?.(".cockpit-gauge, .cockpit-mfd, .cockpit-nav-screen");
   if(!tile||!holder.contains(tile))return;
   event.preventDefault();openZoom(tile);
  });
