@@ -773,7 +773,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     // Motion-sweep draws before the actual two blades; never conceals them.
     const rawSweep=animation?.rotorBlurOpacity;
-    const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.18):0;
+    const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
     if(model.rotorSweep&&sweepOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,sweepOpacity);
