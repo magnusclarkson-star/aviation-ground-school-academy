@@ -7,6 +7,8 @@
 (function(root){"use strict";
 const NAV=root?.AGSAFlightNavigation||(typeof module!=="undefined"?require("./flight-sim-navigation.js"):null);
 if(!NAV)throw Error("Cockpit navigation module missing");
+const FLIGHT=root?.AGSAImmersiveFlight||
+ (typeof module!=="undefined"?require("./flight-sim-model.js"):null);
 const FRAMES=Object.freeze([
  {id:"c172",title:"Cessna 172 · Classic",family:"trainer",control:"yoke",layout:"analog",caption:"Classic training-aircraft six-pack in T configuration",pilot:"Dual-handled yoke",theme:"civil"},
  {id:"r44",title:"Robinson R44 · Raven",family:"rotor",control:"cyclic",layout:"analog",caption:"Later analogue-style rotorcraft instrument cluster",pilot:"Cyclic + collective + anti-torque pedals",theme:"rotor"},
@@ -271,6 +273,12 @@ function buildPanel(doc,profile,holder){
     reading.dataset.r44Live=key;reading.textContent="0";
     cell.append(caption,reading);scan.appendChild(cell);
    }
+   const hoverCue=doc.createElement("output");
+   hoverCue.className="r44-hover-cue";
+   hoverCue.dataset.r44Hover="true";
+   hoverCue.textContent="ON PAD";
+   hoverCue.setAttribute("aria-label","Helicopter hovering and ground drift status");
+   scan.appendChild(hoverCue);
    holder.appendChild(scan);
    const expand=doc.createElement("button");
    expand.type="button";expand.className="r44-secondary-toggle";
@@ -309,6 +317,12 @@ function buildPanel(doc,profile,holder){
 }
 function paint(holder,state,systems,input,profileId,doc){
  const s=snapshot(state,systems,input,profileId);
+ for(const el of holder.querySelectorAll("[data-r44-hover]")){
+  const cue=FLIGHT?.rotorHoverCue?.(state)||"ON PAD";
+  const airborne=state?.mode==="helicopter"&&!state.onGround;
+  el.textContent=cue+(airborne?" · GS "+s.values.ground+" KT":"");
+  el.dataset.status=cue;
+ }
  for(const el of holder.querySelectorAll("[data-r44-live]")){
   const id=el.dataset.r44Live,v=s.values[id];
   el.textContent=id==="heading"?v+"°":id==="vsi"?
