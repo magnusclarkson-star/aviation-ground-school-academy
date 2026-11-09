@@ -13,6 +13,7 @@ assert.equal(sys.parts.leftAileron,0);
 assert.equal(sys.parts.rightAileron,0);
 assert.ok(Math.abs(sys.parts.leftFlap+10*Math.PI/180)<1e-12);
 assert.equal(sys.parts.rightFlap,sys.parts.leftFlap);
+assert.equal(sys.parts.propBlurOpacity,0,"idling propeller has no opaque blur disc");
 assert.equal(A.snapshot(sys).engineValue,"10%");
 assert.equal(A.snapshot(sys).flapValue,"10°");
 assert.match(A.snapshot(sys).disclaimer,/NOT AIRCRAFT DATA/);
@@ -25,6 +26,7 @@ assert.ok(sys.powerPct>beforePower+45,"engine motion should spool up gradually w
 assert.ok(sys.powerPct<101);
 assert.ok(sys.rotation!==beforeAngle);
 assert.ok(sys.rotation>=0&&sys.rotation<2*Math.PI);
+assert.ok(sys.parts.propBlurOpacity>0&&sys.parts.propBlurOpacity<=.14,"fast Cessna propeller has an appropriately subtle blur sweep");
 assert.ok(sys.parts.leftAileron<0&&sys.parts.rightAileron>0,"aileron surfaces deflect oppositely");
 assert.equal(sys.parts.leftAileron,-sys.parts.rightAileron);
 assert.ok(sys.parts.elevatorLeft>0&&sys.parts.elevatorRight>0,
