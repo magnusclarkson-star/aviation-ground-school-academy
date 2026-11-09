@@ -31,6 +31,7 @@
 <script src="flight-sim-scenery.js" defer></script>
 <script src="flight-sim-instruments.js" defer></script>
 <script src="flight-sim-cockpit.js" defer></script>
+<script src="flight-sim-switchgear.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
@@ -126,6 +127,20 @@
    <div id="cockpitMain" class="cockpit-main">
     <div id="cockpitInstrumentWell" class="cockpit-instrument-well">
      <div id="cockpitVisualPanel" class="cockpit-visual-panel" aria-label="Tap individual live aircraft-style instruments to enlarge"></div>
+     <div id="cockpitSwitchPanel" class="cockpit-switch-panel" aria-label="Cockpit visual controls and indications">
+      <div class="cockpit-switch-bank" role="group" aria-label="Cockpit view and lighting switches">
+       <button id="cockpitSwitch_view" class="cockpit-switch" type="button"><span>VIEW</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">PILOT</strong></button>
+       <button id="cockpitSwitch_graphics" class="cockpit-switch" type="button"><span>SCENE</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">3D</strong></button>
+       <button id="cockpitSwitch_light" class="cockpit-switch" type="button"><span>LIGHT</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">DAY</strong></button>
+       <button id="cockpitSwitch_frame" class="cockpit-switch" type="button"><span>FRAME</span><b class="cockpit-switch-lever" aria-hidden="true"></b><strong class="cockpit-switch-value">ON</strong></button>
+      </div>
+      <div class="cockpit-annunciators" aria-label="Live flight indications">
+       <span><small>IAS</small><strong id="cockpitIndicatorSpeed">0 KT</strong></span>
+       <span><small>PWR</small><strong id="cockpitIndicatorPower">0%</strong></span>
+       <span><small>FLAPS</small><strong id="cockpitIndicatorFlap">0°</strong></span>
+      </div>
+      <span id="cockpitSwitchStatus" role="status" aria-live="polite" class="cockpit-visually-hidden"></span>
+     </div>
 
      <section id="cockpitZoomPanel" class="cockpit-zoom-panel" aria-label="Enlarged live cockpit instrument" hidden>
       <div class="cockpit-zoom-head"><strong id="cockpitZoomTitle">Instrument</strong><button type="button" id="cockpitZoomClose">Close ✕</button></div>
