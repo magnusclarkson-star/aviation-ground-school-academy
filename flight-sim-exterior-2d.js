@@ -56,7 +56,44 @@
   else if(axis===3)[x,y]=[x*c-y*s,x*s+y*c];
   return [x+pivot[0],y+pivot[1],z+pivot[2]];
  }
- function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={}}={}){
+ function paintInspection(ctx,{id="c172",width=960,height=540,orbit={},animation={}}={}){
+  const azimuth=((Number(orbit.azimuth)||0)*RAD);
+  const elevation=Math.max(-70,Math.min(78,Number(orbit.elevation??28)))*RAD;
+  const distance=Math.max(17,Math.min(70,Number(orbit.distance??29)));
+  const ca=Math.cos(azimuth),sa=Math.sin(azimuth),ce=Math.cos(elevation),se=Math.sin(elevation);
+  const scale=Math.min(width/25,height/22)*(29/distance);
+  const vertices=[];
+  function put(tri,part){
+   const coords=tri.points.map(source=>{
+    const p=part?rotate(source,part.pivot,part.axis,part.angle):source;
+    const forward=-p[0]*sa+p[2]*ca;
+    return {x:(p[0]*ca+p[2]*sa)*scale,
+     y:(-p[1]*ce-forward*se)*scale,
+     depth:forward*ce-p[1]*se};
+   });
+   vertices.push({coords,depth:(coords[0].depth+coords[1].depth+coords[2].depth)/3,
+    color:tri.color});
+  }
+  for(const tri of geometry(id))put(tri,null);
+  for(const part of movingParts(id)){
+   const angle=Number.isFinite(animation[part.name])?animation[part.name]:0;
+   for(const tri of part.triangles)put(tri,{...part,angle});
+  }
+  vertices.sort((a,b)=>b.depth-a.depth);
+  ctx.save();
+  ctx.translate(width/2,height*.53);
+  for(const tri of vertices){
+   ctx.beginPath();
+   ctx.moveTo(tri.coords[0].x,tri.coords[0].y);
+   ctx.lineTo(tri.coords[1].x,tri.coords[1].y);
+   ctx.lineTo(tri.coords[2].x,tri.coords[2].y);
+   ctx.closePath();ctx.fillStyle=rgb(...tri.color);ctx.fill();
+  }
+  ctx.restore();
+  return true;
+ }
+ function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={},orbit={}}={}){
+  if(view==="inspect")return paintInspection(ctx,{id,width,height,orbit,animation});
   if(!ctx||!state)return false;
   const triangles=geometry(id),parts=movingParts(id);
   const scale=Math.max(2,Math.min(width/24,height/17));
@@ -96,7 +133,7 @@
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotate,paint});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotate,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);
