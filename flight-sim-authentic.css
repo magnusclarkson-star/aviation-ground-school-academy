@@ -316,3 +316,39 @@ main{padding-top:8px}
  #cockpitMain .cockpit-annunciators{flex:1 1 auto;justify-content:end}
  #cockpitMain .cockpit-annunciators span{min-width:51px}
 }
+
+
+/* Enlarging one instrument must never shift the yoke, pedals or throttles. */
+#cockpitMain .cockpit-instrument-well{position:relative}
+#cockpitMain #cockpitZoomPanel{
+ position:absolute;top:6px;left:50%;transform:translateX(-50%);
+ z-index:25;width:min(330px,calc(100% - 14px));max-width:calc(100% - 14px);
+ max-height:min(420px,80dvh);overflow:auto;
+ background:linear-gradient(145deg,#323b41,#121b23 74%);
+ border:3px ridge #8d9ba0;border-radius:15px;
+ box-shadow:0 16px 22px #010304e8,0 0 0 2px #202b31,inset 0 2px 10px #aab6bb22;
+ padding:8px
+}
+#cockpitMain #cockpitZoomPanel .cockpit-zoom-head{padding:3px 3px 8px}
+#cockpitMain #cockpitZoomPanel .cockpit-zoom-head button{min-height:36px;padding:6px 12px}
+#cockpitMain #cockpitZoomPanel .cockpit-zoom-content{width:100%;display:grid;place-items:center}
+#cockpitMain #cockpitZoomPanel .cockpit-gauge{margin:auto;width:min(100%,270px);
+ border-radius:50%;aspect-ratio:1;position:relative;max-width:100%;padding:2px;overflow:hidden}
+#cockpitMain #cockpitZoomPanel .cockpit-gauge svg{
+ display:block;width:100%;height:100%;max-width:none;position:absolute;inset:0;
+}
+#cockpitMain #cockpitZoomPanel .cockpit-gauge .cockpit-gauge-title{font-size:13px;top:13%}
+#cockpitMain #cockpitZoomPanel .cockpit-gauge .cockpit-gauge-number{font-size:21px;bottom:18%}
+#cockpitMain #cockpitZoomPanel .cockpit-mfd{max-width:100%}
+@media(max-width:740px){
+ #cockpitMain #cockpitZoomPanel{top:0;width:min(255px,calc(100% - 8px));
+  max-width:calc(100% - 8px);padding:5px;max-height:70dvh}
+ #cockpitMain #cockpitZoomPanel .cockpit-gauge{width:min(100%,205px);max-width:205px}
+ #cockpitMain #cockpitZoomPanel .cockpit-gauge .cockpit-gauge-title{font-size:10px}
+ #cockpitMain #cockpitZoomPanel .cockpit-gauge .cockpit-gauge-number{font-size:17px}
+ #cockpitMain #cockpitZoomPanel .cockpit-gauge small{font-size:10px}
+}
+@media(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitMain #cockpitZoomPanel{width:min(250px,calc(100% - 8px));max-height:75dvh}
+ #cockpitMain #cockpitZoomPanel .cockpit-gauge{width:min(100%,170px);max-width:170px}
+}

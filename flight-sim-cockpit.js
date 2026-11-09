@@ -28,9 +28,10 @@ function snapshot(state,systems,input,profileId){
   bank:rnd(bank),pitch:rnd(pitch),power:rnd(power),rpm:rnd(rpm),ground:rnd(state?.groundSpeedKt??speed)};
  return Object.freeze({profile:profile.id,values:Object.freeze(values),
   pitch,bank,power,rpm,heading:hdg,
+  slip:clamp((input?.rudder??0)*.72-bank/120,-1,1),
   angles:Object.freeze({
    speed:-130+clamp(speed,0,180)*260/180,
-   alt:-180+(ft%1000)*.36,
+   alt:(ft%1000)*.36,
    vsi:clamp(vs/2000,-1,1)*125,
    heading:hdg,turn:clamp(bank/35,-1,1)*90,
    rpm:-130+rpm*2.6,power:-130+power*2.6
@@ -90,6 +91,59 @@ function makeAnalogFace(doc,id,label,unit){
   node("line",{x1:-12,x2:112,y1:50,y2:50,stroke:"#f3f8fa","stroke-width":2},horizon);
   for(const offset of [-22,-11,11,22])node("line",{x1:37,x2:63,y1:50+offset,y2:50+offset,stroke:"#d7edf5","stroke-width":1},horizon);
   node("path",{d:"M15 50 H35 L44 55 H56 L65 50 H85",stroke:"#f1c96e","stroke-width":4,fill:"none"});
+ }else if(id==="heading"){
+  const card=node("g",{"data-live-heading-card":"true"});
+  // Heading rotates the compass card opposite aircraft heading.
+  for(let j=0;j<72;j++){
+   const angle=j*5;
+   node("line",{x1:50,y1:11,x2:50,y2:j%6===0?18:j%3===0?15:13,
+    stroke:j%6===0?"#f5f2df":"#aab5b7","stroke-width":j%6===0?1.6:.8,
+    transform:"rotate("+angle+" 50 50)"},card);
+  }
+  for(let j=0;j<12;j++){
+   const a=j*30*Math.PI/180;
+   const labels=["N","3","6","E","12","15","S","21","24","W","30","33"];
+   const el=node("text",{
+    x:(50+27*Math.sin(a)).toFixed(2),y:(50-27*Math.cos(a)).toFixed(2),
+    "text-anchor":"middle","dominant-baseline":"middle","font-size":j%3===0?8:6.8,
+    "font-weight":j%3===0?800:650,fill:j===0?"#f0c878":"#e9eee7"
+   },card);
+   el.textContent=labels[j];
+  }
+  node("path",{d:"M50 9 L46 20 L54 20 Z",fill:"#f2d58b"});
+  node("line",{x1:50,y1:37,x2:50,y2:63,stroke:"#e4f0e9","stroke-width":1.4});
+  node("line",{x1:37,y1:50,x2:63,y2:50,stroke:"#e4f0e9","stroke-width":1.4});
+  node("circle",{cx:50,cy:50,r:2.3,fill:"#f2d58b"});
+ }else if(id==="alt"){
+  for(let j=0;j<50;j++){
+   node("line",{x1:50,y1:11,x2:50,y2:j%5===0?20:16,
+    stroke:j%5===0?"#f7f2df":"#aab6ba","stroke-width":j%5===0?1.7:.7,
+    transform:"rotate("+(j*7.2)+" 50 50)"});
+  }
+  for(let j=0;j<10;j++){
+   const a=j*36*Math.PI/180;
+   const el=node("text",{x:(50+29*Math.sin(a)).toFixed(2),
+    y:(50-29*Math.cos(a)).toFixed(2),"font-size":7.5,
+    fill:"#e6eee9","text-anchor":"middle","dominant-baseline":"middle","font-weight":700});
+   el.textContent=String(j);
+  }
+  const thousands=node("g",{"data-live-alt-thousands":"true"});
+  node("path",{d:"M47 53 L49.8 32 L53 53Z",fill:"#d9e3df",stroke:"#778991","stroke-width":.6},thousands);
+  const hundreds=node("g",{"data-live-alt-hundreds":"true"});
+  node("path",{d:"M48.4 52 L50 15 L51.6 52Z",fill:"#f2e3be"},hundreds);
+  node("circle",{cx:50,cy:50,r:3,fill:"#d6e3de",stroke:"#424f55","stroke-width":1});
+ }else if(id==="turn"){
+  for(const angle of [-45,-22.5,0,22.5,45]){
+   node("line",{x1:50,y1:12,x2:50,y2:angle===0?20:17,
+    stroke:"#f3f1e8","stroke-width":angle===0?2:1,
+    transform:"rotate("+angle+" 50 50)"});
+  }
+  const airplane=node("g",{"data-live-turn-airplane":"true"});
+  node("path",{d:"M29 51 L44 49 L48 42 L52 42 L56 49 L71 51 L71 55 L55 54 L53 61 L47 61 L45 54 L29 55Z",
+   fill:"#e5e6e1",stroke:"#7d8e98","stroke-width":.8},airplane);
+  node("path",{d:"M26 74 Q50 85 74 74",stroke:"#ddd4be","stroke-width":3,fill:"none"});
+  node("circle",{cx:50,cy:78,r:5,fill:"#30383d",stroke:"#aaa99c","stroke-width":1});
+  node("circle",{cx:50,cy:77,r:3.2,fill:"#e6e7e3","data-live-slip":"true"});
  }else{
   const dialLabels={
    speed:["0","40","80","120","160"],alt:["0","2","4","6","8"],
@@ -214,6 +268,22 @@ function paint(holder,state,systems,input,profileId,doc){
    id==="rpm"?s.values.rpm+" / "+s.values.rpm+"%":
    id==="power"?s.values.power+"%":String(s.values[id]??"0");
   el.textContent=value;
+ }
+ for(const el of holder.querySelectorAll("[data-live-heading-card]")){
+  el.setAttribute("transform","rotate("+(-s.heading).toFixed(2)+" 50 50)");
+ }
+ for(const el of holder.querySelectorAll("[data-live-alt-hundreds]")){
+  el.setAttribute("transform","rotate("+s.angles.alt.toFixed(2)+" 50 50)");
+ }
+ for(const el of holder.querySelectorAll("[data-live-alt-thousands]")){
+  const thousands=(Number(s.values.alt)%10000)/10000*360;
+  el.setAttribute("transform","rotate("+thousands.toFixed(2)+" 50 50)");
+ }
+ for(const el of holder.querySelectorAll("[data-live-turn-airplane]")){
+  el.setAttribute("transform","rotate("+s.bank.toFixed(2)+" 50 50)");
+ }
+ for(const el of holder.querySelectorAll("[data-live-slip]")){
+  el.setAttribute("cx",(50+s.slip*12).toFixed(2));
  }
  for(const el of holder.querySelectorAll("[data-live-needle]")){
   const id=el.closest("[data-gauge]")?.dataset.gauge||"speed";

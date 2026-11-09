@@ -23,7 +23,15 @@ assert.equal(x.values.heading,"185");
 assert.equal(x.values.pitch,8);
 assert.equal(x.values.bank,-11);
 assert.equal(x.values.power,70);
-assert.ok(x.angles.alt>=-180&&x.angles.alt<=180);
+assert.ok(x.angles.alt>=0&&x.angles.alt<360);
+assert.ok(Math.abs(x.angles.alt-108)<.1,"altimeter long hand: 300 ft advances 108 degrees");
+assert.ok(x.slip>0&&x.slip<.2,"slip ball reflects combined rudder/bank proxy");
+const eastern=UI.snapshot({...state,headingDeg:90,altitudeM:152.4,rollDeg:0},
+ {powerPct:71},{...inputs,rudder:1},"c172");
+assert.equal(eastern.heading,90);
+assert.equal(eastern.values.heading,"090");
+assert.ok(Math.abs(eastern.angles.alt-180)<.01,"500 ft long altimeter needle points down");
+assert.equal(eastern.slip,.72,"rudder offset moves the slip ball");
 const heli=UI.snapshot({...state,mode:"helicopter"},{powerPct:84},inputs,"r44");
 assert.equal(heli.values.rpm,84);
 assert.equal(heli.values.power,55);
