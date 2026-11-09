@@ -972,12 +972,14 @@ $("traceDownload").addEventListener("click",()=>{
  $("traceStatus").textContent="Unsigned synthetic trace downloaded locally. Review before sharing.";
 });
 function frame(now){
+ let visualEvents=[];
  const dt=lastFrame?Math.min(.08,Math.max(0,(now-lastFrame)/1000)):0;
  lastFrame=now;
  if(!paused&&!document.hidden&&dt>0){
   hardware?.poll(dt,{input,mode:state.mode,dragActive:dragPointer!==null,keyboard:keys,pointers,paused});
   if(!paused){
   const result=M.step(state,input,dt);
+  visualEvents=result.events;
   A.step(systems,state,input,dt);
   G.observe(practice,state,result.events);
   trace.sample(state,input,dt);
@@ -993,7 +995,6 @@ function frame(now){
   }
   if(!eventRequested)haptics.ambience(state,input);
   updateVisualFeedback(now,result.events);
-  touchdownFX.update(now,result.events,state);
   if(state.phase!==lastPhase){
    lastPhase=state.phase;
    atcRadio?.cuePhase(state.phase);
@@ -1006,7 +1007,7 @@ function frame(now){
   if(after.index!==before.index||!after.playing)refreshReplay();
  }
  drawScenery(now);
- touchdownFX.update(now,[],state);
+ touchdownFX.update(now,visualEvents,state);
  if(now-prevView>42){updateReadouts();prevView=now;}
  if(now-prevViewTrace>500){traceStatus();prevViewTrace=now;}
  requestAnimationFrame(frame);
