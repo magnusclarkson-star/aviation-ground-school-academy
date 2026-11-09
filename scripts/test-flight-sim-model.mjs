@@ -129,6 +129,56 @@ simulate(hover,hoverInput,5);
 assert.ok(Math.abs(hover.headingDeg)<.001,
  "sideways cyclic while hovering does not invent a forward-flight turn");
 
+// The skids resist downward motion before takeoff even with low collective.
+const padClamp=M.makeState("helicopter"),padDown=M.makeInput("helicopter");
+padDown.collective=.1;
+simulate(padClamp,padDown,3);
+assert.equal(padClamp.altitudeM,0);
+assert.equal(padClamp.verticalMs,0,"grounded helicopter never accumulates negative vertical velocity");
+assert.equal(M.rotorHoverCue(padClamp),"ON PAD");
+// Hover guidance is based on real motion, not on the control stick position.
+const cueState=M.makeState("helicopter");
+Object.assign(cueState,{onGround:false,phase:"hover",altitudeM:3,verticalMs:0,
+ groundSpeedKt:.4,yawRateDegS:0});
+assert.equal(M.rotorHoverCue(cueState),"STEADY HOVER");
+cueState.groundSpeedKt=7.1;
+assert.equal(M.rotorHoverCue(cueState),"DRIFTING");
+cueState.groundSpeedKt=0;cueState.verticalMs=-1.2;
+assert.equal(M.rotorHoverCue(cueState),"DESCENDING");
+cueState.verticalMs=1.3;
+assert.equal(M.rotorHoverCue(cueState),"CLIMBING");
+cueState.verticalMs=0;cueState.yawRateDegS=8;
+assert.equal(M.rotorHoverCue(cueState),"TURNING");
+assert.equal(M.rotorHoverCue(M.makeState("airplane")),null);
+// A last-second collective change cannot disguise high actual impact speed.
+const impactHeli=M.makeState("helicopter"),impactInput=M.makeInput("helicopter");
+Object.assign(impactHeli,{onGround:false,phase:"hover",altitudeM:.09,verticalMs:-4.2});
+impactInput.collective=1;
+const fastImpact=M.step(impactHeli,impactInput,.05);
+assert.equal(impactHeli.phase,"halted",
+ "hard contact must use the actual descent rate rather than collective target");
+assert.ok(fastImpact.events.includes("hardLanding"));
+assert.equal(M.rotorHoverCue(impactHeli),"HARD CONTACT");
+// Conversely, gentle skid contact with a fast collective movement must be
+// judged by impact conditions, not the much more negative target VS.
+const lightHeli=M.makeState("helicopter"),lightInput=M.makeInput("helicopter");
+Object.assign(lightHeli,{onGround:false,phase:"hover",altitudeM:.01,
+ verticalMs:-1.15,groundSpeedKt:0});
+lightInput.collective=.2;
+const lightContact=M.step(lightHeli,lightInput,.05);
+assert.equal(lightHeli.phase,"landed");
+assert.ok(lightContact.events.includes("touchdown"));
+// Both cyclic channels build velocity through the displayed attitude.
+const attitudeHeli=M.makeState("helicopter"),attitudeInput=M.makeInput("helicopter");
+attitudeInput.collective=.80;attitudeInput.pitch=-.65;
+simulate(attitudeHeli,attitudeInput,5);
+assert.ok(attitudeHeli.pitchDeg>3&&attitudeHeli.forwardMs>1);
+const movingBefore=attitudeHeli.forwardMs;
+attitudeInput.pitch=0;
+simulate(attitudeHeli,attitudeInput,.1);
+assert.ok(attitudeHeli.forwardMs>0&&attitudeHeli.forwardMs<movingBefore,
+ "neutral cyclic gradually damps the helicopter's translational momentum");
+
 const heli=M.makeState("helicopter");
 const collective=M.makeInput("helicopter");collective.collective=.82;
 const liftEvents=[];
