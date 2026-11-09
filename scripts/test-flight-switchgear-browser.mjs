@@ -14,7 +14,7 @@ try{
  assert.ok(await panel.isVisible());
  assert.equal(await desktop.locator(".cockpit-switch").count(),4);
  for(const [button,source,after,again] of [
-  ["view","cameraMode","chase","cockpit"],
+  ["view","cameraMode","chase","side"],
   ["graphics","visualMode","2d","3d"],
   ["frame","cockpitFrameToggle","off","on"]
  ]){
