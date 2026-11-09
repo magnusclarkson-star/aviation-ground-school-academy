@@ -5,6 +5,7 @@
 (function(root){"use strict";
  const RAD=Math.PI/180;
  const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map(),PROP_CACHE=new Map();
+ const SHADOW_CACHE=new Map();
  const rgb=(r,g,b)=>"rgb("+Math.round(r*255)+","+Math.round(g*255)+","+Math.round(b*255)+")";
  const modelApi=()=>root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
   require("./flight-sim-3d.js"):null);
@@ -146,6 +147,38 @@
   faces.sort((a,b)=>b.depth-a.depth||a.order-b.order);
   return faces;
  }
+ // The non-WebGL fallback now uses the SAME airframe footprint as WebGL,
+ // rather than a stationary one-size-fits-all elliptical patch.
+ function shadowFaces(id){
+  const resolved=exterior().normalize(id);
+  if(!SHADOW_CACHE.has(resolved)){
+   const mesh=modelApi().buildShadow(resolved),p=mesh.positions,faces=[];
+   for(let i=0;i<p.length;i+=9)
+    faces.push([[p[i],p[i+2]],[p[i+3],p[i+5]],[p[i+6],p[i+8]]]);
+   SHADOW_CACHE.set(resolved,faces);
+  }
+  return SHADOW_CACHE.get(resolved);
+ }
+ function paintGroundShadow(ctx,id,view,scale,height,altitude){
+  if(altitude>=120)return;
+  const opacity=Math.max(0,.20/(1+altitude/24));
+  if(opacity<.012)return;
+  ctx.save();
+  ctx.translate(0,height*.23+Math.min(height*.10,altitude*.07));
+  ctx.beginPath();
+  for(const face of shadowFaces(id)){
+   const transformed=face.map(([x,z])=>{
+    if(view==="top")return [x*scale,-z*scale*.92];
+    if(view==="side")return [z*scale*.85,-x*scale*.15];
+    return [(x+z*.12)*scale,-z*scale*.38];
+   });
+   ctx.moveTo(...transformed[0]);ctx.lineTo(...transformed[1]);
+   ctx.lineTo(...transformed[2]);ctx.closePath();
+  }
+  ctx.fillStyle="rgba(14,27,31,"+opacity.toFixed(3)+")";
+  ctx.fill();
+  ctx.restore();
+ }
  function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={},orbit={}}={}){
   if(view==="inspect")return paintInspection(ctx,{id,width,height,orbit,animation});
   if(!ctx||!state)return false;
@@ -155,13 +188,8 @@
   const altitude=Math.max(0,Number(state.altitudeM)||0);
   ctx.save();
   ctx.translate(width/2,height*.60);
+  paintGroundShadow(ctx,id,view,scale,height,altitude);
   ctx.rotate(view==="top"?0:-roll*RAD*.55);
-  if(view!=="top"){
-   ctx.save();ctx.translate(0,height*.25);
-   ctx.fillStyle="rgba(12,29,39,"+(Math.max(.03,.18-altitude/800)).toFixed(2)+")";
-   ctx.beginPath();ctx.ellipse(0,0,scale*7.0,scale*1.4,0,0,Math.PI*2);
-   ctx.fill();ctx.restore();
-  }
   const project=([x,y,z])=>view==="top"?
    [x*scale,-z*scale*.92]:
    view==="side"?
