@@ -66,6 +66,7 @@ try{
  await phone.goto(url,{waitUntil:"load"});
  assert.ok(await phone.locator(".cockpit-nav-screen [data-nav-map]").first().isVisible());
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ const phoneYoke=await relativeY(phone,"#controlPad");
  await phone.locator(".cockpit-nav-screen").tap();
  assert.equal(await phone.locator("#cockpitZoomPanel").isVisible(),true,"phone tap expands Cessna moving map");
  assert.ok((await phone.locator("#cockpitZoomContent .cockpit-nav-scene svg").boundingBox()).height>=100);
