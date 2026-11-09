@@ -426,6 +426,9 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   helpChoices.dataset.open="false";
   helpToggle.setAttribute("aria-expanded","false");
  }
+ helpChoices?.addEventListener("click",event=>{
+  if(event.target?.closest?.("#cockpitAircraftPhotoButton"))closeHelpMenu();
+ });
  helpToggle?.addEventListener("click",()=>{
   const open=helpChoices?.dataset.open!=="true";
   if(helpChoices)helpChoices.dataset.open=String(open);
