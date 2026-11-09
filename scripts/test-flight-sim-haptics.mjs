@@ -28,6 +28,9 @@ documentLike.hidden=false;
 assert.equal(h.pulse("hardLanding"),true);
 assert.ok(Array.isArray(seen.at(-1))&&seen.at(-1).reduce((sum,n)=>sum+n,0)<=200);
 timestamp+=600;assert.equal(h.pulse("does-not-exist"),false);
+timestamp+=500;assert.equal(h.pulse("hoverHeld"),true,
+ "the precision hover completion has one distinct short haptic cue");
+assert.deepEqual(seen.at(-1),H.patterns.hoverHeld);
 h.setEnabled(false);assert.equal(h.isEnabled(),false);
 assert.equal(seen.at(-1),0,"disabling cancels remaining vibration");
 const silent=H.createHaptics({navigatorLike:{},documentLike,clock:()=>timestamp});
