@@ -10,10 +10,23 @@
   const x=bound(state?.xM,50000),z=bound(state?.zM,50000),
    heading=bearing(state?.headingDeg),track=bearing(state?.trackDeg??heading),
    groundSpeed=Math.max(0,Math.min(999,finite(state?.groundSpeedKt)));
+  // Runway centre is a fixed local point: 0 m east, 900 m north.
+  // Distance is horizontal map distance, NOT distance along an approach.
+  const dx=-x,dz=900-z,runwayDistanceM=Math.hypot(dx,dz);
+  const runwayBearingDeg=bearing(Math.atan2(dx,dz)*180/Math.PI);
+  const correction=((runwayBearingDeg-heading+540)%360)-180;
+  const runwayTurn=correction>5?"R":correction< -5?"L":"HOLD";
+  const runwayLandingHeadingDeg=z>=900?180:0;
+  // Zooms out as the field recedes, allowing the runway to remain on the
+  // heading-up map throughout a normal circuit, then zooms in on approach.
+  const scale=Math.max(.0055,Math.min(SCALE,77/Math.max(1600,runwayDistanceM)));
   return Object.freeze({
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
-   groundSpeedKt:groundSpeed,
-   worldTransform:"translate(110 82) rotate("+heading.toFixed(2)+") scale("+SCALE+" "+(-SCALE)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
+   groundSpeedKt:groundSpeed,scale,
+   runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,
+   runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
+    " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
+   worldTransform:"translate(110 82) rotate("+heading.toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
    trackRotation:"rotate("+(track-heading).toFixed(2)+" 110 82)",
    positionText:(x<0?"W":"E")+Math.round(Math.abs(x))+" "+(z<0?"S":"N")+Math.round(Math.abs(z))
   });
@@ -66,7 +79,7 @@
   box.appendChild(svg);
   const readouts=doc.createElement("div");
   readouts.className="cockpit-nav-readouts";
-  for(const [key,initial] of [["heading","HDG 000"],["track","TRK 000"],["position","E0 N0"],["speed","GS 0"]]){
+  for(const [key,initial] of [["heading","HDG 000"],["track","TRK 000"],["position","E0 N0"],["speed","GS 0"],["runway","RWY · BRG 000°"]]){
    const field=doc.createElement("span");
    field.dataset.navField=key;
    field.textContent=initial;
@@ -88,6 +101,7 @@
     field.textContent=value==="heading"?"HDG "+String(Math.round(c.headingDeg)%360).padStart(3,"0"):
      value==="track"?"TRK "+String(Math.round(c.trackDeg)%360).padStart(3,"0"):
      value==="position"?c.positionText:
+     value==="runway"?c.runwayText:
      "GS "+Math.round(c.groundSpeedKt);
    }
   }
