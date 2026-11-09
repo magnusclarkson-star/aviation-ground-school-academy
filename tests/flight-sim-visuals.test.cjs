@@ -259,12 +259,18 @@ test("all aircraft use the slim view/scene/light/frame switch strip",()=>{
  const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-mini-switches.css"),"utf8");
  const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
  const gear=fs.readFileSync(path.join(__dirname,"..","flight-sim-switchgear.js"),"utf8");
- assert.ok(html.includes('flight-sim-mini-switches.css?v=20261109-miniswitch1'));
+ assert.ok(html.includes('flight-sim-mini-switches.css?v=20261109-micro2'));
  assert.ok(html.indexOf("flight-sim-mini-switches.css")>
   html.indexOf("flight-sim-c172-compact.css"),"compact styles must load last");
  for(const id of ["view","graphics","light","frame"])
   assert.ok(html.includes('id="cockpitSwitch_'+id+'"'),"missing "+id);
  assert.ok(css.includes("#cockpitStation #cockpitMain .cockpit-switch-panel"));
+ assert.ok(html.includes('id="agsa-micro-switch-inline"'));
+ assert.ok(html.includes('data-switch-size="micro2"'));
+ assert.ok(html.includes('width:max-content!important'),
+  "switch housing must be miniature even when the external CSS is stale");
+ assert.ok(css.includes('width:40px!important'),
+  "miniature button width must be declared");
  assert.ok(css.includes("#cockpitStation #cockpitMain .cockpit-switch-bank"));
  assert.ok(css.includes("height:27px!important")&&css.includes("height:28px!important"));
  assert.ok(css.includes(".cockpit-annunciators{\n  display:none!important"),
