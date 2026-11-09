@@ -118,7 +118,7 @@ async function startFullFlight(){
  const vibTest=vibSupported?haptics.test():{accepted:false};
  // Web Audio and speech must be initiated before any await: mobile browsers
  // require an actual tap, and playing during page load is not dependable.
- const engineStart=engineAudio.start(state.mode,audioPower());
+ const engineStart=engineAudio.start(audioMode(),audioPower());
  engineAudio.setVolume(Number($("engineAudioVolume").value),audioPower());
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  const cueStarted=radioTone.enable(true);

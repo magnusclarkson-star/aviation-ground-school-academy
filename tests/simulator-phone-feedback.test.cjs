@@ -101,7 +101,7 @@ test('full settings are ready at maximum before browser gesture, and complete ac
  assert.ok(html.includes('id="engineAudioVolume" type="range" min="0" max="100" step="1" value="100"'));
  assert.ok(html.includes('<option value="textured" selected>'));
  assert.ok(html.includes('<option value="noticeable" selected>'));
- assert.ok(js.includes('const engineStart=engineAudio.start(state.mode,audioPower())'));
+ assert.ok(js.includes('const engineStart=engineAudio.start(audioMode(),audioPower())'), 'full flight engine starts with the selected airframe voice');
  assert.ok(js.includes('const cueStarted=radioTone.enable(true)'));
  assert.ok(js.includes('const radioArmed=atcRadio?.arm(true)===true'));
  assert.ok(js.includes('haptics.setEnabled(true)'));
