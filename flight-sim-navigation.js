@@ -59,7 +59,7 @@
   if(route.length){
    const line=route.map(([x,z],i)=>(i?"L":"M")+x+" "+z).join(" ");
    node(doc,"path",{d:line,fill:"none",stroke:"#edc579","stroke-width":28,
-    "stroke-dasharray":"95 100","stroke-linejoin":"round","data-nav-circuit-route":"true"},base);
+    "stroke-dasharray":"95 100","stroke-linejoin":"round","data-nav-circuit-route":"true",visibility:"hidden"},base);
   }
   const waypoint=node(doc,"circle",{cx:0,cy:0,r:75,fill:"#f2d99a",
    stroke:"#113b49","stroke-width":18,"data-nav-circuit-waypoint":"true"},base);
@@ -108,11 +108,13 @@
   for(const el of holder.querySelectorAll("[data-nav-map]")){
    el.querySelector("[data-nav-world]")?.setAttribute("transform",c.worldTransform);
    el.querySelector("[data-nav-track-pointer]")?.setAttribute("transform",c.trackRotation);
+   const guideLine=el.querySelector("[data-nav-circuit-route]");
+   guideLine?.setAttribute("visibility",c.leg?.active?"visible":"hidden");
    const wp=el.querySelector("[data-nav-circuit-waypoint]");
    if(wp){
     // The status carries the current leg, whose target is a fixed local
     // point from the declared leg table, never an inferred GPS location.
-    const target=c.leg&&Circuit?.targets?.[c.leg.stage];
+    const target=c.leg?.waypoint;
     if(target){wp.setAttribute("cx",String(target[0]));wp.setAttribute("cy",String(target[1]));}
     wp.setAttribute("visibility",target&&c.leg.active?"visible":"hidden");
    }
