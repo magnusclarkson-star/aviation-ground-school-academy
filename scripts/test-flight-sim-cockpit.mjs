@@ -9,6 +9,11 @@ assert.equal(Backlight.normalize("blue"),"blue");
 assert.equal(Backlight.normalize("off"),"off");
 assert.equal(Backlight.normalize("invalid"),"green",
  "unsupported colour falls back to readable green cockpit lighting");
+assert.deepEqual([...Backlight.LEVELS],["dim","normal","bright"]);
+assert.equal(Backlight.normalizeLevel("bright"),"bright");
+assert.equal(Backlight.normalizeLevel("dim"),"dim");
+assert.equal(Backlight.normalizeLevel("invalid"),"normal");
+
 
 const profiles=UI.FRAMES;
 assert.equal(profiles.length,7,"Cessna, Robinson and five fighter panels");
