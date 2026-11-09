@@ -262,3 +262,9 @@ footer{font-size:11px;color:#97b7c9;margin-top:24px;border-top:1px solid #36566a
 @media(prefers-reduced-motion:reduce){
  .cockpit-propeller{animation:none!important;opacity:.35}
 }
+
+
+/* When inspecting the actual aircraft from chase, side or overhead, keep
+   pilot-only reference graphics off the exterior silhouette. */
+.scene-shell[data-exterior-view="on"] .scene-centre,
+.scene-shell[data-exterior-view="on"] #cockpitJetHud{display:none!important}
