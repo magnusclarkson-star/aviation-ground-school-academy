@@ -113,6 +113,25 @@ try{
  const jet=await shot(phone,"#outsideView");
  assert.notEqual(rot,jet,"phone 2D chase switches helicopter to Typhoon profile");
  assert.equal(await phone.locator("#cockpitAircraftSelect").inputValue(),"typhoon");
+ // On Android-sized screens, the visible aircraft also controls the
+ // simulated runway response; changing the picture alone is insufficient.
+ await phone.locator("#startRunway").click();
+ await phone.locator("#power").evaluate(el=>{
+  el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+ await phone.waitForTimeout(1000);
+ const jetSpeed=Number(await phone.locator("#readSpeed").textContent());
+ assert.ok(jetSpeed>4,"selected Typhoon runway movement is live");
+ await phone.locator("#cockpitAircraftSelect").selectOption("c172");
+ await phone.locator("#startRunway").click();
+ await phone.locator("#power").evaluate(el=>{
+  el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+ await phone.waitForTimeout(1000);
+ const trainerSpeed=Number(await phone.locator("#readSpeed").textContent());
+ assert.ok(jetSpeed>trainerSpeed+3,
+  "changing aircraft changes acceleration in the flight model, not only the outside picture");
+
  assert.equal(await phone.locator("#controlPad").isVisible(),true,"cockpit controls unaffected");
  assert.equal(await phone.locator("#cockpitZoomPanel").isVisible(),false,"instrument zoom unaffected");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
