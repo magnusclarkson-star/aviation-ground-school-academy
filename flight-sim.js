@@ -353,7 +353,7 @@ function updateReadouts(){
  I.paint(document,state);
  cockpit?.update();
  switchgear?.update();
- const cue=G.guidance(state,input),stats=G.summary(practice,state);
+ const cue=G.guidance(state,input,practice),stats=G.summary(practice,state);
  $("coachPhase").textContent=cue.tag;
  $("coachText").textContent=cue.text;
  $("coachGlance").dataset.level=cue.level;
@@ -995,6 +995,7 @@ setMode("yoke");
 cockpit=CI.attach({
  documentLike:document,
  getState:()=>state,getSystems:()=>systems,getInput:()=>input,
+ getPractice:()=>practice,
  onSelect:(control)=>setMode(control)
 });
 switchgear=SW.attach({documentLike:document,windowLike:window});
