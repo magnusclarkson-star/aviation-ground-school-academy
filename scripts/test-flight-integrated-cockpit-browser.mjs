@@ -218,7 +218,9 @@ try{
   landed:'PRECISION LANDING'},
   'phone hover mini-panel shows measured hold time and precision landing result');
  const visibleGauges=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
-  els=>els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.dataset.gauge));
+  els=>els.filter(el=>getComputedStyle(el).display!=='none')
+   .sort((a,b)=>Number(getComputedStyle(a).order)-Number(getComputedStyle(b).order))
+   .map(el=>el.dataset.gauge));
  assert.deepEqual(visibleGauges,
   ['speed','attitude','alt','rpm','heading','vsi','power','turn'],
   'all eight R44 instruments must be visible together without a hidden/expand action');
