@@ -32,6 +32,10 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-exterior-2d.js'
+      - 'flight-sim-inspection.js'
+      - 'flight-sim-inspection.css'
+      - 'scripts/test-flight-inspection.mjs'
+      - 'scripts/test-flight-inspection-browser.mjs'
       - 'scripts/test-flight-sim-airframes.mjs'
       - 'scripts/test-flight-exterior-airframes-browser.mjs'
       - 'flight-sim-airport-detail.js'
@@ -108,6 +112,10 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-exterior-2d.js'
+      - 'flight-sim-inspection.js'
+      - 'flight-sim-inspection.css'
+      - 'scripts/test-flight-inspection.mjs'
+      - 'scripts/test-flight-inspection-browser.mjs'
       - 'scripts/test-flight-sim-airframes.mjs'
       - 'scripts/test-flight-exterior-airframes-browser.mjs'
       - 'flight-sim-airport-detail.js'
@@ -179,6 +187,7 @@ jobs:
           node --check flight-sim-3d.js
           node --check flight-sim-airframe-geometry.js
           node --check flight-sim-exterior-2d.js
+          node --check flight-sim-inspection.js
           node --check flight-sim-airport-detail.js
           node --check flight-sim-aircraft-systems.js
           node --check flight-sim-instruments.js
@@ -200,6 +209,7 @@ jobs:
           node scripts/test-flight-sim-environment.mjs
           node scripts/test-flight-sim-3d.mjs
           node scripts/test-flight-sim-airframes.mjs
+          node scripts/test-flight-inspection.mjs
           node scripts/test-flight-sim-airport-detail.mjs
           node scripts/test-flight-sim-aircraft-systems.mjs
       - name: Test optional vibration
@@ -230,6 +240,7 @@ jobs:
           node scripts/test-flight-sim-environment-browser.mjs
           node scripts/test-flight-sim-3d-browser.mjs
           node scripts/test-flight-exterior-airframes-browser.mjs
+          node scripts/test-flight-inspection-browser.mjs
           node scripts/test-flight-sim-airport-detail-browser.mjs
           node scripts/test-flight-sim-aircraft-systems-browser.mjs
           node scripts/test-flight-sim-aerodynamics-browser.mjs
