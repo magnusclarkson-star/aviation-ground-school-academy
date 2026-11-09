@@ -234,3 +234,21 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
   width:min(190px,70vw)!important;height:min(190px,70vw)!important
  }
 }
+
+
+/* Fit the live navigation map alongside all six gauges and both rudder pedals
+   in the focused 390px-high landscape phone cockpit. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  min-height:58px;max-height:70px;padding:1px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge{
+  width:clamp(45px,14dvh,58px)!important;height:clamp(45px,14dvh,58px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-nav-scene svg{
+  height:45px;min-height:0
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-nav-readouts{
+  min-height:15px;padding:1px;font-size:6px
+ }
+}
