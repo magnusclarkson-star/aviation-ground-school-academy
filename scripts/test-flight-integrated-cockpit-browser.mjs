@@ -51,6 +51,24 @@ try{
   'Cessna navigator must sit to the right of the six-pack, not below');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false,'help is hidden until learner taps ⓘ');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),false,'instrument is normal size initially');
+ // Backlight is always available in More without another large toolbar item.
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-backlight'),'green');
+ const firstGauge=desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').first();
+ const originalGauge=await firstGauge.boundingBox();
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(198, 255, 225)');
+ await desktop.locator('#cockpitHelpToggle').click();
+ await desktop.locator('#cockpitBacklightPicker [data-cockpit-backlight="blue"]').click();
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-backlight'),'blue');
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(212, 234, 255)');
+ assert.equal(await desktop.locator('#cockpitBacklightPicker [data-cockpit-backlight="blue"]').getAttribute('aria-pressed'),'true');
+ const litGauge=await firstGauge.boundingBox();
+ assert.ok(Math.abs(originalGauge.height-litGauge.height)<1,
+  'backlighting must not resize round instruments or shift flight controls');
+ await desktop.locator('#cockpitBacklightPicker [data-cockpit-backlight="off"]').click();
+ assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instrument-backlight'),'off');
+ await desktop.locator('#cockpitBacklightPicker [data-cockpit-backlight="green"]').click();
+ assert.equal(await firstGauge.evaluate(el=>getComputedStyle(el).color),'rgb(198, 255, 225)');
+ await desktop.locator('#cockpitHelpToggle').click();
  assert.equal(await desktop.locator('#cockpitControlFocusToggle').count(),0,'no control expansion button');
  assert.equal(await desktop.locator('#cockpitExtraControls').count(),0,'no surprise additional control panels');
  await desktop.locator('#cockpitHelpToggle').click();
@@ -83,6 +101,9 @@ try{
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'trainer glass cockpit has live flight, map and systems displays');
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),0,'round dials replaced by glass displays');
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-nav').count(),1,'glass navigation map remains available');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-head').first().evaluate(
+  el=>getComputedStyle(el).color),'rgb(198, 255, 225)',
+  'glass displays inherit the green lighting without losing navigation');
  await desktop.locator('#cockpitInstrumentStyle').click();
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6,'trainer round gauges restored');
 
@@ -320,6 +341,13 @@ try{
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
+ await phone.locator('#cockpitHelpToggle').tap();
+ await phone.locator('#cockpitBacklightPicker [data-cockpit-backlight="blue"]').tap();
+ assert.equal(await phone.locator('#cockpitStation').getAttribute('data-instrument-backlight'),'blue');
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge-title').first().evaluate(
+  el=>getComputedStyle(el).color),'rgb(212, 234, 255)',
+  'R44 dials illuminate blue on phone screens');
+ await phone.locator('#cockpitHelpToggle').tap();
  assert.ok(await phone.evaluate(()=>{
   const c=document.getElementById('collectivePanel').getBoundingClientRect();
   const r=document.getElementById('restartFlight').getBoundingClientRect();
