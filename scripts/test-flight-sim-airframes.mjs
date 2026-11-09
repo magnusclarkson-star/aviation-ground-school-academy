@@ -78,9 +78,14 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const parts=T.buildMovingParts(id);
  assert.deepEqual(parts.map(x=>x.name),[
   "leftAileron","leftFlap","elevatorLeft","rightAileron",
-  "rightFlap","elevatorRight",...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"])
- ],id+" has the correct individual animated jet surfaces");
+  "rightFlap","elevatorRight",...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"]),
+  "noseGear","mainGearLeft","mainGearRight"
+ ],id+" has animated control surfaces and three retractable gear assemblies");
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
+ for(const p of parts.filter(p=>p.name.endsWith("Gear"))){
+  assert.equal(p.axis,1,id+" jet gear pivots inward around its horizontal hinge");
+  assert.ok(p.mesh.triangles>60,id+" gear has a round wheel with a hub and support strut");
+ }
  const names=parts.map(x=>x.name);
  const rudders=names.filter(name=>name.toLowerCase().includes("rudder"));
  if(id==="typhoon"){
@@ -164,4 +169,21 @@ for(const id of A.IDS){
  assert.ok(fake.count-before>=T.buildVehicle(id).triangles,
   id+" 2D canvas paints the matching mesh rather than one generic airplane");
 }
+// The mobile 2D renderer must layer nearby wheels and rotors over the
+// correct farther fuselage surfaces for every camera, even without WebGL.
+for(const id of A.IDS){
+ for(const view of ["top","side","chase"]){
+  const faces=C.projectedFaces(id,view,{mainRotor:.78,tailRotor:1.45,
+   rotorBlurOpacity:.11,noseGear:1.1,mainGearLeft:1.1,mainGearRight:1.1});
+  assert.ok(faces.length>T.buildVehicle(id).triangles,
+   id+" includes animated moving hardware in fallback view "+view);
+  assert.ok(faces.every(f=>Number.isFinite(f.depth)),id+" depths are finite");
+  assert.ok(faces.every((f,i)=>i===0||faces[i-1].depth>=f.depth-1e-8),
+   id+" "+view+" draws far triangles before near triangles");
+ }
+}
+const helicopterTop=C.projectedFaces("r44","top",{mainRotor:1.1,tailRotor:2.0});
+assert.ok(helicopterTop.at(-1).depth<helicopterTop[0].depth,
+ "rotor blades are depth-sorted with helicopter cabin in overhead fallback");
+
 console.log("Seven external aircraft meshes passed: distinct Cessna, R44, F/A-18, F-22, F-35, Typhoon and Su-37 shapes, matching 2D/3D airframe geometry, controls and mobile budgets.");
