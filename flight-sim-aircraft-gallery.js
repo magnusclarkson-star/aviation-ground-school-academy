@@ -61,14 +61,22 @@ function attach({documentLike}={}){
  const eyebrow=element("span");eyebrow.textContent="AIRCRAFT GALLERY";
  const model=element("strong");model.id="cockpitGalleryHeading";
  title.append(eyebrow,model);
+ const inspectButton=element("button","aircraft-gallery-inspect");
+ inspectButton.type="button";inspectButton.id="cockpitAircraftGalleryInspect";
+ inspectButton.textContent="⟳ 360° Rotate";
+ inspectButton.setAttribute("aria-label","Open the selected aircraft in the interactive 360 degree viewer");
+ inspectButton.setAttribute("aria-controls","aircraftInspectDialog");
  const closeButton=element("button","aircraft-gallery-close");
  closeButton.type="button";closeButton.id="cockpitAircraftGalleryClose";
  closeButton.setAttribute("aria-label","Close aircraft pictures");
  closeButton.textContent="Close ✕";
- header.append(title,closeButton);
+ header.append(title,inspectButton,closeButton);
  const largePhoto=element("img","aircraft-gallery-image");
  largePhoto.id="cockpitAircraftGalleryImage";
  largePhoto.loading="lazy";largePhoto.decoding="async";largePhoto.width=1024;largePhoto.height=768;
+ largePhoto.tabIndex=0;
+ largePhoto.setAttribute("role","button");
+ largePhoto.setAttribute("aria-label","Enlarge the selected aircraft and rotate it in 360 degrees");
  const choices=element("div","aircraft-gallery-choices");
  choices.setAttribute("role","group");
  choices.setAttribute("aria-label","Choose another aircraft picture");
@@ -118,12 +126,26 @@ function attach({documentLike}={}){
   overlay.hidden=false;button.setAttribute("aria-expanded","true");
   closeButton.focus({preventScroll:true});
  }
+ function open360(){
+  // Only one modal at a time. The existing inspector is authoritative
+  // for drag, pinch, zoom and animation and uses the currently selected
+  // aircraft. Keep its original More menu button available as a fallback.
+  close();
+  if(inspect)inspect.click();
+ }
+ inspectButton.addEventListener("click",open360);
+ largePhoto.addEventListener("click",open360);
+ largePhoto.addEventListener("keydown",event=>{
+  if(event.key==="Enter"||event.key===" "){
+   event.preventDefault();open360();
+  }
+ });
  button.addEventListener("click",()=>overlay.hidden?open():close());
  closeButton.addEventListener("click",close);
  overlay.addEventListener("click",event=>{if(event.target===overlay)close();});
  overlay.addEventListener("keydown",event=>{
   if(event.key==="Tab"){
-   const focusables=[closeButton,...thumbnails.values()];
+   const focusables=[inspectButton,closeButton,largePhoto,...thumbnails.values()];
    const index=focusables.indexOf(doc.activeElement);
    if(event.shiftKey&&index===0){event.preventDefault();focusables[focusables.length-1].focus();}
    else if(!event.shiftKey&&index===focusables.length-1){event.preventDefault();focusables[0].focus();}
