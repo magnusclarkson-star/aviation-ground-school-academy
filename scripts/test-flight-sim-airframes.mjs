@@ -117,6 +117,17 @@ assert.ok(Math.abs(extent(sweep,2)-10.06)<.10,
  "motion disc covers the rotor's full circular sweep");
 assert.ok(sweep.positions.every(Number.isFinite));
 assert.equal(T.buildRotorSweep("c172"),null);
+const propSweep=T.buildPropellerSweep("c172");
+assert.ok(propSweep&&propSweep.triangles===96,"trainer propeller motion sweep is lightweight");
+assert.ok(Math.abs(extent(propSweep,0)-1.93)<.06,
+ "trainer propeller blur is circular, not squashed by wing scaling");
+assert.ok(Math.abs(extent(propSweep,1)-1.93)<.06,
+ "trainer propeller blur matches the actual 1.93 m two-blade disc");
+assert.equal(T.buildPropellerSweep("r44"),null);
+assert.equal(C.propellerSweepTriangles("c172").length,96,
+ "2D fallback and WebGL share the Cessna propeller sweep geometry");
+assert.equal(C.propellerSweepTriangles("r44").length,0);
+
 assert.equal(C.rotorSweepTriangles("r44").length,128,
  "2D fallback reuses the same round sweep geometry as WebGL");
 assert.equal(C.rotorSweepTriangles("c172").length,0);
@@ -174,7 +185,7 @@ for(const id of A.IDS){
 for(const id of A.IDS){
  for(const view of ["top","side","chase"]){
   const faces=C.projectedFaces(id,view,{mainRotor:.78,tailRotor:1.45,
-   rotorBlurOpacity:.11,noseGear:1.1,mainGearLeft:1.1,mainGearRight:1.1});
+   rotorBlurOpacity:.11,propBlurOpacity:.11,noseGear:1.1,mainGearLeft:1.1,mainGearRight:1.1});
   assert.ok(faces.length>T.buildVehicle(id).triangles,
    id+" includes animated moving hardware in fallback view "+view);
   assert.ok(faces.every(f=>Number.isFinite(f.depth)),id+" depths are finite");
