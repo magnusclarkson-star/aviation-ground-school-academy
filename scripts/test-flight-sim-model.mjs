@@ -95,6 +95,40 @@ assert.equal(impact.state.phase,"halted","off-runway contact cannot count as a s
 assert.ok(impact.events.includes("hardLanding"));
 assert.equal(M.step(hard,hardInput,.1).state.time,hard.time);
 
+// Helicopter anti-torque pedals build and release yaw rate gradually.
+const pedalState=M.makeState("helicopter");
+const pedalInput=M.makeInput("helicopter");pedalInput.collective=.8;pedalInput.rudder=1;
+simulate(pedalState,pedalInput,5);
+assert.ok(pedalState.altitudeM>0,"pedal check must be airborne");
+assert.ok(pedalState.yawRateDegS>14&&pedalState.yawRateDegS<=19);
+const turningHeading=pedalState.headingDeg;
+pedalInput.rudder=0;
+simulate(pedalState,pedalInput,.2);
+assert.ok(pedalState.yawRateDegS>0&&pedalState.yawRateDegS<18,
+ "pedal release gradually damps heading rate, not an abrupt stop");
+assert.ok(pedalState.headingDeg>turningHeading,"yaw still responds after pedal release");
+simulate(pedalState,pedalInput,3);
+assert.ok(Math.abs(pedalState.yawRateDegS)<.2,"neutral pedals eventually stop yaw");
+const pad=M.makeState("helicopter");
+const padInput=M.makeInput("helicopter");padInput.rudder=1;
+simulate(pad,padInput,3);
+assert.equal(pad.headingDeg,0,"anti-torque pedals cannot spin grounded skids");
+assert.equal(pad.yawRateDegS,0);
+const coordinated=M.makeState("helicopter");
+const coordinatedInput=M.makeInput("helicopter");
+coordinatedInput.collective=.8;coordinatedInput.pitch=-.65;
+simulate(coordinated,coordinatedInput,6);
+const initialCoordinatedHeading=coordinated.headingDeg;
+coordinatedInput.bank=.7;
+simulate(coordinated,coordinatedInput,2);
+assert.ok(coordinated.headingDeg>initialCoordinatedHeading+.2,
+ "forward flight bank assists the turn with pedals centred");
+const hover=M.makeState("helicopter");
+const hoverInput=M.makeInput("helicopter");hoverInput.collective=.8;hoverInput.bank=.7;
+simulate(hover,hoverInput,5);
+assert.ok(Math.abs(hover.headingDeg)<.001,
+ "sideways cyclic while hovering does not invent a forward-flight turn");
+
 const heli=M.makeState("helicopter");
 const collective=M.makeInput("helicopter");collective.collective=.82;
 const liftEvents=[];
