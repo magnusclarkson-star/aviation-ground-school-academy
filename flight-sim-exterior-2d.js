@@ -182,10 +182,17 @@
  function paint(ctx,state,{id="c172",width=960,height=540,view="chase",animation={},orbit={}}={}){
   if(view==="inspect")return paintInspection(ctx,{id,width,height,orbit,animation});
   if(!ctx||!state)return false;
-  const scale=Math.max(2,Math.min(width/24,height/17));
+  const speed=Number.isFinite(state.groundSpeedKt)?
+   Math.max(0,Math.min(500,state.groundSpeedKt)):0;
+  const movement=Math.min(1,speed/(state.mode==="helicopter"?100:210));
+  // Mirror the WebGL chase camera's wider high-speed framing in fallback
+  // mode, keeping the same selected aircraft and animated control surfaces.
+  const scale=Math.max(2,Math.min(width/24,height/17))*(1-movement*.13);
   const roll=Number.isFinite(state.rollDeg)?state.rollDeg:0;
   const pitch=Number.isFinite(state.pitchDeg)?state.pitchDeg:0;
   const altitude=Math.max(0,Number(state.altitudeM)||0);
+  const bounce=Number.isFinite(animation?.touchdownBounce)?
+   Math.max(0,Math.min(.24,animation.touchdownBounce)):0;
   ctx.save();
   ctx.translate(width/2,height*.60);
   paintGroundShadow(ctx,id,view,scale,height,altitude);
@@ -193,8 +200,8 @@
   const project=([x,y,z])=>view==="top"?
    [x*scale,-z*scale*.92]:
    view==="side"?
-   [z*scale*.91,(-y*.95-x*.17)*scale]:
-   [(x+z*.12)*scale,(-y*.91-z*(.43+pitch/350))*scale];
+   [z*scale*.91,(-(y+bounce)*.95-x*.17)*scale]:
+   [(x+z*.12)*scale,(-(y+bounce)*.91-z*(.43+pitch/350))*scale];
   // One painter pass for body, rotating blades and hinged surfaces preserves
   // the correct near/far layer when the camera or selected aircraft changes.
   for(const face of projectedFaces(id,view,animation)){
