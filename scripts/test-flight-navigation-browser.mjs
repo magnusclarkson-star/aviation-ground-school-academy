@@ -30,7 +30,7 @@ try{
    readouts:[...map.querySelectorAll("[data-nav-field]")].map(el=>el.textContent)};
  });
  assert.equal(derived.pos,"230.0,-1450.0");
- assert.match(derived.transform,/rotate\(90\.00\)/);
+ assert.match(derived.transform,/rotate\(-90\.00\)/,"heading-up map rotates opposite aircraft heading");
  assert.match(derived.transform,/translate\(-230\.00 1450\.00\)/);
  assert.equal(derived.track,"rotate(15.00 110 82)");
  assert.ok(derived.readouts.includes("E230 S1450"));
