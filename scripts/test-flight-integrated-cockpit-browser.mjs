@@ -177,7 +177,11 @@ try{
  assert.equal(await more.getAttribute('aria-expanded'),'true');
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
   els=>els.filter(el=>getComputedStyle(el).display!=='none').length),8);
- await phone.locator('#cockpitVisualPanel [data-gauge="heading"]').tap({position:{x:23,y:43}});
+ const secondaryHeading=phone.locator('#cockpitVisualPanel [data-gauge="heading"]');
+ const headingBounds=await secondaryHeading.boundingBox();
+ assert.ok(headingBounds.width>=55&&headingBounds.height>=55,
+  'expanded R44 heading retains a proper individually tappable instrument face');
+ await secondaryHeading.tap();
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true,
   'secondary R44 heading dial retains tap-only individual instrument enlargement');
  await phone.locator('#cockpitZoomClose').tap();
