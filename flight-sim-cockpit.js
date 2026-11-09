@@ -211,10 +211,10 @@ function makeAnalogFace(doc,id,label,unit){
 function digitalScreen(doc,kind,index){
  const screen=doc.createElement("div");screen.className="cockpit-mfd cockpit-mfd-"+kind;
  const header=doc.createElement("div");header.className="cockpit-mfd-head";header.textContent=
-   kind==="pfd"?"FLIGHT DISPLAY":kind==="nav"?"NAVIGATION · SIM":kind==="engine"?"SYSTEMS · SIM":
+   kind==="pfd"?"FLIGHT DISPLAY":kind==="nav"?"NAVIGATION · SIM":kind==="sysnav"?"NAV / SYSTEMS":kind==="engine"?"SYSTEMS · SIM":
    kind==="att"?"ATTITUDE · SIM":"FLIGHT DATA";
  const body=doc.createElement("div");body.className="cockpit-mfd-body";
- if(kind==="nav"){
+ if(kind==="nav"||kind==="sysnav"){
   body.classList.add("cockpit-mfd-map-body");
   body.appendChild(NAV.build(doc));
  }else if(kind==="pfd"||kind==="att"){
@@ -241,6 +241,19 @@ function digitalScreen(doc,kind,index){
  }
  const foot=doc.createElement("div");foot.className="cockpit-mfd-foot";foot.textContent="TRAINING DISPLAY "+(index+1)+" · NO TACTICAL DATA";
  screen.append(header,body,foot);
+ // The Su-37 retains its two large displays but now has a live map and
+ // live engine readouts instead of sacrificing navigation for systems.
+ if(kind==="sysnav"){
+  const strip=doc.createElement("div");
+  strip.className="cockpit-sysnav-strip";
+  strip.setAttribute("aria-label","Live power, engine and vertical speed indications");
+  for(const [key,caption] of [["power","PWR"],["rpm","RPM"],["vsi","V/S"]]){
+   const cell=doc.createElement("span"),label=doc.createElement("small"),value=doc.createElement("strong");
+   label.textContent=caption;value.dataset.mfdValue=key;value.textContent="0";
+   cell.append(label,value);strip.appendChild(cell);
+  }
+  screen.insertBefore(strip,foot);
+ }
  screen.setAttribute("role","button");
  screen.tabIndex=0;
  screen.setAttribute("aria-label","Enlarge "+header.textContent+" simulated display");
@@ -256,7 +269,7 @@ function buildPanel(doc,profile,holder,instrumentStyle="auto"){
   const screenKinds=profile.family==="jet"?
    (profile.layout==="panoramic"?["pfd","nav","engine"]:
     profile.layout==="quad"?["nav","pfd","att","engine"]:
-    profile.layout==="dual"?["pfd","engine"]:["nav","pfd","engine"]):
+    profile.layout==="dual"?["pfd","sysnav"]:["nav","pfd","engine"]):
    ["pfd","nav","engine"];
   const layout=profile.family==="jet"?profile.layout:"triple";
   const row=doc.createElement("div");
