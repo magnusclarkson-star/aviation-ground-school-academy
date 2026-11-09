@@ -236,21 +236,44 @@ function buildMovingParts(mode="airplane"){
   const m=new Mesh();draw(m);result.push({name,pivot,axis,mesh:m.finish()});
  };
  if(mode==="airplane"){
-  add("propeller",[0,0,6.05],3,m=>{
-   m.box(-.13,-2.15,6.04,.26,4.30,.16,metal);
-   m.box(-2.15,-.13,6.04,4.30,.26,.16,tint(metal,.84));
-   m.box(-.31,-.31,6.14,.62,.62,.28,yellow);
+  // A Cessna 172-style two-blade fixed-pitch propeller: one 1.93 m disk,
+  // not the former four-bladed cross or 4.3 m helicopter-sized propeller.
+  // The small difference in each blade face gives visual pitch/twist.
+  add("propeller",[0,0,6.11],3,m=>{
+   for(const sign of [-1,1]){
+    const y0=sign*.18,y1=sign*.80,y2=sign*.965;
+    m.quad([-.14,y0,6.13],[.15,y0,6.09],
+     [.10,y1,6.07],[-.10,y1,6.13],metal);
+    m.quad([-.10,y1,6.13],[.10,y1,6.07],
+     [.045,y2,6.09],[-.055,y2,6.13],tint(metal,.89));
+    m.quad([.15,y0,6.04],[-.14,y0,6.08],
+     [-.10,y1,6.07],[.10,y1,6.01],tint(metal,.75));
+    m.quad([.10,y1,6.01],[-.10,y1,6.07],
+     [-.055,y2,6.06],[.045,y2,6.02],tint(metal,.7));
+    m.box(-.08,sign>0?.84:-.95,6.08,.16,.11,.1,yellow);
+   }
+   m.box(-.22,-.22,6.12,.44,.44,.18,yellow);
   });
-  for(const [name,x,bankSign] of [
-   ["leftAileron",-6.25,-1],["rightAileron",4.55,1]]){
-   add(name,[x+ .85,.1,-1.7],1,m=>{
-    m.box(x,-.06,-2.18,1.7,.21,.55,bankSign>0?blue:yellow);
-   });
-  }
-  for(const [name,x] of [["leftFlap",-3.9],["rightFlap",1.4]]){
-   add(name,[x+1.1,.1,-1.68],1,m=>{
-    m.box(x,-.07,-2.22,2.2,.22,.62,blue);
-   });
+  // Flaps and ailerons must be physically connected to the high wings,
+  // not floating a metre below the aircraft (the previous geometry).
+  // Hinges rotate about the lateral X axis and remain in the same
+  // local coordinates in the 2D renderer and 360-degree WebGL inspector.
+  const panel=(m,a,b,c,d,color)=>{
+   m.quad(a,b,c,d,color);
+   m.quad(d,c,b,a,tint(color,.78));
+  };
+  for(const sign of [-1,1]){
+   const side=sign<0?"left":"right";
+   add(side==="left"?"leftAileron":"rightAileron",
+    [sign*6.12,.94,-1.45],1,m=>{
+     panel(m,[sign*5.10,.94,-1.32],[sign*7.26,.95,-1.52],
+      [sign*7.26,.92,-1.85],[sign*5.10,.91,-1.69],pale);
+    });
+   add(side==="left"?"leftFlap":"rightFlap",
+    [sign*2.6,.94,-1.27],1,m=>{
+     panel(m,[sign*.94,.93,-1.15],[sign*4.78,.94,-1.24],
+      [sign*4.78,.91,-1.68],[sign*.94,.90,-1.64],blue);
+    });
   }
   for(const [name,x] of [["elevatorLeft",-2.5],["elevatorRight",.38]]){
    add(name,[x+1.04,.81,-5.55],1,m=>{
