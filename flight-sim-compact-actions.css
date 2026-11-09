@@ -1,7 +1,9 @@
 /* Compact cockpit command bar: keep the flying controls and gauges large;
  * reduce only ancillary navigation/help buttons. Full info remains on demand. */
-#cockpitStation #cockpitHelpToggle{display:none}
-#cockpitStation .cockpit-help-choices{display:contents}
+/* Keep auxiliary tools behind one working More menu. */
+#cockpitStation #cockpitHelpToggle{display:inline-flex}
+#cockpitStation .cockpit-help-choices{display:none}
+#cockpitStation .cockpit-help-choices[data-open="true"]{display:flex}
 
 @media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
  #cockpitStation .cockpit-info-toolbar.cockpit-actions{
@@ -126,4 +128,70 @@
   font-size:10px!important;
  }
  #cockpitStation .cockpit-help-choices{width:min(240px,100%);padding:4px}
+}
+
+/* Compact flight-deck commands: prioritize visible flight instruments.
+   Keep touch hit targets adequate without making every control a large card. */
+#cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  position:relative;
+  display:flex;
+  flex-wrap:nowrap;
+  gap:4px;
+  align-items:center;
+  margin:2px 0 4px;
+  padding:0;
+}
+#cockpitStation .cockpit-actions #restartFlight,
+#cockpitStation .cockpit-actions #aircraftInspectOpen,
+#cockpitStation .cockpit-actions #cockpitFocusButton,
+#cockpitStation .cockpit-actions #cockpitHelpToggle{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  flex:0 1 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:36px!important;
+  height:36px!important;
+  max-height:36px!important;
+  margin:0!important;
+  padding:3px 8px!important;
+  border-radius:6px!important;
+  font:700 11px/1 system-ui,sans-serif!important;
+  white-space:nowrap;
+}
+#cockpitStation .cockpit-help-choices{
+  position:absolute!important;
+  display:none!important;
+  z-index:35;
+  top:calc(100% + 3px);
+  right:0;
+  width:min(250px,96vw);
+  flex-direction:column;
+  padding:6px;
+  background:#102632;
+  border:1px solid #74919a;
+  border-radius:7px;
+  box-shadow:0 10px 20px #000b;
+}
+#cockpitStation .cockpit-help-choices[data-open="true"]{display:flex!important}
+@media(max-width:740px),(orientation:landscape) and (max-height:620px) and (min-width:600px){
+ #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+   display:grid!important;
+   grid-template-columns:repeat(4,minmax(0,1fr))!important;
+   gap:3px!important;
+ }
+ #cockpitStation .cockpit-actions #restartFlight,
+ #cockpitStation .cockpit-actions #aircraftInspectOpen,
+ #cockpitStation .cockpit-actions #cockpitFocusButton,
+ #cockpitStation .cockpit-actions #cockpitHelpToggle{
+   width:100%!important;
+   min-height:34px!important;
+   height:34px!important;
+   max-height:34px!important;
+   padding:2px 3px!important;
+   font-size:10px!important;
+ }
+ #cockpitStation .cockpit-help-choices{grid-column:1/-1}
 }
