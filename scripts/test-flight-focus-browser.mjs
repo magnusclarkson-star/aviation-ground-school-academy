@@ -19,7 +19,7 @@ const metrics=async page=>page.evaluate(()=>{
   instruments:rect("#cockpitVisualPanel"),gauges:[...document.querySelectorAll("#cockpitVisualPanel .cockpit-gauge")].map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height}}),
   switches:rect("#cockpitSwitchPanel"),yoke:rect("#controlPad"),
   left:rect("#leftRudder"),right:rect("#rightRudder"),power:rect("#powerPanel"),
-  stationClient:station.clientHeight,stationScroll:station.scrollHeight};
+  stationClient:station.clientHeight,stationScroll:station.scrollHeight,stationScrollTop:station.scrollTop};
 });
 try{
  const desktop=await browser.newPage({viewport:{width:1200,height:880}});
@@ -72,6 +72,7 @@ try{
  assert.equal(landscape.viewport.height,390);
  assert.ok(landscape.scrollWidth<=846,"no horizontal overflow in landscape");
  assert.ok(Math.abs(landscape.scene.height-390)<=2,"scene occupies one phone screen");
+ console.log("Focused landscape geometry",JSON.stringify(landscape));
  assert.ok(landscape.instruments.top>=landscape.scenery.bottom-3,
   "instruments stay below windshield");
  assert.ok(landscape.yoke.top>=landscape.instruments.bottom-10,
