@@ -252,21 +252,47 @@ function buildVehicle(mode="airplane"){
  Exterior.populate(m,mode);
  return scaleMesh(m.finish(),mode);
 }
+// Trace a conservative ground silhouette from the actual scaled airframe
+// triangles. This avoids the old generic oval appearing under every aircraft.
+// The finite scanline budget runs only once per model, not once per frame.
 function buildShadow(mode="c172"){
- const mesh=buildVehicle(mode),position=mesh.positions;
- let xMin=Infinity,xMax=-Infinity,zMin=Infinity,zMax=-Infinity;
- for(let i=0;i<position.length;i+=3){
-  xMin=Math.min(xMin,position[i]);xMax=Math.max(xMax,position[i]);
-  zMin=Math.min(zMin,position[i+2]);zMax=Math.max(zMax,position[i+2]);
+ const resolved=Exterior.normalize(mode),vehicle=buildVehicle(resolved),p=vehicle.positions;
+ let zMin=Infinity,zMax=-Infinity;
+ for(let i=2;i<p.length;i+=3){zMin=Math.min(zMin,p[i]);zMax=Math.max(zMax,p[i]);}
+ const count=64,left=[],right=[];
+ for(let row=0;row<=count;row++){
+  const z=zMin+(zMax-zMin)*(row/count);
+  let low=Infinity,high=-Infinity;
+  for(let k=0;k<p.length;k+=9){
+   for(let edge=0;edge<3;edge++){
+    const a=k+3*edge,b=k+3*((edge+1)%3),za=p[a+2],zb=p[b+2];
+    if(Math.abs(za-z)<1e-5){low=Math.min(low,p[a]);high=Math.max(high,p[a]);}
+    if((za<z&&z<zb)||(zb<z&&z<za)){
+     const x=p[a]+(p[b]-p[a])*(z-za)/(zb-za);
+     low=Math.min(low,x);high=Math.max(high,x);
+    }
+   }
+  }
+  left.push(Number.isFinite(low)?low:null);
+  right.push(Number.isFinite(high)?high:null);
  }
- const rx=mode==="r44"||mode==="helicopter"?5.03:(xMax-xMin)*.47;
- const rz=(zMax-zMin)*.48;
- const cx=(xMax+xMin)/2,cz=(zMax+zMin)/2;
  const m=new Mesh(),shade=rgb(17,28,30);
- for(let i=0;i<28;i++){
-  const a=i*2*Math.PI/28,b=(i+1)*2*Math.PI/28;
-  m.tri([cx,0,cz],[cx+rx*Math.cos(a),0,cz+rz*Math.sin(a)],
-   [cx+rx*Math.cos(b),0,cz+rz*Math.sin(b)],shade);
+ for(let i=0;i<count;i++){
+  if(left[i]===null||left[i+1]===null)continue;
+  const za=zMin+(zMax-zMin)*(i/count),zb=zMin+(zMax-zMin)*((i+1)/count);
+  const la=left[i],ra=right[i],lb=left[i+1],rb=right[i+1];
+  if(ra-la<.05&&rb-lb<.05)continue;
+  m.quad([la,0,za],[ra,0,za],[rb,0,zb],[lb,0,zb],shade);
+ }
+ // The R44's moving two-blade rotor casts a faint rotating-disc impression.
+ // The cockpit/exterior moving rotor blades remain separately animated.
+ if(resolved==="r44"){
+  const discRadius=5.03,centreZ=-.4,segments=24;
+  for(let i=0;i<segments;i++){
+   const a=i*2*Math.PI/segments,b=(i+1)*2*Math.PI/segments;
+   m.tri([0,0,centreZ],[discRadius*Math.cos(a),0,centreZ+discRadius*Math.sin(a)],
+    [discRadius*Math.cos(b),0,centreZ+discRadius*Math.sin(b)],shade);
+  }
  }
  return m.finish();
 }
