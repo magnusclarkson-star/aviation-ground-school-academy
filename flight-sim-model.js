@@ -60,7 +60,7 @@ function makeState(mode="airplane",scenario="runway",options={}){
  if(mode==="helicopter"){
   return {mode,airframeId,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
    groundSpeedKt:0,trackDeg:0,windXMps:0,windZMps:0,verticalMs:0,pitchDeg:0,rollDeg:0,headingDeg:0,
-   lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:true,
+   lateralMs:0,forwardMs:0,yawRateDegS:0,time:0,turbulence:0,onGround:true,
    message:"A fictional helipad exercise. Increase collective for a gentle vertical lift."};
  }
  const approach=scenario==="approach";
@@ -96,6 +96,13 @@ function step(state,input,seconds){
  if(Math.abs(state.rollDeg)>14)events.push("turn");
  if(state.mode==="helicopter"){
   const collective=clamp(input.collective,0,1);
+  // Anti-torque pedal commands now build and decay a yaw rate rather than
+  // rotating the fuselage instantly. Banking adds a gentle coordinated
+  // turn only in forward flight; hovering remains pedal-controlled.
+  const forwardSpeed=Math.max(0,state.forwardMs||0);
+  const turnAssist=clamp(state.rollDeg*.055*forwardSpeed/8,-2.5,2.5);
+  const commandedYaw=clamp(rudder*18+turnAssist,-19,19);
+  state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,2.4,dt);
   const targetVS=clamp((collective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
   state.verticalMs=smooth(state.verticalMs,targetVS,1.5,dt);
   if(state.onGround&&state.verticalMs>0.35){
@@ -113,7 +120,7 @@ function step(state,input,seconds){
    const vz=forward*Math.cos(heading)-lateral*Math.sin(heading);
    const gx=vx+wind.x,gz=vz+wind.z;
    state.zM+=gz*dt;state.xM+=gx*dt;
-   state.headingDeg=(state.headingDeg+rudder*15*dt+360)%360;
+   state.headingDeg=(state.headingDeg+state.yawRateDegS*dt+360)%360;
    state.groundSpeedKt=Math.hypot(gx,gz)/KNOT;
    state.trackDeg=E.compassTrack(gx,gz);
    state.speedKt=Math.hypot(forward,lateral)/KNOT;
@@ -131,6 +138,8 @@ function step(state,input,seconds){
     events.push(gentle?"touchdown":"hardLanding");
    }
   }else{
+   // Skids on the pad resist yaw: no invisible rotation while stationary.
+   state.yawRateDegS=0;
    state.altitudeM=0;state.groundSpeedKt=0;state.speedKt=0;state.trackDeg=state.headingDeg;
   }
   return {state,events};
