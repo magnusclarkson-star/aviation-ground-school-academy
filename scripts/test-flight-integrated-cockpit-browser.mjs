@@ -284,7 +284,7 @@ try{
   });
   assert.ok(layout.allVisible&&layout.noOverflow,
    id+' phone glass displays fit dashboard with no clipping '+JSON.stringify(layout));
-  assert.ok(layout.panelHeight<=280,id+' phone screens must not push yoke too far down');
+  assert.ok(layout.panelHeight<=280,id+' phone screens must not push yoke too far down '+JSON.stringify(layout));
   if(id==='fa18'||id==='f35'||id==='typhoon')
    assert.ok(layout.navWithPfd,id+' navigation should share top row with PFD');
  }
