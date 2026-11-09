@@ -10,6 +10,9 @@ const Scenery=require("../flight-sim-scenery.js");
 const Flight=require("../flight-sim-model.js");
 const Navigation=require("../flight-sim-navigation.js");
 const MiniPFD=require("../flight-sim-mini-pfd-zoom.js");
+const Circuit=require("../flight-sim-circuit-guide.js");
+const Guidance=require("../flight-sim-guidance.js");
+const BankHold=require("../flight-sim-bank-hold.js");
 const airframe=require("../flight-sim-airframe-geometry.js");
 const pose=(view,eyeX=0,craftX=0,yaw=0)=>({
  view,eye:[eyeX,10,12],craft:[craftX,1.5,0],yaw,pitch:-.1,roll:0
@@ -178,4 +181,49 @@ test("a complete departure, two return turns and runway landing remain possible"
  assert.ok(Math.abs(state.xM)<24,"runway centreline is 48 m wide");
  assert.ok(state.zM>=0&&state.zM<=1800,"touchdown is on the original runway");
  assert.ok(state.time<300,"circuit is achievable inside a normal exercise");
+});
+
+test("position-aware circuit progresses through departure and return legs",()=>{
+ const state=Flight.makeState("airplane","runway",{airframeId:"c172"});
+ const progress=Guidance.start(state),seen=[progress.circuit.stage];
+ const samples=[
+  {xM:0,zM:1700,altitudeM:80,onGround:false,headingDeg:0,phase:"flight"},
+  {xM:600,zM:2300,altitudeM:130,onGround:false,headingDeg:160,phase:"flight"},
+  {xM:900,zM:-1600,altitudeM:130,onGround:false,headingDeg:180,phase:"flight"},
+  {xM:300,zM:-1900,altitudeM:105,onGround:false,headingDeg:350,phase:"flight"},
+  {xM:14,zM:610,altitudeM:0,onGround:true,headingDeg:0,phase:"rollout"}
+ ];
+ for(const sample of samples){
+  Object.assign(state,sample);Guidance.observe(progress,state,[]);
+  seen.push(progress.circuit.stage);
+  const nav=Navigation.coordinates(state,progress.circuit);
+  assert.ok(nav.circuitText);
+  assert.equal(nav.leg.stage,progress.circuit.stage);
+ }
+ assert.deepEqual(seen,["departure","crosswind","downwind","base","final","landed"]);
+});
+test("runway map rotates opposite aircraft heading, with circuit route visible in data",()=>{
+ const state=Flight.makeState("airplane","runway");
+ state.headingDeg=90;
+ const nav=Navigation.coordinates(state,Circuit.create(state));
+ assert.ok(nav.worldTransform.includes("rotate(-90.00)"));
+ assert.ok(nav.circuitText.includes("DEPARTURE"));
+ const rotor=Flight.makeState("helicopter");
+ assert.equal(Navigation.coordinates(rotor,Circuit.create(rotor)).leg,null);
+});
+test("optional phone bank hold sustains a user-commanded turn, then levels on demand",()=>{
+ const hold=BankHold.create();
+ assert.equal(hold.value(),0);
+ hold.setArmed(true);
+ assert.equal(hold.release(.72),.72);
+ assert.equal(hold.value(),.72);
+ assert.equal(hold.value(-.66),-.66,"held keyboard override should take priority");
+ assert.equal(hold.value(),.72,"held bank should resume after keyboard override");
+ hold.setArmed(false);
+ assert.equal(hold.value(),0);
+ hold.setArmed(true);
+ hold.release(-.85);
+ hold.clear();
+ assert.equal(hold.status().armed,false);
+ assert.equal(hold.value(),0);
 });
