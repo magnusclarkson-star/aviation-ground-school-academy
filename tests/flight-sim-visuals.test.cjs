@@ -313,7 +313,7 @@ test("compact glass fighter layouts preserve clickable instrument zoom and phone
  const fs=require("node:fs"),path=require("node:path");
  const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-all-aircraft-fit.css"),"utf8");
  const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
- assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-fit1"));
+ assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-fit2"));
  assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-panoramic"));
  assert.ok(css.includes("cockpit-mfd-grid.cockpit-mfd-triple>.cockpit-mfd-pfd"));
  assert.ok(css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important"));
