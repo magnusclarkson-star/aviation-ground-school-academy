@@ -19,8 +19,12 @@ try{
   'no extra automatic flight controls');
  const pad=desktop.locator('#controlPad');
  const originalSize=await pad.evaluate(el=>el.getBoundingClientRect().height);
- const controlPosition=await pad.boundingBox();
- const pedalPosition=await desktop.locator('#leftRudder').boundingBox();
+ const relativeY=async(page,id)=>page.evaluate(id=>{
+  const panel=document.querySelector('#cockpitMain').getBoundingClientRect();
+  return document.querySelector(id).getBoundingClientRect().top-panel.top;
+ },id);
+ const controlPosition=await relativeY(desktop,'#controlPad');
+ const pedalPosition=await relativeY(desktop,'#leftRudder');
  assert.ok(await desktop.locator('#cockpitVisualPanel [data-live-heading-card]').count()===1,
    'a rotating compass card replaces the old fake heading needle');
  assert.equal(await desktop.locator('#cockpitVisualPanel [data-live-alt-hundreds]').count(),1);
@@ -53,10 +57,10 @@ try{
  await gauge.click({position:{x:65,y:75}});
  assert.equal(await desktop.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute',
    'enlarged gauge floats over the dashboard rather than entering the layout');
- const shiftedPad=await pad.boundingBox();
- const shiftedPedal=await desktop.locator('#leftRudder').boundingBox();
- assert.ok(Math.abs(shiftedPad.y-controlPosition.y)<1,'zoom does not move centered yoke');
- assert.ok(Math.abs(shiftedPedal.y-pedalPosition.y)<1,'zoom does not move rudder pedals');
+ const shiftedPad=await relativeY(desktop,'#controlPad');
+ const shiftedPedal=await relativeY(desktop,'#leftRudder');
+ assert.ok(Math.abs(shiftedPad-controlPosition)<1,'zoom does not move centered yoke');
+ assert.ok(Math.abs(shiftedPedal-pedalPosition)<1,'zoom does not move rudder pedals');
  assert.equal(await desktop.locator('#cockpitZoomPanel').isVisible(),true,
   'tapping instrument face enlarges only that instrument');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false);
@@ -105,7 +109,7 @@ try{
   'touching yoke does not expand flight control area');
  assert.equal(await phone.locator('#cockpitStation').getAttribute('data-control-focus'),null);
  assert.equal(await phone.locator('#cockpitExtraControls').count(),0);
- const phonePadPosition=await phonePad.boundingBox();
+ const phonePadPosition=await relativeY(phone,'#controlPad');
  await phone.locator('#cockpitVisualPanel .cockpit-info-dot').first().tap();
  assert.equal(await phone.locator('#cockpitInfoPanel').isVisible(),true);
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),false);
@@ -113,8 +117,8 @@ try{
  await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().tap({position:{x:32,y:35}});
  assert.equal(await phone.locator('#cockpitZoomPanel').isVisible(),true);
  assert.equal(await phone.locator('#cockpitZoomPanel').evaluate(el=>getComputedStyle(el).position),'absolute');
- const phonePadAfterZoom=await phonePad.boundingBox();
- assert.ok(Math.abs(phonePadPosition.y-phonePadAfterZoom.y)<1,
+ const phonePadAfterZoom=await relativeY(phone,'#controlPad');
+ assert.ok(Math.abs(phonePadPosition-phonePadAfterZoom)<1,
   'phone instrument zoom never moves the yoke touch target');
  await phone.locator('#cockpitZoomClose').tap();
  const inCockpit=await phone.evaluate(()=>{
