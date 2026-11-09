@@ -161,6 +161,18 @@ try{
  assert.equal(await phone.locator('#collectivePanel').isVisible(),true);
  assert.equal(await phone.locator('#powerPanel').isVisible(),false);
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
+ assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-hover]').textContent(),'ON PAD',
+  'on-pad hover cue reflects the grounded state');
+ const flightCue=await phone.evaluate(()=>{
+  const state=window.AGSAImmersiveFlight.makeState('helicopter');
+  Object.assign(state,{onGround:false,phase:'hover',altitudeM:3,
+   verticalMs:0,groundSpeedKt:7.3});
+  window.AGSACockpitIntegrated.paint(document.getElementById('cockpitVisualPanel'),
+   state,{powerPct:84},{throttle:0,collective:.75,rudder:0},'r44',document);
+  return document.querySelector('#cockpitVisualPanel [data-r44-hover]').textContent;
+ });
+ assert.equal(flightCue,'DRIFTING · GS 7 KT',
+  'live R44 mini instrument announces measured ground drift during hover');
  const primary=await phone.locator('#cockpitVisualPanel .cockpit-gauge').evaluateAll(
   els=>els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.dataset.gauge));
  assert.deepEqual(primary,['speed','attitude','alt','rpm'],
