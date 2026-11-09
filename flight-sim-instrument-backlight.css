@@ -109,3 +109,67 @@
   gap:2px;padding:3px;
  }
 }
+
+
+/* Independent, three-stop backlight dimmer. Mutates ONLY the light colour
+   variables: never scales, clips or obscures instruments, map or horizon. */
+#cockpitStation[data-instrument-backlight="green"][data-instrument-dimmer="dim"]{
+ --ib-ink:#8da895;
+ --ib-halo:rgba(39,150,74,.16);
+ --ib-halo-soft:rgba(26,95,48,.10);
+ --ib-face:#081310;--ib-border:#3d6550;
+}
+#cockpitStation[data-instrument-backlight="green"][data-instrument-dimmer="bright"]{
+ --ib-ink:#deffeb;
+ --ib-halo:rgba(105,255,160,.67);
+ --ib-halo-soft:rgba(72,231,118,.34);
+ --ib-face:#0a251a;--ib-border:#72c995;
+}
+#cockpitStation[data-instrument-backlight="blue"][data-instrument-dimmer="dim"]{
+ --ib-ink:#91a9bd;
+ --ib-halo:rgba(44,110,175,.17);
+ --ib-halo-soft:rgba(27,69,122,.11);
+ --ib-face:#09141e;--ib-border:#3b627f;
+}
+#cockpitStation[data-instrument-backlight="blue"][data-instrument-dimmer="bright"]{
+ --ib-ink:#e0f3ff;
+ --ib-halo:rgba(92,196,255,.68);
+ --ib-halo-soft:rgba(70,148,255,.36);
+ --ib-face:#0b273e;--ib-border:#79bde8;
+}
+/* One horizontal slider nested under existing More > Light swatches.
+   It occupies zero space in the flight-control or gauge dashboard. */
+#cockpitStation .cockpit-help-choices .cockpit-backlight-dimmer{
+ display:grid!important;
+ grid-template-columns:30px minmax(0,1fr) 44px;
+ align-items:center;
+ gap:5px;
+ grid-column:1/-1;
+ min-width:0;
+ padding:2px 1px 0;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-dimmer label,
+#cockpitStation .cockpit-help-choices .cockpit-backlight-dimmer output{
+ color:#cce0e4;
+ font:750 9px/1 system-ui,sans-serif;
+ white-space:nowrap;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-dimmer output{
+ text-align:right;
+}
+#cockpitStation .cockpit-help-choices #cockpitBacklightDimmer{
+ display:block;
+ width:100%;
+ height:24px;
+ min-width:0;
+ margin:0;
+ padding:0;
+ border:0;
+ background:transparent;
+ accent-color:#b9e5cf;
+ touch-action:pan-x;
+ cursor:pointer;
+}
+#cockpitStation .cockpit-help-choices #cockpitBacklightDimmer:focus-visible{
+ outline:2px solid #ffdea1;outline-offset:2px;
+}
