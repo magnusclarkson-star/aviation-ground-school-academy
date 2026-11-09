@@ -146,12 +146,12 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   const sides=12,outer=[];
   for(let i=0;i<sides;i++){
    const theta=i*2*Math.PI/sides;
-   outer.push([33*Math.cos(theta),0,33*Math.sin(theta)]);
+   outer.push([30*Math.cos(theta),0,30*Math.sin(theta)]);
   }
   poly(outer,"#303d48","#eef6d9",4);
   for(let i=0;i<sides;i++){
    const a=outer[i],b=outer[(i+1)%sides];
-   line([a[0]*.82,.08,a[2]*.82],[b[0]*.82,.08,b[2]*.82],"#f2d274",4);
+   line([a[0]*.9,.08,a[2]*.9],[b[0]*.9,.08,b[2]*.9],"#f2d274",4);
   }
   // Enclosed H on the helipad plane.
   for(const x of [-8,8])line([x,.15,-12],[x,.15,12],"#f6f8ef",8);
