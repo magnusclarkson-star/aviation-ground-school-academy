@@ -41,6 +41,17 @@ try{
  }
  await desktop.locator("#cockpitAircraftGalleryClose").click();
  assert.equal(await desktop.locator("#cockpitAircraftGallery").isVisible(),false);
+ // One tap on the aircraft photograph opens the ORIGINAL interactive 360°
+ // viewer; the gallery must close before the inspection modal opens.
+ await desktop.locator("#cockpitAircraftPhotoButton").click();
+ await desktop.locator("#cockpitAircraftGalleryImage").click();
+ assert.equal(await desktop.locator("#cockpitAircraftGallery").isVisible(),false);
+ assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),true);
+ assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),"Cessna 172");
+ await desktop.locator("#aircraftInspectSpin").click();
+ assert.equal(await desktop.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
+ await desktop.locator("#aircraftInspectClose").click();
+ assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
  await desktop.locator("#cockpitAircraftSelect").selectOption("f35");
  assert.equal(await source(desktop),"aircraft-f35.webp","external dropdown also updates preview");
  await desktop.locator("#typeCyclic").click();
@@ -69,6 +80,17 @@ try{
  await phone.locator('.aircraft-gallery-choice[data-aircraft-id="f22"]').tap();
  assert.equal(await phone.locator("#cockpitAircraftSelect").inputValue(),"f22");
  await checkLoaded(phone,"#cockpitAircraftGalleryImage");
+ await phone.locator("#cockpitAircraftGalleryInspect").tap();
+ assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),false,
+  "gallery closes before opening the 360 degree viewer");
+ assert.equal(await phone.locator("#aircraftInspectDialog").isVisible(),true,
+  "360 degree inspection is reachable directly from aircraft picture on a phone");
+ assert.equal(await phone.locator("#aircraftInspectModel").textContent(),"F-22 Raptor");
+ await phone.locator("#aircraftInspectSpin").tap();
+ assert.equal(await phone.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
+ await phone.locator("#aircraftInspectClose").tap();
+ assert.equal(await phone.locator("#aircraftInspectDialog").isVisible(),false);
+ await thumb.tap();
  await phone.locator("#cockpitAircraftGalleryClose").tap();
  assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),false);
  await phone.locator("#cockpitFocusButton").tap();
@@ -80,6 +102,8 @@ try{
  assert.equal(await phone.locator("#cockpitAircraftGallery").isVisible(),true);
  const landscape=await phone.locator("#cockpitAircraftGalleryImage").boundingBox();
  assert.ok(landscape.height>100&&landscape.y+landscape.height<=391,"landscape photo visible without clipping: "+JSON.stringify(landscape));
+ assert.ok(await phone.locator("#cockpitAircraftGalleryInspect").isVisible(),
+  "360-degree rotate action stays directly available in landscape gallery");
  await phone.locator("#cockpitAircraftGalleryClose").tap();
  assert.ok(await phone.locator("#controlPad").isVisible(),"flight controls usable after closing gallery");
  assert.deepEqual(errors,[],"no browser runtime errors");
