@@ -243,10 +243,16 @@ test("Cessna round six-pack stays tightly grouped without changing R44 or glass 
  const path=require("node:path");
  const css=fs.readFileSync(path.join(__dirname,"..","flight-sim-c172-compact.css"),"utf8");
  const html=fs.readFileSync(path.join(__dirname,"..","flight-sim.html"),"utf8");
- assert.ok(html.includes("flight-sim-c172-compact.css?v=20261109-c172cluster1"));
+ assert.ok(html.includes("flight-sim-c172-compact.css?v=20261109-c172navright2"));
  assert.ok(css.includes('#cockpitStation[data-airframe="c172"][data-instruments="round"]'));
  assert.ok(css.includes("grid-template-columns:repeat(3,minmax(0,1fr))"));
  assert.ok(css.includes("grid-template-columns:minmax(0,1fr)!important"));
+ assert.ok(css.includes('grid-template-columns:minmax(0,1.6fr) minmax(105px,1fr)!important'),
+   'portrait phone must keep navigator beside three-by-two gauges');
+ assert.ok(css.includes('width:min(100%,78px)!important'),
+   'portrait phone round dials are capped near 78px');
+ assert.ok(css.includes('grid-template-columns:minmax(0,1.75fr) minmax(125px,1fr)!important'),
+   'desktop navigator shares the instrument row');
  assert.ok(css.includes("grid-row:1/4"));
  for(const gauge of ["speed","attitude","alt","turn","heading","vsi"])
   assert.ok(css.includes('[data-gauge="'+gauge+'"]'),"missing "+gauge);
