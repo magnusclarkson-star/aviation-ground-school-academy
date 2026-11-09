@@ -249,7 +249,7 @@
 #cockpitStation[data-family="rotor"] .r44-lesson-strip{
  position:relative;box-sizing:border-box;
  display:flex;align-items:center;min-width:0;
- min-height:37px;margin:5px 0 0;padding:5px 32px 5px 8px;
+ min-height:37px;margin:5px 0 0;padding:5px 68px 5px 8px;
  border:1px solid #81969d;border-radius:7px;
  background:linear-gradient(135deg,#132e38,#101c27);
 }
@@ -270,10 +270,36 @@
 }
 @media(max-width:540px) and (orientation:portrait){
  #cockpitStation[data-family="rotor"] .r44-lesson-strip{
-  min-height:33px;padding:4px 28px 4px 5px;margin-top:4px;
+  min-height:37px;padding:4px 63px 4px 5px;margin-top:4px;
  }
  #cockpitStation[data-family="rotor"] .r44-lesson-strip>strong{font-size:10px}
  #cockpitStation[data-family="rotor"] .r44-lesson-strip .cockpit-info-dot{
   width:24px;height:24px;min-width:24px;min-height:24px;
+ }
+}
+
+/* Speak the current R44 lesson with the device voice. Both icons are
+   finger-sized and stay beside, never over, the flight instrument faces. */
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle{
+ position:absolute;right:33px;top:50%;transform:translateY(-50%);
+ display:grid;place-items:center;
+ width:30px;height:32px;min-height:30px;
+ border:1px solid #79929b;border-radius:6px;
+ background:#20363d;color:#f2f7e9;
+ font:700 16px/1 system-ui,sans-serif;
+ touch-action:manipulation;cursor:pointer;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle[aria-pressed="false"]{
+ color:#b5c2c6;background:#222c31;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle:focus-visible{
+ outline:2px solid #f5d596;outline-offset:2px;
+}
+#cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle:disabled{
+ opacity:.55;cursor:not-allowed;
+}
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-family="rotor"] .r44-lesson-strip .r44-voice-toggle{
+  right:29px;width:29px;height:32px;
  }
 }
