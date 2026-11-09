@@ -65,6 +65,24 @@
   box-shadow:0 10px 20px #000b;
  }
  #cockpitStation .cockpit-help-choices[data-open="true"]{display:flex}
+ #cockpitStation .cockpit-help-choices #cockpitAircraftPhotoButton{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:44px;
+  padding:3px 6px;
+  display:flex;
+  justify-content:flex-start;
+ }
+ #cockpitStation .cockpit-help-choices .aircraft-photo-preview{
+  width:48px;
+  height:36px;
+ }
+ #cockpitStation .cockpit-help-choices .aircraft-photo-label{
+  max-width:none;
+  white-space:normal;
+  font-size:11px;
+ }
  #cockpitStation .cockpit-help-choices [data-cockpit-help]{
   flex:none;
   display:block;
