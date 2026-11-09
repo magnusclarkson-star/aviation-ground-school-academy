@@ -80,6 +80,35 @@ function runway(mesh){
  }
  for(const z of [12,1740])for(const x of [-15,-11,-7,7,11,15])
   mesh.quad([x-1,.12,z],[x+1,.12,z],[x+1,.12,z+24],[x-1,.12,z+24],white);
+ // Side shoulders and pavement joints add low-altitude movement cues
+ // without increasing texture memory or issuing extra GPU draw calls.
+ for(let z=0;z<1800;z+=90){
+  for(const x of [-23,20.4])
+   mesh.quad([x,.06,z],[x+2.6,.06,z],[x+2.6,.06,z+90],[x,.06,z+90],
+    tint(tarmac,.73));
+  if(z>0&&z<1750)
+   for(const x of [-17,5.5])
+    mesh.quad([x,.075,z-.12],[x+11.5,.075,z-.12],
+     [x+11.5,.075,z+.12],[x,.075,z+.12],tint(tarmac,.83));
+ }
+ // Fictional touchdown-zone pairs and subtle rubber deposits near each end.
+ for(const end of [0,1800]){
+  for(const distance of [130,270,430]){
+   const z=end===0?distance:1800-distance-18;
+   for(const x of [-12.5,10]){
+    mesh.quad([x,.115,z],[x+2.5,.115,z],
+     [x+2.5,.115,z+18],[x,.115,z+18],rgb(207,218,212));
+   }
+  }
+  for(let i=0;i<9;i++){
+   const d=82+i*29,z=end===0?d:1800-d-12;
+   for(const x of [-6.9,5.3]){
+    const shift=(noise(i*11+x)-.5)*.65;
+    mesh.quad([x+shift,.105,z],[x+shift+1.2,.105,z],
+     [x+shift+1.2,.105,z+8],[x+shift,.105,z+8],tint(tarmac,.75));
+   }
+  }
+ }
  for(let z=0;z<=1800;z+=95)for(const x of [-24,24])
   mesh.box(x-.4,.05,z-.4,.8,.6,.8,rgb(222,207,136));
  mesh.quad([20,.08,250],[270,.08,250],[270,.08,310],[20,.08,310],tarmac);
