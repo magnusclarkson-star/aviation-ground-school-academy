@@ -1,0 +1,111 @@
+/* Instrument panel backlight: colourized dial markings and MFD edges only.
+   No enlargement, added cockpit row, or changes to live instrument values.
+   Night-mode lighting and scenery remain independent of this control. */
+#cockpitStation[data-instrument-backlight="green"]{
+ --ib-ink:#c6ffe1;--ib-halo:rgba(77,243,137,.38);
+ --ib-halo-soft:rgba(48,180,94,.20);--ib-face:#081b16;
+ --ib-dark:#050f10;--ib-border:#549c72;
+}
+#cockpitStation[data-instrument-backlight="blue"]{
+ --ib-ink:#d4eaff;--ib-halo:rgba(80,168,255,.42);
+ --ib-halo-soft:rgba(42,125,245,.21);--ib-face:#091b2d;
+ --ib-dark:#061020;--ib-border:#548ab9;
+}
+#cockpitStation[data-instrument-backlight="green"] :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge,
+#cockpitStation[data-instrument-backlight="blue"] :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge{
+ position:relative;
+ background:radial-gradient(circle at 50% 50%,var(--ib-face) 0%,
+  #07121a 67%,#253b3f 85%,#09141c 100%)!important;
+ border-color:var(--ib-border)!important;
+ box-shadow:inset 0 0 12px var(--ib-halo-soft),
+  inset 0 0 3px var(--ib-halo),0 0 6px var(--ib-halo-soft)!important;
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge svg{
+ filter:drop-shadow(0 0 2px var(--ib-halo));
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge:not([data-gauge="attitude"]) svg text{
+ fill:var(--ib-ink)!important;
+ filter:drop-shadow(0 0 2px var(--ib-halo));
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge:not([data-gauge="attitude"]) svg line{
+ stroke:var(--ib-ink)!important;
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge-title,
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-gauge-number{
+ color:var(--ib-ink)!important;
+ text-shadow:0 0 4px var(--ib-halo);
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-mfd{
+ border-color:var(--ib-border)!important;
+ box-shadow:inset 0 0 0 1px var(--ib-halo-soft),0 0 7px var(--ib-halo-soft)!important;
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) .cockpit-mfd-body{
+ border-color:var(--ib-border)!important;
+ box-shadow:inset 0 0 13px var(--ib-halo-soft);
+ background:linear-gradient(160deg,var(--ib-face),var(--ib-dark))!important;
+}
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ :is(#cockpitVisualPanel,#cockpitZoomContent) :is(.cockpit-mfd-head,.cockpit-mfd-line,
+ .cockpit-mfd-line strong,.cockpit-mfd-readouts span,.cockpit-mfd-readouts strong,
+ .cockpit-mfd-foot,.cockpit-nav-name,.cockpit-nav-readouts){
+ color:var(--ib-ink)!important;
+ text-shadow:0 0 3px var(--ib-halo-soft);
+}
+/* Keep the actual blue/brown artificial horizon, warning colour arcs and
+   live navigation map recognisable. Only their bezels and captions glow. */
+#cockpitStation:is([data-instrument-backlight="green"],[data-instrument-backlight="blue"])
+ #cockpitZoomPanel .cockpit-zoom-head strong{color:var(--ib-ink)}
+/* Small grouped swatches, intentionally inside the existing More popover. */
+#cockpitStation .cockpit-help-choices .cockpit-backlight-picker{
+ display:grid!important;
+ grid-template-columns:minmax(60px,1fr) repeat(3,minmax(42px,.7fr));
+ align-items:center;
+ gap:3px;
+ min-width:0;
+ margin:2px 0 0;
+ padding:4px;
+ border-top:1px solid #59747b;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-label{
+ font:800 9px/1.1 system-ui,sans-serif;letter-spacing:.02em;
+ color:#d3e6e5;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-picker button{
+ display:flex!important;flex:none!important;justify-content:center;
+ align-items:center;gap:3px;min-width:0!important;width:auto!important;
+ min-height:32px!important;height:32px!important;max-height:32px!important;
+ padding:3px!important;margin:0!important;border-radius:5px!important;
+ border:1px solid #67818a!important;background:#183341!important;
+ color:#e5f0ef!important;font:750 9px/1 system-ui,sans-serif!important;
+ white-space:nowrap!important;cursor:pointer;touch-action:manipulation;
+}
+#cockpitStation .cockpit-backlight-picker button::before{
+ content:"";display:inline-block;flex:0 0 8px;width:8px;height:8px;
+ border-radius:50%;background:#8b979d;border:1px solid #ffffff44;
+}
+#cockpitStation .cockpit-backlight-picker [data-cockpit-backlight="green"]::before{
+ background:#69ee99;box-shadow:0 0 5px #5dff9d99;
+}
+#cockpitStation .cockpit-backlight-picker [data-cockpit-backlight="blue"]::before{
+ background:#70baff;box-shadow:0 0 5px #55adffaa;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-picker button[aria-pressed="true"]{
+ border-color:#e9d18e!important;background:#314c5a!important;
+ box-shadow:inset 0 0 0 1px #e9d18e70!important;
+}
+#cockpitStation .cockpit-help-choices .cockpit-backlight-picker button:focus-visible{
+ outline:2px solid #ffe0a1;outline-offset:1px;
+}
+@media(max-width:375px){
+ #cockpitStation .cockpit-help-choices .cockpit-backlight-picker{
+  grid-template-columns:minmax(53px,1fr) repeat(3,minmax(40px,.7fr));
+  gap:2px;padding:3px;
+ }
+}
