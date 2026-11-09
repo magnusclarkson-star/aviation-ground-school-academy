@@ -216,6 +216,21 @@
   color:#f5dea3;font-size:11px;font-variant-numeric:tabular-nums;
   white-space:nowrap;line-height:1.2;
  }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan .r44-hover-cue{
+  display:block;grid-column:1/-1;min-width:0;
+  padding:3px 4px;text-align:center;
+  border:1px solid #657f86;border-radius:5px;
+  color:#d9edf0;background:#102733;
+  font:700 10px/1.25 system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan .r44-hover-cue[data-status="STEADY HOVER"]{
+  color:#d9f0c9;border-color:#7b9c76;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan .r44-hover-cue[data-status="DRIFTING"],
+ #cockpitStation[data-family="rotor"] .r44-quick-scan .r44-hover-cue[data-status="DESCENDING"]{
+  color:#f8d69f;border-color:#ac906e;
+ }
  #cockpitStation[data-family="rotor"] .r44-secondary-toggle{
   display:block;width:100%;min-height:39px;
   margin:5px 0 0;padding:5px 2px;
