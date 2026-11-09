@@ -44,6 +44,9 @@ on:
       - 'flight-sim-cockpit.js'
       - 'flight-sim-cockpit.css'
       - 'flight-sim-authentic.css'
+      - 'flight-sim-switchgear.js'
+      - 'scripts/test-flight-sim-switchgear.mjs'
+      - 'scripts/test-flight-switchgear-browser.mjs'
       - 'scripts/test-flight-sim-cockpit.mjs'
       - 'scripts/test-flight-integrated-cockpit-browser.mjs'
       - 'scripts/test-flight-cockpit-zoom-browser.mjs'
@@ -103,6 +106,9 @@ on:
       - 'flight-sim-cockpit.js'
       - 'flight-sim-cockpit.css'
       - 'flight-sim-authentic.css'
+      - 'flight-sim-switchgear.js'
+      - 'scripts/test-flight-sim-switchgear.mjs'
+      - 'scripts/test-flight-switchgear-browser.mjs'
       - 'scripts/test-flight-sim-cockpit.mjs'
       - 'scripts/test-flight-integrated-cockpit-browser.mjs'
       - 'scripts/test-flight-cockpit-zoom-browser.mjs'
@@ -147,6 +153,7 @@ jobs:
           node --check flight-sim-aircraft-systems.js
           node --check flight-sim-instruments.js
           node --check flight-sim-cockpit.js
+          node --check flight-sim-switchgear.js
           node --check flight-sim-guidance.js
           node --check flight-sim-gamepad.js
           node --check flight-sim-gamepad-ui.js
@@ -167,6 +174,7 @@ jobs:
         run: |
           node scripts/test-flight-sim-instruments.mjs
           node scripts/test-flight-sim-cockpit.mjs
+          node scripts/test-flight-sim-switchgear.mjs
           node scripts/test-flight-sim-guidance.mjs
       - name: Test optional physical controller mapping
         run: node scripts/test-flight-sim-gamepad.mjs
@@ -178,6 +186,7 @@ jobs:
         run: |
           node scripts/test-flight-sim-browser.mjs
           node scripts/test-flight-integrated-cockpit-browser.mjs
+          node scripts/test-flight-switchgear-browser.mjs
           node scripts/test-flight-cockpit-zoom-browser.mjs
           node scripts/test-flight-sim-gamepad-browser.mjs
           node scripts/test-flight-sim-environment-browser.mjs
