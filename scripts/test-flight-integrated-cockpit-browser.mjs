@@ -128,8 +128,31 @@ try{
  assert.ok(await phone.locator('#flightGrip').isVisible());
  const restart=phone.locator('#restartFlight');
  assert.equal(await restart.evaluate(el=>!!el.closest('#cockpitStation')),true);
- assert.ok((await restart.boundingBox()).width>=280,'phone restart stretches across cockpit');
- assert.ok((await restart.boundingBox()).height>=44,'phone restart is finger-sized');
+ const row=await phone.evaluate(()=>{
+  const ids=['restartFlight','aircraftInspectOpen','cockpitFocusButton','cockpitHelpToggle'];
+  const boxes=ids.map(id=>document.getElementById(id).getBoundingClientRect());
+  return {boxes:boxes.map(b=>({x:b.x,y:b.y,width:b.width,height:b.height})),
+   choicesVisible:getComputedStyle(document.getElementById('cockpitHelpChoices')).display!=='none',
+   bodyWidth:document.documentElement.scrollWidth,viewport:innerWidth,
+   typeHeight:document.getElementById('typeCyclic').getBoundingClientRect().height};
+ });
+ assert.ok(row.boxes.every(b=>b.height>=44&&b.height<=45),
+  'four compact cockpit actions remain finger-sized on phone');
+ assert.ok(row.boxes.every(b=>b.width>=65&&b.width<=110),
+  'restart and ancillary buttons no longer occupy whole rows');
+ assert.ok(Math.max(...row.boxes.map(b=>b.y))-Math.min(...row.boxes.map(b=>b.y))<2,
+  'restart, inspect, focus and Help must occupy one compact row');
+ assert.equal(row.choicesVisible,false,'three secondary information actions are initially tucked away');
+ assert.ok(row.bodyWidth<=row.viewport+2,'the compact cockpit must not overflow the phone');
+ assert.ok(row.typeHeight<=46,'large redundant aircraft family buttons have been shortened');
+ await phone.locator('#cockpitHelpToggle').tap();
+ assert.equal(await phone.locator('#cockpitHelpToggle').getAttribute('aria-expanded'),'true');
+ assert.equal(await phone.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').isVisible(),true);
+ await phone.locator('#cockpitHelpChoices [data-cockpit-help="controls"]').tap();
+ assert.equal(await phone.locator('#cockpitHelpToggle').getAttribute('aria-expanded'),'false');
+ assert.match(await phone.locator('#cockpitInfoText').textContent(),/Yoke, stick or cyclic/);
+ await phone.locator('#cockpitInfoClose').tap();
+ assert.ok((await restart.boundingBox()).height>=44,'phone restart remains an easy touch target');
  await restart.tap();
  assert.equal(await phone.locator('#cockpitRestartStatus').textContent(),'Flight restarted');
  const value=await phone.evaluate(()=>{
