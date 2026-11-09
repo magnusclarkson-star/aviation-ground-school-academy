@@ -27,4 +27,9 @@ for(const item of publicCuratedPaths){
 for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","flight-sim.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
 }
+for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
+ const file="aircraft-"+id+".webp";
+ const details=await stat(path.join(output,file));
+ if(!details.isFile()||details.size<10000)throw Error("Missing or incomplete aircraft image: "+file);
+}
 console.log("Built public Academy bundle ("+count+" files). Backend, tests, docs, repository configuration, credentials and private portal assets are excluded.");

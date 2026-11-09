@@ -457,6 +457,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   closeInfo();
   if(notify)onSelect(profile.control,profile.id);
   update();
+  doc.dispatchEvent(new CustomEvent("agsa:aircraft-changed",{detail:{id:profile.id}}));
   return profile;
  }
  function update(){
