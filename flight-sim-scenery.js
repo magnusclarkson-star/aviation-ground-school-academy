@@ -141,7 +141,10 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);
   ctx.strokeStyle=color;ctx.lineWidth=widthPx;ctx.stroke();
  }
- for(let z=3000;z>=-3000;z-=150){
+ // Keep scenery bands around the aircraft, not limited to the first
+ // three kilometres from the field. This allows a full out-and-back circuit.
+ const farBand=Math.ceil((state.zM+3000)/150)*150;
+ for(let z=farBand;z>=state.zM-3000;z-=150){
   const alternate=Math.floor(z/150)%2===0;
   const shade=alternate?"#8baa7950":"#b1bf7d30";
   poly([[-800,0,z],[-70,0,z],[-70,0,z+75],[-800,0,z+75]],shade);
@@ -270,20 +273,27 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
     lamp(p.x,p.y,r);
    }
   }
-  // Lightweight tropical trees, fences and hangars form a moving horizon.
-  for(let z=2600;z>=-950;z-=87){
-   if(z<state.zM+6)continue;
-   for(const side of [-1,1]){
-    const seed=Math.sin(z*.18+side*5.6);
-    const x=side*(90+Math.abs(seed)*145),p=project(state,x,0,z,w,h);
-    if(!p||p.depth>2100||p.y<0||p.y>h+55||p.x<-25||p.x>w+25)continue;
-    const heightPx=Math.min(125,4200/p.depth)*(0.7+Math.abs(seed)*.6);
+  // Deterministic tree positions around the moving aircraft. The fixed
+  // local grid prevents trees following the camera and keeps the countryside
+  // populated well past the original small airport rectangle.
+  const xBase=Math.round(state.xM/360)*360;
+  const firstZ=Math.ceil((state.zM+2450)/200)*200;
+  for(let z=firstZ;z>=state.zM-2450;z-=200){
+   for(let column=-3;column<=3;column++){
+    const seed=Math.sin(z*.037+column*4.37);
+    const x=xBase+column*260+Math.sin(z*.091+column*9.2)*51;
+    if(Math.abs(x)<92&&z>=-1000&&z<2350)continue;
+    if(state.mode==="helicopter"&&Math.hypot(x,z)<140)continue;
+    const p=project(state,x,0,z,w,h);
+    if(!p||p.depth>2500||p.y<0||p.y>h+65||p.x<-55||p.x>w+55)continue;
+    const heightPx=Math.min(110,4100/p.depth)*(.7+Math.abs(seed)*.6);
     const crown=Math.max(2,heightPx*.35);
     ctx.fillStyle="#503e31";
     ctx.fillRect(p.x-1.6,p.y-heightPx*.72,3.2,heightPx*.72);
-    ctx.fillStyle=side===1?"#31573f":"#386c47";
+    ctx.fillStyle=column%2?"#31573f":"#386c47";
     ctx.beginPath();ctx.ellipse(p.x,p.y-heightPx*.9,crown,crown*.75,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#4d7d4f7a";ctx.beginPath();ctx.arc(p.x-crown*.3,p.y-heightPx,crown*.55,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#4d7d4f7a";ctx.beginPath();
+    ctx.arc(p.x-crown*.3,p.y-heightPx,crown*.55,0,Math.PI*2);ctx.fill();
    }
   }
   // Simple shaded buildings provide a 3D depth cue beside the runway.
