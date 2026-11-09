@@ -41,6 +41,20 @@ function flightProfile(state){
  return state?.physicsId==="classic"&&Object.hasOwn(JET_SETTINGS,state?.airframeId)?
   JET_SETTINGS[state.airframeId]:E.selectProfile(state?.profileId||"trainer");
 }
+// A short live hovering cue driven by the actual motion and yaw readings,
+// never by the last joystick command. Shared by cockpit and flight status.
+function rotorHoverCue(state){
+ if(!state||state.mode!=="helicopter")return null;
+ if(state.onGround)return state.phase==="landed"?"LANDED":
+  state.phase==="halted"?"HARD CONTACT":"ON PAD";
+ const rise=clamp(state.verticalMs,-10,10),drift=clamp(state.groundSpeedKt,0,200);
+ if(rise>.7)return "CLIMBING";
+ if(rise<-.7)return "DESCENDING";
+ if(drift>4)return "DRIFTING";
+ if(Math.abs(state.yawRateDegS||0)>4)return "TURNING";
+ if(drift<2&&Math.abs(rise)<.4)return "STEADY HOVER";
+ return "ADJUST HOVER";
+}
 function makeInput(mode="airplane"){
  return {bank:0,pitch:0,rudder:0,throttle:0,collective:.48,
   flaps:mode==="airplane"?10:0,brake:false,turbulence:.16};
@@ -105,6 +119,9 @@ function step(state,input,seconds){
   state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,2.4,dt);
   const targetVS=clamp((collective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
   state.verticalMs=smooth(state.verticalMs,targetVS,1.5,dt);
+  // The helipad supports the skids. A grounded helicopter cannot show
+  // a negative vertical speed or accumulate an invisible downward impulse.
+  if(state.onGround)state.verticalMs=Math.max(0,state.verticalMs);
   if(state.onGround&&state.verticalMs>0.35){
    state.onGround=false;state.phase="lift";
    state.message="Simulated rotorcraft lift. Use cyclic for horizontal motion and collective for height.";
@@ -112,8 +129,11 @@ function step(state,input,seconds){
   }
   if(!state.onGround){
    state.altitudeM+=state.verticalMs*dt;
-   const forward=smooth(state.forwardMs,-pitch*13,0.95,dt);
-   const lateral=smooth(state.lateralMs,bank*11,0.95,dt);
+   // Translate from the visible rotor-disc attitude, not directly from
+   // the touch input. The cyclic first tilts the illustrated helicopter,
+   // then horizontal velocity builds and decays gradually.
+   const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),0.95,dt);
+   const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),0.95,dt);
    state.forwardMs=forward;state.lateralMs=lateral;
    const heading=state.headingDeg*RAD;
    const vx=forward*Math.sin(heading)+lateral*Math.cos(heading);
@@ -129,9 +149,14 @@ function step(state,input,seconds){
    if(state.verticalMs>.65)events.push("climb");
    if(state.verticalMs<-.65)events.push("descent");
    if(state.altitudeM<=0){
-    state.altitudeM=0;state.onGround=true;state.verticalMs=0;
+    // Check the ACTUAL descent speed at skid contact, rather than the
+    // desired descent speed from the last collective setting. Quickly
+    // raising collective before contact must not erase a hard impact.
+    const impactVS=state.verticalMs;
     const insidePad=Math.hypot(state.xM,state.zM)<27;
-    const gentle=targetVS>=-1.75&&state.groundSpeedKt<9&&insidePad;
+    const gentle=impactVS>=-1.75&&state.groundSpeedKt<9&&
+     Math.abs(state.rollDeg)<10&&insidePad;
+    state.altitudeM=0;state.onGround=true;state.verticalMs=0;
     state.phase=gentle?"landed":"halted";
     state.message=gentle?"Gentle fictional helipad landing. Review your collective coordination.":
      "Hard or off-pad rotorcraft contact. Restart and practise a stabilised descent.";
@@ -214,7 +239,7 @@ function step(state,input,seconds){
  }
  return {state,events};
 }
-const api={makeInput,makeState,step,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+const api={makeInput,makeState,step,rotorHoverCue,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
