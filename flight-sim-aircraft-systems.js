@@ -11,7 +11,7 @@ function create(mode="airplane"){
  const heli=mode==="helicopter";
  return {mode,time:0,powerPct:heli?80:10,rotation:0,tailRotation:0,
   displayedPower:0,flapDeg:0,gearRetraction:0,parts:Object.create(null),
-  lastGround:true};
+  lastGround:true,lastVerticalMs:0,touchdownAge:0,touchdownStrength:0};
 }
 function step(system,state,input,seconds){
  if(!system||system.mode!==state?.mode)throw Error("System mode must match fictional aircraft");
@@ -35,8 +35,30 @@ function step(system,state,input,seconds){
  }
  system.displayedPower=Math.round((heli?collective:throttle)*100);
  system.flapDeg=heli?0:clamp(input?.flaps,0,30);
- system.lastGround=state.onGround===true;
+ // A small, time-decaying visual suspension response on touchdown. It
+ // never feeds back into position, velocity, control forces or flight grades.
+ // Use the preceding airborne descent rate: ground-state vertical speed
+ // may already have been reset to zero by the flight model.
+ const grounded=state.onGround===true,wasGrounded=system.lastGround;
+ if(dt){
+  if(!wasGrounded&&grounded){
+   system.touchdownAge=0;
+   system.touchdownStrength=clamp(.055+Math.abs(system.lastVerticalMs)*.025,.055,.22);
+  }else if(wasGrounded&&!grounded){
+   system.touchdownStrength=0;system.touchdownAge=0;
+  }
+  if(!grounded)system.lastVerticalMs=clamp(state.verticalMs,-25,25);
+  if(system.touchdownStrength>0){
+   system.touchdownAge+=dt;
+   if(system.touchdownAge>1.4)system.touchdownStrength=0;
+  }
+ }
+ system.lastGround=grounded;
  const r=system.parts;
+ // Brief upward gear/suspension rebound, with no underground penetration.
+ r.touchdownBounce=system.touchdownStrength>0&&grounded?
+  Math.max(0,Math.sin(system.touchdownAge*17))*
+  Math.exp(-system.touchdownAge*4.5)*system.touchdownStrength:0;
  if(heli){
   r.mainRotor=system.rotation;
   r.tailRotor=system.tailRotation;
