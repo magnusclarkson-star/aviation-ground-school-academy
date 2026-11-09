@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="flight-sim-exercises.css">
 <link rel="stylesheet" href="flight-sim-instructor-voice.css">
 <link rel="stylesheet" href="flight-sim-authentic.css">
+<link rel="stylesheet" href="flight-sim-focus.css">
 <script src="flight-sim-environment.js" defer></script>
 <script src="flight-sim-loading.js" defer></script>
 <script src="flight-sim-aerodynamics.js" defer></script>
@@ -32,6 +33,7 @@
 <script src="flight-sim-instruments.js" defer></script>
 <script src="flight-sim-cockpit.js" defer></script>
 <script src="flight-sim-switchgear.js" defer></script>
+<script src="flight-sim-focus.js" defer></script>
 <script src="flight-sim-guidance.js" defer></script>
 <script src="flight-sim-gamepad.js" defer></script>
 <script src="flight-sim-gamepad-ui.js" defer></script>
@@ -116,6 +118,8 @@
    <p class="cockpit-note" id="cockpitAircraftNotice">A visual teaching layout, not manufacturer-certified aircraft instrumentation.</p>
    <div class="cockpit-info-toolbar cockpit-actions" role="group" aria-label="Flight controls and optional help">
     <button type="button" id="restartFlight" class="cockpit-restart" aria-label="Restart the current flight from its starting position">↻ RESTART FLIGHT</button>
+    <button type="button" id="cockpitFocusButton" class="cockpit-info-button cockpit-focus-button" aria-pressed="false" aria-label="Enter cockpit-only flight view">⛶ Cockpit view</button>
+    <span id="cockpitFocusStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
     <span id="cockpitRestartStatus" class="cockpit-visually-hidden" role="status" aria-live="polite"></span>
     <button type="button" class="cockpit-info-button" data-cockpit-help="panel" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Instruments</button>
     <button type="button" class="cockpit-info-button" data-cockpit-help="controls" aria-expanded="false" aria-controls="cockpitInfoPanel">ⓘ Controls</button>
