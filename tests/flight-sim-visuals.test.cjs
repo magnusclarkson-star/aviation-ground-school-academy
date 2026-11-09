@@ -108,6 +108,7 @@ test("navigation keeps the home runway in view and calculates bearing",()=>{
 });
 test("compact PFD opens and closes through touch without cloning the live SVG",()=>{
  const listeners=new Map(),buttons=[];
+ let popoverOpen=0,popoverClosed=0;
  const panel={
   children:[],attributes:{},classList:{
    entries:new Set(),toggle(name,enabled){
@@ -115,6 +116,10 @@ test("compact PFD opens and closes through touch without cloning the live SVG",(
    }
   },firstChild:null,
   setAttribute(name,value){this.attributes[name]=value},
+  getAttribute(name){return this.attributes[name]},
+  removeAttribute(name){delete this.attributes[name]},
+  showPopover(){popoverOpen++},
+  hidePopover(){popoverClosed++},
   addEventListener(name,handler){listeners.set("panel:"+name,handler)},
   insertBefore(child){this.children.unshift(child);buttons.push(child)},
   focus(){},
@@ -132,12 +137,17 @@ test("compact PFD opens and closes through touch without cloning the live SVG",(
  listeners.get("panel:click")({target:panel});
  assert.equal(zoom.isExpanded(),true);
  assert.equal(panel.attributes["aria-expanded"],"true");
+ assert.equal(panel.attributes.popover,"manual");
+ assert.equal(popoverOpen,1,"enlarged live PFD should enter browser top layer");
  assert.equal(panel.children.length,1,"existing instruments must not be cloned");
  listeners.get("panel:click")({target:buttons[0],stopPropagation(){}});
  assert.equal(zoom.isExpanded(),false);
+ assert.equal(popoverClosed,1,"close should leave the browser top layer");
  zoom.setExpanded(true);
  listeners.get("doc:keydown")({key:"Escape",preventDefault(){}});
  assert.equal(zoom.isExpanded(),false);
+ assert.equal(popoverClosed,2);
+ assert.equal(panel.getAttribute("popover"),undefined);
 });
 
 
