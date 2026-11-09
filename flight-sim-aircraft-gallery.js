@@ -39,7 +39,7 @@ function attach({documentLike}={}){
  )?.matches??false;
  function placePhotoAction(){
   // Aircraft picture is the main selector and must stay visible on phones.
-  if(button.parentElement!==actions)actions.insertBefore(button,focus||helpToggle);
+  if(button.parentElement!==actions)actions.insertBefore(button,doc.getElementById("cockpitInstrumentStyle")||focus||helpToggle);
   // Move only the secondary 360-degree inspection control into More.
   if(narrow()&&more&&inspect&&inspect.parentElement!==more){
    more.appendChild(inspect);
