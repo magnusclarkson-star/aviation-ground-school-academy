@@ -497,6 +497,10 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   return true;
  }
  function closeZoom(){
+  if(zoomPanel.getAttribute?.("popover")==="manual"){
+   try{zoomPanel.hidePopover?.()}catch{}
+   zoomPanel.removeAttribute("popover");
+  }
   zoomPanel.hidden=true;
   zoomContent.replaceChildren();
   zoomTitle.textContent="Instrument";
@@ -525,6 +529,12 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   zoomContent.replaceChildren(clone);
   zoomTitle.textContent=tile.querySelector(".cockpit-gauge-title, .cockpit-mfd-head, .cockpit-nav-name")?.textContent||"Instrument";
   zoomPanel.hidden=false;
+  // Native top-layer presentation escapes the scrollable flight deck on
+  // Android, while the fixed-position CSS remains a compatible fallback.
+  if(typeof zoomPanel.showPopover==="function"){
+   zoomPanel.setAttribute("popover","manual");
+   try{zoomPanel.showPopover()}catch{zoomPanel.removeAttribute("popover");}
+  }
   update();
   $("cockpitZoomClose").focus({preventScroll:true});
  }
