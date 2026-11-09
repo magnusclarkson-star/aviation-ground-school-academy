@@ -501,6 +501,11 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   zoomContent.replaceChildren();
   zoomTitle.textContent="Instrument";
  }
+ // An enlarged instrument must appear immediately, not several panels
+ // below the flight deck where the phone user cannot see the response.
+ zoomPanel.setAttribute("role","dialog");
+ zoomPanel.setAttribute("aria-modal","true");
+ zoomPanel.setAttribute("aria-labelledby","cockpitZoomTitle");
  function openZoom(tile){
   closeInfo();
   const clone=tile.cloneNode(true);
@@ -521,6 +526,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   zoomTitle.textContent=tile.querySelector(".cockpit-gauge-title, .cockpit-mfd-head, .cockpit-nav-name")?.textContent||"Instrument";
   zoomPanel.hidden=false;
   update();
+  $("cockpitZoomClose").focus({preventScroll:true});
  }
  holder.addEventListener("click",event=>{
   const dot=event.target?.closest?.(".cockpit-info-dot");
@@ -541,6 +547,10 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   event.preventDefault();openZoom(tile);
  });
  $("cockpitZoomClose").addEventListener("click",closeZoom);
+ doc.addEventListener("pointerdown",event=>{
+  if(!zoomPanel.hidden&&!zoomPanel.contains(event.target)&&
+    !holder.contains(event.target))closeZoom();
+ });
  $("cockpitInfoClose").addEventListener("click",closeInfo);
  for(const button of cockpitStation.querySelectorAll(".cockpit-info-toolbar [data-cockpit-help]")){
   button.addEventListener("click",()=>{
