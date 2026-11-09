@@ -15,7 +15,7 @@ const SCALE=Object.freeze({
  fa18:Object.freeze([.890,1,1.148]),
  f22:Object.freeze([1.015,1,1.139]),
  f35:Object.freeze([.982,1,.981]),
- typhoon:Object.freeze([.711,1,.923]),
+ typhoon:Object.freeze([.711,1,.874]),
  su37:Object.freeze([.850,1,1.260])
 });
 const rgb=(r,g,b)=>[r/255,g/255,b/255];
