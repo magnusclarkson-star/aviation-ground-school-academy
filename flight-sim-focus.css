@@ -1,0 +1,223 @@
+/* Full-screen focused flying layout. Explicit toggle only: the learner keeps
+   the regular lesson page unless Cockpit view is pressed. */
+body[data-cockpit-focus="on"]{overflow:hidden!important;overscroll-behavior:none}
+body[data-cockpit-focus="on"] .scene-panel{
+ position:fixed!important;inset:0!important;z-index:1000!important;
+ width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+ margin:0!important;border:0!important;border-radius:0!important;
+ display:flex!important;flex-direction:column!important;overflow:hidden!important;
+ box-shadow:none!important;background:#10171c!important
+}
+body[data-cockpit-focus="on"] .scene-shell{
+ position:relative!important;top:auto!important;flex:0 0 clamp(105px,22dvh,205px);
+ width:100%!important;height:clamp(105px,22dvh,205px)!important;
+ aspect-ratio:auto!important;min-height:0;max-height:none!important;
+ border-radius:0!important;z-index:1!important
+}
+body[data-cockpit-focus="on"] #cockpitStation{
+ flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ scrollbar-width:thin;border-top-width:4px;padding:4px 8px 12px
+}
+body[data-cockpit-focus="on"] #cockpitMain{max-width:950px;padding:6px 9px}
+body[data-cockpit-focus="on"] .cockpit-actions .cockpit-info-button:not(.cockpit-focus-button){display:none!important}
+body[data-cockpit-focus="on"] #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+ margin:3px auto;gap:5px
+}
+body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions #restartFlight{
+ flex:0 0 auto;width:auto;min-width:98px;min-height:34px;padding:5px 9px;font-size:11px
+}
+body[data-cockpit-focus="on"] #cockpitStation .cockpit-focus-button{
+ border:1px solid #b5c9cd;color:#eaf3f1;background:#364650;
+ min-height:34px;min-width:117px;font:750 11px/1 system-ui,sans-serif;
+ padding:5px 9px
+}
+body[data-cockpit-focus="on"] #cockpitStation .cockpit-focus-button:focus-visible{
+ outline:3px solid #efdea4;outline-offset:2px
+}
+body[data-cockpit-focus="on"] .sim-about{display:none}
+#cockpitStation .cockpit-focus-button{min-width:110px;min-height:42px;font:750 12px/1 system-ui,sans-serif}
+#cockpitStation .cockpit-focus-button[aria-pressed="true"]{border-color:#dfc684;background:#344e53;color:#f3f2df}
+
+/* Phone portrait: dedicate the whole screen to the cockpit. Controls retain
+   their normal touch geometry and the rudder stays immediately below yoke. */
+@media(max-width:740px) and (orientation:portrait){
+ body[data-cockpit-focus="on"] .scene-shell{
+  flex-basis:clamp(112px,17dvh,158px);
+  height:clamp(112px,17dvh,158px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation{padding:4px 5px 10px}
+ body[data-cockpit-focus="on"] #cockpitMain{padding:5px 4px}
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-info-toolbar.cockpit-actions{margin:3px auto}
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions #restartFlight{
+  flex:0 0 auto;min-height:32px;min-width:95px;width:auto;font-size:10px;padding:4px 7px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-focus-button{
+  min-height:32px;min-width:108px;font-size:10px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge{width:min(100%,115px)}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .control-pad{height:clamp(105px,15dvh,143px)!important}
+}
+
+/* Android landscape phones: a continuous windscreen, gauges, switches,
+   centered yoke and underlying pedals, within a single cockpit viewport.
+   Only the instrument face opens a zoom; no JS changes steering size. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] .scene-panel{overflow:hidden!important}
+ body[data-cockpit-focus="on"] .scene-shell{
+  flex:0 0 clamp(39px,11dvh,56px)!important;height:clamp(39px,11dvh,56px)!important;
+  min-height:0!important;position:relative!important
+ }
+ body[data-cockpit-focus="on"] .scene-top,body[data-cockpit-focus="on"] .scene-bottom{
+  font-size:8px;top:auto
+ }
+ body[data-cockpit-focus="on"] .scene-bottom{bottom:1px}
+ body[data-cockpit-focus="on"] .scene-bottom span{padding:1px 3px;font-size:8px}
+ body[data-cockpit-focus="on"] #cockpitStation{
+  flex:1 1 auto;min-height:0;padding:2px 6px 3px!important;
+  overflow-y:auto!important;border-top-width:2px!important
+ }
+ body[data-cockpit-focus="on"] .cockpit-station-head{
+  min-height:27px;max-height:29px;gap:5px;margin:0 auto!important
+ }
+ body[data-cockpit-focus="on"] .cockpit-station-head>div:first-child{flex:1 1 auto}
+ body[data-cockpit-focus="on"] .cockpit-station-head>div:first-child strong{font-size:10px}
+ body[data-cockpit-focus="on"] .cockpit-station-head label{
+  flex:0 1 145px;min-width:0;max-width:145px;font-size:8px;gap:0
+ }
+ body[data-cockpit-focus="on"] .cockpit-station-head select{
+  min-height:24px;padding:1px 4px;font-size:10px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .full-flight-launch{
+  flex:0 0 88px;max-width:88px!important;min-width:0!important;width:88px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation #fullFlightLaunch{
+  min-height:27px!important;max-height:27px;padding:2px;font-size:8px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  min-height:27px;max-height:28px;margin:1px auto!important;gap:5px;
+  justify-content:center;flex-wrap:nowrap
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions #restartFlight{
+  flex:0 0 auto;min-width:102px;min-height:26px;padding:3px 5px;font-size:9px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-focus-button{
+  min-width:101px;min-height:26px;padding:3px 5px;font-size:9px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain.cockpit-flightdeck{
+  margin:0 auto;padding:2px 5px 2px!important;
+  border-radius:8px!important;border-width:1px!important;gap:0!important;
+  max-width:770px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-instrument-well{gap:1px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-visual-panel{
+  display:grid;grid-template-columns:minmax(0,3.8fr) minmax(100px,1fr);
+  max-width:710px;min-height:0;margin:0 auto;padding:2px 5px!important;
+  gap:5px;border-width:2px;border-radius:6px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-sixpack{
+  width:100%;max-width:390px;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px 3px;justify-items:center;align-items:center
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge{
+  width:clamp(45px,16dvh,65px)!important;height:clamp(45px,16dvh,65px)!important;
+  border-width:2px!important;min-height:0;padding:0;border-radius:50%
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge-title{
+  top:8%;font-size:6px;line-height:1
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge-number{bottom:17%;font-size:9px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge small{bottom:8%;font-size:6px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-gauge .cockpit-info-dot{
+  right:5%;top:18%;width:17px;height:17px;min-width:17px;min-height:17px;font-size:10px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-avionics{
+  min-height:0;max-height:138px;padding:3px;gap:2px;border-width:2px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .avionics-radio{padding:2px;min-height:16px}
+ body[data-cockpit-focus="on"] #cockpitMain .avionics-screen{min-height:27px}
+ body[data-cockpit-focus="on"] #cockpitMain .avionics-buttons{display:none}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch-panel{
+  max-width:710px;width:100%;min-height:0;margin:1px auto;padding:2px 5px;
+  gap:6px;border-width:1px;border-radius:3px;flex-wrap:nowrap
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch-bank{gap:3px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch{
+  width:51px;min-height:30px;height:32px;padding:1px 2px;gap:0;
+  grid-template-rows:8px 11px 9px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch span{font-size:6px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch .cockpit-switch-lever{
+  width:10px;height:11px;border-width:1px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-switch .cockpit-switch-value{font-size:7px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-annunciators{gap:3px;flex:1 1 auto}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-annunciators span{
+  min-width:48px;padding:2px 4px;gap:1px;border-width:1px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-annunciators small{font-size:7px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-annunciators strong{font-size:10px}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel{
+  max-width:710px;width:100%;margin:0 auto!important;padding:0!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,2.3fr) minmax(0,1fr);
+  column-gap:4px;row-gap:0
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .control-assembly{max-width:240px}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .control-pad{
+  height:clamp(53px,16.5dvh,72px)!important;max-height:72px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .flight-grip{
+  height:100%!important;filter:drop-shadow(0 3px 3px #000b)
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .axis-values{
+  margin:0 auto;gap:3px;width:70%;min-height:10px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .axis-values span{
+  font-size:6px;line-height:1.2;padding:1px 3px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel>.rudder-deck{
+  margin:1px auto 0!important;padding:0!important;max-width:175px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .rudder-pedals{gap:6px}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .rudder-pedals button{
+  min-height:30px!important;height:30px!important;padding:1px;font-size:7px;border-width:2px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .rudder-pedals .pedal-icon{
+  font-size:9px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls{
+  margin:1px 0 0;gap:2px;max-width:none
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls .lever-panel{
+  padding:2px 3px;border-width:1px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .side-controls label{font-size:7px}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .lever-track{
+  margin:0;padding:1px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .lever-track input{height:20px}
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .lever-panel select{
+  font-size:8px;min-height:23px;margin:0;padding:1px
+ }
+ body[data-cockpit-focus="on"] #cockpitMain .control-panel .brake-button{
+  min-height:27px;padding:1px 2px;font-size:7px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-family="jet"] #cockpitMain .cockpit-visual-panel,
+ body[data-cockpit-focus="on"] #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-visual-panel{
+  display:block!important;max-width:710px;padding:2px 4px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-family="jet"] #cockpitMain .cockpit-mfd{
+  border-width:2px;min-height:0;padding:2px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-family="jet"] #cockpitMain .cockpit-mfd-body{
+  min-height:53px;padding:2px
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-family="jet"] #cockpitMain .cockpit-mfd-attitude{height:44px}
+ body[data-cockpit-focus="on"] #cockpitMain .cockpit-zoom-panel{
+  position:fixed!important;top:50%!important;left:50%!important;
+  transform:translate(-50%,-50%)!important;width:min(250px,76vw);
+  max-height:85dvh;z-index:1003
+ }
+ body[data-cockpit-focus="on"] #cockpitMain #cockpitZoomPanel .cockpit-gauge{
+  width:min(190px,70vw)!important;height:min(190px,70vw)!important
+ }
+}
