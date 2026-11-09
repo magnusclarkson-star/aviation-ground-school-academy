@@ -6,6 +6,8 @@ on:
       - 'flight-sim.html'
       - 'flight-sim.css'
       - 'flight-sim.js'
+      - 'flight-sim-engine-audio.js'
+      - 'scripts/test-flight-engine-audio.mjs'
       - 'flight-sim-model.js'
       - 'flight-sim-aerodynamics.js'
       - 'flight-sim-loading.js'
@@ -176,6 +178,7 @@ jobs:
       - name: Validate simulator source
         run: |
           node --check flight-sim.js
+          node --check flight-sim-engine-audio.js
           node --check flight-sim-model.js
           node --check flight-sim-aerodynamics.js
           node --check flight-sim-loading.js
@@ -212,6 +215,7 @@ jobs:
           node scripts/test-flight-inspection.mjs
           node scripts/test-flight-sim-airport-detail.mjs
           node scripts/test-flight-sim-aircraft-systems.mjs
+          node scripts/test-flight-engine-audio.mjs
       - name: Test optional vibration
         run: node scripts/test-flight-sim-haptics.mjs
       - name: Test integrated glass instruments and guidance
