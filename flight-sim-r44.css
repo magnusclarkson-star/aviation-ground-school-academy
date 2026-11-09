@@ -143,3 +143,86 @@
   height:63px;
  }
 }
+
+/* Compact R44 phone dashboard: four legible primary dials, not eight
+   thumbnail gauges crushed into four columns. The independent live quick
+   scan keeps heading, vertical speed and collective visible at all times.
+   All eight original dials remain live and accessible from the toggle. */
+.r44-quick-scan,.r44-secondary-toggle{display:none}
+@media(max-width:540px) and (orientation:portrait){
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:clamp(3px,1.3vw,6px)!important;
+  max-width:100%;
+  align-items:stretch;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge{
+  width:100%;
+  min-width:0;
+  min-height:0;
+  max-width:none;
+  aspect-ratio:auto;
+  box-sizing:border-box;
+  padding:3px 2px 4px;
+  overflow:hidden;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge svg{
+  display:block;
+  width:min(100%,78px);
+  max-width:100%;
+  height:clamp(44px,7.5dvh,64px);
+  margin:auto;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge-title{
+  font-size:8px;line-height:1;min-height:13px;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge-number{
+  font-size:10px;line-height:1.15;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack .cockpit-gauge small{
+  font-size:8px;line-height:1;
+ }
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="speed"]{order:1}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="attitude"]{order:2}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="alt"]{order:3}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="rpm"]{order:4}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="heading"]{order:5}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="vsi"]{order:6}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="power"]{order:7}
+ #cockpitStation[data-family="rotor"] #cockpitMain .cockpit-sixpack [data-gauge="turn"]{order:8}
+ #cockpitStation[data-family="rotor"] #cockpitVisualPanel:not([data-r44-expanded="true"])
+ .cockpit-sixpack [data-gauge="heading"],
+ #cockpitStation[data-family="rotor"] #cockpitVisualPanel:not([data-r44-expanded="true"])
+ .cockpit-sixpack [data-gauge="vsi"],
+ #cockpitStation[data-family="rotor"] #cockpitVisualPanel:not([data-r44-expanded="true"])
+ .cockpit-sixpack [data-gauge="power"],
+ #cockpitStation[data-family="rotor"] #cockpitVisualPanel:not([data-r44-expanded="true"])
+ .cockpit-sixpack [data-gauge="turn"]{display:none!important}
+ #cockpitStation[data-family="rotor"] .r44-quick-scan{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;
+  width:100%;margin:5px auto 0;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan span{
+  min-width:0;display:grid;gap:2px;place-items:center;
+  padding:3px 1px;border:1px solid #85969c;border-radius:5px;
+  background:#09151d;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan small{
+  color:#bbd5dd;font-size:8px;font-weight:800;line-height:1;
+ }
+ #cockpitStation[data-family="rotor"] .r44-quick-scan strong{
+  color:#f5dea3;font-size:11px;font-variant-numeric:tabular-nums;
+  white-space:nowrap;line-height:1.2;
+ }
+ #cockpitStation[data-family="rotor"] .r44-secondary-toggle{
+  display:block;width:100%;min-height:39px;
+  margin:5px 0 0;padding:5px 2px;
+  border-radius:6px;border:1px solid #7a929a;
+  color:#e9f0ef;background:#192933;
+  font:700 10px/1.2 system-ui,sans-serif;
+  touch-action:manipulation;
+ }
+ #cockpitStation[data-family="rotor"] .r44-secondary-toggle:focus-visible{
+  outline:2px solid #f5d596;outline-offset:2px;
+ }
+}
