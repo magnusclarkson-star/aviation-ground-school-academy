@@ -11,6 +11,36 @@ const RAD=Math.PI/180;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number.isFinite(x)?x:0));
 const smooth=(x,target,rate,dt)=>x+(target-x)*(1-Math.exp(-rate*dt));
 const KNOT=0.514444;
+// Five distinct *illustrative*, bounded jet responses. These are teaching
+// settings, not manufacturer speeds, performance or flight-envelope data.
+// The C172 and R44 preserve their established exercises.
+const JET_SETTINGS=Object.freeze({
+ fa18:Object.freeze({bankDeg:47,pitchDeg:17,rollResponse:2.8,pitchResponse:2,
+  groundAccel:16,rotationKt:88,approachKt:118,stallKt:68,airborneBaseKt:84,
+  airbornePowerKt:128,airborneDragKt:.44,climbLift:1.02,climbPower:3.1,
+  climbCap:11,turnBank:.052,turnRudder:.65,maxGroundKt:185,maxAirborneKt:230,landingMaxKt:152}),
+ f22:Object.freeze({bankDeg:55,pitchDeg:19,rollResponse:3.3,pitchResponse:2.4,
+  groundAccel:19,rotationKt:94,approachKt:126,stallKt:74,airborneBaseKt:94,
+  airbornePowerKt:142,airborneDragKt:.48,climbLift:1.08,climbPower:3.8,
+  climbCap:13,turnBank:.06,turnRudder:.60,maxGroundKt:200,maxAirborneKt:255,landingMaxKt:165}),
+ f35:Object.freeze({bankDeg:49,pitchDeg:16,rollResponse:2.6,pitchResponse:1.9,
+  groundAccel:15,rotationKt:91,approachKt:122,stallKt:72,airborneBaseKt:91,
+  airbornePowerKt:129,airborneDragKt:.48,climbLift:1,climbPower:3,
+  climbCap:11.5,turnBank:.051,turnRudder:.61,maxGroundKt:195,maxAirborneKt:235,landingMaxKt:160}),
+ typhoon:Object.freeze({bankDeg:53,pitchDeg:19,rollResponse:3.4,pitchResponse:2.55,
+  groundAccel:18,rotationKt:87,approachKt:117,stallKt:67,airborneBaseKt:88,
+  airbornePowerKt:143,airborneDragKt:.44,climbLift:1.05,climbPower:3.6,
+  climbCap:12.5,turnBank:.059,turnRudder:.63,maxGroundKt:205,maxAirborneKt:250,landingMaxKt:157}),
+ su37:Object.freeze({bankDeg:52,pitchDeg:18,rollResponse:2.9,pitchResponse:2.15,
+  groundAccel:17,rotationKt:96,approachKt:132,stallKt:76,airborneBaseKt:102,
+  airbornePowerKt:143,airborneDragKt:.51,climbLift:1.03,climbPower:3.4,
+  climbCap:12,turnBank:.055,turnRudder:.62,maxGroundKt:205,maxAirborneKt:260,landingMaxKt:173})
+});
+const AIRFRAME_IDS=Object.freeze(["c172","r44",...Object.keys(JET_SETTINGS)]);
+function flightProfile(state){
+ return state?.physicsId==="classic"&&Object.hasOwn(JET_SETTINGS,state?.airframeId)?
+  JET_SETTINGS[state.airframeId]:E.selectProfile(state?.profileId||"trainer");
+}
 function makeInput(mode="airplane"){
  return {bank:0,pitch:0,rudder:0,throttle:0,collective:.48,
   flaps:mode==="airplane"?10:0,brake:false,turbulence:.16};
@@ -23,15 +53,18 @@ function makeState(mode="airplane",scenario="runway",options={}){
  const profileId=mode==="helicopter"?"rotor":options.profileId??"trainer";
  const physicsId=mode==="helicopter"?"classic":(options.physicsId??"classic");
  if(!["classic","aero"].includes(physicsId))throw Error("Unknown fictional physics mode");
- const profile=mode==="airplane"?E.selectProfile(profileId):null;
+ const airframeId=mode==="helicopter"?"r44":options.airframeId??"c172";
+ if(!AIRFRAME_IDS.includes(airframeId)||(mode==="airplane"&&airframeId==="r44"))
+  throw Error("Unknown or incompatible selected airframe");
+ const profile=mode==="airplane"?flightProfile({airframeId,profileId,physicsId}):null;
  if(mode==="helicopter"){
-  return {mode,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
+  return {mode,airframeId,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
    groundSpeedKt:0,trackDeg:0,windXMps:0,windZMps:0,verticalMs:0,pitchDeg:0,rollDeg:0,headingDeg:0,
    lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:true,
    message:"A fictional helipad exercise. Increase collective for a gentle vertical lift."};
  }
  const approach=scenario==="approach";
- const plane={mode,profileId,windId,physicsId,scenario:approach?"approach":"runway",
+ const plane={mode,airframeId,profileId,windId,physicsId,scenario:approach?"approach":"runway",
   phase:approach?"approach":"roll",xM:0,zM:approach?-1450:0,
   altitudeM:approach?84:0,speedKt:approach?profile.approachKt:0,groundSpeedKt:approach?profile.approachKt:0,
   trackDeg:0,windXMps:0,windZMps:0,
@@ -47,7 +80,7 @@ function step(state,input,seconds){
  const t=state.time+=dt;
  const wind=E.windAt(state.windId||"calm",t);
  state.windXMps=wind.x;state.windZMps=wind.z;
- const p=state.mode==="airplane"?E.selectProfile(state.profileId||"trainer"):null;
+ const p=state.mode==="airplane"?flightProfile(state):null;
  const turb=clamp(input.turbulence,0,1);
  state.turbulence=turb*(Math.sin(t*2.91)*.55+Math.sin(t*7.31)*.3);
  const bank=clamp(input.bank,-1,1),pitch=clamp(input.pitch,-1,1),rudder=clamp(input.rudder,-1,1);
@@ -108,7 +141,7 @@ function step(state,input,seconds){
  if(state.onGround){
   const brake=input.brake===true;
   const acceleration=p.groundAccel*throttle-1.2-.00065*state.speedKt**2-flap*.014-(brake?9:0);
-  state.speedKt=clamp(state.speedKt+acceleration*dt,0,115);
+  state.speedKt=clamp(state.speedKt+acceleration*dt,0,p.maxGroundKt??115);
   state.verticalMs=0;state.altitudeM=0;
   state.headingDeg=clamp(state.headingDeg+rudder*.65*dt,-40,40);
   state.zM+=state.speedKt*KNOT*Math.cos(state.headingDeg*RAD)*dt;
@@ -133,7 +166,7 @@ function step(state,input,seconds){
    events.push("completed");
   }
  }else{
-  const targetSpeed=clamp(p.airborneBaseKt+p.airbornePowerKt*throttle-state.pitchDeg*.9-flap*p.airborneDragKt,26,155);
+  const targetSpeed=clamp(p.airborneBaseKt+p.airbornePowerKt*throttle-state.pitchDeg*.9-flap*p.airborneDragKt,26,p.maxAirborneKt??155);
   state.speedKt=smooth(state.speedKt,targetSpeed,.19,dt);
   const stall=state.speedKt<p.stallKt;
   const targetVertical=clamp(
@@ -162,7 +195,7 @@ function step(state,input,seconds){
   if(state.altitudeM<=0){
    state.altitudeM=0;state.onGround=true;
    const onRunway=state.zM>=-35&&state.zM<=1800&&Math.abs(state.xM)<24;
-   const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&state.speedKt<93&&onRunway;
+   const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&state.speedKt<(p.landingMaxKt??93)&&onRunway;
    state.verticalMs=0;
    state.phase=gentle?"rollout":"halted";
    state.message=gentle?"Simulated touchdown. Reduce power and hold the brake to finish the rollout.":
@@ -172,7 +205,7 @@ function step(state,input,seconds){
  }
  return {state,events};
 }
-const api={makeInput,makeState,step,clamp,KNOT};
+const api={makeInput,makeState,step,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);

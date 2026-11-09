@@ -494,10 +494,15 @@ function reportEnvironment(){
   "Classic: the original guided takeoff/landing behaviour. Choose Experimental for invented aerodynamic forces and energy trends.";
 }
 function makeConfiguredState(mode,scenario="runway"){
+ // A control-mode button may fire before the cockpit selector changes
+ // from the old model. Use a compatible temporary type while switching.
+ const requested=airframeId();
+ const selected=mode==="helicopter"?"r44":requested==="r44"?"c172":requested;
  return M.makeState(mode,scenario,{
   profileId:$("profileSelect").value,
   windId:$("windSelect").value,
-  physicsId:$("physicsSelect").value,
+  physicsId:mode==="airplane"&&selected!=="c172"?"classic":$("physicsSelect").value,
+  airframeId:selected,
   loadout:currentLoadout()
  });
 }
@@ -783,6 +788,18 @@ $("engineAudioVolume").addEventListener("input",()=>{
 $("visualMode").addEventListener("change",()=>{chooseVisual();syncCockpitFrame();});
 $("cockpitFrameToggle").addEventListener("change",syncCockpitFrame);
 document.addEventListener("agsa:aircraft-changed",()=>{
+ const id=airframeId(),isJet=state.mode==="airplane"&&id!=="c172";
+ // Selecting a model updates its motion as well as its picture. Preserve
+ // an ongoing Classic flight, but reset an incompatible experimental lab.
+ if(isJet&&state.physicsId==="aero"){
+  $("physicsSelect").value="classic";
+  reset(state.scenario);
+ }
+ state.airframeId=id;
+ const trainer=state.mode==="airplane"&&!isJet;
+ show("profileWrap",trainer);
+ show("physicsWrap",trainer);
+ $("physicsSelect").disabled=!trainer;
  if(engineAudio.status().active){engineAudio.update(audioMode(),audioPower());syncEngineAudioUI();}
  syncCockpitFrame();
  prev2D=0;prev3D=0;
