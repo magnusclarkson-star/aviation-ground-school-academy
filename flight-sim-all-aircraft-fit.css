@@ -72,6 +72,12 @@
  #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-panoramic .cockpit-mfd-pfd{
   grid-row:auto!important;
  }
+ /* FA-18 and Typhoon: navigation and PFD share the first row instead of
+    forcing the three displays to consume three separate phone rows. */
+ #cockpitStation[data-family="jet"][data-instruments="glass"] #cockpitMain #cockpitVisualPanel .cockpit-mfd-grid.cockpit-mfd-triple>.cockpit-mfd-pfd{
+  grid-column:auto!important;
+  grid-row:auto!important;
+ }
 }
 
 /* Compact landscape: keep the fighter PFD and moving-map screen above the
