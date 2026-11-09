@@ -7,13 +7,72 @@ if(!E)throw Error("Fictional aircraft profiles unavailable");
 const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
 const round=x=>Math.round(Number.isFinite(x)?x:0);
 const lowEnergyKt=state=>E.selectProfile(state.profileId||"trainer").stallKt+4;
+const R44_STAGES=Object.freeze(["takeoff","hover","turn","return"]);
+const headingDelta=(heading,start)=>((heading-start+540)%360+360)%360-180;
+function newR44Lesson(){
+ return {stage:"takeoff",status:"active",turnStartHeading:null,turnDeg:0,
+  turnsCompleted:0,finishedAt:null};
+}
+function updateR44Lesson(lesson,state){
+ if(!lesson||lesson.status!=="active")return;
+ if(state.phase==="halted"){
+  lesson.status="stopped";lesson.finishedAt=state.time;return;
+ }
+ if(state.phase==="landed"){
+  lesson.status=lesson.stage==="return"&&state.landingGrade==="precision"?
+   "completed":"incomplete";
+  lesson.finishedAt=state.time;return;
+ }
+ if(lesson.stage==="takeoff"&&!state.onGround&&state.altitudeM>=2){
+  lesson.stage="hover";
+ }
+ if(lesson.stage==="hover"&&state.hoverAchieved===true){
+  lesson.stage="turn";
+  lesson.turnStartHeading=Number.isFinite(state.headingDeg)?state.headingDeg:0;
+ }
+ if(lesson.stage==="turn"&&!state.onGround){
+  const delta=headingDelta(Number.isFinite(state.headingDeg)?state.headingDeg:0,
+   lesson.turnStartHeading??0);
+  lesson.turnDeg=Math.round(Math.abs(delta));
+  const inRange=Math.abs(delta)>=85&&Math.abs(delta)<=105;
+  const controlled=state.altitudeM>=2&&state.altitudeM<=12&&
+   Math.abs(state.verticalMs)<1.5&&state.groundSpeedKt<5&&
+   Math.hypot(state.xM,state.zM)<=20&&Math.abs(state.yawRateDegS||0)<5;
+  if(inRange&&controlled){
+   lesson.stage="return";lesson.turnsCompleted++;
+  }
+ }
+}
+function r44LessonStatus(progress,state){
+ const lesson=progress?.r44Lesson;
+ if(!lesson)return null;
+ const stage=lesson.stage;
+ const n=Math.max(1,R44_STAGES.indexOf(stage)+1);
+ const pct=Math.max(0,Math.min(8,state?.hoverHoldSec||0));
+ const offset=Math.hypot(Number(state?.xM)||0,Number(state?.zM)||0);
+ const captions={takeoff:"TAKEOFF",hover:"HOVER",turn:"90° TURN",return:"RETURN & LAND"};
+ const short=lesson.status==="completed"?"LESSON COMPLETE":
+  lesson.status==="incomplete"?"RESTART LESSON":
+  lesson.status==="stopped"?"RESTART AFTER CONTACT":
+  n+"/4 · "+captions[stage];
+ const hint=lesson.status==="completed"?"Precision landing completed after the hover and turn.":
+  lesson.status!=="active"?"Restart the helicopter exercise to try all four stages.":
+  stage==="takeoff"?"Lift into a steady low hover above the helipad.":
+  stage==="hover"?"Hold height and position for 8 seconds: "+Math.floor(pct)+"/8.":
+  stage==="turn"?"Turn 90° with the pedals, then steady the heading: "+lesson.turnDeg+"°.":
+  "Return to the helipad centre ("+Math.round(offset)+" m away) and land gently.";
+ return Object.freeze({stage,status:lesson.status,index:n,total:4,short,hint,
+  progress:stage==="hover"?Math.floor(pct):stage==="turn"?lesson.turnDeg:null,
+  complete:lesson.status==="completed"});
+}
 function start(state){
  if(!state||!validPhase.has(state.phase))throw Error("Synthetic flight state required");
  return {
   scenario:state.scenario,mode:state.mode,lastPhase:state.phase,
   startAt:state.time,elapsed:0,maxHeight:Math.max(0,state.altitudeM),
   maxOffset:Math.abs(state.xM),minVertical:Math.min(0,state.verticalMs),
-  phaseVisits:[state.phase],landings:0,hardContacts:0,liftoffs:0
+  phaseVisits:[state.phase],landings:0,hardContacts:0,liftoffs:0,
+  r44Lesson:state.mode==="helicopter"?newR44Lesson():null
  };
 }
 function observe(progress,state,events=[]){
@@ -33,13 +92,21 @@ function observe(progress,state,events=[]){
   if(event==="touchdown")progress.landings++;
   if(event==="hardLanding")progress.hardContacts++;
  }
+ if(progress.r44Lesson)updateR44Lesson(progress.r44Lesson,state);
  return progress;
 }
-function guidance(state,input){
+function guidance(state,input,progress){
  if(!state||!input)throw Error("Synthetic aircraft data required");
  const phase=state.phase;
  const heli=state.mode==="helicopter";
  const base={tag:"LEARNING CUE",level:"normal",text:"Observe the fictional scenery and instruments together.",complete:false};
+ if(heli&&progress?.r44Lesson){
+  const lesson=r44LessonStatus(progress,state);
+  return {...base,tag:"R44 · "+lesson.short,
+   level:lesson.status==="completed"?"positive":
+    lesson.status==="active"?"normal":"caution",
+   text:lesson.hint,complete:lesson.status!=="active"};
+ }
  if(!heli&&state.physicsId==="aero"&&state.aeroStalled===true&&
    ["climb","flight","approach"].includes(phase))
   return {...base,tag:"EXPERIMENTAL WING ENERGY CUE",level:"caution",
@@ -121,7 +188,7 @@ function summary(progress,state){
   warning:"Session-only, fictional observations; not assessed or independently verified. No training credit."
  };
 }
-const api={start,observe,guidance,summary};
+const api={start,observe,guidance,summary,r44LessonStatus};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightGuidance=api;
 })(typeof window!=="undefined"?window:null);
