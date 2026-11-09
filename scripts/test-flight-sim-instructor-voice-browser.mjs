@@ -94,6 +94,62 @@ try{
  assert.deepEqual(errors,[]);
  await desktop.close();
 
+ // Independent R44 voice page: selecting the helicopter is the user gesture.
+ // The 4 lesson stages speak once each, but never interrupt the ATC queue.
+ const coachPage=await browser.newPage({viewport:{width:1200,height:900}});
+ coachPage.on("pageerror",e=>errors.push("R44 voice "+e.message));
+ await coachPage.addInitScript(()=>{
+  window.__coachSpeech=[];window.__coachCancel=0;
+  Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{
+   speak(utterance){window.__coachSpeech.push({text:utterance.text,rate:utterance.rate})},
+   cancel(){window.__coachCancel++},
+   getVoices(){return []}
+  }});
+  Object.defineProperty(window,"SpeechSynthesisUtterance",{configurable:true,
+   value:class{constructor(text){this.text=text}}});
+ });
+ await coachPage.goto(url,{waitUntil:"load"});
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),0,
+  "spoken R44 guidance must not start on page load");
+ await coachPage.locator("#cockpitAircraftSelect").selectOption("r44");
+ assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"true");
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),1,
+  "R44 selection is the explicit gesture that arms a short stage prompt");
+ assert.match(await coachPage.evaluate(()=>window.__coachSpeech.at(-1).text),
+  /Lift into a steady hover/);
+ await coachPage.waitForTimeout(200);
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),1,
+  "animation frames cannot spam the instructor announcement");
+ await coachPage.locator("#r44VoiceToggle").click();
+ assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"false");
+ const mutedCount=await coachPage.evaluate(()=>window.__coachSpeech.length);
+ await coachPage.waitForTimeout(150);
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount);
+ await coachPage.locator("#r44VoiceToggle").click();
+ assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"true");
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount+1,
+  "unmuting repeats the current stage only after the learner taps");
+ await coachPage.locator("#collective").evaluate(el=>{
+  el.value="82";el.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+ await coachPage.waitForFunction(()=>document.querySelector("[data-r44-lesson]")?.
+   textContent.includes("2/4 · HOVER"),null,{timeout:8000});
+ assert.match(await coachPage.evaluate(()=>window.__coachSpeech.at(-1).text),
+  /Hold your position and height/);
+ const cancelBeforeATC=await coachPage.evaluate(()=>window.__coachCancel);
+ await coachPage.locator("#atcBefore").click();
+ assert.ok((await coachPage.evaluate(()=>window.__coachCancel))>cancelBeforeATC,
+  "ATC spoken conversation interrupts the lesson voice, never the reverse");
+ assert.match(await coachPage.evaluate(()=>window.__coachSpeech.at(-1).text),
+  /Academy|pilot|Tower|runway|helipad/i);
+ const duringATC=await coachPage.evaluate(()=>window.__coachSpeech.length);
+ await coachPage.waitForTimeout(150);
+ assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),duringATC);
+ await coachPage.locator("#atcStop").click();
+ await coachPage.locator("#pauseFlight").click();
+ assert.equal(await coachPage.locator("#pauseFlight").getAttribute("aria-pressed"),"true");
+ await coachPage.close();
+
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone "+e.message));
  await phone.addInitScript(()=>{
@@ -127,6 +183,12 @@ try{
  const pedal=await phone.locator("#rightRudder").boundingBox();
  assert.ok(control&&pedal&&pedal.y>=control.y+control.height-12&&pedal.y-control.y<280,
   "pedals remain below the centered yoke when narration panel expands");
+ await phone.locator("#cockpitAircraftSelect").selectOption("r44");
+ assert.equal(await phone.locator("#r44VoiceToggle").isVisible(),true);
+ assert.equal(await phone.locator("#r44VoiceToggle").isDisabled(),true,
+  "unsupported phone remains silent and keeps the R44 cockpit usable");
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
+  "R44 mute icon cannot create horizontal scrolling on a 390px phone");
  assert.deepEqual(errors,[]);
  await phone.close();
  console.log("Instructor voice browser passed: no auto-play, Scout/pilot scripts, slower pace, reference/comparison/feedback speech, stop/hide, unsupported 390px phone and text-only self-check.");
