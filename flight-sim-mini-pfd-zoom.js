@@ -1,4 +1,4 @@
-/* The small always-live PFD enlarges in place: no duplicate SVG IDs or
+/* The small always-live PFD expands into the browser top layer when supported: no duplicate SVG IDs or
  * stale instrument values. The cockpit's separate glass display uses its
  * own zoom handler. Both remain operable on touch and keyboard.
  */
@@ -20,9 +20,21 @@
   let expanded=false;
   function setExpanded(value){
    expanded=!!value;
+   if(expanded){
+    // Modern Android browsers put popovers in the top layer. This prevents
+    // the enlarged live PFD from being clipped by the scrollable cockpit.
+    if(typeof panel.showPopover==="function"){
+     panel.setAttribute("popover","manual");
+     try{panel.showPopover()}catch{panel.removeAttribute("popover");}
+    }
+   }else if(panel.getAttribute?.("popover")==="manual"){
+    try{panel.hidePopover?.()}catch{}
+    panel.removeAttribute("popover");
+   }
    panel.classList.toggle("agsa-mini-pfd-expanded",expanded);
    panel.setAttribute("aria-expanded",String(expanded));
-   panel.setAttribute("aria-label",expanded?"Enlarged primary flight display; activate to close":"Enlarge live primary flight display");
+   panel.setAttribute("role",expanded?"dialog":"button");
+   panel.setAttribute("aria-label",expanded?"Enlarged live primary flight display":"Enlarge live primary flight display");
    close.hidden=!expanded;
    if(expanded)close.focus({preventScroll:true});else panel.focus({preventScroll:true});
    return expanded;
