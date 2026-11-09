@@ -31,6 +31,7 @@
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   function updateHeading(){
    const id=selected();
+   $("aircraftInspectModelSelect").value=id;
    $("aircraftInspectModel").textContent=types.LABELS[id];
    $("aircraftInspectAngles").textContent="AZ "+String(Math.round(orbit.azimuth)).padStart(3,"0")+
     "° · EL "+Math.round(orbit.elevation)+"°";
@@ -107,6 +108,15 @@
    orbit={azimuth:0,elevation:26,distance:30};
    autoRotate=false;updateHeading();
   }
+  $("aircraftInspectModelSelect").addEventListener("change",event=>{
+   const id=event.target.value;
+   if(!types.IDS.includes(id))return;
+   if(select.value!==id){
+    select.value=id;
+    select.dispatchEvent(new Event("change",{bubbles:true}));
+   }
+   updateHeading();
+  });
   trigger.addEventListener("click",open);
   $("aircraftInspectClose").addEventListener("click",close);
   $("aircraftInspectReset").addEventListener("click",reset);
@@ -146,7 +156,7 @@
      event.key==="ArrowUp"?-10:event.key==="ArrowDown"?10:0);return;
    }
    if(event.key==="Tab"){
-    const els=[ $("aircraftInspectClose"),$("aircraftInspectZoomIn"),
+    const els=[ $("aircraftInspectClose"),$("aircraftInspectModelSelect"),$("aircraftInspectZoomIn"),
       $("aircraftInspectZoomOut"),$("aircraftInspectReset"),$("aircraftInspectSpin") ];
     const first=els[0],last=els[els.length-1];
     if(event.shiftKey&&doc.activeElement===first){event.preventDefault();last.focus()}
