@@ -416,6 +416,29 @@ function buildJetParts(Mesh,id){
    });
   }
  }
+ // Retractable tricycle landing gear is part of the individual jet model,
+ // not permanently attached to the fuselage while airborne. The wheel, hub
+ // and strut pivot together under animation from the flight-system model.
+ add("noseGear",[0,-.36,3.25],1,m=>{
+  curvedTube(m,[[0,-.37,3.25],[0,-.86,3.20],[0,-1.18,3.12]],
+   .085,palette.metal,8);
+  wheel(m,0,-1.21,3.12,.28,.105);
+  m.box(-.13,-.55,3.23,.26,.12,.30,tint(palette.dark,1.15));
+ });
+ const gearWidth=variant==="su37"?1.70:variant==="f35"?1.18:1.42;
+ for(const sign of [-1,1]){
+  const side=sign<0?"Left":"Right",x=sign*gearWidth;
+  add("mainGear"+side,[x,-.30,-2.32],1,m=>{
+   curvedTube(m,[[x,-.32,-2.32],[x+sign*.05,-.88,-2.34],
+    [x+sign*.06,-1.13,-2.41]],.105,palette.metal,8);
+   wheel(m,x+sign*.06,-1.16,-2.43,.35,.135);
+   // A slim articulated drag link helps the gear read as landing hardware
+   // rather than an unrelated hanging black cylinder.
+   curvedTube(m,[[x,-.52,-2.30],[x+sign*.23,-.88,-2.06],
+    [x+sign*.05,-1.05,-2.35]],.035,palette.metal,6);
+   m.box(x-.15,-.36,-2.42,.30,.10,.42,tint(palette.dark,1.12));
+  });
+ }
  return props;
 }
 const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts});
