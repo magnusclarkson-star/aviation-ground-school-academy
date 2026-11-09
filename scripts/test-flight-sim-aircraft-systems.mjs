@@ -81,6 +81,23 @@ assert.ok(Math.abs(rotor.powerPct-rotorPowerBefore)<5,
  "conceptual collective movement must not imply a large change in rotor RPM");
 assert.ok(rotor.parts.rotorPitch<0);
 
+// Five fighter profiles have wheel/strut assemblies that retract after
+// departure and extend again during the approach. The trainer has fixed gear.
+const jetState=M.makeState("airplane","runway",{airframeId:"f35"});
+const jetSystem=A.create("airplane"),jetInput=M.makeInput("airplane");
+A.step(jetSystem,jetState,jetInput,0);
+assert.equal(jetSystem.parts.noseGear,0);
+jetState.onGround=false;jetState.altitudeM=240;jetState.verticalMs=3;
+for(let i=0;i<60;i++)A.step(jetSystem,jetState,jetInput,.05);
+assert.ok(jetSystem.parts.noseGear>1.2,"jet nosewheel retracts after departure");
+assert.equal(jetSystem.parts.mainGearLeft,jetSystem.parts.mainGearRight,
+ "jet main landing gear retracts together");
+jetState.altitudeM=70;jetState.verticalMs=-2;
+for(let i=0;i<60;i++)A.step(jetSystem,jetState,jetInput,.05);
+assert.ok(jetSystem.parts.noseGear<.4,"jet nosewheel extends ahead of landing");
+assert.equal(jetSystem.parts.mainGearLeft,jetSystem.parts.noseGear);
+assert.equal(sys.parts.noseGear,0,"Cessna fixed gear never retracts");
+
 const planeParts=T.buildMovingParts("airplane");
 const rotorParts=T.buildMovingParts("helicopter");
 assert.deepEqual(planeParts.map(p=>p.name),[
