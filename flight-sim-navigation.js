@@ -2,11 +2,12 @@
  * Uses only the current simulator xM/zM/headingDeg/trackDeg state. */
 (function(root){"use strict";
  const NS="http://www.w3.org/2000/svg";
+ const Circuit=root?.AGSACircuitGuide||(typeof module!=="undefined"?require("./flight-sim-circuit-guide.js"):null);
  const SCALE=.048; // 1 nautical mile is about 89 px on this illustrative map
  const finite=(v,fallback=0)=>Number.isFinite(Number(v))?Number(v):fallback;
  const bound=(v,limit)=>Math.max(-limit,Math.min(limit,finite(v)));
  const bearing=v=>((finite(v)%360)+360)%360;
- function coordinates(state){
+ function coordinates(state,circuit=null){
   const x=bound(state?.xM,50000),z=bound(state?.zM,50000),
    heading=bearing(state?.headingDeg),track=bearing(state?.trackDeg??heading),
    groundSpeed=Math.max(0,Math.min(999,finite(state?.groundSpeedKt)));
@@ -17,13 +18,15 @@
   const correction=((runwayBearingDeg-heading+540)%360)-180;
   const runwayTurn=correction>5?"R":correction< -5?"L":"HOLD";
   const runwayLandingHeadingDeg=z>=900?180:0;
+  const leg=Circuit?.status(circuit,state)||null;
   // Zooms out as the field recedes, allowing the runway to remain on the
   // heading-up map throughout a normal circuit, then zooms in on approach.
   const scale=Math.max(.0055,Math.min(SCALE,77/Math.max(1600,runwayDistanceM)));
   return Object.freeze({
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
    groundSpeedKt:groundSpeed,scale,
-   runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,
+   runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
+   circuitText:leg?leg.label+" · "+leg.courseText+" · "+leg.turn+" · RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m"):null,
    runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
     " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
    worldTransform:"translate(110 82) rotate("+heading.toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
@@ -50,6 +53,17 @@
   }
   node(doc,"path",{d:grid.join(" "),stroke:"#31565b","stroke-width":12,fill:"none"},base);
   node(doc,"rect",{x:-23,y:0,width:46,height:1800,rx:4,fill:"#526065",stroke:"#9aac9a","stroke-width":6},base);
+  // The circuit is a fixed dashed suggestion over the local field map.
+  // It never moves the aircraft or overrides touch controls.
+  const route=Circuit?.PATH||[];
+  if(route.length){
+   const line=route.map(([x,z],i)=>(i?"L":"M")+x+" "+z).join(" ");
+   node(doc,"path",{d:line,fill:"none",stroke:"#edc579","stroke-width":28,
+    "stroke-dasharray":"95 100","stroke-linejoin":"round","data-nav-circuit-route":"true"},base);
+  }
+  const waypoint=node(doc,"circle",{cx:0,cy:0,r:75,fill:"#f2d99a",
+   stroke:"#113b49","stroke-width":18,"data-nav-circuit-waypoint":"true"},base);
+  waypoint.setAttribute("visibility","hidden");
   node(doc,"rect",{x:58,y:20,width:20,height:1760,fill:"#596b6b",stroke:"#65787a","stroke-width":3},base);
   node(doc,"path",{d:"M0 140 H68 M0 1610 H68",stroke:"#86937d","stroke-width":26,fill:"none"},base);
   node(doc,"line",{x1:0,y1:35,x2:0,y2:1760,stroke:"#edf5e4","stroke-width":4,"stroke-dasharray":"75 65"},base);
@@ -88,12 +102,20 @@
   box.appendChild(readouts);
   return box;
  }
- function paint(holder,state){
+ function paint(holder,state,circuit=null){
   if(!holder?.querySelectorAll)return;
-  const c=coordinates(state);
+  const c=coordinates(state,circuit);
   for(const el of holder.querySelectorAll("[data-nav-map]")){
    el.querySelector("[data-nav-world]")?.setAttribute("transform",c.worldTransform);
    el.querySelector("[data-nav-track-pointer]")?.setAttribute("transform",c.trackRotation);
+   const wp=el.querySelector("[data-nav-circuit-waypoint]");
+   if(wp){
+    // The status carries the current leg, whose target is a fixed local
+    // point from the declared leg table, never an inferred GPS location.
+    const target=c.leg&&Circuit?.targets?.[c.leg.stage];
+    if(target){wp.setAttribute("cx",String(target[0]));wp.setAttribute("cy",String(target[1]));}
+    wp.setAttribute("visibility",target&&c.leg.active?"visible":"hidden");
+   }
    el.dataset.navPosition=c.xM.toFixed(1)+","+c.zM.toFixed(1);
    el.dataset.navHeading=c.headingDeg.toFixed(1);
    for(const field of el.querySelectorAll("[data-nav-field]")){
@@ -101,7 +123,7 @@
     field.textContent=value==="heading"?"HDG "+String(Math.round(c.headingDeg)%360).padStart(3,"0"):
      value==="track"?"TRK "+String(Math.round(c.trackDeg)%360).padStart(3,"0"):
      value==="position"?c.positionText:
-     value==="runway"?c.runwayText:
+     value==="runway"?(c.circuitText||c.runwayText):
      "GS "+Math.round(c.groundSpeedKt);
    }
   }
