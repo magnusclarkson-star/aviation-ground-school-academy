@@ -19,6 +19,11 @@
   const runwayTurn=correction>5?"R":correction< -5?"L":"HOLD";
   const runwayLandingHeadingDeg=z>=900?180:0;
   const leg=Circuit?.status(circuit,state)||null;
+  // Keep the next circuit waypoint visible as a small direction pointer
+  // even when that fixed waypoint is outside the map's narrow viewport.
+  // The heading-up arrow is only a drawing; it never changes controls.
+  const waypointRelativeDeg=leg?.active?
+   ((leg.waypointBearingDeg-heading+540)%360)-180:null;
   // Zooms out as the field recedes, allowing the runway to remain on the
   // heading-up map throughout a normal circuit, then zooms in on approach.
   const scale=Math.max(.0055,Math.min(SCALE,77/Math.max(1600,runwayDistanceM)));
@@ -26,6 +31,8 @@
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
    groundSpeedKt:groundSpeed,scale,
    runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
+   waypointRotation:waypointRelativeDeg===null?null:
+    "rotate("+waypointRelativeDeg.toFixed(2)+" 110 82)",
    circuitText:leg?(leg.finalCue?leg.label+" "+(leg.waypointDistanceM>=1000?(leg.waypointDistanceM/1000).toFixed(1)+" km":Math.round(leg.waypointDistanceM)+" m")+" · "+leg.finalCue:leg.short+" · "+leg.turn+" · WP "+String(Math.round(leg.waypointBearingDeg)%360).padStart(3,"0")+"°"):null,
    runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
     " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
@@ -81,6 +88,12 @@
    fill:"none","stroke-dasharray":"3 6"},svg);
   node(doc,"path",{d:"M110 0 V8 M110 156 V160 M0 82 H9 M211 82 H220",
    stroke:"#c9e7db99","stroke-width":1.5,fill:"none"},svg);
+  // A small amber pointer on the upper navigation ring indicates the
+  // bearing to the active circuit waypoint, including off-screen targets.
+  const circuitPointer=node(doc,"g",{"data-nav-circuit-pointer":"true",
+   visibility:"hidden"},svg);
+  node(doc,"path",{d:"M110 7 L105 19 L110 16 L115 19 Z",
+   stroke:"#392f1a","stroke-width":1,fill:"#ffe0a1"},circuitPointer);
   const track=node(doc,"g",{"data-nav-track-pointer":"true"},svg);
   node(doc,"path",{d:"M110 23 L104 37 L110 33 L116 37 Z",
    stroke:"#a8f1df","stroke-width":1,fill:"#80ebc5"},track);
@@ -108,6 +121,11 @@
   for(const el of holder.querySelectorAll("[data-nav-map]")){
    el.querySelector("[data-nav-world]")?.setAttribute("transform",c.worldTransform);
    el.querySelector("[data-nav-track-pointer]")?.setAttribute("transform",c.trackRotation);
+   const circuitPointer=el.querySelector("[data-nav-circuit-pointer]");
+   if(circuitPointer){
+    circuitPointer.setAttribute("visibility",c.waypointRotation?"visible":"hidden");
+    if(c.waypointRotation)circuitPointer.setAttribute("transform",c.waypointRotation);
+   }
    const guideLine=el.querySelector("[data-nav-circuit-route]");
    guideLine?.setAttribute("visibility",c.leg?.active?"visible":"hidden");
    const wp=el.querySelector("[data-nav-circuit-waypoint]");

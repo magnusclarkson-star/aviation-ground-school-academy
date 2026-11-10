@@ -39,6 +39,22 @@ try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
+ const mapPointer=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,holder=document.createElement("div");
+  holder.appendChild(N.build(document));
+  const state={mode:"airplane",scenario:"runway",phase:"flight",onGround:false,
+   xM:0,zM:1750,headingDeg:0,trackDeg:0,groundSpeedKt:75};
+  N.paint(holder,state,{stage:"crosswind"});
+  const pointer=holder.querySelector("[data-nav-circuit-pointer]");
+  const visible=pointer.getAttribute("visibility");
+  const transform=pointer.getAttribute("transform");
+  N.paint(holder,state,null);
+  return {visible,transform,hidden: pointer.getAttribute("visibility")};
+ });
+ assert.equal(mapPointer.visible,"visible","active circuit waypoint arrow appears on map");
+ assert.equal(mapPointer.transform,"rotate(60.95 110 82)",
+  "map waypoint arrow rotates toward the real next waypoint bearing");
+ assert.equal(mapPointer.hidden,"hidden","waypoint arrow hides when circuit is inactive");
  const runwayDrawn=await desktop.evaluate(()=>{
   const canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;

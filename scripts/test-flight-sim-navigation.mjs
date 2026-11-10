@@ -6,6 +6,17 @@ const zero=N.coordinates({xM:0,zM:0,headingDeg:0,trackDeg:0,groundSpeedKt:0});
 assert.equal(zero.worldTransform,"translate(110 82) rotate(0.00) scale(0.04800 -0.04800) translate(0.00 0.00)");
 assert.equal(zero.trackRotation,"rotate(0.00 110 82)");
 assert.equal(zero.positionText,"E0 N0");
+assert.equal(zero.waypointRotation,null,"waypoint arrow hidden without an active circuit");
+const circuitState={mode:"airplane",scenario:"runway",phase:"flight",onGround:false,
+ xM:0,zM:1750,headingDeg:0,trackDeg:0,groundSpeedKt:75};
+const nextRight=N.coordinates(circuitState,{stage:"crosswind"});
+assert.equal(nextRight.waypointRotation,"rotate(60.95 110 82)",
+ "an off-screen eastern circuit waypoint points right from northbound flight");
+const towardWest=N.coordinates({...circuitState,headingDeg:90},{stage:"crosswind"});
+assert.equal(towardWest.waypointRotation,"rotate(-29.05 110 82)",
+ "turning east moves the same waypoint to the aircraft's left");
+const inactive=N.coordinates(circuitState,{stage:"landed"});
+assert.equal(inactive.waypointRotation,null,"pointer disappears after the circuit ends");
 const arriving=N.coordinates({xM:-230.5,zM:-1450,headingDeg:90,trackDeg:100,groundSpeedKt:74});
 assert.equal(arriving.positionText,"W231 S1450");
 assert.match(arriving.worldTransform,/rotate\(-90\.00\)/,"heading-up map rotates opposite aircraft heading");
