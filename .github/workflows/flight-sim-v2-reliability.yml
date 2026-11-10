@@ -5,6 +5,7 @@ on:
       - 'flight-sim-circuit-guide.js'
       - 'flight-sim-touch-pedals.js'
       - 'tests/simulator-v2-circuit-pedals.test.cjs'
+      - 'tests/simulator-v2-flight-sequence.test.cjs'
       - '.github/workflows/flight-sim-v2-reliability.yml'
   push:
     branches: [main]
@@ -12,6 +13,7 @@ on:
       - 'flight-sim-circuit-guide.js'
       - 'flight-sim-touch-pedals.js'
       - 'tests/simulator-v2-circuit-pedals.test.cjs'
+      - 'tests/simulator-v2-flight-sequence.test.cjs'
       - '.github/workflows/flight-sim-v2-reliability.yml'
 permissions:
   contents: read
@@ -26,4 +28,5 @@ jobs:
           node-version: '22'
       - run: node --check flight-sim-circuit-guide.js
       - run: node --check flight-sim-touch-pedals.js
-      - run: node --test tests/simulator-v2-circuit-pedals.test.cjs
+      - run: node --check flight-sim-model.js
+      - run: node --test tests/simulator-v2-circuit-pedals.test.cjs tests/simulator-v2-flight-sequence.test.cjs
