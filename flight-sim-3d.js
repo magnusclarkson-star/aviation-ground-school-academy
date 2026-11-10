@@ -91,6 +91,20 @@ function countryside(mesh){
   const corners=Countryside.trackCorners(track);
   mesh.quad(...corners.map(([x,z])=>[x,y(x,z)+.02,z]),rgb(155,141,108));
  }
+ // Two-stage tank roofs and four slender supports provide recognisable
+ // 3D silhouettes from the cockpit, chase, side and full 360° cameras.
+ // They stay on the terrain and add only a few hundred triangles total.
+ for(const tower of Countryside.towers){
+  const {x,z,height:h,radius:r,color}=tower;
+  const groundY=Countryside.terrainHeight(x,z);
+  const dark=rgb(83,102,103),tank=hexRgb(color);
+  for(const sideX of [-1,1])for(const sideZ of [-1,1])
+   mesh.box(x+sideX*r*.7-.25,groundY,z+sideZ*r*.7-.25,
+    .50,h*.73,.50,dark);
+  mesh.box(x-r,groundY+h*.70,z-r,2*r,h*.25,2*r,tank);
+  mesh.cone(x,groundY+h*.95,z,r*1.1,h*.13,tint(tank,.88),8);
+  mesh.box(x-.22,groundY+h*1.08,z-.22,.44,h*.10,.44,dark);
+ }
 }
 function runway(mesh){
  for(let z=0;z<1800;z+=90){
