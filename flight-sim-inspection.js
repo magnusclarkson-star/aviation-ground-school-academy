@@ -1,7 +1,7 @@
 /* Touch-friendly, aircraft-specific orbit viewer. The inspection canvas never
  * receives or changes flight control input; it only renders the current type. */
 (function(root){"use strict";
- const limits=Object.freeze({minDistance:17,maxDistance:70,minElevation:-65,maxElevation:78});
+ const limits=Object.freeze({minDistance:9,maxDistance:70,minElevation:-65,maxElevation:78});
  const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(v)?v:min));
  const wrap=degrees=>((degrees%360)+360)%360;
  function orbitStep(orbit,deltaX,deltaY){
@@ -24,7 +24,7 @@
  // Double-tap toggles a useful close view while preserving the exact
  // aircraft bearing and elevation. Fitted size returns to 100% on second use.
  function doubleTapZoom(orbit){
-  const far=30,close=21.6;
+  const far=18,close=11;
   return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
  }
  function separation(points){
@@ -39,7 +39,7 @@
    canvas2D=$("aircraftInspectCanvas2D"),select=$("cockpitAircraftSelect");
   if(!trigger||!modal||!viewport||!canvas3D||!canvas2D||!select)
    throw Error("360° inspector requires its cockpit controls and canvases");
-  let orbit={azimuth:0,elevation:26,distance:30};
+  let orbit={azimuth:0,elevation:26,distance:18};
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
   // Pointer IDs are tracked independently so a second touch changes zoom,
   // rather than making the model unexpectedly spin or the flight yoke move.
@@ -102,7 +102,7 @@
   let lastFrameTime=0;
   function open(){
    if(!modal.hidden)return;
-   orbit={azimuth:0,elevation:26,distance:30};autoRotate=false;last=0;lastFrameTime=0;
+   orbit={azimuth:0,elevation:26,distance:18};autoRotate=false;last=0;lastFrameTime=0;
    modal.hidden=false;doc.body.dataset.aircraftInspect="on";
    trigger.setAttribute("aria-expanded","true");
    canvas2D.hidden=false;canvas3D.hidden=true;
@@ -130,7 +130,7 @@
    (triggerVisible?trigger:photoButton||trigger).focus({preventScroll:true});
   }
   function reset(){
-   orbit={azimuth:0,elevation:26,distance:30};
+   orbit={azimuth:0,elevation:26,distance:18};
    autoRotate=false;updateHeading();
   }
   $("aircraftInspectModelSelect").addEventListener("change",event=>{
