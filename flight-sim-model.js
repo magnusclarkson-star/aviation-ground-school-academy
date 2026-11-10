@@ -87,7 +87,8 @@ function makeState(mode="airplane",scenario="runway",options={}){
   return {mode,airframeId,profileId,windId,physicsId:"classic",scenario:"helipad",phase:"pad",xM:0,zM:0,altitudeM:0,speedKt:0,
    groundSpeedKt:0,trackDeg:0,windXMps:0,windZMps:0,verticalMs:0,pitchDeg:0,rollDeg:0,headingDeg:0,
    lateralMs:0,forwardMs:0,yawRateDegS:0,hoverHoldSec:0,
-   hoverBestSec:0,hoverAchieved:false,landingGrade:null,time:0,turbulence:0,onGround:true,
+   hoverBestSec:0,hoverAchieved:false,landingGrade:null,touchdownData:null,
+   time:0,turbulence:0,onGround:true,
    message:"A fictional helipad exercise. Increase collective for a gentle vertical lift."};
  }
  const approach=scenario==="approach";
@@ -228,6 +229,15 @@ function step(state,input,seconds){
      Math.hypot(state.xM,state.zM)<=6&&impactVS>=-1.4&&
      state.groundSpeedKt<3&&Math.abs(state.rollDeg)<6&&
      Math.abs(state.yawRateDegS)<4;
+    // Preserve actual skid-contact values before grounded state zeros the
+    // vertical rate. Works for gentle, precision and hard contacts alike,
+    // without changing rotor dynamics or touchdown grading.
+    state.touchdownData=Object.freeze({
+     sinkMs:impactVS,groundSpeedKt:state.groundSpeedKt,
+     padOffsetM:Math.hypot(state.xM,state.zM),
+     yawRateDegS:state.yawRateDegS,bankDeg:state.rollDeg,
+     grade:gentle?(precision?"precision":"standard"):"hard"
+    });
     state.altitudeM=0;state.onGround=true;state.verticalMs=0;
     state.hoverHoldSec=0;
     state.phase=gentle?"landed":"halted";
