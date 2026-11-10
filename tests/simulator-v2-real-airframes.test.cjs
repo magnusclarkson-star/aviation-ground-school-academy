@@ -9,8 +9,8 @@ test("imported C172 excludes old duplicate flaps, ailerons, elevators, rudder an
  const model={parts:legacy,authenticParts:[]};
  const imported=Three.exteriorAnimatedParts("c172",true,model);
  const fallback=Three.exteriorAnimatedParts("c172",false,model);
- assert.deepEqual(imported.map(part=>part.name),["propeller"],
-  "only the propeller overlay belongs on the textured C172 model");
+ assert.deepEqual(imported.map(part=>part.name),[],
+  "imported C172 has its own propeller: no extra illustrated propeller or surfaces");
  assert.equal(fallback.length,legacy.length,
   "lightweight fallback must retain all original animated control surfaces");
  for(const label of ["leftFlap","rightFlap","elevatorLeft","elevatorRight",
@@ -26,6 +26,24 @@ test("imported R44 uses source-aligned rotor hardware, but its fallback remains 
  const model={parts,authenticParts};
  assert.deepEqual(Three.exteriorAnimatedParts("r44",true,model),authenticParts);
  assert.deepEqual(Three.exteriorAnimatedParts("r44",false,model),parts);
+});
+test("both imported aircraft have four separate seats and a visible instrument binnacle",()=>{
+ for(const id of ["r44","c172"]){
+  const cabin=Three.buildImportedCabin(id);
+  assert.equal(cabin.seats,4,id+" needs two front and two rear seats");
+  assert.equal(cabin.hasPanel,true,id+" instrument panel must exist");
+  assert.ok(cabin.vertices>250,id+" four seats and panel need real 3D triangles");
+  assert.ok(cabin.positions.every(Number.isFinite));
+  const extrema=[Infinity,-Infinity,Infinity,-Infinity,Infinity,-Infinity];
+  for(let j=0;j<cabin.positions.length;j+=3)
+   for(let a=0;a<3;a++){
+    extrema[a*2]=Math.min(extrema[a*2],cabin.positions[j+a]);
+    extrema[a*2+1]=Math.max(extrema[a*2+1],cabin.positions[j+a]);
+   }
+  assert.ok(extrema[3]>-.3&&extrema[2]<-.6,"seat backs and bases span usable cabin height");
+  assert.ok(extrema[1]-extrema[0]>.8,id+" has two separated seat columns");
+ }
+ assert.equal(Three.buildImportedCabin("fa18"),null);
 });
 test("real licensed C172 GLB is bundled locally and small enough for mobile",()=>{
  assert.ok(bytes.length>100000&&bytes.length<2*1024*1024);
