@@ -37,7 +37,9 @@ function roadSegments(route,steps=48){
    point(i+1,3.2),point(i+1,-3.2)].map(Object.freeze)));
  return Object.freeze(out);
 }
-const api=Object.freeze({routes,pose,sample,roadSegments});
+// Road strips are static; calculate the trigonometry once, not every phone frame.
+const roadPolygons=Object.freeze(routes.flatMap(route=>roadSegments(route,48)));
+const api=Object.freeze({routes,pose,sample,roadSegments,roadPolygons});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAAirfieldTraffic=api;
 })(typeof window!=="undefined"?window:null);
