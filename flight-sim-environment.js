@@ -53,7 +53,20 @@ function compassTrack(x,z){
  if(Math.hypot(x,z)<.05)return 0;
  return (Math.atan2(x,z)*180/Math.PI+360)%360;
 }
-const api={profiles,winds,selectProfile,selectWind,windAt,describeWind,compassTrack};
+// The imaginary strip is aligned north/south and usable in either direction.
+// Distinguish a controlled runway touchdown from crossing the pavement
+// sideways. These are forgiving *game* thresholds, not aviation limits.
+function runwayAlignment(headingDeg,trackDeg){
+ const axisError=angle=>{
+  if(!Number.isFinite(angle))return 180;
+  return Math.abs(((angle%180)+270)%180-90);
+ };
+ const headingErrorDeg=axisError(headingDeg);
+ const trackErrorDeg=axisError(trackDeg);
+ return {headingErrorDeg,trackErrorDeg,
+  aligned:headingErrorDeg<=30&&trackErrorDeg<=35};
+}
+const api={profiles,winds,selectProfile,selectWind,windAt,describeWind,compassTrack,runwayAlignment};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightEnvironment=api;
 })(typeof window!=="undefined"?window:null);
