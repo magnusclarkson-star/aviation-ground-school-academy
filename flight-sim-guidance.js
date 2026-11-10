@@ -118,8 +118,13 @@ function guidance(state,input,progress){
    ["climb","flight","approach"].includes(phase))
   return {...base,tag:"EXPERIMENTAL WING ENERGY CUE",level:"caution",
    text:"The invented aerodynamic model indicates insufficient wing energy or excessive angle of attack. Compare the fictional lift, drag, speed and pitch readings; this is not real stall recovery instruction."};
- if(phase==="halted")return {...base,tag:"SIMULATION STOPPED",level:"caution",complete:true,
-  text:"The imaginary aircraft contacted terrain outside this exercise's gentle-landing conditions. Reset and compare the controls, runway alignment and height trend."};
+ if(phase==="halted"){
+  if(state.mode==="airplane"&&/runway (excursion|overrun)/i.test(state.message||""))
+   return {...base,tag:"RUNWAY EXCURSION",level:"caution",complete:true,
+    text:state.message+" Restart and practise holding the centreline while slowing down."};
+  return {...base,tag:"SIMULATION STOPPED",level:"caution",complete:true,
+   text:"The imaginary aircraft contacted terrain outside this exercise's gentle-landing conditions. Reset and compare the controls, runway alignment and height trend."};
+ }
  if(phase==="complete"||phase==="landed")
   return {...base,tag:"PRACTICE SEQUENCE COMPLETE",level:"positive",complete:true,
    text:"The fictional exercise finished. Review your session observations or reset to practise again; this is not a recorded flying qualification."};
