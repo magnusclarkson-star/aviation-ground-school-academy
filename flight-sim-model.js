@@ -255,7 +255,14 @@ function step(state,input,seconds){
    state.message="Runway excursion in this simplified exercise. Reset before retrying.";
    events.push("hardLanding");
   }
-  if(state.phase==="rollout"&&state.speedKt<5){
+  const excursion=E.runwayRolloutExcursion(state);
+  if(excursion){
+   state.phase="halted";
+   state.message=excursion==="side"?
+    "Runway excursion: the wheels left the side of the strip during rollout.":
+    "Runway overrun: the wheels passed the end of the strip during rollout.";
+   events.push("runwayExcursion","hardLanding");
+  }else if(state.phase==="rollout"&&state.speedKt<5){
    state.phase="complete";
    state.message="Fictional rollout complete. This is not a proficiency endorsement.";
    events.push("completed");
