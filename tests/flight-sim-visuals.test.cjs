@@ -403,3 +403,30 @@ test("R44 tail rotor sweep remains small and develops visible rotation blur",()=
  for(let i=0;i<35;i++)Systems.step(sys,state,input,.05);
  assert.ok(sys.parts.tailBlurOpacity>.05&&sys.parts.tailBlurOpacity<=.16);
 });
+
+test("runway final provides short left/right intercept using actual ground track",()=>{
+ const state=Flight.makeState("airplane","approach",{airframeId:"c172"});
+ const leg=Circuit.create(state);
+ state.xM=180;state.zM=-850;state.altitudeM=110;
+ state.headingDeg=0;state.trackDeg=0;
+ let nav=Navigation.coordinates(state,leg);
+ assert.match(nav.circuitText,/FINAL/);
+ assert.match(nav.circuitText,/E180m/);
+ assert.match(nav.circuitText,/HIGH/);
+ assert.match(nav.circuitText,/L9°/,"east of the runway requires a small left intercept");
+ assert.match(nav.circuitText,/km/,"final preserves distance to the waypoint");
+ state.xM=-180;
+ nav=Navigation.coordinates(state,leg);
+ assert.match(nav.circuitText,/W180m/);
+ assert.match(nav.circuitText,/R9°/,"west of the runway requires a right intercept");
+ state.xM=0;
+ state.altitudeM=(200-state.zM)*Math.tan(3*Math.PI/180);
+ state.trackDeg=350;
+ assert.match(Navigation.coordinates(state,leg).circuitText,/CTR · PATH · R10°/,
+  "display uses track rather than the unchanged zero-degree nose heading");
+ state.trackDeg=0;
+ assert.match(Navigation.coordinates(state,leg).circuitText,/CTR · PATH · TRK OK/);
+ state.onGround=true;
+ assert.equal(Circuit.status(leg,state).finalCue,null,
+  "final steering stops after touchdown");
+});
