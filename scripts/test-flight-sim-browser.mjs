@@ -221,6 +221,24 @@ try{
  assert.match(rolloutEdgeCoach.edge.text,/RWY E23 m/);
  assert.equal(rolloutEdgeCoach.centre.level,"normal");
  assert.match(rolloutEdgeCoach.centre.text,/ROLL 240 m/);
+ const stopAwareness=await desktop.evaluate(()=>{
+  const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance,
+   E=window.AGSAFlightEnvironment;
+  const s={...M.makeState("airplane","approach"),phase:"rollout",
+   onGround:true,xM:0,zM:1760,headingDeg:0,trackDeg:0,
+   speedKt:50,rolloutBrakePressure:.1,altitudeM:0};
+  const i={...M.makeInput(),throttle:0,flaps:20};
+  const end=G.guidance(s,i);
+  const forecast=E.runwayStopForecast(s,i,M.flightProfile(s));
+  const onLongRunway=G.guidance({...s,zM:500,rolloutBrakePressure:1},i);
+  const side=G.guidance({...s,xM:22},i);
+  return {end,remaining:forecast.remainingM,side,onLongRunway};
+ });
+ assert.equal(stopAwareness.remaining,40);
+ assert.equal(stopAwareness.end.tag,"RUNWAY END · ROLLOUT");
+ assert.equal(stopAwareness.end.level,"caution");
+ assert.equal(stopAwareness.side.tag,"RUNWAY EDGE · ROLLOUT");
+ assert.equal(stopAwareness.onLongRunway.level,"normal");
  const rolloutResult=await desktop.evaluate(()=>{
   const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
   return ["classic","aero"].map(physicsId=>{

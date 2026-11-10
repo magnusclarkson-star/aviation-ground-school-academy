@@ -81,8 +81,32 @@ function runwayRolloutExcursion(state){
  if(state.zM< -40||state.zM>1820)return "end";
  return null;
 }
+// Educational ground-roll estimate using *current* simulated speed, control
+// positions and the same approximate drag/brake terms as the classic model.
+// It assumes pressure/throttle are held; it never drives brakes or steering.
+function runwayStopForecast(state,input={},profile=null){
+ if(state?.mode!=="airplane"||state?.phase!=="rollout"||
+  ![state.zM,state.xM,state.headingDeg,state.speedKt].every(Number.isFinite))return null;
+ const speed=Math.max(0,state.speedKt);
+ // Show end-distance only when actually rolling along the long runway axis.
+ const signed=((state.headingDeg%360)+540)%360-180;
+ const north=Math.abs(signed)<=40,south=Math.abs(Math.abs(signed)-180)<=40;
+ if(!north&&!south)return null;
+ const remainingM=Math.max(0,north?1800-state.zM:state.zM);
+ const brake=Math.max(0,Math.min(1,Number(state.rolloutBrakePressure)||0));
+ const flap=Math.max(0,Math.min(30,Number(input.flaps)||0));
+ const throttle=Math.max(0,Math.min(1,Number(input.throttle)||0));
+ const groundAccel=Number(profile?.groundAccel)||6.5;
+ // Treat pressure as held throughout the estimate; only current motion
+ // can inform a projection, not a guarantee of stopping at a location.
+ const decelKtS=1.2+.00065*speed*speed+flap*.014+9*brake-groundAccel*throttle;
+ const stopDistanceM=decelKtS>.05?speed*speed*.514444/(2*decelKtS):Infinity;
+ const marginM=remainingM-stopDistanceM;
+ return Object.freeze({remainingM,stopDistanceM,marginM,
+  endRisk:speed>=8&&marginM<20,direction:north?"north":"south"});
+}
 const api={profiles,winds,selectProfile,selectWind,windAt,describeWind,
- compassTrack,runwayAlignment,runwayRolloutExcursion};
+ compassTrack,runwayAlignment,runwayRolloutExcursion,runwayStopForecast};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightEnvironment=api;
 })(typeof window!=="undefined"?window:null);

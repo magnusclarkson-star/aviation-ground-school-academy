@@ -32,6 +32,31 @@ assert.equal(E.runwayRolloutExcursion({
  phase:"rollout",speedKt:0,xM:0,zM:1821}),"end");
 assert.equal(E.runwayRolloutExcursion({
  phase:"rollout",speedKt:4.8,xM:0,zM:1800}),null);
+// Runway end awareness depends on actual position, heading and simulated
+// braking (the estimate must not alter the model or controls).
+const forecastState={mode:"airplane",phase:"rollout",xM:0,zM:1750,
+ headingDeg:0,speedKt:50,rolloutBrakePressure:.3};
+const creeping=E.runwayStopForecast(forecastState,{throttle:0,flaps:20},
+ E.selectProfile("trainer"));
+assert.equal(creeping.remainingM,50);
+assert.equal(creeping.direction,"north");
+assert.equal(creeping.endRisk,true);
+assert.ok(creeping.stopDistanceM>50);
+assert.ok(Object.isFrozen(creeping));
+const strongBrake=E.runwayStopForecast({...forecastState,zM:1600,
+ rolloutBrakePressure:1},{throttle:0,flaps:20},E.selectProfile("trainer"));
+assert.equal(strongBrake.endRisk,false);
+assert.ok(strongBrake.remainingM>strongBrake.stopDistanceM);
+assert.equal(E.runwayStopForecast({...forecastState,headingDeg:180,zM:50},
+ {flaps:20,throttle:0},E.selectProfile("trainer")).direction,"south");
+assert.equal(E.runwayStopForecast({...forecastState,headingDeg:90},
+ {},E.selectProfile("trainer")),null,
+ "no runway-end forecast when aircraft is pointing across the runway");
+assert.equal(E.runwayStopForecast({...forecastState,phase:"approach"},
+ {},E.selectProfile("trainer")),null);
+assert.ok(E.runwayStopForecast({...forecastState,rolloutBrakePressure:0},
+ {throttle:1},E.selectProfile("trainer")).endRisk,
+ "continuing full throttle cannot be treated as stopped");
 assert.throws(()=>E.selectProfile("airbus"),/Unknown fictional/);
 assert.throws(()=>E.selectWind("storm"),/Unknown fictional/);
 assert.throws(()=>M.makeState("airplane","approach",{profileId:"not-a-profile"}),/Unknown fictional/);
