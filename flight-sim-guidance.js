@@ -131,6 +131,16 @@ function guidance(state,input,progress){
   return {...base,tag:"SIMULATION STOPPED",level:"caution",complete:true,
    text:"The imaginary aircraft contacted terrain outside this exercise's gentle-landing conditions. Reset and compare the controls, runway alignment and height trend."};
  }
+ if(!heli&&phase==="complete"&&state.touchdownData){
+  const landing=state.touchdownData;
+  return {...base,tag:"RUNWAY PRACTICE · FINISHED",level:"positive",complete:true,
+   // The actual contact snapshot is preserved across rollout. It lets a
+   // phone learner review the landing without navigating to another panel.
+   text:"TD "+round(landing.speedKt)+" kt · SINK "+
+    Math.abs(Number(landing.sinkMs)||0).toFixed(1)+" m/s · OFFSET "+
+    round(Math.abs(landing.offsetM))+" m · ROLL "+
+    round(state.rolloutDistanceM)+" m"};
+ }
  if(phase==="complete"||phase==="landed")
   return {...base,tag:"PRACTICE SEQUENCE COMPLETE",level:"positive",complete:true,
    text:"The fictional exercise finished. Review your session observations or reset to practise again; this is not a recorded flying qualification."};
@@ -225,6 +235,13 @@ function summary(progress,state){
   maxLateralOffsetM:round(progress.maxOffset),
   peakDescentMs:Number(progress.minVertical.toFixed(1)),
   liftoffs:progress.liftoffs,touchdowns:progress.landings,
+  touchdown:state.mode==="airplane"&&state.touchdownData?
+   Object.freeze({
+    speedKt:round(state.touchdownData.speedKt),
+    sinkMs:Number(Math.abs(state.touchdownData.sinkMs||0).toFixed(1)),
+    offsetM:round(Math.abs(state.touchdownData.offsetM)),
+    rolloutM:round(state.rolloutDistanceM)
+   }):null,
   stopEvents:progress.hardContacts,
   warning:"Session-only, fictional observations; not assessed or independently verified. No training credit."
  };
