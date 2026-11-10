@@ -783,14 +783,14 @@ function buildCleanR44Rotors(){
   const [cx,cy,cz]=tail;
   for(const sign of [-1,1]){
    const y0=cy+sign*.10,y1=cy+sign*.70;
-   const a=[cx-.018,y0,cz-.105],b=[cx-.018,y1,cz-.075],
-    c=[cx-.018,y1,cz+.11],d=[cx-.018,y0,cz+.135];
+   const a=[cx-.013,y0,cz-.065],b=[cx-.013,y1,cz-.052],
+    c=[cx-.013,y1,cz+.065],d=[cx-.013,y0,cz+.075];
    m.quad(a,b,c,d,bright);
-   m.quad([cx+.018,d[1],d[2]],[cx+.018,c[1],c[2]],
-    [cx+.018,b[1],b[2]],[cx+.018,a[1],a[2]],dark);
-   m.box(cx-.045,sign>0?cy+.60:cy-.72,cz-.10,.09,.12,.20,tip);
+   m.quad([cx+.013,d[1],d[2]],[cx+.013,c[1],c[2]],
+    [cx+.013,b[1],b[2]],[cx+.013,a[1],a[2]],dark);
+   m.box(cx-.025,sign>0?cy+.65:cy-.70,cz-.055,.05,.055,.11,tip);
   }
-  m.box(cx-.09,cy-.12,cz-.12,.18,.24,.24,steel);
+  m.box(cx-.075,cy-.105,cz-.08,.15,.21,.16,steel);
  });
  return parts;
 }
