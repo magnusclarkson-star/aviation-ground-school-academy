@@ -30,3 +30,5 @@ jobs:
       - run: node --check flight-sim-touch-pedals.js
       - run: node --check flight-sim-model.js
       - run: node --test tests/simulator-v2-circuit-pedals.test.cjs tests/simulator-v2-flight-sequence.test.cjs
+      - run: node scripts/test-flight-sim-model.mjs
+      - run: node scripts/test-flight-sim-airframes.mjs
