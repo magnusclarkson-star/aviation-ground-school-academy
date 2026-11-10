@@ -130,7 +130,15 @@ function guidance(state,input,progress){
    text:"Notice the helipad moving in the visual scene. Explore the effect of collective on height and cyclic on direction in this simplified exercise."};
  }
  const circuit=Circuit?.status(progress?.circuit,state);
- if(circuit&&["climb","flight"].includes(phase)&&state.physicsId==="classic"){
+ // Prioritize a low-energy warning over route directions, even on a
+ // full-circuit lesson. Previously a normal CLASSIC circuit cue masked
+ // a low-speed aircraft throughout climb and free flight.
+ if(!heli&&["climb","flight"].includes(phase)&&state.speedKt<lowEnergyKt(state))
+  return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
+   text:"Simulated airspeed is low. Compare power, attitude and speed before continuing the illustrated circuit."};
+ // The optional experimental flight model should not lose its waypoint
+ // guidance: this route is informational and never overrides aerodynamics.
+ if(circuit&&["climb","flight"].includes(phase)){
   return {...base,tag:"RETURN CIRCUIT · "+circuit.label,
    text:circuit.instructions};
  }
@@ -159,12 +167,21 @@ function guidance(state,input,progress){
    return {...base,tag:"FREE FLIGHT · WIND AND TRACK",
     text:"Compare the fictional nose heading with the path over the moving ground. The two indications need not agree when wind shifts the aircraft sideways."};
   return {...base,tag:"FREE FLIGHT · BANK AND LEVEL",
-   text:"Try gentle bank changes and observe heading, pitch and the moving countryside. Use the separate final-approach setup to practise a landing scene."};
+   text:"Bank and turn back toward the runway using the live navigation map; the separate short-final setup is optional."};
  }
  if(phase==="approach"){
   if(state.physicsId==="aero"&&state.verticalMs<-3.4)
    return {...base,tag:"EXPERIMENTAL APPROACH · RAPID SINK",level:"caution",
     text:"The invented model shows a high descent rate. Compare illustrated wing energy and drag; reset the exercise rather than applying it to real-world flight."};
+  // Real flown returns have both a live centreline and a ground-track
+  // intercept cue in the moving map. Reuse it in the small coaching strip
+  // instead of reverting to generic "short final" reset instructions.
+  // A direct short-final practice setup retains the earlier lesson prompts.
+  if(state.scenario==="runway"&&circuit?.stage==="final"&&circuit.finalCue&&
+   state.verticalMs>=-3.4&&state.speedKt>=lowEnergyKt(state))
+   return {...base,tag:"RETURN CIRCUIT · FINAL",
+    level:Math.abs(state.xM)>24?"caution":"normal",
+    text:circuit.instructions};
   if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
    text:"The imaginary aircraft is offset from the drawn runway. Compare the outside view with the lateral-offset marker and heading."};
   if(state.verticalMs<-3.4)return {...base,tag:"SHORT FINAL · RAPID DESCENT",level:"caution",
