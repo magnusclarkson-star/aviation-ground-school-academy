@@ -637,3 +637,48 @@ test("approach fixtures provide matching fixed-world 2D and 3D runway lead-in",(
  assert.equal(visibleLamps,lights.length,
   "every approach lamp should project in the 2D view when returning on final");
 });
+
+test("both models stop a landing rollout if the wheels leave the runway",()=>{
+ const E=require("../flight-sim-environment.js");
+ assert.equal(E.runwayRolloutExcursion({phase:"rollout",xM:0,zM:700,speedKt:50}),null);
+ assert.equal(E.runwayRolloutExcursion({phase:"rollout",xM:29,zM:700,speedKt:50}),"side");
+ assert.equal(E.runwayRolloutExcursion({phase:"rollout",xM:0,zM:1821,speedKt:50}),"end");
+ assert.equal(E.runwayRolloutExcursion({phase:"rollout",xM:0,zM:-41,speedKt:50}),"end");
+ assert.equal(E.runwayRolloutExcursion({phase:"rollout",xM:29,zM:700,speedKt:4}),null);
+ assert.equal(E.runwayRolloutExcursion({phase:"flight",xM:29,zM:700,speedKt:50}),null);
+ for(const physicsId of ["classic","aero"]){
+  for(const scenario of [
+   {xM:27,zM:700,headingDeg:90,expected:"side"},
+   {xM:0,zM:1819,headingDeg:0,expected:"end"},
+   {xM:0,zM:-39,headingDeg:180,expected:"end"}
+  ]){
+   const state=Flight.makeState("airplane","approach",{physicsId});
+   Object.assign(state,{phase:"rollout",onGround:true,speedKt:52,
+    altitudeM:0,rollDeg:0,trackDeg:scenario.headingDeg,...scenario});
+   const input=Flight.makeInput("airplane");
+   input.throttle=0;input.brake=false;
+   const output=Flight.step(state,input,.1);
+   assert.equal(state.phase,"halted",physicsId+" "+scenario.expected+" excursion");
+   assert.ok(output.events.includes("runwayExcursion"));
+   assert.ok(output.events.includes("hardLanding"));
+   assert.equal(output.events.includes("completed"),false);
+   assert.match(state.message,scenario.expected==="side"?/side/:/end/);
+   const cue=Guidance.guidance(state,input);
+   assert.equal(cue.tag,"RUNWAY EXCURSION");
+   assert.match(cue.text,/centreline/);
+   assert.equal(cue.level,"caution");
+   const elapsed=state.time;
+   assert.deepEqual(Flight.step(state,input,.1).events,[]);
+   assert.equal(state.time,elapsed,"excursion must stop the frozen exercise");
+  }
+  const stopped=Flight.makeState("airplane","approach",{physicsId});
+  Object.assign(stopped,{phase:"rollout",onGround:true,altitudeM:0,
+   xM:0,zM:750,speedKt:4.7,headingDeg:0});
+  const brakes=Flight.makeInput("airplane");
+  brakes.throttle=0;brakes.brake=true;
+  const result=Flight.step(stopped,brakes,.05);
+  assert.equal(stopped.phase,"complete","a slow runway-centred rollout still completes");
+  assert.ok(result.events.includes("completed"));
+  assert.equal(result.events.includes("runwayExcursion"),false);
+ }
+});
