@@ -60,6 +60,10 @@ try{
     "panel_1_gauges","Propeller","leftaileron","rightaileron",
     "elevatorleft","elevatorright","rudder_1","flaps"])
     assert.ok(meta.names.includes(part),"Missing original source part: "+part);
+   assert.ok(meta.cockpit.panel[2]>meta.cockpit.pilot[2]+.25,
+    "real cockpit panel must lie in front of pilot, not behind in tail cone");
+   assert.ok(meta.cockpit.pilot[2]>meta.cockpit.rear[2]+.25,
+    "front pilot seat must be ahead of the original back seat");
    const before=await page.evaluate(()=>window.__AGSA_V3.getDetailedTransforms());
    // Actually drive source nodes; do not add independently modelled
    // surfaces on top of FlightGear flaps, propeller or cabin shell.
@@ -82,6 +86,9 @@ try{
    await page.locator("#cabinCamera").click();
    await page.waitForTimeout(300);
    await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-cabin.png"});
+   await page.locator("#pilotCamera").click();
+   await page.waitForTimeout(300);
+   await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-pilot-eye.png"});
    await page.locator("#topCamera").click();
    await page.waitForTimeout(300);
    await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-top.png"});
