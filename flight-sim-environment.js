@@ -66,7 +66,20 @@ function runwayAlignment(headingDeg,trackDeg){
  return {headingErrorDeg,trackErrorDeg,
   aligned:headingErrorDeg<=30&&trackErrorDeg<=35};
 }
-const api={profiles,winds,selectProfile,selectWind,windAt,describeWind,compassTrack,runwayAlignment};
+// A successful touchdown must still be followed by a controlled ground
+// rollout. Allow a narrow shoulder outside the illustrated 48 m pavement,
+// plus a small threshold/end margin, before marking a runway excursion.
+// Return a reason, not a heading command: the learner remains in control.
+function runwayRolloutExcursion(state){
+ if(state?.phase!=="rollout"||!Number.isFinite(state.speedKt)||
+    state.speedKt<5)return null;
+ if(!Number.isFinite(state.xM)||!Number.isFinite(state.zM))return "side";
+ if(Math.abs(state.xM)>28)return "side";
+ if(state.zM< -40||state.zM>1820)return "end";
+ return null;
+}
+const api={profiles,winds,selectProfile,selectWind,windAt,describeWind,
+ compassTrack,runwayAlignment,runwayRolloutExcursion};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightEnvironment=api;
 })(typeof window!=="undefined"?window:null);

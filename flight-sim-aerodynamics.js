@@ -121,7 +121,14 @@ function step(state,input,dt,events=[],wind){
    state.message="Imaginary runway excursion. This is a simplified comparison model, not real directional control.";
    events.push("hardLanding");
   }
-  if(state.phase==="rollout"&&state.speedKt<5){
+  const excursion=E.runwayRolloutExcursion(state);
+  if(excursion){
+   state.phase="halted";
+   state.message=excursion==="side"?
+    "Runway excursion: the wheels left the side of the strip during rollout.":
+    "Runway overrun: the wheels passed the end of the strip during rollout.";
+   events.push("runwayExcursion","hardLanding");
+  }else if(state.phase==="rollout"&&state.speedKt<5){
    state.phase="complete";
    state.message="Experimental fictional rollout complete. No pilot proficiency or training credit is conferred.";
    events.push("completed");
