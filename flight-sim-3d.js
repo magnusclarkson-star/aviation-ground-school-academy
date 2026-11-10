@@ -1186,7 +1186,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      for(const part of realModel.primitives){
       const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
-      const alpha=Math.max(0,Math.min(1,part.opacity));
+      // glTF C172 omits opacity; only R44 glass overrides full opacity.
+      const alpha=Math.max(0,Math.min(1,part.opacity??1));
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       if(alpha<.99){
