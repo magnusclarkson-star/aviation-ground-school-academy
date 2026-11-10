@@ -225,7 +225,9 @@
   const movement=Math.min(1,speed/(state.mode==="helicopter"?100:210));
   // Mirror the WebGL chase camera's wider high-speed framing in fallback
   // mode, keeping the same selected aircraft and animated control surfaces.
-  const scale=Math.max(2,Math.min(width/24,height/17))*(1-movement*.13);
+  // Frame the selected aircraft substantially closer, especially on phones.
+  // Moving surfaces, rotors and shadows remain in the SAME scale.
+  const scale=Math.max(2,Math.min(width/21,height/15))*(1-movement*.18);
   const roll=Number.isFinite(state.rollDeg)?state.rollDeg:0;
   const pitch=Number.isFinite(state.pitchDeg)?state.pitchDeg:0;
   const altitude=Math.max(0,Number(state.altitudeM)||0);
