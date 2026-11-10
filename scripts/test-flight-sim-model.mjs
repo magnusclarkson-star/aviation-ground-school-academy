@@ -140,6 +140,24 @@ assert.ok(braking.rolloutBrakePressure<.99,
  "releasing the brake immediately starts relaxing pressure");
 assert.ok(braking.speedKt<=brakedSpeed,
  "release does not inject speed or teleport the aircraft");
+// A near-stop excursion cannot be marked completed just because the
+// moving airplane fell below the five-knot completion threshold.
+for(const point of [{xM:28.2,zM:850},{xM:0,zM:1821}]){
+ const offStrip=Object.assign(M.makeState("airplane","approach"),{
+  phase:"rollout",onGround:true,speedKt:4.6,groundSpeedKt:4.6,
+  headingDeg:0,trackDeg:0,altitudeM:0,...point
+ });
+ const off=M.step(offStrip,{...M.makeInput(),brake:true,throttle:0},.05);
+ assert.equal(offStrip.phase,"halted","outside runway: never mark a successful stop");
+ assert.ok(off.events.includes("runwayExcursion"));
+ assert.ok(!off.events.includes("completed"));
+}
+const stoppedInside=Object.assign(M.makeState("airplane","approach"),{
+ phase:"rollout",onGround:true,speedKt:4.6,groundSpeedKt:4.6,
+ headingDeg:0,trackDeg:0,altitudeM:0,xM:0,zM:900
+});
+assert.equal(M.step(stoppedInside,{...M.makeInput(),brake:true,throttle:0},.05).state.phase,
+ "complete","a genuine runway stop still completes normally");
 
 const hard=M.makeState("airplane","approach");
 hard.altitudeM=.01;hard.verticalMs=-6;hard.xM=88;hard.zM=500;
