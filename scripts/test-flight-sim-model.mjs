@@ -300,6 +300,10 @@ const fastImpact=M.step(impactHeli,impactInput,.05);
 assert.equal(impactHeli.phase,"halted",
  "hard contact must use the actual descent rate rather than collective target");
 assert.ok(fastImpact.events.includes("hardLanding"));
+assert.ok(Object.isFrozen(impactHeli.touchdownData));
+assert.equal(impactHeli.touchdownData.grade,"hard");
+assert.ok(impactHeli.touchdownData.sinkMs< -3.5,
+ "hard skid contact must retain actual downward speed, even if collective was raised");
 assert.equal(M.rotorHoverCue(impactHeli),"HARD CONTACT");
 // Conversely, gentle skid contact with a fast collective movement must be
 // judged by impact conditions, not the much more negative target VS.
@@ -310,6 +314,14 @@ lightInput.collective=.2;
 const lightContact=M.step(lightHeli,lightInput,.05);
 assert.equal(lightHeli.phase,"landed");
 assert.ok(lightContact.events.includes("touchdown"));
+assert.ok(Object.isFrozen(lightHeli.touchdownData));
+assert.equal(lightHeli.touchdownData.grade,"standard");
+assert.ok(lightHeli.touchdownData.sinkMs<0 &&
+ Math.abs(lightHeli.touchdownData.sinkMs)<1.75,
+ "skid contact records actual low vertical descent before reset");
+assert.equal(lightHeli.verticalMs,0);
+assert.ok(lightHeli.touchdownData.padOffsetM<.01,
+ "tiny physics integration movement at touchdown is valid, not a teleport");
 // Both cyclic channels build velocity through the displayed attitude.
 const attitudeHeli=M.makeState("helicopter"),attitudeInput=M.makeInput("helicopter");
 attitudeInput.collective=.80;attitudeInput.pitch=-.65;
