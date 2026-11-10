@@ -293,13 +293,14 @@ function addR44(m){
  for(const side of [-1,1]){
   const x=side*1.36;
   curvedTube(m,[[x,-1.52,-2.30],[x,-1.56,-1.50],
-   [x,-1.56,1.20],[x,-1.52,2.37],[x,-1.31,2.77],
-   [x,-1.20,2.96]],.105,palette.dark,9);
+   [x,-1.56,1.20],[x,-1.51,2.40],[x,-1.27,2.83],
+   [x,-1.04,3.14]],.105,palette.dark,9);
   for(const z of [-1.50,1.16])
    curvedTube(m,[[side*.83,-.73,z],[side*1.09,-1.22,z],
     [x,-1.47,z]],.075,palette.metal,7);
   for(const z of [-1.50,-.15,1.20])
-   m.box(x-.11,-1.69,z-.25,.22,.05,.50,palette.black);
+   m.box(x-.11,-1.69,z-.25,.22,.05,.50,
+    z>0?palette.metal:palette.black);
  }
  for(const z of [-1.52,1.16])
   curvedTube(m,[[-1.36,-1.01,z],[0,-.91,z],
