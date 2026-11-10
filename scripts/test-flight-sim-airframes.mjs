@@ -135,8 +135,18 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  }
 
 }
-assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),["mainRotor","tailRotor"]);
-const [mainRotor,tailRotor]=T.buildMovingParts("r44");
+assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),
+ ["swashBank","swashPitch","mainRotor","tailRotor"]);
+const rotorAssemblies=T.buildMovingParts("r44");
+const mainRotor=rotorAssemblies.find(p=>p.name==="mainRotor");
+const tailRotor=rotorAssemblies.find(p=>p.name==="tailRotor");
+for(const name of ["swashBank","swashPitch"]){
+ const part=rotorAssemblies.find(p=>p.name===name);
+ assert.ok(part.mesh.triangles>=24&&part.mesh.triangles<=60,
+  name+" remains under the mobile mesh budget");
+ assert.ok(C.movingParts("r44").some(p=>p.name===name),
+  name+" must also appear in 2D non-WebGL inspection");
+}
 const extent=(m,axis)=>{
  const v=m.positions;
  let lo=Infinity,hi=-Infinity;

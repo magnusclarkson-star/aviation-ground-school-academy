@@ -57,7 +57,7 @@ for(const id of X.IDS){
   "fallback 360 inspection draws full model and animated surfaces: "+id);
 }
 const r44parts=C.movingParts("r44");
-assert.deepEqual(r44parts.map(p=>p.name),["mainRotor","tailRotor"]);
+assert.deepEqual(r44parts.map(p=>p.name),["swashBank","swashPitch","mainRotor","tailRotor"]);
 assert.ok(r44parts.every(p=>p.triangles.length>8));
 assert.ok(A.buildVehicle("c172").triangles>250,"refined Cessna cabin and prop spinner");
 assert.ok(A.buildVehicle("r44").triangles>250,"refined Robinson cowling, cabin and tail");
