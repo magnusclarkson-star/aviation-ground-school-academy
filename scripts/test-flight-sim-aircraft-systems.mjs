@@ -174,7 +174,8 @@ assert.equal(independent.parts.touchdownBounce,0,
 const planeParts=T.buildMovingParts("airplane");
 const rotorParts=T.buildMovingParts("helicopter");
 assert.deepEqual(planeParts.map(p=>p.name),[
- "propeller","leftAileron","rightAileron","leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"
+ "propeller","mainWheels","noseWheel","leftAileron","rightAileron",
+ "leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"
 ]);
 assert.ok(planeParts.find(p=>p.name==="propeller").mesh.vertices>=24,
  "The rotating two-blade propeller must contain tapered 3D blade faces");
