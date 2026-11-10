@@ -33,6 +33,54 @@ try{
   }});
  });
  await desktop.goto(url,{waitUntil:"load"});
+ // A slow Android phone should not render both complete worlds every frame.
+ // Probe the actual Canvas draw path while WebGL is active, then exercise the
+ // user-visible 2D fallback and a return to 3D in the same page session.
+ const sceneRenderBudget=await desktop.evaluate(async()=>{
+  const S=window.AGSAFlightScenery;
+  const canvas3D=document.querySelector("#outsideView3D");
+  const select=document.querySelector("#visualMode");
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const setMode=mode=>{
+   select.value=mode;
+   select.dispatchEvent(new Event("change",{bubbles:true}));
+  };
+  let draws=0;
+  const original=S.draw;
+  S.draw=(...args)=>{draws++;return original(...args)};
+  try{
+   const gpuInitially=!canvas3D.hidden;
+   await wait(440);
+   const gpuRemainedActive=!canvas3D.hidden;
+   const hiddenCanvasDraws=draws;
+   draws=0;
+   setMode("2d");
+   await wait(300);
+   const active2dDraws=draws;
+   const manuallySelected2d=canvas3D.hidden;
+   draws=0;
+   setMode("3d");
+   await wait(520);
+   const gpuRestored=!canvas3D.hidden;
+   const restored2dDraws=draws;
+   return {gpuInitially,gpuRemainedActive,hiddenCanvasDraws,
+    manuallySelected2d,active2dDraws,gpuRestored,restored2dDraws};
+  }finally{
+   S.draw=original;
+  }
+ });
+ if(sceneRenderBudget.gpuInitially&&sceneRenderBudget.gpuRemainedActive)
+  assert.equal(sceneRenderBudget.hiddenCanvasDraws,0,
+   "WebGL active: never waste CPU repainting a hidden full-resolution 2D canvas");
+ assert.equal(sceneRenderBudget.manuallySelected2d,true,
+  "learner can still choose the original 2D fallback");
+ assert.ok(sceneRenderBudget.active2dDraws>=2,
+  "2D fallback immediately renders current flight state and continues animating");
+ if(sceneRenderBudget.gpuRestored)assert.equal(sceneRenderBudget.restored2dDraws,0,
+  "switching back to 3D must again stop redundant Canvas rendering");
+ else assert.ok(sceneRenderBudget.restored2dDraws>=1,
+  "unsupported 3D must continue drawing the 2D fallback");
+
  assert.match(await desktop.title(),/Immersive Airfield/);
  assert.equal(await desktop.locator("#typeYoke").getAttribute("aria-pressed"),"true");
  assert.equal(await desktop.locator("#cockpitFrameToggle").inputValue(),"on");
