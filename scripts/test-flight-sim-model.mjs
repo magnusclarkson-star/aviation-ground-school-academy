@@ -227,6 +227,31 @@ simulate(fullControl,fullControlInput,3);
 assert.ok(fullControl.rollDeg>11,
  "full cyclic travel retains the established turning authority");
 
+// Low-hover pedal controls should be more precise on touchscreen than
+// at normal forward-flight height, yet full-pedal turning remains strong.
+const lowYaw=M.makeState("helicopter"),highYaw=M.makeState("helicopter");
+for(const state of [lowYaw,highYaw]){
+ Object.assign(state,{onGround:false,phase:"hover",altitudeM:4,
+  forwardMs:0,lateralMs:0,groundSpeedKt:0,yawRateDegS:0});
+}
+highYaw.altitudeM=25;highYaw.phase="flight";
+const finePedals=M.makeInput("helicopter");
+finePedals.collective=.495;finePedals.rudder=.25;finePedals.turbulence=0;
+M.step(lowYaw,finePedals,.1);M.step(highYaw,finePedals,.1);
+assert.ok(lowYaw.yawRateDegS>0&&lowYaw.yawRateDegS<highYaw.yawRateDegS*.90,
+ "small R44 hover-pedal deflections rotate more gently near the pad");
+const fullYaw=M.makeState("helicopter");
+Object.assign(fullYaw,{onGround:false,phase:"hover",altitudeM:4});
+const fullYawInput={...finePedals,rudder:1};
+M.step(fullYaw,fullYawInput,.1);
+assert.ok(fullYaw.yawRateDegS>lowYaw.yawRateDegS*4,
+ "fine pedal curve preserves decisive full-pedal turning");
+finePedals.rudder=0;
+const leftOverYaw=lowYaw.yawRateDegS;
+M.step(lowYaw,finePedals,.1);
+assert.ok(lowYaw.yawRateDegS>0&&lowYaw.yawRateDegS<leftOverYaw,
+ "neutral pedals damp hover yaw smoothly without an instant stop");
+
 // The skids resist downward motion before takeoff even with low collective.
 const padClamp=M.makeState("helicopter"),padDown=M.makeInput("helicopter");
 padDown.collective=.1;
