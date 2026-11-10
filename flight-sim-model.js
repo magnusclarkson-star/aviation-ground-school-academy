@@ -156,8 +156,14 @@ function step(state,input,seconds){
   // forward-flight coordinated turn. Pedals alone control hover yaw.
   const forwardSpeed=Math.max(0,(state.forwardMs||0)-1.5);
   const turnAssist=clamp(state.rollDeg*.055*forwardSpeed/8,-2.5,2.5);
-  const commandedYaw=clamp(rudder*18+turnAssist,-19,19);
-  state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,2.4,dt);
+  // Pedals need finer resolution during low, slow hover on a phone.
+  // Retain the existing full-pedal rate and normal forward-flight response.
+  const carefulYaw=state.altitudeM<12&&Math.hypot(
+   state.forwardMs||0,state.lateralMs||0)<4;
+  const pedal=carefulYaw?shapeRotorCyclic(rudder):rudder;
+  const commandedYaw=clamp(pedal*18+turnAssist,-19,19);
+  const yawResponse=carefulYaw&&Math.abs(rudder)<.04?3.1:2.4;
+  state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,yawResponse,dt);
   const targetVS=clamp((collective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
   state.verticalMs=smooth(state.verticalMs,targetVS,1.5,dt);
   // The helipad supports the skids. A grounded helicopter cannot show
