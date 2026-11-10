@@ -215,6 +215,13 @@
   doc.addEventListener("keydown",event=>{
    if(modal.hidden)return;
    if(event.key==="Escape"){event.preventDefault();event.stopImmediatePropagation();close();return}
+   // Preserve native arrow-key operation of the aircraft dropdown and
+   // any future editable controls inside the inspection dialog.
+   // Only use arrow keys to orbit while focus is on a non-editable control.
+   const active=doc.activeElement;
+   const nativeInput=active&&(active.matches?.("select,input,textarea,[contenteditable]")||
+    active.isContentEditable);
+   if(nativeInput)return;
    if(event.key==="ArrowLeft"||event.key==="ArrowRight"||
       event.key==="ArrowUp"||event.key==="ArrowDown"){
     event.preventDefault();event.stopImmediatePropagation();
