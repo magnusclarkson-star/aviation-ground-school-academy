@@ -52,8 +52,30 @@ const farmsteads=freeze([
  {id:"east-farm",x:910,z:1330,w:18,d:24,h:8,roof:"#964e42",wall:"#d8c6ab"},
  {id:"west-farm",x:-930,z:230,w:22,d:19,h:7,roof:"#805448",wall:"#dbcfb3"},
  {id:"south-farm",x:-900,z:-1250,w:20,d:28,h:9,roof:"#755b4d",wall:"#c5beae"},
- {id:"north-farm",x:940,z:2500,w:21,d:23,h:8,roof:"#935e4f",wall:"#d9c8a8"}
+ {id:"north-farm",x:940,z:2500,w:21,d:23,h:8,roof:"#935e4f",wall:"#d9c8a8"},
+ {id:"crosswind-barn",x:1060,z:1910,w:32,d:38,h:10,roof:"#7d584c",wall:"#c8bda3"},
+ {id:"downwind-mill",x:1270,z:730,w:25,d:27,h:11,roof:"#6e5149",wall:"#d9cbbb"},
+ {id:"south-cottages",x:1160,z:-1630,w:24,d:35,h:7,roof:"#a1664c",wall:"#d8c4a9"},
+ {id:"base-barn",x:-480,z:-2100,w:28,d:31,h:9,roof:"#885447",wall:"#d8caba"},
+ {id:"east-cluster",x:530,z:-370,w:21,d:25,h:8,roof:"#8f5e45",wall:"#d9c3a6"}
 ].map(f=>freeze(f)));
+// Visible clusters of world-anchored trees surround the circuit and return
+// approach. They share identical coordinates in the WebGL and phone views.
+// Deterministic module initialization; no per-frame random tree positions.
+const groveCentres=freeze([
+ [-690,-2400], [580,-2070], [1400,-1750],[-1330,-1120],
+ [520,-900],[1550,-350],[-530,160],[560,460],
+ [1450,870],[-1180,1510],[600,1840],[1540,2520]
+].map(pair=>freeze(pair)));
+const trees=freeze(groveCentres.flatMap(([cx,cz],group)=>
+ Array.from({length:5},(_,i)=>{
+  const x=cx+Math.sin(i*2.6+group*1.8)*57;
+  const z=cz+Math.cos(i*2.2+group*.95)*64;
+  const h=8+(i*7+group*3)%9;
+  const crown=2.8+(i+group)%4*.55;
+  return freeze({id:"grove-"+group+"-"+i,x,z,h,crown,
+   color:(i+group)%3===0?"#315d3c":(i+group)%3===1?"#416b45":"#386544"});
+ })));
 // Low rural hedgerows provide near-ground depth while circling back to
 // the runway. Eight fixed strips, no textures/network requests or camera
 // anchoring; both renderers use these exact X/Z footprints.
@@ -77,7 +99,7 @@ function trackCorners(track){
  return [[track.ax+ox,track.az+oz],[track.bx+ox,track.bz+oz],
   [track.bx-ox,track.bz-oz],[track.ax-ox,track.az-oz]];
 }
-const api=freeze({fields,farmTracks,towers,hedgerows,farmsteads,terrainHeight,trackCorners});
+const api=freeze({fields,farmTracks,towers,hedgerows,farmsteads,trees,terrainHeight,trackCorners});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACountryside=api;
 })(typeof window!=="undefined"?window:null);

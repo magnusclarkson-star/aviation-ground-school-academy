@@ -39,6 +39,30 @@ try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
+ const forestFraming=await desktop.evaluate(()=>{
+  const C=window.AGSACountryside,T=window.AGSAFlight3D,
+   S=window.AGSAFlightScenery;
+  if(!C||!T||!S)return null;
+  const tree=C.trees[0],state={mode:"airplane",xM:tree.x+25,
+   zM:tree.z-140,altitudeM:75,headingDeg:0,pitchDeg:0,rollDeg:0,
+   groundSpeedKt:65};
+  const before=S.project(state,tree.x,tree.h,tree.z,960,540);
+  const after=S.project({...state,xM:state.xM+55},
+   tree.x,tree.h,tree.z,960,540);
+  const chase=T.cameraPose(state,"chase"),
+   rotor=T.cameraPose({...state,mode:"helicopter"},"chase");
+  return {treeCount:C.trees.length,farmCount:C.farmsteads.length,
+   parallax:before&&after?before.x-after.x:null,
+   chaseDistance:Math.hypot(chase.eye[0]-chase.craft[0],
+    chase.eye[2]-chase.craft[2]),
+   rotorDistance:Math.hypot(rotor.eye[0]-rotor.craft[0],
+    rotor.eye[2]-rotor.craft[2])};
+ });
+ assert.ok(forestFraming,"live browser loads shared tree and camera geometry");
+ assert.equal(forestFraming.treeCount,60);
+ assert.ok(forestFraming.farmCount>=9);
+ assert.ok(forestFraming.parallax>50,"fixed trees must move with aircraft position");
+ assert.ok(forestFraming.chaseDistance<31&&forestFraming.rotorDistance<25);
  // The actual browser must have loaded the shared wind module before both
  // renderer scripts. This complements the Node geometry/flight-model tests.
  const windVisual=await desktop.evaluate(()=>{
@@ -367,7 +391,7 @@ try{
    farm.x+farm.w/2,14,farm.z,960,540);
   return {count:C.farmsteads.length,roofs,before:before?.x,after:after?.x};
  });
- assert.equal(farmhouseParallax.count,4);
+ assert.ok(farmhouseParallax.count>=9);
  assert.ok(farmhouseParallax.roofs>0,
   "the mobile 2D canvas paints a real farm roof");
  assert.ok(farmhouseParallax.after<farmhouseParallax.before,

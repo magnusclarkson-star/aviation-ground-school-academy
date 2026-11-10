@@ -133,6 +133,16 @@ function countryside(mesh){
   const {x,z,w,d,h,color}=hedgerow;
   mesh.box(x,y(x,z),z,w,h,d,hexRgb(color));
  }
+ // Cross-renderer groves of conifers turn from distant silhouettes into
+ // foreground depth cues as the pilot passes them on base or downwind.
+ // Each tree is simple static geometry; all are uploaded with the world once.
+ for(const tree of Countryside.trees){
+  const base=y(tree.x,tree.z),h=tree.h,r=tree.crown;
+  mesh.box(tree.x-.34,base,tree.z-.34,.68,h*.30,.68,rgb(87,71,53));
+  const leaves=hexRgb(tree.color);
+  mesh.cone(tree.x,base+h*.23,tree.z,r,h*.67,leaves,7);
+  mesh.cone(tree.x,base+h*.45,tree.z,r*.78,h*.55,tint(leaves,.85),7);
+ }
  for(const farm of Countryside.farmsteads){
   const {x,z,w,d,h,wall,roof}=farm;
   const floor=y(x,z),yRoof=floor+h,peak=yRoof+Math.min(w,d)*.27;
@@ -720,20 +730,20 @@ function cameraPose(state,view="cockpit",orbit={}){
  const groundSpeed=limit(state.groundSpeedKt,0,500);
  const movement=limit(groundSpeed/(helicopter?100:210),0,1);
  if(view==="side"){
-  const distance=(helicopter?26:28)+movement*(helicopter?4:6);
-  const rise=(helicopter?9:10)+movement*3;
+  const distance=(helicopter?21:24)+movement*(helicopter?5:8);
+  const rise=(helicopter?7.5:8.5)+movement*3;
   return {view,
    eye:[state.xM-distance*Math.cos(yaw),Math.max(4,craft[1]+rise),
     state.zM+distance*Math.sin(yaw)],
    yaw:yaw+Math.PI/2,pitch:-Math.atan2(rise,distance),roll:0,craft};
  }
  if(view==="top"){
-  const rise=(helicopter?39:43)+movement*(helicopter?6:9);
+  const rise=(helicopter?32:36)+movement*(helicopter?8:12);
   return {view,eye:[state.xM,Math.max(7,craft[1]+rise),state.zM-4],
    yaw,pitch:-1.46,roll:0,craft};
  }
- const distance=(helicopter?26:30)+movement*(helicopter?4:8);
- const rise=(helicopter?10:12)+movement*(helicopter?2:4);
+ const distance=(helicopter?21:24)+movement*(helicopter?5:10);
+ const rise=(helicopter?8:9.5)+movement*(helicopter?3:5);
  return {view,eye:[state.xM-distance*Math.sin(yaw),
     Math.max(4,craft[1]+rise),state.zM-distance*Math.cos(yaw)],
   yaw,pitch:-Math.atan2(rise,distance),
