@@ -358,3 +358,28 @@ test("compact circuit readout gives next waypoint distance and bearing",()=>{
  assert.ok(revised.circuitText.includes("LEFT"),"bearing cue changes with position");
  assert.ok(revised.circuitText.includes("WP"),"waypoint label remains distinguishable");
 });
+
+test("runway return circuit final displays centreline and descent cues",()=>{
+ const s=Flight.makeState("airplane","runway",{airframeId:"c172"});
+ s.onGround=false;s.phase="flight";s.xM=85;s.zM=-1400;s.altitudeM=140;
+ const route=Circuit.create(s);route.stage="final";
+ const cue=Circuit.status(route,s);
+ assert.ok(cue.finalCue.includes("E85m"),"east displacement should be visible");
+ assert.ok(cue.finalCue.includes("HIGH"),"large positive glidepath deviation should be visible");
+ assert.ok(Navigation.coordinates(s,route).circuitText.includes("E85m"));
+ s.xM=-90;s.altitudeM=30;
+ assert.ok(Circuit.status(route,s).finalCue.includes("W90m"));
+ assert.ok(Circuit.status(route,s).finalCue.includes("LOW"));
+ s.xM=0;s.altitudeM=(200-s.zM)*Math.tan(3*Math.PI/180);
+ assert.equal(Circuit.status(route,s).finalCue,"CTR · PATH");
+});
+
+test("direct final-approach exercise begins with live final navigation",()=>{
+ const s=Flight.makeState("airplane","approach",{airframeId:"c172"});
+ const route=Circuit.create(s);
+ assert.equal(route.stage,"final");
+ assert.ok(Circuit.status(route,s).finalCue.includes("CTR"));
+ assert.ok(Navigation.coordinates(s,route).circuitText.includes("FINAL"));
+ const heli=Flight.makeState("helicopter","helipad");
+ assert.equal(Circuit.create(heli).stage,"inactive");
+});

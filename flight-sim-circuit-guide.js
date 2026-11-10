@@ -7,7 +7,7 @@
 const RAD=180/Math.PI;
 const heading=n=>((Number(n)||0)%360+360)%360;
 const signedDelta=(from,to)=>((heading(to)-heading(from)+540)%360)-180;
-const eligible=s=>s?.mode==="airplane"&&s?.scenario==="runway";
+const eligible=s=>s?.mode==="airplane"&&["runway","approach"].includes(s?.scenario);
 const LEGS=Object.freeze({
  departure:Object.freeze({label:"DEPARTURE",target:[0,1900],course:0,
   hint:"Fly past the far end of the runway, then start a right turn."}),
@@ -26,7 +26,7 @@ const LEGS=Object.freeze({
 });
 const PATH=Object.freeze([[0,250],[0,1750],[900,2250],[900,-1750],[0,-1900],[0,250]]);
 function create(state){
- return {stage:eligible(state)?"departure":"inactive"};
+ return {stage:!eligible(state)?"inactive":state.scenario==="approach"?"final":"departure"};
 }
 function update(circuit,state){
  if(!circuit||!eligible(state)||circuit.stage==="inactive")return circuit;
@@ -57,11 +57,24 @@ function status(circuit,state){
  const turn=offset>8?"RIGHT":offset< -8?"LEFT":"AHEAD";
  const distanceText=distance>=1000?(distance/1000).toFixed(1)+" km":Math.round(distance)+" m";
  const course=String(step.course).padStart(3,"0")+"°";
+ // Illustrative 3-degree descent towards a point 200m from the runway's
+ // southern threshold, using the same coordinates as the rendered airfield.
+ // This is educational visual feedback, not real aircraft performance data.
+ let finalCue=null;
+ if(circuit.stage==="final"&&!state.onGround){
+  const targetHeightM=Math.max(0,200-z)*Math.tan(3*Math.PI/180);
+  const altitudeM=Number.isFinite(state.altitudeM)?state.altitudeM:0;
+  const heightErrorM=altitudeM-targetHeightM;
+  const lateral=Math.abs(x)<=20?"CTR":(x>0?"E":"W")+Math.round(Math.abs(x))+"m";
+  const vertical=Math.abs(heightErrorM)<=12?"PATH":
+   (heightErrorM>0?"HIGH":"LOW")+Math.round(Math.abs(heightErrorM))+"m";
+  finalCue=lateral+" · "+vertical;
+ }
  return Object.freeze({
   stage:circuit.stage,label:step.label,hint:step.hint,
   waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
-  courseDeg:step.course,courseText:course,turn,
+  courseDeg:step.course,courseText:course,turn,finalCue,
   short:step.label+" · "+course+" · "+distanceText,
   instructions:step.hint+" Heading reference "+course+".",
   active:!["landed","stopped"].includes(circuit.stage)

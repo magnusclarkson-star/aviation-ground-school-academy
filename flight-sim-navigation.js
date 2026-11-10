@@ -26,7 +26,7 @@
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
    groundSpeedKt:groundSpeed,scale,
    runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
-   circuitText:leg?leg.short+" · "+leg.turn+" · WP "+String(Math.round(leg.waypointBearingDeg)%360).padStart(3,"0")+"°":null,
+   circuitText:leg?(leg.finalCue?leg.short+" · "+leg.finalCue:leg.short+" · "+leg.turn+" · WP "+String(Math.round(leg.waypointBearingDeg)%360).padStart(3,"0")+"°"):null,
    runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
     " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
    worldTransform:"translate(110 82) rotate("+(-heading).toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
