@@ -42,6 +42,27 @@ test("model replaces hull but preserves the Academy's animated rotor controls",(
  assert.ok(Three.buildRotorSweep("r44").vertices>0);
  assert.ok(Three.buildTailRotorSweep("r44").vertices>0);
 });
+test("imported R44 renders only its own two-bladed main and tail rotors",()=>{
+ const parts=Three.buildCleanR44Rotors();
+ assert.deepEqual(parts.map(p=>p.name),["mainRotor","tailRotor"],
+  "legacy swash rings, old tail linkage boxes and decorative leftovers must not render");
+ const main=parts[0],tail=parts[1],anchors=Three.REAL_R44_HARDWARE_ANCHORS;
+ assert.deepEqual(main.pivot,anchors.main.actual);
+ assert.deepEqual(tail.pivot,anchors.tail.actual);
+ assert.equal(main.axis,2,"main rotor must rotate around vertical Y");
+ assert.equal(tail.axis,1,"tail rotor must rotate around lateral X");
+ for(const part of parts){
+  assert.ok(part.mesh.vertices>80,part.name+" has actual two-sided rotor geometry");
+  assert.ok(part.mesh.positions.every(Number.isFinite));
+  assert.equal(part.mesh.colors.length,part.mesh.positions.length);
+ }
+ const x=[];
+ for(let i=0;i<main.mesh.positions.length;i+=3)x.push(main.mesh.positions[i]);
+ assert.ok(Math.max(...x)>4.9&&Math.min(...x)<-4.9,"main blades retain full R44 span");
+ const y=[];
+ for(let i=1;i<tail.mesh.positions.length;i+=3)y.push(tail.mesh.positions[i]);
+ assert.ok(Math.max(...y)-Math.min(...y)>1.4,"tail rotor retains its full diameter");
+});
 test("real R44 rotors stay mounted on real cabin and tail, not placeholder fuselage",()=>{
  const parts=Three.buildMovingParts("r44").map(Three.alignRealR44MovingPart);
  const mast=parts.find(p=>p.name==="mainRotor").pivot;
