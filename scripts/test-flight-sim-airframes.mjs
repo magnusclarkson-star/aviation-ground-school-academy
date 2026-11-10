@@ -115,6 +115,19 @@ for(let j=2;j<doorMesh.length;j+=3)
  furthestSkid=Math.max(furthestSkid,doorMesh[j]);
 assert.ok(furthestSkid>3.20&&furthestSkid<3.35,
  "R44 exterior has a visibly curled, protective forward skid nose");
+const highSkidTip=[];
+for(let j=0;j<doorMesh.length;j+=3){
+ if(Math.abs(Math.abs(doorMesh[j])-1.36)<.14&&
+    doorMesh[j+2]>3.0&&doorMesh[j+1]>-.97)
+  highSkidTip.push(doorMesh[j+1]);
+}
+assert.ok(highSkidTip.length>=4,
+ "V2 R44 raised protective front tips must be visible in the shared aircraft exterior");
+let tailFinAbove=false;
+for(let j=0;j<doorMesh.length;j+=3)
+ if(Math.abs(doorMesh[j])<.13&&doorMesh[j+1]>2.28&&
+  doorMesh[j+2]<-8&&doorMesh[j+2]>-8.5)tailFinAbove=true;
+assert.ok(tailFinAbove,"R44 upper tail stabilizer silhouette is visible in 3D/360°");
 for(const sign of [-1,1]){
  let doorHandle=false;
  for(let i=0;i<doorMesh.length;i+=3){
