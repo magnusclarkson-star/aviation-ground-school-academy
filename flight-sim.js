@@ -325,10 +325,10 @@ function drawScenery(now){
    }}catch{fallbackTo2D("3D rendering error; switched to 2D scenery.");}
    prev3D=now;
   }
-  // Keep a warm 2D fallback without rendering it at full frame rate on phones.
-  if(now-prev2D>=300){
-   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});prev2D=now;
-  }
+  // WebGL is already covering this scene. Do not keep repainting a
+  // hidden 960x540 Canvas in the background on a phone. FallbackTo2D()
+  // draws the current flight state immediately if GPU rendering is lost,
+  // so a continuously "warm" second renderer only wastes CPU and battery.
  }else if(now-prev2D>=42){
   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});prev2D=now;
  }
