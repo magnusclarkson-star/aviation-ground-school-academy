@@ -42,6 +42,22 @@ test("model replaces hull but preserves the Academy's animated rotor controls",(
  assert.ok(Three.buildRotorSweep("r44").vertices>0);
  assert.ok(Three.buildTailRotorSweep("r44").vertices>0);
 });
+test("real R44 rotors stay mounted on real cabin and tail, not placeholder fuselage",()=>{
+ const parts=Three.buildMovingParts("r44").map(Three.alignRealR44MovingPart);
+ const mast=parts.find(p=>p.name==="mainRotor").pivot;
+ const tail=parts.find(p=>p.name==="tailRotor").pivot;
+ const model=R44.parseAC3D(source,texture);
+ assert.ok(mast[2]>0&&mast[2]<2,"mast aligned above cabin");
+ assert.ok(mast[1]>model.bounds[3]&&mast[1]<model.bounds[3]+1,
+  "rotor disc supported just above genuine R44 roof");
+ assert.ok(tail[2]>model.bounds[4]&&tail[2]<-3,
+  "tail rotor visibly attached to real rear boom");
+ assert.ok(tail[1]>.35&&tail[1]<1.2);
+ const main=Three.alignRealR44Hardware(Three.buildRotorSweep("r44"));
+ const rear=Three.alignRealR44Hardware(Three.buildTailRotorSweep("r44"),true);
+ assert.ok(main.positions.every(Number.isFinite));
+ assert.ok(rear.positions.every(Number.isFinite));
+});
 test("cyclic, collective and tail-yaw state changes stay finite with imported model",()=>{
  const state=Model.makeState("helicopter");
  const input={...Model.makeInput("helicopter"),collective:.71,bank:.25,pitch:-.20,rudder:.35};
