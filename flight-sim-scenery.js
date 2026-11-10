@@ -200,6 +200,18 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    poly([[x,y+h,z],[x+w,y+h,z],[x+w,y+h,z+d],[x,y+h,z+d]],color);
    poly([[x,y,z],[x+w,y,z],[x+w,y+h,z],[x,y+h,z]],"#375b3d");
   }
+  // Tree clusters use the SAME coordinates, trunk heights and green
+  // canopies as WebGL. Both crossing faces remain visible as the pilot turns.
+  for(const tree of Countryside.trees){
+   if(Math.abs(tree.z-state.zM)>2650)continue;
+   const x=tree.x,z=tree.z,h=tree.h,r=tree.crown;
+   const y=Countryside.terrainHeight(x,z)+.14;
+   line([x,y,z],[x,y+h*.34,z],"#574735",2);
+   poly([[x-r,y+h*.24,z],[x,y+h*.90,z],
+    [x+r,y+h*.24,z]],tree.color);
+   poly([[x,y+h*.24,z-r],[x,y+h*.90,z],
+    [x,y+h*.24,z+r]],"#315c3d");
+  }
   // Raised pitched-roof farm buildings use the exact same fixed X/Z
   // coordinates, dimensions and wall/roof colours as WebGL2.
   for(const farm of Countryside.farmsteads){
