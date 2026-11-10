@@ -435,6 +435,32 @@ function buildMovingParts(mode="airplane"){
    }
    m.box(-.22,-.22,6.12,.44,.44,.18,yellow);
   });
+  // Visible wheel-hub paint rotates with runway speed. The existing
+  // round tyres and landing-gear struts stay in the static C172 body mesh:
+  // no additional heavy cylinders are needed on low-powered Android GPUs.
+  // A pair of contrasting radial marks can be seen in chase, side and 360
+  // inspection views, and uses the same rotating-part data in Canvas 2D.
+  const hubMark=(m,x,y,z,r)=>{
+   for(const faceSign of [-1,1]){
+    // Leave the hub's original metal surface intact. The moving paint sits
+    // just beyond the tyre's .105-wide face, inside its .42-radius hub.
+    const face=x+faceSign*.133;
+    const strip=(a,b,half,color)=>{
+     m.quad([face,y+a,z-half],[face,y+b,z-half],
+      [face,y+b,z+half],[face,y+a,z+half],color);
+     m.quad([face,y+a,z+half],[face,y+b,z+half],
+      [face,y+b,z-half],[face,y+a,z-half],color);
+    };
+    strip(r*.10,r*.38,r*.053,blue);
+    strip(-r*.38,-r*.13,r*.065,yellow);
+   }
+  };
+  add("mainWheels",[0,-1.25,-.80],1,m=>{
+   for(const sign of [-1,1])hubMark(m,sign*2.10,-1.25,-.80,.35);
+  });
+  add("noseWheel",[0,-1.25-(.26-.35)*.24,4.45],1,m=>{
+   hubMark(m,0,-1.25-(.26-.35)*.24,4.45,.26);
+  });
   // Flaps and ailerons must be physically connected to the high wings,
   // not floating a metre below the aircraft (the previous geometry).
   // Hinges rotate about the lateral X axis and remain in the same
