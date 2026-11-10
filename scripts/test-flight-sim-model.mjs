@@ -272,4 +272,61 @@ for(const column of shared)
 assert.ok([...leftSide.values(),...rightSide.values()].every(Number.isFinite));
 assert.equal(S.treeColumnAt(Number.NaN),0);
 assert.ok(Math.abs(S.treeWorldX(0,600))<=51);
+// A deterministic VIRTUAL test pilot (test-only, never part of the app)
+// tries the entire Cessna circuit from runway roll to brake-stop without
+// calling makeState again, changing location, or using approach reposition.
+const G=require("../flight-sim-guidance.js");
+const fullCircuit=M.makeState("airplane","runway",{airframeId:"c172",windId:"calm"});
+const fullInput=M.makeInput("airplane");
+const fullProgress=G.start(fullCircuit);
+const seen=new Set(),fullEvents=[];
+let priorTime=0;
+const signedTurn=(target,current)=>((target-current+540)%360)-180;
+const limit=(x,a,b)=>Math.max(a,Math.min(b,x));
+for(let tick=0;tick<7500&&!["complete","halted"].includes(fullCircuit.phase);tick++){
+ const stage=fullProgress.circuit.stage;
+ seen.add(stage);
+ if(fullCircuit.onGround&&fullCircuit.phase==="roll"){
+  fullInput.throttle=1;fullInput.pitch=-.70;fullInput.bank=0;
+ }else if(fullCircuit.phase==="rollout"){
+  fullInput.throttle=0;fullInput.pitch=0;fullInput.bank=0;fullInput.brake=true;
+ }else{
+  fullInput.brake=false;fullInput.flaps=stage==="final"?20:10;
+  fullInput.throttle=stage==="final"?.46:.62;
+  const bearing=stage==="departure"?0:
+   stage==="crosswind"?(fullCircuit.xM<650?90:180):
+   stage==="downwind"?180:
+   stage==="base"?(fullCircuit.xM>310?270:0):
+   stage==="final"?Math.atan2(-fullCircuit.xM,
+    Math.max(440,300-fullCircuit.zM))*180/Math.PI:0;
+  fullInput.bank=limit(signedTurn(bearing,fullCircuit.headingDeg)/28,-.94,.94);
+  const targetHeight=stage==="final"?
+   Math.max(0,200-fullCircuit.zM)*Math.tan(3*Math.PI/180):
+   stage==="base"?105:stage==="downwind"&&fullCircuit.zM< -850?120:145;
+  const error=targetHeight-fullCircuit.altitudeM;
+  const verticalAim=limit(error*.16+(stage==="final"?-2.0:0),-2.9,4.0);
+  const speedMs=Math.max(22,fullCircuit.speedKt*M.KNOT);
+  const powerClimb=(fullInput.throttle-.5)*2-.48;
+  const simulatedPitchDeg=Math.atan2(verticalAim-powerClimb,
+   speedMs*.92)*180/Math.PI;
+  fullInput.pitch=limit(-simulatedPitchDeg/13,-.85,.75);
+ }
+ const update=M.step(fullCircuit,fullInput,.05);
+ fullEvents.push(...update.events);
+ G.observe(fullProgress,fullCircuit,update.events);
+ assert.ok(fullCircuit.time>=priorTime,"circuit must advance continuously");
+ priorTime=fullCircuit.time;
+}
+assert.deepEqual(["departure","crosswind","downwind","base","final"].filter(s=>!seen.has(s)),[],
+ "virtual pilot should fly through each circuit leg without teleporting");
+assert.equal(fullCircuit.phase,"complete",
+ "the full fictional C172 circuit must return to the runway and finish braking; "+
+ JSON.stringify({phase:fullCircuit.phase,x:Math.round(fullCircuit.xM),
+ z:Math.round(fullCircuit.zM),h:Math.round(fullCircuit.altitudeM),
+ hdg:Math.round(fullCircuit.headingDeg),speed:Math.round(fullCircuit.speedKt),legs:[...seen]}));
+assert.ok(fullEvents.includes("liftoff")&&fullEvents.includes("touchdown")&&
+ fullEvents.includes("completed"),"one continuous flight includes liftoff, landing and rollout");
+assert.ok(fullCircuit.time>110&&fullCircuit.time<375,
+ "the circuit is not a short-final reset or an instant teleport");
+
 console.log("Immersive flight model passed: runway liftoff, turn, final-approach landing/rollout, off-runway impact, collective/helipad and perspective scenery.");

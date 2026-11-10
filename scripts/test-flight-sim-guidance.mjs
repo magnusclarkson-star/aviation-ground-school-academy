@@ -138,6 +138,25 @@ for(const physicsId of ["classic","aero"]){
   physicsId+" navigation may never mask critical low-speed observation");
  assert.equal(slow.level,"caution");
 }
+// Circuit height prompts follow actual position/height and remain subordinate
+// to low-speed caution, in both the Classic and experimental learning modes.
+const heightState=M.makeState("airplane","runway");
+Object.assign(heightState,{phase:"flight",onGround:false,xM:700,zM:300,
+ headingDeg:180,trackDeg:180,altitudeM:230,speedKt:90,verticalMs:0});
+const heightProgress=G.start(heightState);
+heightProgress.circuit.stage="downwind";
+assert.match(G.guidance(heightState,M.makeInput(),heightProgress).text,/HGT ↓ 145m/);
+heightState.altitudeM=145;
+assert.match(G.guidance(heightState,M.makeInput(),heightProgress).text,/HGT OK/);
+heightState.altitudeM=70;
+assert.match(G.guidance(heightState,M.makeInput(),heightProgress).text,/HGT ↑ 145m/);
+heightProgress.circuit.stage="base";
+assert.match(G.guidance(heightState,M.makeInput(),heightProgress).text,/HGT ↑ 105m/);
+heightState.speedKt=12;
+assert.equal(G.guidance(heightState,M.makeInput(),heightProgress).tag,
+ "FICTIONAL LOW-ENERGY CUE",
+ "circuit height hints cannot override low-speed caution");
+
 // An illustrative jet has a different fictional energy envelope from the
 // original basic trainer; warning status must follow the selected airframe.
 const fighter=M.makeState("airplane","runway",{airframeId:"f22"});

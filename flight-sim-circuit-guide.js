@@ -69,6 +69,16 @@ function status(circuit,state){
  // southern threshold, using the same coordinates as the rendered airfield.
  // This is educational visual feedback, not real aircraft performance data.
  let finalCue=null;
+ // The circuit is more than compass turns: show one compact height target
+ // while abeam the airfield and a lower reference on base. These are
+ // invented simulator heights, NOT Cessna performance figures.
+ const referenceHeightM=circuit.stage==="crosswind"?145:
+  circuit.stage==="downwind"?145:circuit.stage==="base"?105:null;
+ const currentHeightM=Number.isFinite(state.altitudeM)?state.altitudeM:0;
+ const heightErrorM=referenceHeightM===null?0:currentHeightM-referenceHeightM;
+ const heightCue=referenceHeightM===null?null:
+  (heightErrorM>24?"HGT ↓ "+referenceHeightM+"m":
+   heightErrorM< -24?"HGT ↑ "+referenceHeightM+"m":"HGT OK");
  if(circuit.stage==="final"&&!state.onGround){
   const targetHeightM=Math.max(0,200-z)*Math.tan(3*Math.PI/180);
   const altitudeM=Number.isFinite(state.altitudeM)?state.altitudeM:0;
@@ -92,12 +102,14 @@ function status(circuit,state){
   waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
   courseDeg:step.course,courseText:course,turn,finalCue,
+  referenceHeightM,heightCue,
   short:step.label+" · "+course+" · "+distanceText,
   // The printed leg course alone can steer a learner away from the
   // next waypoint after a wide banked turn. Use the current bearing and
   // distance to the *fixed* leg waypoint instead; no controls are moved.
   instructions:finalCue?"FINAL · "+finalCue:
-   (turn==="AHEAD"?"AHEAD":"TURN "+turn)+" "+bearingText+" · "+distanceText+" to "+step.label,
+   (turn==="AHEAD"?"AHEAD":"TURN "+turn)+" "+bearingText+" · "+distanceText+
+   " to "+step.label+(heightCue?" · "+heightCue:""),
   active:!["landed","stopped"].includes(circuit.stage)
  });
 }
