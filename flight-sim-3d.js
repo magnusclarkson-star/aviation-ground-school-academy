@@ -494,6 +494,26 @@ function buildMovingParts(mode="airplane"){
    m.box(-.12,1.2,-6.12,.24,1.65,.55,yellow);
   });
  }else{
+  // Two low-poly swashplate reference rings beneath the main rotor hub.
+  // They tilt independently with cyclic bank and pitch; they neither drive
+  // flight physics nor pretend to reproduce R44 rotor control linkages.
+  const swashRing=(name,y,axis,color)=>{
+   add(name,[0,y,-.4],axis,m=>{
+    const outer=.50,inner=.34,segments=12,z=-.4;
+    for(let i=0;i<segments;i++){
+     const a=2*Math.PI*i/segments,b=2*Math.PI*(i+1)/segments;
+     m.quad([inner*Math.cos(a),y,z+inner*Math.sin(a)],
+      [outer*Math.cos(a),y,z+outer*Math.sin(a)],
+      [outer*Math.cos(b),y,z+outer*Math.sin(b)],
+      [inner*Math.cos(b),y,z+inner*Math.sin(b)],color);
+    }
+    // Tiny contrasting tie arms show the tilt on narrow chase screens.
+    m.box(-.06,y-.03,z-.70,.12,.09,.32,metal);
+    m.box(-.06,y-.03,z+.38,.12,.09,.32,blue);
+   });
+  };
+  swashRing("swashBank",2.76,3,metal);
+  swashRing("swashPitch",2.67,1,blue);
   // R44 rotor arrangement: one teetering TWO-blade main rotor, 10.06 m
   // diameter; one TWO-blade tail rotor, 1.47 m diameter. Blade sections
   // have slight coning, tapered tips and contrasting edges for legibility.
