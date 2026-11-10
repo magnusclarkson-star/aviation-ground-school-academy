@@ -6,28 +6,28 @@ const A=require("../flight-sim-3d.js");
 const X=require("../flight-sim-airframe-geometry.js");
 const C=require("../flight-sim-exterior-2d.js");
 
-const initial={azimuth:0,elevation:26,distance:30};
-assert.deepEqual(O.orbitStep(initial,180,0),{azimuth:99,elevation:26,distance:30});
+const initial={azimuth:0,elevation:26,distance:18};
+assert.deepEqual(O.orbitStep(initial,180,0),{azimuth:99,elevation:26,distance:18});
 assert.ok(Math.abs(O.orbitStep(initial,720,0).azimuth-36)<1e-8,"orbit wrapping tolerates floating-point arithmetic");
 assert.equal(O.orbitStep(initial,0,1000).elevation,78);
 assert.equal(O.orbitStep(initial,0,-1000).elevation,-65);
-assert.equal(O.zoomStep(initial,.1).distance,17);
+assert.equal(O.zoomStep(initial,.1).distance,9);
 assert.equal(O.zoomStep(initial,100).distance,70);
-assert.equal(O.zoomStep(initial,.8).distance,24);
+assert.equal(O.zoomStep(initial,.8).distance,14.4);
 assert.equal(O.zoomStep(initial,1.22).azimuth,0);
-assert.equal(O.pinchStep(initial,100,125).distance,24,"fingers apart zoom into airframe");
-assert.equal(O.pinchStep(initial,100,80).distance,37.5,"fingers together zoom out");
-assert.equal(O.pinchStep(initial,30,300).distance,17,"pinch-in stays inside close limit");
+assert.equal(O.pinchStep(initial,100,125).distance,14.4,"fingers apart zoom into airframe");
+assert.equal(O.pinchStep(initial,100,80).distance,22.5,"fingers together zoom out");
+assert.equal(O.pinchStep(initial,30,300).distance,9,"pinch-in stays inside close limit");
 assert.equal(O.pinchStep(initial,300,30).distance,70,"pinch-out stays inside far limit");
 assert.deepEqual(O.pinchStep(initial,0,90),initial,"zero span cannot break camera");
 assert.deepEqual(O.pinchStep(initial,NaN,90),initial,"non-finite span is ignored");
 assert.deepEqual(O.doubleTapZoom(initial),
- {azimuth:0,elevation:26,distance:21.6},
+ {azimuth:0,elevation:26,distance:11},
  "double tap brings aircraft closer without losing its orientation");
 assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(initial)),initial,
  "a second double tap restores the original fitted viewing distance");
 assert.deepEqual(O.doubleTapZoom({azimuth:145,elevation:-14,distance:18}),
- {azimuth:145,elevation:-14,distance:30},
+ {azimuth:145,elevation:-14,distance:18},
  "double tap restores fit even after manual pinch zoom");
 
 
