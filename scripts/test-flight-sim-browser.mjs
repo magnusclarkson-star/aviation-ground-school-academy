@@ -266,6 +266,34 @@ try{
  await phone.locator("#visualMode").selectOption("2d");
  assert.ok(await phone.locator("#outsideView").isVisible());
 
+ // Protect the user's most-used Android touch gesture: tapping the live
+ // mini PFD must enlarge this very instrument, without duplicate SVGs.
+ const miniPfd=phone.locator("#flightInstruments .mini-pfd");
+ await miniPfd.locator("#miniAttitude").tap();
+ assert.equal(await miniPfd.getAttribute("aria-expanded"),"true",
+  "tapping the miniature live PFD opens its own enlarged display");
+ assert.ok(await miniPfd.locator(".agsa-mini-pfd-close").isVisible());
+ assert.ok(await miniPfd.evaluate(el=>el.getBoundingClientRect().width>innerWidth*.8),
+  "enlarged PFD fills most of a narrow mobile screen");
+ assert.equal(await phone.locator("#miniAttitude").count(),1,
+  "PFD enlargement uses the live SVG rather than duplicating instrument IDs");
+ await miniPfd.locator(".agsa-mini-pfd-close").tap();
+ assert.equal(await miniPfd.getAttribute("aria-expanded"),"false");
+ assert.ok(await miniPfd.evaluate(el=>document.activeElement===el),
+  "closing miniature PFD returns keyboard focus to the live instrument");
+
+ // Every analog round gauge should also open above the phone cockpit and
+ // restore focus to the original live tile when dismissed.
+ const analogGauge=phone.locator("#cockpitVisualPanel .cockpit-gauge").first();
+ await analogGauge.tap();
+ assert.ok(await phone.locator("#cockpitZoomPanel").isVisible(),
+  "round cockpit instrument opens its full-size zoom on touch");
+ assert.ok(await phone.locator("#cockpitZoomContent .cockpit-gauge").isVisible());
+ await phone.locator("#cockpitZoomClose").tap();
+ assert.ok(await phone.locator("#cockpitZoomPanel").isHidden());
+ assert.ok(await analogGauge.evaluate(el=>document.activeElement===el),
+  "closing zoom returns focus to the same aircraft instrument");
+
  // On a small touch screen a deliberate HOLD+finger release retains the
  // bank for the circuit, but an interrupted/cancelled gesture must LEVEL
  // the plane rather than leave a surprise 38-degree turn engaged.

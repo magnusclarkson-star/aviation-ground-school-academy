@@ -509,7 +509,10 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   trigger?.setAttribute("aria-expanded","true");
   return true;
  }
- function closeZoom(){
+ let zoomOrigin=null;
+ function closeZoom({restoreFocus=false}={}){
+  const focusTarget=zoomOrigin;
+  zoomOrigin=null;
   if(zoomPanel.getAttribute?.("popover")==="manual"){
    try{zoomPanel.hidePopover?.()}catch{}
    zoomPanel.removeAttribute("popover");
@@ -517,6 +520,9 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   zoomPanel.hidden=true;
   zoomContent.replaceChildren();
   zoomTitle.textContent="Instrument";
+  // A touch or keyboard dismissal should return to the same live gauge.
+  // Aircraft switches rebuild gauges, so only restore to connected tiles.
+  if(restoreFocus&&focusTarget?.isConnected)focusTarget.focus({preventScroll:true});
  }
  // An enlarged instrument must appear immediately, not several panels
  // below the flight deck where the phone user cannot see the response.
@@ -525,6 +531,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  zoomPanel.setAttribute("aria-labelledby","cockpitZoomTitle");
  function openZoom(tile){
   closeInfo();
+  zoomOrigin=tile;
   const clone=tile.cloneNode(true);
   clone.querySelector(".cockpit-info-dot")?.remove();
   clone.removeAttribute("role");
@@ -569,7 +576,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
   if(!tile||!holder.contains(tile))return;
   event.preventDefault();openZoom(tile);
  });
- $("cockpitZoomClose").addEventListener("click",closeZoom);
+ $("cockpitZoomClose").addEventListener("click",()=>closeZoom({restoreFocus:true}));
  // Keep an enlarged instrument visible while the learner manipulates the
  // yoke, collective or throttle. Explicit Close, Escape, or aircraft changes
  // dismiss it; tapping a flight control must not make the PFD disappear.
@@ -586,7 +593,7 @@ function attach({documentLike,onSelect=()=>{},getState=()=>null,getSystems=()=>n
  doc.addEventListener("keydown",event=>{
   if(event.key!=="Escape")return;
   closeHelpMenu();
-  if(!zoomPanel.hidden)closeZoom();
+  if(!zoomPanel.hidden)closeZoom({restoreFocus:true});
   if(!infoPanel.hidden)closeInfo();
  });
  function refreshOrientation(){
