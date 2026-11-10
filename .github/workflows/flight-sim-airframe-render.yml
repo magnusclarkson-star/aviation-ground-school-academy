@@ -1,0 +1,59 @@
+name: Imported Aircraft WebGL Visual Smoke
+on:
+  pull_request:
+    paths:
+      - 'flight-sim-3d.js'
+      - 'flight-sim.html'
+      - 'flight-sim-real-airframes.js'
+      - 'flight-sim-real-r44.js'
+      - 'flight-sim-airframe-geometry.js'
+      - 'assets/aircraft/**'
+      - 'tests/simulator-v2-real-r44.test.cjs'
+      - 'tests/simulator-v2-real-airframes.test.cjs'
+      - 'scripts/test-flight-sim-real-airframes-browser.mjs'
+      - '.github/workflows/flight-sim-airframe-render.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'flight-sim-3d.js'
+      - 'flight-sim.html'
+      - 'flight-sim-real-airframes.js'
+      - 'flight-sim-real-r44.js'
+      - 'flight-sim-airframe-geometry.js'
+      - 'assets/aircraft/**'
+      - 'tests/simulator-v2-real-r44.test.cjs'
+      - 'tests/simulator-v2-real-airframes.test.cjs'
+      - 'scripts/test-flight-sim-real-airframes-browser.mjs'
+      - '.github/workflows/flight-sim-airframe-render.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  airframes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate imported-model geometry and overlay decisions
+        run: |
+          node --test tests/simulator-v2-real-r44.test.cjs
+          node --test tests/simulator-v2-real-airframes.test.cjs
+      - name: Install isolated WebGL browser
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
+          npx playwright install chromium
+      - name: Render actual R44 and C172 across outside and 360-degree cameras
+        run: node scripts/test-flight-sim-real-airframes-browser.mjs
+      - name: Save real-aircraft preview images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: imported-airframe-webgl-previews
+          path: |
+            artifacts/real-r44-*.png
+            artifacts/real-c172-*.png
+          if-no-files-found: ignore
+          retention-days: 14

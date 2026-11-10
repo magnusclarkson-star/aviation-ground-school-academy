@@ -3,6 +3,30 @@ const test=require("node:test"),assert=require("node:assert/strict"),fs=require(
 const Real=require("../flight-sim-real-airframes.js");
 const bytes=fs.readFileSync("assets/aircraft/c172-e737-optimized.glb");
 const array=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+const Three=require("../flight-sim-3d.js");
+test("imported C172 excludes old duplicate flaps, ailerons, elevators, rudder and wheel marks",()=>{
+ const legacy=Three.buildMovingParts("c172");
+ const model={parts:legacy,authenticParts:[]};
+ const imported=Three.exteriorAnimatedParts("c172",true,model);
+ const fallback=Three.exteriorAnimatedParts("c172",false,model);
+ assert.deepEqual(imported.map(part=>part.name),["propeller"],
+  "only the propeller overlay belongs on the textured C172 model");
+ assert.equal(fallback.length,legacy.length,
+  "lightweight fallback must retain all original animated control surfaces");
+ for(const label of ["leftFlap","rightFlap","elevatorLeft","elevatorRight",
+                     "leftAileron","rightAileron","rudder","mainWheels","noseWheel"]){
+  assert.ok(fallback.some(part=>part.name===label),label+" must still exist for fallback");
+  assert.equal(imported.some(part=>part.name===label),false,
+   label+" must never appear as a floating ghost on the imported GLB");
+ }
+});
+test("imported R44 uses source-aligned rotor hardware, but its fallback remains independent",()=>{
+ const parts=Three.buildMovingParts("r44");
+ const authenticParts=parts.map(Three.alignRealR44MovingPart);
+ const model={parts,authenticParts};
+ assert.deepEqual(Three.exteriorAnimatedParts("r44",true,model),authenticParts);
+ assert.deepEqual(Three.exteriorAnimatedParts("r44",false,model),parts);
+});
 test("real licensed C172 GLB is bundled locally and small enough for mobile",()=>{
  assert.ok(bytes.length>100000&&bytes.length<2*1024*1024);
  assert.equal(Real.FILE,"assets/aircraft/c172-e737-optimized.glb");

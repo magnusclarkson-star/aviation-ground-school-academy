@@ -526,11 +526,28 @@ function buildPropellerSweep(mode="c172"){
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
-// R44 source dimensions differ from the earlier procedural placeholder.
-// Remap rotor hardware to the genuine cabin roof and tailboom; the original
-// animated axes and flight-model commands remain unchanged.
+// Anchor the moving hardware to the actual FlightGear R44 mesh, not to a
+// guessed percentage of the older illustrative helicopter's fuselage length.
+// Coordinates come from the bundled AC3D geometry (converted to +Z nose):
+// cabin mast at approximately (0,1.277,2.20); left tail-rotor shaft at
+// approximately (-1.305,.235,-3.59). The hub clears the mast and shaft by
+// a small visible gap so it does not disappear into the imported body.
+const REAL_R44_HARDWARE_ANCHORS=Object.freeze({
+ main:Object.freeze({
+  legacy:Object.freeze([0,3.16,-.40]),
+  actual:Object.freeze([0,1.48,2.20])
+ }),
+ tail:Object.freeze({
+  legacy:Object.freeze([-.77,1.19,-8.18]),
+  actual:Object.freeze([-1.355,.235,-3.59])
+ })
+});
 function alignRealR44HardwarePoint(point,tail=false){
- return [point[0],point[1]-(tail?.30:1.15),point[2]*.60+1.30];
+ const {legacy,actual}=tail?REAL_R44_HARDWARE_ANCHORS.tail:
+  REAL_R44_HARDWARE_ANCHORS.main;
+ // Translation preserves physical 10.06 m main rotor and 1.47 m tail rotor
+ // diameters; the old *.60 tailboom compression also shrank/misplaced blur.
+ return point.map((value,index)=>value-legacy[index]+actual[index]);
 }
 function alignRealR44Hardware(mesh,tail=false){
  const positions=new Float32Array(mesh.positions.length);
@@ -729,6 +746,16 @@ function buildMovingParts(mode="airplane"){
   });
  }
  return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
+}
+// The licensed C172 GLB already contains wings, flaps, elevator, rudder,
+// tyres and cabin. Drawing the old illustrated surfaces over it creates
+// detached, double flaps/elevators in exterior and 360-degree cameras.
+// Retain only the animated propeller overlay; the full illustrated parts set
+// is still necessary for the fallback aircraft and its 2D companion.
+function exteriorAnimatedParts(id,imported,model){
+ if(id==="r44"&&imported)return model.authenticParts||[];
+ if(id==="c172"&&imported)return (model.parts||[]).filter(p=>p.name==="propeller");
+ return model.parts||[];
 }
 function cameraPose(state,view="cockpit",orbit={}){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
@@ -1225,7 +1252,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const isImportedRotorcraft=id==="r44"&&realR44!==null;
     const rotorSweep=isImportedRotorcraft?model.authenticRotorSweep:model.rotorSweep;
     const tailRotorSweep=isImportedRotorcraft?model.authenticTailRotorSweep:model.tailRotorSweep;
-    const animatedParts=isImportedRotorcraft?model.authenticParts:model.parts;
+    const animatedParts=exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
     if(rotorSweep&&sweepOpacity>0){
@@ -1296,7 +1323,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,importedCameraFraming,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
