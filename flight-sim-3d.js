@@ -800,8 +800,8 @@ function buildCleanR44Rotors(){
 // This does not interfere with the separate pilot-facing training cockpit UI.
 function buildImportedCabin(id){
  if(id!=="r44"&&id!=="c172")return null;
- const m=new Mesh(),leather=rgb(56,75,87),cushion=rgb(92,111,120),
-  highlight=rgb(157,174,179),panel=rgb(35,48,57),
+ const m=new Mesh(),leather=rgb(174,163,143),cushion=rgb(210,201,182),
+  highlight=rgb(226,216,195),panel=rgb(35,48,57),
   screen=rgb(56,103,118),trim=rgb(180,191,189),floor=rgb(64,71,75);
  let seats=0;
  const r44=id==="r44";
@@ -1018,17 +1018,17 @@ void main(){
   float band=(1.-smoothstep(.045,.115,abs(p.y+.30-p.z*.022)))*
     fuselage*fuselageSpan;
   vec3 paint=mix(vec3(.91,.935,.953),vec3(.13,.32,.48),band);
-  albedo=mix(paint,albedo,.12);
+  albedo=mix(paint,albedo,.07);
   // Two render passes allow the existing tinted window region to remain
   // transparent WITHOUT punching holes in the solid wing/cowling. Opaque
   // skin first, new seats and panel second, glazing last.
   float side=(smoothstep(.39,.50,abs(p.x))*
     (1.-smoothstep(.90,1.02,abs(p.x))))*
     smoothstep(-1.15,-.65,p.z)*(1.-smoothstep(1.6,2.05,p.z))*
-    smoothstep(-.18,-.04,p.y)*(1.-smoothstep(.62,.82,p.y));
+    smoothstep(.09,.24,p.y)*(1.-smoothstep(.62,.82,p.y));
   float front=(1.-smoothstep(.65,.95,abs(p.x)))*
     smoothstep(1.35,1.70,p.z)*(1.-smoothstep(2.4,2.7,p.z))*
-    smoothstep(-.26,-.10,p.y)*(1.-smoothstep(.75,.95,p.y));
+    smoothstep(-.08,.09,p.y)*(1.-smoothstep(.75,.95,p.y));
   float luminance=dot(texel.rgb,vec3(.2126,.7152,.0722));
   float glass=max(side,front)*(1.-smoothstep(.22,.49,luminance));
   if(uC172Pass==1 && glass>.5)discard;
