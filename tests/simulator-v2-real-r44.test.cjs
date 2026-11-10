@@ -47,16 +47,49 @@ test("real R44 rotors stay mounted on real cabin and tail, not placeholder fusel
  const mast=parts.find(p=>p.name==="mainRotor").pivot;
  const tail=parts.find(p=>p.name==="tailRotor").pivot;
  const model=R44.parseAC3D(source,texture);
- assert.ok(mast[2]>0&&mast[2]<2,"mast aligned above cabin");
- assert.ok(mast[1]>model.bounds[3]&&mast[1]<model.bounds[3]+1,
-  "rotor disc supported just above genuine R44 roof");
- assert.ok(tail[2]>model.bounds[4]&&tail[2]<-3,
-  "tail rotor visibly attached to real rear boom");
- assert.ok(tail[1]>.35&&tail[1]<1.2);
+ // The 2026-11-10 placeholder transform compressed Z by .60 and
+ // positioned the main hub aft of the cabin mast and the tail rotor above
+ // the shaft. Check the actual model's source-space mount coordinates.
+ const anchors=Three.REAL_R44_HARDWARE_ANCHORS;
+ assert.deepEqual(mast,anchors.main.actual,"main hub must sit over the actual mast");
+ assert.deepEqual(tail,anchors.tail.actual,"tail rotor must sit on the left shaft");
+ assert.ok(mast[2]>1.95&&mast[2]<2.4,"main hub is centered above cabin mast");
+ assert.ok(mast[1]>model.bounds[3]&&mast[1]<model.bounds[3]+.25,
+  "main hub clears the highest existing R44 mast without a tall floating gap");
+ assert.ok(tail[0]<-1.3&&tail[0]>-1.45,"tail hub sits just outboard of the shaft");
+ assert.ok(Math.abs(tail[1]-.235)<.002&&Math.abs(tail[2]+3.59)<.002,
+  "tail rotor is centered on the original source attachment");
+ const mainTip=Three.alignRealR44HardwarePoint([5.03,3.16,-.4]);
+ const tailTip=Three.alignRealR44HardwarePoint([-.77,1.19+.735,-8.18],true);
+ assert.ok(Math.abs(Math.hypot(mainTip[0]-mast[0],mainTip[2]-mast[2])-5.03)<1e-8,
+  "import preserves main rotor radius rather than scaling the disc");
+ assert.ok(Math.abs(Math.hypot(tailTip[1]-tail[1],tailTip[2]-tail[2])-.735)<1e-8,
+  "import preserves tail rotor radius");
  const main=Three.alignRealR44Hardware(Three.buildRotorSweep("r44"));
  const rear=Three.alignRealR44Hardware(Three.buildTailRotorSweep("r44"),true);
  assert.ok(main.positions.every(Number.isFinite));
  assert.ok(rear.positions.every(Number.isFinite));
+});
+test("all imported R44 moving parts share their source mounting points",()=>{
+ const parts=Three.buildMovingParts("r44").map(Three.alignRealR44MovingPart);
+ const hub=parts.find(p=>p.name==="mainRotor").pivot;
+ const pitch=parts.find(p=>p.name==="swashPitch").pivot;
+ const bank=parts.find(p=>p.name==="swashBank").pivot;
+ const tail=parts.find(p=>p.name==="tailRotor").pivot;
+ const link=parts.find(p=>p.name==="tailPitchLink").pivot;
+ assert.equal(pitch[2],hub[2],"swashplate must be under main hub, not off to one side");
+ assert.equal(bank[2],hub[2]);
+ assert.ok(pitch[1]<hub[1]&&bank[1]<hub[1]);
+ assert.deepEqual(tail,link,"tail-pitch linkage must remain connected to rotor");
+ const original=Three.buildMovingParts("r44").find(p=>p.name==="mainRotor");
+ const aligned=parts.find(p=>p.name==="mainRotor");
+ for(let i=0;i<original.mesh.positions.length;i+=3){
+  const expected=Three.alignRealR44HardwarePoint([
+   original.mesh.positions[i],original.mesh.positions[i+1],original.mesh.positions[i+2]
+  ]);
+  for(let c=0;c<3;c++)assert.ok(Math.abs(aligned.mesh.positions[i+c]-expected[c])<.00001,
+   "rotor blade vertices must translate together with hub");
+ }
 });
 test("cyclic, collective and tail-yaw state changes stay finite with imported model",()=>{
  const state=Model.makeState("helicopter");
