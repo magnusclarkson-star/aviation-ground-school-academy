@@ -101,6 +101,9 @@ try{
  assert.match(await desktop.locator("#coachPhase").textContent(),/RUNWAY/);
  assert.ok(/^\d+ s$/.test(await desktop.locator("#coachElapsed").textContent()),"session elapsed is a whole-second indication");
  assert.equal(await desktop.locator("#offsetLabel").textContent(),"RUNWAY OFFSET");
+ // Examine the active Canvas only: the 2D backup is deliberately frozen
+ // while GPU scenery covers it. The learning model still moves normally.
+ await desktop.locator("#visualMode").selectOption("2d");
  const first=await screenshotSignature(desktop);
  assert.ok(first>0);
  await desktop.locator("#startApproach").click();
@@ -110,7 +113,8 @@ try{
  assert.match(await desktop.locator("#coachPhase").textContent(),/SHORT FINAL/);
  await desktop.waitForTimeout(1100);
  const after=await screenshotSignature(desktop);
- assert.notEqual(after,first,"world geometry must redraw as fictional aircraft moves");
+ assert.notEqual(after,first,"active 2D world geometry must redraw as the aircraft moves");
+ await desktop.locator("#visualMode").selectOption("3d");
  await desktop.locator("#typeStick").click();
  assert.equal(await desktop.locator("#typeStick").getAttribute("aria-pressed"),"true");
  assert.equal(await desktop.locator(".hardware-stick").isVisible(),true);
