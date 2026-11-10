@@ -87,8 +87,9 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
   if(wasPlaying){onTransmissionEnd();onFinish();}
   status(message);
  }
- function play(stage){
-  const mode=getMode()==="helicopter"?"helicopter":"airplane",scenario=getScenario();
+ function play(stage,scenarioOverride=null){
+  const mode=getMode()==="helicopter"?"helicopter":"airplane",
+   scenario=scenarioOverride||getScenario();
   const airportId=getAirport()||"academy",situationId=getSituation()||"normal";
   const entries=stage==="all"?makeAll(mode,scenario,airportId,situationId):dialogue(stage,mode,scenario,airportId,situationId);
   stop("Preparing fictional training radio transcript.");
@@ -124,11 +125,18 @@ function attach({windowLike,documentLike,getMode=()=> "airplane",getScenario=()=
  }
  function cuePhase(phase){
   const stage=stageFromPhase(phase);
-  if(!armed||!stage||stagesSeen.has(stage))return false;
-  stagesSeen.add(stage);
+  // A real home-runway return is an arrival even though the lesson began
+  // as a departure. Play its own approach exchange once rather than
+  // silently suppressing it because climb already used the "during" stage.
+  const returnFinal=phase==="approach"&&getMode()!=="helicopter"&&
+   getScenario()==="runway";
+  const key=returnFinal?"return-final":stage;
+  if(!armed||!stage||stagesSeen.has(key))return false;
+  stagesSeen.add(key);
   // Even when the browser blocks synthesized speech, show the full transcript.
-  const voiced=play(stage);
-  if(!voiced)status("Automatic "+stage+" stage: fictional transcript shown. Device voice may be unavailable; no audio was transmitted.");
+  const voiced=play(stage,returnFinal?"approach":null);
+  if(!voiced)status("Automatic "+(returnFinal?"final approach":stage)+
+   " stage: fictional transcript shown. Device voice may be unavailable; no audio was transmitted.");
   return true;
  }
  function arm(enable){
