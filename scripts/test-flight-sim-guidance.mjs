@@ -163,8 +163,13 @@ returned.xM=0;
 G.observe(returnedProgress,returned,[]);
 assert.match(G.guidance(returned,M.makeInput(),returnedProgress).text,/CTR/);
 returned.verticalMs=-5;
+returned.xM=130;
 assert.match(G.guidance(returned,M.makeInput(),returnedProgress).tag,/RAPID DESCENT/,
- "excessive simulated descent rate overrides waypoint cue");
+ "high descent rate must override lateral and waypoint cues together");
+returned.verticalMs=-1.4;returned.speedKt=12;
+assert.equal(G.guidance(returned,M.makeInput(),returnedProgress).tag,
+ "SHORT FINAL · LOW ENERGY",
+ "off-centre approach must never hide low-speed caution");
 assert.match(G.guidance({...runway,phase:"flight",speedKt:83},controls).text,
  /turn back toward the runway/,
  "unguided flight hint should not imply landing requires teleport/reset");
