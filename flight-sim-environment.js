@@ -71,8 +71,11 @@ function runwayAlignment(headingDeg,trackDeg){
 // plus a small threshold/end margin, before marking a runway excursion.
 // Return a reason, not a heading command: the learner remains in control.
 function runwayRolloutExcursion(state){
- if(state?.phase!=="rollout"||!Number.isFinite(state.speedKt)||
-    state.speedKt<5)return null;
+ if(state?.phase!=="rollout")return null;
+ // Check the runway boundary even when rolling at walking speed.
+ // Previously a craft could cross a side boundary just below 5 knots
+ // and be incorrectly marked COMPLETE on the same physics tick.
+ if(!Number.isFinite(state.speedKt))return "side";
  if(!Number.isFinite(state.xM)||!Number.isFinite(state.zM))return "side";
  if(Math.abs(state.xM)>28)return "side";
  if(state.zM< -40||state.zM>1820)return "end";

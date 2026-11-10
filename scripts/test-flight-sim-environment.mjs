@@ -25,6 +25,13 @@ assert.notEqual(E.windAt("gusts",0).x,E.windAt("gusts",4).x);
 assert.deepEqual(E.windAt("gusts",3),E.windAt("gusts",3),"gusts must be deterministic");
 assert.ok(E.compassTrack(5,0)>80&&E.compassTrack(5,0)<100);
 assert.equal(E.compassTrack(0,-1),180);
+// Runway boundaries remain relevant at walking speed and a full stop.
+assert.equal(E.runwayRolloutExcursion({
+ phase:"rollout",speedKt:4.6,xM:28.1,zM:800}),"side");
+assert.equal(E.runwayRolloutExcursion({
+ phase:"rollout",speedKt:0,xM:0,zM:1821}),"end");
+assert.equal(E.runwayRolloutExcursion({
+ phase:"rollout",speedKt:4.8,xM:0,zM:1800}),null);
 assert.throws(()=>E.selectProfile("airbus"),/Unknown fictional/);
 assert.throws(()=>E.selectWind("storm"),/Unknown fictional/);
 assert.throws(()=>M.makeState("airplane","approach",{profileId:"not-a-profile"}),/Unknown fictional/);
