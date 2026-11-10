@@ -45,6 +45,23 @@ test("both imported aircraft have four separate seats and a visible instrument b
  }
  assert.equal(Three.buildImportedCabin("fa18"),null);
 });
+test("new C172 fuselage closes floating seats without extra wings or propellers",()=>{
+ const shell=Three.buildImportedC172Shell();
+ assert.equal(shell.windowPanels,5,"front windshield and four distinct side windows");
+ assert.ok(shell.skin.vertices>150,"tapered white cabin, nose and tail need full 3D surfaces");
+ assert.ok(shell.glass.vertices>15,"real see-through separate window geometry required");
+ for(const mesh of [shell.skin,shell.glass]){
+  assert.ok(mesh.positions.every(Number.isFinite));
+  assert.equal(mesh.colors.length,mesh.positions.length);
+  assert.equal(mesh.normals.length,mesh.positions.length);
+ }
+ const x=[],z=[];
+ for(let i=0;i<shell.skin.positions.length;i+=3){
+  x.push(shell.skin.positions[i]);z.push(shell.skin.positions[i+2]);
+ }
+ assert.ok(Math.max(...x)>.6&&Math.min(...x)<-.6,"both cabin sides are closed");
+ assert.ok(Math.max(...z)>3.65&&Math.min(...z)<-3.5,"body spans nose and tail");
+});
 test("real licensed C172 GLB is bundled locally and small enough for mobile",()=>{
  assert.ok(bytes.length>100000&&bytes.length<2*1024*1024);
  assert.equal(Real.FILE,"assets/aircraft/c172-e737-optimized.glb");
