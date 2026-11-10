@@ -101,6 +101,13 @@ finalInput.throttle=0;finalInput.brake=true;finalInput.pitch=0;
 simulate(approach,finalInput,20,landingEvents);
 assert.equal(approach.phase,"complete","brakes should end the runway rollout");
 assert.ok(landingEvents.includes("completed"));
+const reportFromRealLanding=require("../flight-sim-guidance.js");
+const measuredLanding=reportFromRealLanding.summary(
+ reportFromRealLanding.start(M.makeState("airplane","approach")),approach).touchdown;
+assert.ok(measuredLanding&&measuredLanding.speedKt>40);
+assert.ok(measuredLanding.sinkMs>0&&measuredLanding.sinkMs<4);
+assert.ok(measuredLanding.offsetM<24);
+assert.ok(measuredLanding.rolloutM>50);
 assert.ok(approach.rolloutBrakePressure>.9);
 assert.ok(approach.rolloutDistanceM>50,
  "aircraft follows the runway for a measurable distance after touchdown");
