@@ -3,6 +3,7 @@ const test=require("node:test");
 const assert=require("node:assert/strict");
 const Model=require("../flight-sim-model.js");
 const Geometry=require("../flight-sim-3d.js");
+const Airframes=require("../flight-sim-airframe-geometry.js");
 const Colors=Object.freeze({navy:[33,94,141],blue:[71,127,155]});
 const near=(a,b,t=.015)=>Math.abs(a-b)<=t;
 function hasPoint(mesh,x,y,z){
@@ -44,12 +45,12 @@ test("R44 stick release damps velocity without teleporting or holding position",
  assert.ok(Number.isFinite(s.xM)&&Number.isFinite(s.zM));
 });
 test("C172 exterior has aircraft-specific blue/white cabin and tapered nose livery",()=>{
- const s=Geometry.buildVehicle("c172");
+ const s=Geometry.buildVehicle("c172"),[sx,sy,sz]=Airframes.SCALE.c172;
  assert.ok(s.vertices<4000);
  for(const sign of [-1,1]){
-  assert.ok(hasColoredPoint(s,sign*.79,.13,-1.62,Colors.navy),"side cabin band");
-  assert.ok(hasColoredPoint(s,sign*.64,-.03,-3.62,Colors.blue),"aft side band");
-  assert.ok(hasColoredPoint(s,sign*.69,-.02,3.56,Colors.navy),"nose paint accent");
+  assert.ok(hasColoredPoint(s,sign*.79*sx,.13*sy,-1.62*sz,Colors.navy),"side cabin band");
+  assert.ok(hasColoredPoint(s,sign*.64*sx,-.03*sy,-3.62*sz,Colors.blue),"aft side band");
+  assert.ok(hasColoredPoint(s,sign*.69*sx,-.02*sy,3.56*sz,Colors.navy),"nose paint accent");
  }
 });
 test("R44 exterior gains separate cabin, cowling and tailboom details",()=>{
