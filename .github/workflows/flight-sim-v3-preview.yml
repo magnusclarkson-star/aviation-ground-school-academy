@@ -1,0 +1,52 @@
+name: Isolated V3 Cessna Scene Graph
+on:
+  pull_request:
+    paths:
+      - 'v3/**'
+      - 'flight-sim-v3-preview.html'
+      - 'scripts/build-flight-sim-v3.mjs'
+      - 'scripts/test-flight-sim-v3-preview-browser.mjs'
+      - 'scripts/build-pages.mjs'
+      - 'scripts/test-pages-package.mjs'
+      - '.github/workflows/flight-sim-v3-preview.yml'
+      - '.github/workflows/deploy-pages.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'v3/**'
+      - 'flight-sim-v3-preview.html'
+      - 'scripts/build-flight-sim-v3.mjs'
+      - 'scripts/test-flight-sim-v3-preview-browser.mjs'
+      - '.github/workflows/flight-sim-v3-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-c172:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Three.js, esbuild and Chromium browser harness
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 playwright@1.56.1
+          npx playwright install chromium
+      - name: Build a self-contained browser-local Three.js scene
+        run: node scripts/build-flight-sim-v3.mjs
+      - name: Test Cessna on mobile portrait and landscape, with GLB comparison
+        run: node scripts/test-flight-sim-v3-preview-browser.mjs
+      - name: Validate bundled output and private-source exclusion
+        run: |
+          node scripts/build-pages.mjs
+          node scripts/test-pages-package.mjs
+      - name: Upload V3 C172 phone-sized screenshots for visual acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-c172-phone-browser-previews
+          path: artifacts/v3-c172-*.png
+          if-no-files-found: ignore
+          retention-days: 14
