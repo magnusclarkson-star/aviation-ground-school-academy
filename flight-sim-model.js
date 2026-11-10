@@ -248,7 +248,7 @@ function step(state,input,seconds){
   }else{
    // A little more wheel-steering authority only at taxi speeds; maintain
    // the previous gentle behaviour at fast touchdown speeds.
-   const groundRate=.65+(rolling?.8*Math.max(0,1-state.speedKt/55):0);
+   const groundRate=.65+(rolling ? .8*Math.max(0,1-state.speedKt/55) : 0);
    state.headingDeg=(state.headingDeg+rudder*groundRate*dt+360)%360;
   }
   state.zM+=state.speedKt*KNOT*Math.cos(state.headingDeg*RAD)*dt;
