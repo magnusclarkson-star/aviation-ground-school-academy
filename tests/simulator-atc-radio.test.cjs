@@ -30,7 +30,8 @@ function mockWorld({voices=true}={}){
  const els=new Map(),docListeners={};
  function element(id){
   if(!els.has(id))els.set(id,{
-   id,textContent:'',disabled:false,children:[],handlers:{},className:'',
+   id,textContent:'',disabled:false,children:[],handlers:{},attrs:{},className:'',
+   setAttribute(k,v){this.attrs[k]=v;},
    addEventListener(event,fn){this.handlers[event]=fn;},
    replaceChildren(){this.children=[];},
    appendChild(x){this.children.push(x);},
