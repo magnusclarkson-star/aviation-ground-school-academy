@@ -28,6 +28,9 @@ const Traffic=root?.AGSAAirfieldTraffic||
 const RealAirframes=root?.AGSARealAirframes||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-real-airframes.js"):null);
+const RealR44=root?.AGSARealR44||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-real-r44.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -888,6 +891,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
+ let realR44=null,realR44Status="loading";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -972,9 +976,41 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(typeof console!=="undefined")console.warn("C172 mesh fallback:",error);
    }
   }
+  async function importR44(){
+   if(!RealR44){realR44Status="unavailable";return;}
+   try{
+    const model=await RealR44.ensureR44();
+    if(disposed||lost)return;
+    const decoded=await Promise.all(model.images.map(async(bytes,i)=>{
+     const blob=new Blob([bytes],{type:model.mimeTypes?.[i]||"image/png"});
+     return root.createImageBitmap(blob);
+    }));
+    if(disposed||lost){decoded.forEach(bitmap=>bitmap.close?.());return;}
+    const images=decoded.map(bitmap=>{
+     const texture=gl.createTexture();textures.push(texture);
+     gl.bindTexture(gl.TEXTURE_2D,texture);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
+     gl.generateMipmap(gl.TEXTURE_2D);
+     bitmap.close?.();return texture;
+    });
+    gl.bindTexture(gl.TEXTURE_2D,null);
+    realR44={primitives:model.primitives.map(uploadImported),images,
+     vertices:model.vertices,triangles:model.triangles};
+    realR44Status="imported";
+   }catch(error){
+    realR44Status="fallback";
+    if(typeof console!=="undefined")console.warn("R44 mesh fallback:",error);
+   }
+  }
   // This is deliberately non-blocking: controls and simulated flight start
   // immediately with the legacy model, then swap to genuine C172 geometry.
   void importC172();
+  void importR44();
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
@@ -1114,12 +1150,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const isReal=id==="c172"&&realC172!==null;
-    if(canvas.dataset)canvas.dataset.airframeSource=isReal?"licensed-c172-glb":"procedural";
-    if(isReal){
+    const realModel=id==="c172"?realC172:id==="r44"?realR44:null;
+    if(canvas.dataset)canvas.dataset.airframeSource=realModel?
+     (id==="c172"?"licensed-c172-glb":"licensed-r44-ac3d"):"procedural";
+    if(realModel){
      gl.activeTexture(gl.TEXTURE0);
-     for(const part of realC172.primitives){
-      const img=part.imageId===null?null:realC172.images[part.imageId];
+     for(const part of realModel.primitives){
+      const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.bindTexture(gl.TEXTURE_2D,img);
@@ -1194,6 +1231,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   }
   return {draw,destroy,resetCamera(){cameraRig?.reset()},
    get realC172Status(){return realC172Status},
+   get realR44Status(){return realR44Status},
    supported:true,engine:"webgl2",get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
