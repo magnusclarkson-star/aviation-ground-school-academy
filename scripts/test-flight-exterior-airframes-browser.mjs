@@ -12,6 +12,36 @@ try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
+ const positionLenses=await desktop.evaluate(()=>{
+  const C=window.AGSAExteriorChase2D,T=window.AGSAFlight3D;
+  const count=(mesh,rgb,side)=>{
+   let matches=0;
+   for(let i=0;i<mesh.positions.length;i+=3){
+    if(Math.abs(mesh.colors[i]-rgb[0]/255)>.006||
+       Math.abs(mesh.colors[i+1]-rgb[1]/255)>.006||
+       Math.abs(mesh.colors[i+2]-rgb[2]/255)>.006)continue;
+    if(side==="left"&&mesh.positions[i]<-.7)matches++;
+    if(side==="right"&&mesh.positions[i]>.7)matches++;
+    if(side==="aft"&&mesh.positions[i+2]<-3)matches++;
+   }
+   return matches;
+  };
+  return ["c172","r44","fa18","f22","f35","typhoon","su37"].map(id=>{
+   const gpu=T.buildVehicle(id),fallback=C.getMesh(id);
+   return {id,
+    red:count(gpu,[235,56,48],"left"),green:count(gpu,[54,214,111],"right"),
+    white:count(gpu,[236,241,226],"aft"),
+    sameColors:gpu.colors.length===fallback.colors.length&&
+     gpu.colors.every((x,i)=>x===fallback.colors[i])};
+  });
+ });
+ for(const item of positionLenses){
+  assert.ok(item.red>0&&item.green>0&&item.white>0,
+   item.id+" position lights have correct left/right/aft placement");
+  assert.equal(item.sameColors,true,
+   item.id+" GPU and 2D fallback use the same position lens colours");
+ }
+
  assert.equal(await readModel(desktop),"c172");
  assert.equal(await desktop.locator("#sceneAircraftType").textContent(),"Cessna 172");
  await desktop.locator("#pauseFlight").click();
