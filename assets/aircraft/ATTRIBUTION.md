@@ -15,3 +15,21 @@
 **No endorsement:** Neither the original creator nor the upstream repository is affiliated with or endorses Aviation Ground School Academy.
 
 **Other aircraft:** The R44 and five fighter silhouettes are still procedural until a separately licensed model is integrated and visually accepted. Do not describe them as replaced by this C172 upgrade.
+
+---
+
+## Robinson R44 Raven II — imported MIT-licensed model
+
+**Asset:** `assets/aircraft/r44-molen-raven-ii.glb`.
+
+**Original model and author:** Bendyline LLC (© 2026), from the **Molen** original polygonal aircraft collection.
+
+**Source:** [Robinson R44 Raven II source bundle](https://github.com/bendyline/molen/tree/main/content/entities/source/aircraft/robinson-r44), distributed in the public [Molen asset release](https://github.com/bendyline/molen/releases/tag/assets-52148fd49fe80b1d) as `entities-models-part-001.tar.gz`.
+
+**License:** [MIT License](https://github.com/bendyline/molen/blob/main/LICENSE). Full license text and original copyright notice are reproduced in `MOLEN-LICENSE.txt`.
+
+**Academy adaptation:** The geometry is loaded as indexed glTF 2.0 with KHR mesh quantization, a ground-height origin offset, animated main/tail rotor node groups, and WebGL PNG materials. The original glTF binary is preserved, without model geometry alterations.
+
+**Accuracy limitation:** Molen explicitly identifies its R44 as a visual prototype needing further review. It is an original, approximate polygonal interpretation, not Robinson Helicopter Company CAD or a manufacturer-approved model. Do not imply manufacturer approval or certification.
+
+**No endorsement:** Bendyline LLC and Robinson Helicopter Company have no endorsement of or affiliation with Aviation Ground School Academy.
