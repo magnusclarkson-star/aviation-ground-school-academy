@@ -1,0 +1,64 @@
+name: Import licensed R44 GLB
+on:
+  push:
+    branches: [feature/v2-real-r44-glb-asset-20261110]
+    paths:
+      - '.github/workflows/import-r44-licensed-model.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  acquire:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download upstream MIT model archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/molen-assets assets/aircraft
+          gh release download assets-52148fd49fe80b1d \
+            -R bendyline/molen \
+            -p entities-models-part-001.tar.gz \
+            -D /tmp/molen-assets
+          archive=/tmp/molen-assets/entities-models-part-001.tar.gz
+          entry="$(tar -tzf "$archive" | grep -Ei 'robinson[_-]r44/.*\.glb$' | head -n 1 || true)"
+          if [ -z "$entry" ]; then
+            echo 'No Robinson R44 GLB present in the archive'
+            tar -tzf "$archive" | grep -Ei 'robinson[_-]r44' | head -n 25 || true
+            exit 1
+          fi
+          printf 'Extracting licensed MIT asset: %s\n' "$entry"
+          tar -xOzf "$archive" "$entry" > assets/aircraft/r44-molen-raven-ii.glb
+          node -e '
+            const fs=require("node:fs"),p="assets/aircraft/r44-molen-raven-ii.glb";
+            const b=fs.readFileSync(p);
+            if(b.length<100000||b.length>8000000||b.toString("ascii",0,4)!=="glTF")
+              throw Error("Invalid or oversized R44 GLB");
+            console.log("R44 GLB bytes:",b.length);
+          '
+          sha256sum assets/aircraft/r44-molen-raven-ii.glb
+      - name: Preserve model as auditable build artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r44-original-mit-glb
+          path: assets/aircraft/r44-molen-raven-ii.glb
+          retention-days: 14
+      - name: Commit licensed model to development branch
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/aircraft/r44-molen-raven-ii.glb
+          if ! git diff --staged --quiet; then
+            git commit -m "asset(v2): add actual MIT-licensed Robinson R44 GLB geometry"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
