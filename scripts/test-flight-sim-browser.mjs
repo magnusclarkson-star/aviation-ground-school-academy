@@ -55,6 +55,23 @@ try{
   return count;
  });
  assert.ok(runwayDrawn>4,"runway stays visible in 2D southbound return view");
+ const treeScene=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery;
+  const list=xM=>{
+   const middle=S.treeColumnAt(xM);
+   return Array.from({length:7},(_,n)=>{
+    const column=middle+n-3;
+    return {column,x:S.treeWorldX(column,600)};
+   });
+  };
+  return {a:list(129),b:list(131)};
+ });
+ const before=new Map(treeScene.a.map(p=>[p.column,p.x]));
+ const after=new Map(treeScene.b.map(p=>[p.column,p.x]));
+ const unchanged=[...before].filter(([column,x])=>after.get(column)===x);
+ assert.equal(unchanged.length,6,
+  "moving across the phone's landscape grid cannot teleport the tree line");
+
 
  assert.equal(await desktop.locator("#visualMode").inputValue(),"3d");
  assert.equal(await desktop.locator("#cameraMode").inputValue(),"cockpit");
