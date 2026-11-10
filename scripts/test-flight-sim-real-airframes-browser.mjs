@@ -11,6 +11,8 @@ const root=process.cwd(),extensions={
  ".css":"text/css; charset=utf-8",
  ".glb":"model/gltf-binary",
  ".webp":"image/webp",
+ ".png":"image/png",
+ ".ac":"text/plain; charset=utf-8",
  ".svg":"image/svg+xml"
 };
 const server=http.createServer((req,res)=>{
@@ -78,8 +80,46 @@ try{
  assert.ok(info.chromaticPixels>1000,"actual WebGL screenshot has textured colours");
  fs.mkdirSync("artifacts",{recursive:true});
  await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-3d-preview.png"});
+ // The imported Robinson R44 must actually replace the procedural hull
+ // while retaining the existing simulator's animated main/tail rotors.
+ await page.waitForFunction(()=>window.__c172TestRenderer?.realR44Status==="imported",null,
+  {timeout:20000});
+ const rotor=await page.evaluate(async()=>{
+  const model=await window.AGSARealR44.ensureR44();
+  const s={mode:"helicopter",xM:0,zM:0,altitudeM:60,
+   headingDeg:30,pitchDeg:4,rollDeg:2,groundSpeedKt:18};
+  const renderer=window.__c172TestRenderer,canvas=window.__c172TestCanvas;
+  const details=[];
+  for(const view of ["side","chase","top","inspect"]){
+   const drawn=renderer.draw(s,{view,airframeId:"r44",
+    animation:{mainRotor:1.2,tailRotor:2.4,swashBank:.12,
+     swashPitch:-.08,collectiveLink:.22},
+    orbit:{azimuth:28,elevation:14,distance:20}});
+   const gl=canvas.getContext("webgl2");
+   const pixels=new Uint8Array(canvas.width*canvas.height*4);
+   gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+   let colored=0;
+   for(let i=0;i<pixels.length;i+=4){
+    if(Math.max(pixels[i],pixels[i+1],pixels[i+2])-
+       Math.min(pixels[i],pixels[i+1],pixels[i+2])>30)colored++;
+   }
+   details.push({view,drawn,colored});
+  }
+  return {status:renderer.realR44Status,source:canvas.dataset.airframeSource,
+   vertices:model.vertices,triangles:model.triangles,
+   imageCount:model.images.length,details};
+ });
+ assert.equal(rotor.status,"imported");
+ assert.equal(rotor.source,"licensed-r44-ac3d");
+ assert.ok(rotor.vertices>22000);
+ assert.ok(rotor.triangles>7500);
+ assert.equal(rotor.imageCount,1);
+ assert.ok(rotor.details.every(v=>v.drawn&&v.colored>500),
+  "genuine 3D R44 must render in chase, side, top and orbit views");
+ await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-3d-preview.png"});
  assert.deepEqual(errors,[]);
  console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
+ console.log("Real R44 textured mesh Browser passed:",JSON.stringify(rotor));
 }finally{
  if(browser)await browser.close();
  await new Promise(resolve=>server.close(resolve));
