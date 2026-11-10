@@ -271,6 +271,32 @@ M.step(lowYaw,finePedals,.1);
 assert.ok(lowYaw.yawRateDegS>0&&lowYaw.yawRateDegS<leftOverYaw,
  "neutral pedals damp hover yaw smoothly without an instant stop");
 
+// V2 phone collective: small changes around the simulated hover trim are
+// less abrupt near the pad. Full-travel climb/descent and high-altitude
+// control sensitivity must remain unchanged.
+const rotorTrim=.48+.12/8.2;
+const fineUp=M.shapeRotorCollective(rotorTrim+.06,4,false);
+const fineDown=M.shapeRotorCollective(rotorTrim-.06,4,false);
+assert.ok(fineUp>rotorTrim&&fineUp<rotorTrim+.06);
+assert.ok(fineDown<rotorTrim&&fineDown>rotorTrim-.06);
+assert.equal(M.shapeRotorCollective(.8,4,false),.8);
+assert.equal(M.shapeRotorCollective(.2,4,false),.2);
+assert.equal(M.shapeRotorCollective(.55,30,false),.55);
+assert.equal(M.shapeRotorCollective(.55,4,true),.55);
+assert.ok(Math.abs(M.shapeRotorCollective(rotorTrim,4,false)-rotorTrim)<1e-12);
+const fineLow=M.makeState("helicopter"),fineHigh=M.makeState("helicopter");
+for(const [state,height] of [[fineLow,4],[fineHigh,30]])
+ Object.assign(state,{phase:"hover",onGround:false,altitudeM:height,
+  forwardMs:0,lateralMs:0,verticalMs:0,hoverHoldSec:0});
+const hoverCollectiveInput={...M.makeInput("helicopter"),
+ collective:rotorTrim+.06,turbulence:0};
+M.step(fineLow,hoverCollectiveInput,.1);
+M.step(fineHigh,hoverCollectiveInput,.1);
+assert.ok(fineLow.verticalMs>0&&fineLow.verticalMs<fineHigh.verticalMs*.85,
+ "a gentle small collective touch near the pad has visibly finer climb response");
+assert.ok(fineLow.altitudeM>4&&fineHigh.altitudeM>30,
+ "both simulated rotorcraft still move; input curve is not an altitude hold");
+
 // The skids resist downward motion before takeoff even with low collective.
 const padClamp=M.makeState("helicopter"),padDown=M.makeInput("helicopter");
 padDown.collective=.1;
