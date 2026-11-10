@@ -1280,6 +1280,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   const airframes=Object.create(null);
   for(const id of Exterior.IDS){
    const cabin=buildImportedCabin(id);
+   const shell=id==="c172"?buildImportedC172Shell():null;
    airframes[id]={
     body:upload(buildVehicle(id)),
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
@@ -1288,6 +1289,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
     shadow:inspectionOnly?null:upload(buildShadow(id)),
     cabin:cabin?upload(cabin):null,
+    shell:shell?upload(shell.skin):null,
+    shellGlass:shell?upload(shell.glass):null,
     authenticParts:id==="r44"?buildCleanR44Rotors().map(part=>({
      ...part,gpu:upload(part.mesh)
     })):null,
@@ -1449,11 +1452,23 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.disable(gl.BLEND);gl.depthMask(true);
       gl.uniform1i(uni.uC172Pass,1);
       for(const part of realModel.primitives)drawPrimitive(part,1);
+      // Source GLB's missing dark side panels are completed by one shaped
+      // C172 fuselage. Draw it before seats; never duplicate wing/tail parts.
+      gl.uniform1i(uni.uC172Pass,0);
+      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
+      gl.uniform1f(uni.uOpacity,1);
+      gl.bindVertexArray(model.shell.vao);
+      gl.drawArrays(gl.TRIANGLES,0,model.shell.count);
       drawCabin();
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);gl.uniform1i(uni.uC172Pass,2);
       for(const part of realModel.primitives)drawPrimitive(part,1);
+      // Actual see-through side panels + windshield; body remains opaque.
       gl.uniform1i(uni.uC172Pass,0);
+      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
+      gl.uniform1f(uni.uOpacity,.26);
+      gl.bindVertexArray(model.shellGlass.vao);
+      gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
      }else{
       // R44 source material 4 is 70% transparent glass. Treat windows as
       // transparent after the solid body and new cabin, not before the seats.
@@ -1551,7 +1566,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildCleanR44Rotors,buildImportedCabin,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
