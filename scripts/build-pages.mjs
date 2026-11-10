@@ -35,6 +35,12 @@ for(const item of publicCuratedPaths){
  await copyFile(source,target);
  count++;
 }
+// The V3 experimental page must never be deployed with a missing engine.
+// Its static bundle is produced by pinned tooling in the Pages workflow.
+const v3Bundle=await stat(path.join(output,"flight-sim-v3.bundle.js"));
+if(v3Bundle.size<100000||v3Bundle.size>2200000)
+ throw Error("V3 Three.js bundle missing from published site");
+await stat(path.join(output,"flight-sim-v3-preview.html"));
 // CI must reject any deployment missing the models themselves: publishing
 // only their JavaScript loaders silently reverts exterior views to placeholders.
 for(const [asset,minBytes] of [
