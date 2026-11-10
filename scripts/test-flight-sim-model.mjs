@@ -176,6 +176,32 @@ simulate(hover,hoverInput,5);
 assert.ok(Math.abs(hover.headingDeg)<.001,
  "sideways cyclic while hovering does not invent a forward-flight turn");
 
+// Fine cyclic movements are less abrupt than a linear phone-stick mapping,
+ // without removing full bank or pitch authority at maximum deflection.
+assert.equal(M.shapeRotorCyclic(0),0);
+assert.equal(M.shapeRotorCyclic(1),1);
+assert.equal(M.shapeRotorCyclic(-1),-1);
+assert.ok(M.shapeRotorCyclic(.20)>.10&&M.shapeRotorCyclic(.20)<.15);
+assert.equal(M.shapeRotorCyclic(-.20),-M.shapeRotorCyclic(.20));
+const carefulHeli=M.makeState("helicopter"),carefulInput=M.makeInput("helicopter");
+carefulInput.collective=.8;
+simulate(carefulHeli,carefulInput,3);
+carefulInput.collective=.495;carefulInput.bank=.2;
+simulate(carefulHeli,carefulInput,2);
+assert.ok(carefulHeli.rollDeg>1&&carefulHeli.rollDeg<2.5,
+ "small phone cyclic produces a controllable visible roll near hover");
+assert.ok(carefulHeli.lateralMs>.2);
+const carefulDrift=carefulHeli.lateralMs;
+carefulInput.bank=0;
+simulate(carefulHeli,carefulInput,1);
+assert.ok(carefulHeli.lateralMs>0&&carefulHeli.lateralMs<carefulDrift,
+ "re-centred cyclic damps, but does not teleport away, existing drift");
+const fullControl=M.makeState("helicopter"),fullControlInput=M.makeInput("helicopter");
+fullControlInput.collective=.82;fullControlInput.bank=1;
+simulate(fullControl,fullControlInput,3);
+assert.ok(fullControl.rollDeg>11,
+ "full cyclic travel retains the established turning authority");
+
 // The skids resist downward motion before takeoff even with low collective.
 const padClamp=M.makeState("helicopter"),padDown=M.makeInput("helicopter");
 padDown.collective=.1;
