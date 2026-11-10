@@ -6,6 +6,7 @@ const Three=require("../flight-sim-3d.js");
 const M=require("../flight-sim-model.js");
 const PadDetail=require("../flight-sim-helipad-detail.js");
 const Scenery=require("../flight-sim-scenery.js");
+const Countryside=require("../flight-sim-countryside.js");
 
 // Regression guard: the GPU lighting must follow aircraft attitude and hinge
 // rotation, not illuminate the fixed untransformed original mesh normals.
@@ -68,6 +69,17 @@ const hasPoint=(mesh,x,y,z)=>{
  }
  return false;
 };
+assert.equal(Countryside.fields.length,20);
+assert.equal(Countryside.farmTracks.length,20);
+const firstCrop=Countryside.fields[0];
+const terrainY=Countryside.terrainHeight(firstCrop.x,firstCrop.z)+.14;
+assert.ok(hasPoint(runway,firstCrop.x,terrainY,firstCrop.z),
+ "WebGL runway world contains shared fixed-coordinate crop fields");
+assert.ok(hasPoint(pad,firstCrop.x,terrainY,firstCrop.z),
+ "helipad scene retains the same geographic landmarks");
+const firstTrack=Countryside.trackCorners(Countryside.farmTracks[0]);
+assert.equal(firstTrack.length,4);
+assert.ok(firstTrack.flat().every(Number.isFinite));
 const firstPylon=PadDetail.pylons[0];
 assert.ok(hasPoint(pad,firstPylon.x-1.3,.16,firstPylon.z-1.3),
  "3D world includes the same fixed-world pylon footprint as mobile scenery");
