@@ -280,7 +280,7 @@ function step(state,input,seconds){
   if(state.verticalMs<-.7)events.push("descent");
   if(state.phase==="climb"&&state.altitudeM>75){
    state.phase="flight";
-   state.message="Free flight: practise bank and level pitch. Use 'Set up final approach' for a new fictional runway arrival.";
+   state.message="Free flight: follow the live circuit waypoint bearing, then turn back to the original runway. Short-final setup is optional.";
   }
   if(state.phase==="approach"&&state.zM>=-40&&state.altitudeM>28){
    state.message="Above the imaginary runway threshold. Practise a new approach setup if needed.";

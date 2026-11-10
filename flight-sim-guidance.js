@@ -4,10 +4,14 @@
 (function(root){"use strict";
 const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
 const Circuit=root?.AGSACircuitGuide||(typeof module!=="undefined"?require("./flight-sim-circuit-guide.js"):null);
+const Flight=root?.AGSAImmersiveFlight||(typeof module!=="undefined"?require("./flight-sim-model.js"):null);
 if(!E)throw Error("Fictional aircraft profiles unavailable");
 const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
 const round=x=>Math.round(Number.isFinite(x)?x:0);
-const lowEnergyKt=state=>E.selectProfile(state.profileId||"trainer").stallKt+4;
+// Use the active fictional jet profile rather than the default trainer
+// threshold when coaching a jet. These numbers are invented simulation data.
+const lowEnergyKt=state=>(Flight?.flightProfile?.(state)?.stallKt??
+ E.selectProfile(state.profileId||"trainer").stallKt)+4;
 const R44_STAGES=Object.freeze(["takeoff","hover","turn","return"]);
 const headingDelta=(heading,start)=>((heading-start+540)%360+360)%360-180;
 function newR44Lesson(){
@@ -130,7 +134,15 @@ function guidance(state,input,progress){
    text:"Notice the helipad moving in the visual scene. Explore the effect of collective on height and cyclic on direction in this simplified exercise."};
  }
  const circuit=Circuit?.status(progress?.circuit,state);
- if(circuit&&["climb","flight"].includes(phase)&&state.physicsId==="classic"){
+ // Prioritize a low-energy warning over route directions, even on a
+ // full-circuit lesson. Previously a normal CLASSIC circuit cue masked
+ // a low-speed aircraft throughout climb and free flight.
+ if(!heli&&["climb","flight"].includes(phase)&&state.speedKt<lowEnergyKt(state))
+  return {...base,tag:"FICTIONAL LOW-ENERGY CUE",level:"caution",
+   text:"Simulated airspeed is low. Compare power, attitude and speed before continuing the illustrated circuit."};
+ // The optional experimental flight model should not lose its waypoint
+ // guidance: this route is informational and never overrides aerodynamics.
+ if(circuit&&["climb","flight"].includes(phase)){
   return {...base,tag:"RETURN CIRCUIT · "+circuit.label,
    text:circuit.instructions};
  }
@@ -159,18 +171,26 @@ function guidance(state,input,progress){
    return {...base,tag:"FREE FLIGHT · WIND AND TRACK",
     text:"Compare the fictional nose heading with the path over the moving ground. The two indications need not agree when wind shifts the aircraft sideways."};
   return {...base,tag:"FREE FLIGHT · BANK AND LEVEL",
-   text:"Try gentle bank changes and observe heading, pitch and the moving countryside. Use the separate final-approach setup to practise a landing scene."};
+   text:"Bank and turn back toward the runway using the live navigation map; the separate short-final setup is optional."};
  }
  if(phase==="approach"){
   if(state.physicsId==="aero"&&state.verticalMs<-3.4)
    return {...base,tag:"EXPERIMENTAL APPROACH · RAPID SINK",level:"caution",
     text:"The invented model shows a high descent rate. Compare illustrated wing energy and drag; reset the exercise rather than applying it to real-world flight."};
-  if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
-   text:"The imaginary aircraft is offset from the drawn runway. Compare the outside view with the lateral-offset marker and heading."};
+  // Prioritize excessive descent and low-speed cues over lateral
+  // alignment, for *both* a direct short final and a flown return.
   if(state.verticalMs<-3.4)return {...base,tag:"SHORT FINAL · RAPID DESCENT",level:"caution",
-   text:"The model shows a relatively high descent rate. Observe the height and vertical-rate trends; reset the fictional approach rather than forcing a touchdown."};
+   text:"The model shows a relatively high descent rate. Compare height and vertical-rate trends before the simulated touchdown."};
   if(state.speedKt<lowEnergyKt(state))return {...base,tag:"SHORT FINAL · LOW ENERGY",level:"caution",
-   text:"The model's simulated airspeed is low. Use the practice reset if you want to compare a different approach state. These are not aircraft-specific limits."};
+   text:"The model's simulated airspeed is low. Compare speed, power and attitude; these are fictional limits."};
+  // A flown return uses the moving map's compact centreline/glidepath/
+  // ground-track correction, avoiding generic reset prompts or new buttons.
+  if(state.scenario==="runway"&&circuit?.stage==="final"&&circuit.finalCue)
+   return {...base,tag:"RETURN CIRCUIT · FINAL",
+    level:Math.abs(state.xM)>24?"caution":"normal",
+    text:circuit.instructions};
+  if(Math.abs(state.xM)>24)return {...base,tag:"SHORT FINAL · ALIGNMENT",level:"caution",
+   text:"The imaginary aircraft is offset from the runway. Compare the outside view with the lateral marker and heading."};
   if(state.windId&&state.windId!=="calm")
    return {...base,tag:"SHORT FINAL · WIND AND GROUND TRACK",
     text:"Compare simulated airspeed with ground speed, heading with actual track, and runway offset. This wind exercise is not an aircraft-specific crosswind landing technique."};
