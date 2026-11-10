@@ -63,6 +63,7 @@ function status(circuit,state){
  const offset=signedDelta(state.headingDeg,bearing);
  const turn=offset>8?"RIGHT":offset< -8?"LEFT":"AHEAD";
  const distanceText=distance>=1000?(distance/1000).toFixed(1)+" km":Math.round(distance)+" m";
+ const bearingText=String(Math.round(bearing)%360).padStart(3,"0")+"°";
  const course=String(step.course).padStart(3,"0")+"°";
  // Illustrative 3-degree descent towards a point 200m from the runway's
  // southern threshold, using the same coordinates as the rendered airfield.
@@ -92,7 +93,11 @@ function status(circuit,state){
   waypointBearingDeg:bearing,waypointDistanceM:distance,
   courseDeg:step.course,courseText:course,turn,finalCue,
   short:step.label+" · "+course+" · "+distanceText,
-  instructions:step.hint+" Heading reference "+course+".",
+  // The printed leg course alone can steer a learner away from the
+  // next waypoint after a wide banked turn. Use the current bearing and
+  // distance to the *fixed* leg waypoint instead; no controls are moved.
+  instructions:finalCue?"FINAL · "+finalCue:
+   (turn==="AHEAD"?"AHEAD":"TURN "+turn)+" "+bearingText+" · "+distanceText+" to "+step.label,
   active:!["landed","stopped"].includes(circuit.stage)
  });
 }
