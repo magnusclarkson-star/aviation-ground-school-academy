@@ -782,7 +782,7 @@ function buildCleanR44Rotors(){
  add("tailRotor",tail,1,m=>{
   const [cx,cy,cz]=tail;
   for(const sign of [-1,1]){
-   const y0=cy+sign*.10,y1=cy+sign*.70;
+   const y0=cy+sign*.10,y1=cy+sign*.735;
    const a=[cx-.013,y0,cz-.065],b=[cx-.013,y1,cz-.052],
     c=[cx-.013,y1,cz+.065],d=[cx-.013,y0,cz+.075];
    m.quad(a,b,c,d,bright);
