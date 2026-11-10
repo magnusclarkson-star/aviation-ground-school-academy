@@ -53,6 +53,23 @@ assert.equal(A.snapshot(sys).motionValue,"ANIMATED","idle propeller illustration
 assert.throws(()=>A.create("jet"),/Unknown/);
 assert.throws(()=>A.step(A.create("airplane"),M.makeState("helicopter"),control,.1),/mode must match/);
 
+// A frozen lesson must let students explore control-surface geometry
+// without unpausing or moving the aircraft. The UI invokes this zero-step
+// preview on flap detents, pedals and touch yoke input.
+const frozenState=M.makeState("airplane");
+const frozenInput=M.makeInput("airplane");
+const frozen=A.create("airplane");
+A.step(frozen,frozenState,frozenInput,0);
+const frozenTime=frozen.time,initialHeading=frozenState.headingDeg;
+frozenInput.flaps=30;frozenInput.rudder=1;frozenInput.bank=.8;frozenInput.pitch=-.6;
+A.step(frozen,frozenState,frozenInput,0);
+assert.equal(A.snapshot(frozen).flapValue,"30°");
+assert.ok(Math.abs(frozen.parts.leftFlap+Math.PI/6)<1e-12);
+assert.ok(frozen.parts.rudder>.4&&frozen.parts.leftAileron<0&&frozen.parts.rightAileron>0);
+assert.ok(frozen.parts.elevatorLeft>0);
+assert.equal(frozen.time,frozenTime,"preview cannot advance the clock");
+assert.equal(frozen.rotation,0,"preview cannot rotate a stationary propeller");
+assert.equal(frozenState.headingDeg,initialHeading,"preview cannot steer the aircraft");
 const rotorState=M.makeState("helicopter"),rotorInput=M.makeInput("helicopter");
 const rotor=A.create("helicopter");A.step(rotor,rotorState,rotorInput,0);
 assert.equal(A.snapshot(rotor).engineLabel,"ROTOR SPEED · SIM");
