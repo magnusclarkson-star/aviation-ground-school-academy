@@ -218,10 +218,21 @@ function guidance(state,input,progress){
   return {...base,tag:"SHORT FINAL · THREE-POINT SCAN",
    text:"Scan runway alignment, artificial horizon and vertical-rate indication. Observe their relationship as the imaginary threshold approaches."};
  }
- if(phase==="rollout")return {...base,tag:"AFTER TOUCHDOWN · ROLLOUT",
-  text:"GS "+round(state.speedKt)+" kt · BRAKE "+
-   round((state.rolloutBrakePressure||0)*100)+"% · ROLL "+
-   round(state.rolloutDistanceM)+" m"};
+ if(phase==="rollout"){
+  // Rollout is NOT finished at touchdown. Show runway-side position while
+  // nearing the edge instead of making the learner infer it from the map.
+  // These are fictional strip coordinates, not aircraft procedures.
+  const crossM=Number.isFinite(state.xM)?state.xM:0;
+  const nearEdge=Math.abs(crossM)>=20;
+  const offCenter=Math.abs(crossM)>=12;
+  const offset=offCenter?" · RWY "+(crossM>0?"E":"W")+
+   round(Math.abs(crossM))+" m":"";
+  const motion="GS "+round(state.speedKt)+" kt · BRAKE "+
+   round((state.rolloutBrakePressure||0)*100)+"%";
+  return {...base,tag:nearEdge?"RUNWAY EDGE · ROLLOUT":"AFTER TOUCHDOWN · ROLLOUT",
+   level:nearEdge?"caution":"normal",
+   text:motion+offset+(offCenter?"":" · ROLL "+round(state.rolloutDistanceM)+" m")};
+ }
  return base;
 }
 function summary(progress,state){
