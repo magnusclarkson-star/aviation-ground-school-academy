@@ -43,6 +43,8 @@
    groundSpeedKt:groundSpeed,scale,isHelipad:heli,
    padDistanceM,padBearingDeg,padTurn,
    runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
+   projectedTouchdownX:leg?.projectedTouchdownX??null,
+   landingProjectionCue:leg?.landingProjectionCue??null,
    waypointRotation:waypointRelativeDeg===null?null:
     "rotate("+waypointRelativeDeg.toFixed(2)+" 110 82)",
    circuitText:leg?(leg.finalCue?leg.label+" "+(leg.waypointDistanceM>=1000?(leg.waypointDistanceM/1000).toFixed(1)+" km":Math.round(leg.waypointDistanceM)+" m")+" · "+leg.finalCue:
@@ -89,6 +91,14 @@
   const waypoint=node(doc,"circle",{cx:0,cy:0,r:75,fill:"#f2d99a",
    stroke:"#113b49","stroke-width":18,"data-nav-circuit-waypoint":"true"},airport);
   waypoint.setAttribute("visibility","hidden");
+  // A small movable diamond shows where the current *ground track* would
+  // intersect the illustrated runway at z=150 m. Amber means projected
+  // crossing outside the strip; teal means projected crossing on it.
+  const predicted=node(doc,"path",{
+   d:"M0 -48 L48 0 L0 48 L-48 0 Z",
+   "data-nav-landing-prediction":"true",visibility:"hidden",
+   fill:"#f1b77a",stroke:"#294b4d","stroke-width":12},base);
+  predicted.setAttribute("transform","translate(0 150)");
   node(doc,"rect",{x:58,y:20,width:20,height:1760,fill:"#596b6b",stroke:"#65787a","stroke-width":3},airport);
   node(doc,"path",{d:"M0 140 H68 M0 1610 H68",stroke:"#86937d","stroke-width":26,fill:"none"},airport);
   node(doc,"line",{x1:0,y1:35,x2:0,y2:1760,stroke:"#edf5e4","stroke-width":4,"stroke-dasharray":"75 65"},airport);
@@ -158,6 +168,16 @@
    }
    const guideLine=el.querySelector("[data-nav-circuit-route]");
    guideLine?.setAttribute("visibility",c.leg?.active?"visible":"hidden");
+   const predicted=el.querySelector("[data-nav-landing-prediction]");
+   if(predicted){
+    const valid=Number.isFinite(c.projectedTouchdownX);
+    predicted.setAttribute("visibility",valid?"visible":"hidden");
+    if(valid){
+     predicted.setAttribute("transform","translate("+c.projectedTouchdownX.toFixed(2)+" 150)");
+     predicted.setAttribute("fill",
+      Math.abs(c.projectedTouchdownX)<=24?"#92e8c5":"#f1b77a");
+    }
+   }
    const wp=el.querySelector("[data-nav-circuit-waypoint]");
    if(wp){
     // The status carries the current leg, whose target is a fixed local

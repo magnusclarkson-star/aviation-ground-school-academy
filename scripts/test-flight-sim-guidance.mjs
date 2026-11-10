@@ -194,6 +194,34 @@ assert.ok(Circuit.cornerLeadMetres({...cornerState,groundSpeedKt:100})>
  Circuit.cornerLeadMetres({...cornerState,groundSpeedKt:40,speedKt:40}));
 assert.ok(Circuit.cornerLeadMetres({speedKt:1000})<=380);
 
+// A final-approach touchdown projection should reflect the aircraft's
+// actual ground track: correction changes it continuously without teleport.
+const forecastState=M.makeState("airplane","runway");
+Object.assign(forecastState,{phase:"approach",onGround:false,xM:150,
+ zM:-950,altitudeM:80,speedKt:88,groundSpeedKt:88,
+ headingDeg:0,trackDeg:0,verticalMs:-1.3});
+const forecastSession=G.start(forecastState);
+forecastSession.circuit.stage="final";
+const straight=Circuit.status(forecastSession.circuit,forecastState);
+assert.equal(straight.projectedTouchdownX,150);
+assert.equal(straight.landingProjectionCue,"TD E150m");
+assert.match(straight.finalCue,/TD E150m/);
+forecastState.trackDeg=352;
+const correcting=Circuit.status(forecastSession.circuit,forecastState);
+assert.ok(Math.abs(correcting.projectedTouchdownX)<30,
+ "a moderate ground-track correction aims back at the actual runway");
+assert.ok(correcting.landingProjectionCue==="TD CTR"||
+ correcting.projectedTouchdownX<straight.projectedTouchdownX);
+forecastState.trackDeg=180;
+assert.equal(Circuit.status(forecastSession.circuit,forecastState).projectedTouchdownX,null,
+ "track prediction disappears when pointing away from the runway");
+forecastState.trackDeg=0;forecastState.zM=250;
+assert.equal(Circuit.status(forecastSession.circuit,forecastState).projectedTouchdownX,null,
+ "never extrapolate beyond the ground aiming zone");
+const forecastComplete={...forecastState,phase:"complete",onGround:true};
+Circuit.update(forecastSession.circuit,forecastComplete);
+assert.equal(Circuit.status(forecastSession.circuit,forecastComplete).projectedTouchdownX,null);
+
 // An illustrative jet has a different fictional energy envelope from the
 // original basic trainer; warning status must follow the selected airframe.
 const fighter=M.makeState("airplane","runway",{airframeId:"f22"});

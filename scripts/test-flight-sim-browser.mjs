@@ -81,6 +81,33 @@ try{
  assert.equal(padMap.heliFrame.pointer,"rotate(-90.00 110 82)");
  assert.deepEqual(padMap.fixedWing,{mode:"runway",pad:"hidden",runway:"visible"},
   "switching from R44 back to Cessna restores runway map, without stale pads");
+ const touchdownMap=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,map=document.createElement("section");
+  map.appendChild(N.build(document));
+  const approach={mode:"airplane",scenario:"runway",phase:"approach",
+   onGround:false,xM:150,zM:-950,headingDeg:0,trackDeg:0,
+   altitudeM:80,speedKt:88,groundSpeedKt:88,verticalMs:-1};
+  N.paint(map,approach,{stage:"final"});
+  const prediction=map.querySelector("[data-nav-landing-prediction]");
+  const off={visible:prediction.getAttribute("visibility"),
+   transform:prediction.getAttribute("transform"),
+   fill:prediction.getAttribute("fill")};
+  N.paint(map,{...approach,trackDeg:352},{stage:"final"});
+  const corrected={transform:prediction.getAttribute("transform"),
+   fill:prediction.getAttribute("fill")};
+  N.paint(map,{...approach,mode:"helicopter",scenario:"helipad"},null);
+  const heliHidden=prediction.getAttribute("visibility");
+  N.paint(map,{...approach,phase:"complete",onGround:true},{stage:"landed"});
+  const stopped=prediction.getAttribute("visibility");
+  return {off,corrected,heliHidden,stopped};
+ });
+ assert.equal(touchdownMap.off.visible,"visible");
+ assert.equal(touchdownMap.off.transform,"translate(150.00 150)");
+ assert.equal(touchdownMap.off.fill,"#f1b77a");
+ assert.notEqual(touchdownMap.corrected.transform,touchdownMap.off.transform,
+  "landing prediction moves with actual changed ground track");
+ assert.equal(touchdownMap.heliHidden,"hidden");
+ assert.equal(touchdownMap.stopped,"hidden");
  const runwayDrawn=await desktop.evaluate(()=>{
   const canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;

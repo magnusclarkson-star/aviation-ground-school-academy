@@ -89,7 +89,7 @@ function status(circuit,state){
  // Illustrative 3-degree descent towards a point 200m from the runway's
  // southern threshold, using the same coordinates as the rendered airfield.
  // This is educational visual feedback, not real aircraft performance data.
- let finalCue=null;
+ let finalCue=null,projectedTouchdownX=null,landingProjectionCue=null;
  // The circuit is more than compass turns: show one compact height target
  // while abeam the airfield and a lower reference on base. These are
  // invented simulator heights, NOT Cessna performance figures.
@@ -114,15 +114,32 @@ function status(circuit,state){
   const targetTrack=heading(Math.max(-22,Math.min(22,Math.atan2(-x,runwayAheadM)*RAD)));
   const actualTrack=Number.isFinite(state.trackDeg)?state.trackDeg:state.headingDeg;
   const trackError=signedDelta(actualTrack,targetTrack);
+  // Extend the actual ground track to an illustrated 150 m runway aiming
+  // zone. It is a visual "if the present track continues" prediction,
+  // not a landing guarantee, automated steering or an aviation procedure.
+  // Do not project when already across the aiming zone, travelling
+  // substantially away from the strip, or outside the local practice area.
+  const trackNorth=signedDelta(0,actualTrack);
+  if(z< -80&&z> -3500&&Math.abs(trackNorth)<=55){
+   projectedTouchdownX=x+(150-z)*Math.tan(trackNorth/RAD);
+   if(Number.isFinite(projectedTouchdownX)){
+    landingProjectionCue=Math.abs(projectedTouchdownX)<=24?"TD CTR":
+     "TD "+(projectedTouchdownX>0?"E":"W")+
+     Math.round(Math.abs(projectedTouchdownX))+"m";
+   }else projectedTouchdownX=null;
+  }
   const trackCue=Math.abs(trackError)<=3?"TRK OK":
    (trackError>0?"R":"L")+Math.round(Math.abs(trackError))+"°";
-  finalCue=lateral+" · "+vertical+" · "+trackCue;
+  finalCue=lateral+" · "+vertical+" · "+trackCue+
+   (landingProjectionCue&&Math.abs(projectedTouchdownX)>24?
+    " · "+landingProjectionCue:"");
  }
  return Object.freeze({
   stage:circuit.stage,label:step.label,hint:step.hint,
   waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
   courseDeg:step.course,courseText:course,turn,finalCue,
+  projectedTouchdownX,landingProjectionCue,
   referenceHeightM,heightCue,turnLeadM,turnNow,
   nextCourseDeg:next?.course??null,nextLabel:next?.label??null,
   short:step.label+" · "+course+" · "+distanceText,
