@@ -366,6 +366,20 @@ function buildRotorSweep(mode="r44"){
  }
  return scaleMesh(m.finish(),"r44");
 }
+// Thin anti-torque rotor motion ring. The two actual moving blades remain
+// opaque. This annulus helps fast rotation read on low-refresh mobile screens.
+function buildTailRotorSweep(mode="r44"){
+ if(Exterior.normalize(mode)!=="r44")return null;
+ const m=new Mesh(),inner=rgb(161,195,205),tips=rgb(232,205,153);
+ const count=24,x=-.81,cy=1.19,cz=-8.18,radius=.735;
+ const at=(r,a)=>[x,cy+r*Math.cos(a),cz+r*Math.sin(a)];
+ for(let i=0;i<count;i++){
+  const a=i*2*Math.PI/count,b=(i+1)*2*Math.PI/count;
+  m.quad(at(.20,a),at(.60,a),at(.60,b),at(.20,b),inner);
+  m.quad(at(.60,a),at(radius,a),at(radius,b),at(.60,b),tips);
+ }
+ return scaleMesh(m.finish(),"r44");
+}
 // An unobtrusive translucent propeller sweep prevents the trainer's two
 // rapidly spinning blades from vanishing between frames on mobile displays.
 // The actual animated two-blade propeller is still drawn over the sweep.
@@ -709,6 +723,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     body:upload(buildVehicle(id)),
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
     rotorSweep:id==="r44"?upload(buildRotorSweep(id)):null,
+    tailRotorSweep:id==="r44"?upload(buildTailRotorSweep(id)):null,
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
     shadow:inspectionOnly?null:upload(buildShadow(id))
    };
@@ -804,6 +819,18 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
+    const tailOpacity=Number.isFinite(animation?.tailBlurOpacity)?
+     limit(animation.tailBlurOpacity,0,.20):0;
+    if(model.tailRotorSweep&&tailOpacity>0){
+     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+     gl.uniform1f(uni.uOpacity,tailOpacity);
+     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+     gl.depthMask(false);
+     gl.bindVertexArray(model.tailRotorSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.tailRotorSweep.count);
+     gl.depthMask(true);gl.disable(gl.BLEND);
+     gl.uniform1f(uni.uOpacity,1);
+    }
     // Draw this sweep only when the propeller is turning fast enough; the
     // actual blades remain distinct at startup and low power.
     const propOpacity=Number.isFinite(animation?.propBlurOpacity)?
@@ -846,7 +873,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);

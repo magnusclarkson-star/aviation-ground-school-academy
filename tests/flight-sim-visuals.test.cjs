@@ -383,3 +383,23 @@ test("direct final-approach exercise begins with live final navigation",()=>{
  const heli=Flight.makeState("helicopter","helipad");
  assert.equal(Circuit.create(heli).stage,"inactive");
 });
+
+test("R44 tail rotor sweep remains small and develops visible rotation blur",()=>{
+ const sweep=Render.buildTailRotorSweep("r44");
+ assert.ok(sweep.vertices>0&&sweep.vertices<600,"lightweight blur mesh");
+ assert.ok(Array.from(sweep.positions).every(Number.isFinite));
+ assert.equal(Render.buildTailRotorSweep("c172"),null);
+ const xs=[],ys=[],zs=[];
+ for(let i=0;i<sweep.positions.length;i+=3){
+  xs.push(sweep.positions[i]);ys.push(sweep.positions[i+1]);zs.push(sweep.positions[i+2]);
+ }
+ assert.ok(Math.max(...xs)-Math.min(...xs)<.01,"tail disk stays in shaft plane");
+ assert.ok(Math.min(...ys)>0&&Math.max(...ys)<2.1);
+ assert.ok(Math.min(...zs)<-7&&Math.max(...zs)<-7);
+ const Systems=require("../flight-sim-aircraft-systems.js");
+ const state=Flight.makeState("helicopter");
+ const sys=Systems.create("helicopter"),input=Flight.makeInput("helicopter");
+ assert.equal(Systems.step(sys,state,input,0).parts.tailBlurOpacity,0);
+ for(let i=0;i<35;i++)Systems.step(sys,state,input,.05);
+ assert.ok(sys.parts.tailBlurOpacity>.05&&sys.parts.tailBlurOpacity<=.16);
+});
