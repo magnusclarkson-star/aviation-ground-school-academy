@@ -457,3 +457,24 @@ test("2D runway remains drawn when returning from the north heading south",()=>{
  assert.equal(Scenery.draw(canvas,state,{view:"cockpit"}),true);
  assert.equal(counts.behind,0,"runway behind aircraft must remain culled");
 });
+
+test("landing rollout keeps north-aligned heading through 360-degree wrap",()=>{
+ const state=Flight.makeState("airplane","approach",{airframeId:"c172"});
+ const input=Flight.makeInput("airplane");
+ state.onGround=true;state.phase="rollout";state.zM=550;state.altitudeM=0;
+ state.speedKt=51;state.headingDeg=358;
+ input.brake=true;
+ Flight.step(state,input,.05);
+ assert.equal(state.phase,"rollout");
+ const delta=((state.headingDeg-358+540)%360)-180;
+ assert.ok(Math.abs(delta)<1,
+  "358-degree touchdown heading must not jump to 40 degrees during rollout");
+ assert.ok(state.zM>550,"aircraft continues north along the runway");
+ assert.ok(Math.abs(state.xM)<1,"a correctly aligned rollout stays close to centreline");
+ const departure=Flight.makeState("airplane","runway",{airframeId:"c172"});
+ departure.headingDeg=15;
+ input.rudder=1;
+ Flight.step(departure,input,.05);
+ assert.ok(departure.headingDeg>=15&&departure.headingDeg<17,
+  "existing limited takeoff steering remains unchanged");
+});
