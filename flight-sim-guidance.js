@@ -4,10 +4,14 @@
 (function(root){"use strict";
 const E=root?.AGSAFlightEnvironment||(typeof module!=="undefined"?require("./flight-sim-environment.js"):null);
 const Circuit=root?.AGSACircuitGuide||(typeof module!=="undefined"?require("./flight-sim-circuit-guide.js"):null);
+const Flight=root?.AGSAImmersiveFlight||(typeof module!=="undefined"?require("./flight-sim-model.js"):null);
 if(!E)throw Error("Fictional aircraft profiles unavailable");
 const validPhase=new Set(["roll","climb","flight","approach","rollout","complete","halted","pad","lift","hover","landed"]);
 const round=x=>Math.round(Number.isFinite(x)?x:0);
-const lowEnergyKt=state=>E.selectProfile(state.profileId||"trainer").stallKt+4;
+// Use the active fictional jet profile rather than the default trainer
+// threshold when coaching a jet. These numbers are invented simulation data.
+const lowEnergyKt=state=>(Flight?.flightProfile?.(state)?.stallKt??
+ E.selectProfile(state.profileId||"trainer").stallKt)+4;
 const R44_STAGES=Object.freeze(["takeoff","hover","turn","return"]);
 const headingDelta=(heading,start)=>((heading-start+540)%360+360)%360-180;
 function newR44Lesson(){
