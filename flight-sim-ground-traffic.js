@@ -17,7 +17,7 @@ function pose(route,time=0,reducedMotion=false){
  const x=route.x+route.radiusX*ca,z=route.z+route.radiusZ*sa;
  const dx=-route.radiusX*sa,dz=route.radiusZ*ca;
  return Object.freeze({id:route.id,kind:route.kind,color:route.color,
-  x,z,headingRad:Math.atan2(dx,dz),timeSec});
+  x,z,headingRad:Math.atan2(dx,dz),timeSec:reducedMotion?0:timeSec});
 }
 function sample(time=0,reducedMotion=false){
  return routes.map(route=>pose(route,time,reducedMotion));
