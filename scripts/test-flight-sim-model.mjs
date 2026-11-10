@@ -616,5 +616,10 @@ const crosswindCircuit=verifyCompleteCircuitAt(.05,"crosswind");
 assert.ok(crosswindCircuit.rolloutM>50 &&
  Object.isFrozen(crosswindCircuit.landing),
  "crosswind circuit must end in a measured runway contact and ground roll");
+// Deterministic gusts must not force a reset or instant reposition, either.
+const gustyCircuit=verifyCompleteCircuitAt(.05,"gusts");
+assert.ok(gustyCircuit.rolloutM>50 &&
+ Object.isFrozen(gustyCircuit.landing),
+ "gusty circuit must include measured touchdown and controlled brake-stop");
 
 console.log("Immersive flight model passed: runway liftoff, turn, final-approach landing/rollout, off-runway impact, collective/helipad and perspective scenery.");
