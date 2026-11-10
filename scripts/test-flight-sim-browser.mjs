@@ -130,6 +130,26 @@ try{
  assert.equal(hoverFeedback.slipping.color,"#f0c680");
  assert.match(hoverFeedback.slipping.text,/DRIFT/);
  assert.equal(hoverFeedback.grounded,"hidden");
+ const observedSkid=await desktop.evaluate(()=>{
+  const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
+  const s=M.makeState("helicopter"),practice=G.start(s);
+  Object.assign(s,{phase:"hover",onGround:false,altitudeM:.01,
+   verticalMs:-1.15,groundSpeedKt:0,xM:1.5,zM:-.5});
+  const input=M.makeInput("helicopter");input.collective=.2;input.turbulence=0;
+  const events=M.step(s,input,.05).events;
+  G.observe(practice,s,events);
+  const lesson=G.r44LessonStatus(practice,s);
+  return {phase:s.phase,events,hint:lesson.hint,
+   grade:s.touchdownData?.grade,offset:s.touchdownData?.padOffsetM,
+   report:G.summary(practice,s).rotorTouchdown};
+ });
+ assert.equal(observedSkid.phase,"landed");
+ assert.ok(observedSkid.events.includes("touchdown"));
+ assert.equal(observedSkid.grade,"standard");
+ assert.match(observedSkid.hint,/SKIDS .* · DRIFT .* · PAD /);
+ assert.ok(observedSkid.offset>1&&observedSkid.offset<2);
+ assert.ok(observedSkid.report.sinkMs>0,
+  "browser lesson must show measured pre-contact skid sink rate");
  const ruralParallax=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery,canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;
