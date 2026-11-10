@@ -311,7 +311,14 @@ async function loadDetailedCandidate(){
   let meshes=0,materials=0;
   airframe.traverse(obj=>{if(obj.isMesh){meshes++;materials+=Array.isArray(obj.material)?
    obj.material.length:1;}});
-  detailedParts={airframe,found,rotations,meshes,materials,size:size.toArray()};
+  // Real cabin coordinates are derived from the detailed source nodes,
+  // never estimated as unrelated constants near the aircraft tail.
+  const pilot=found.get("pilotseat_left").getWorldPosition(new THREE.Vector3());
+  const rightPilot=found.get("pilotseat_right").getWorldPosition(new THREE.Vector3());
+  const panel=found.get("panel_1_gauges").getWorldPosition(new THREE.Vector3());
+  const back=found.get("backseat_left").getWorldPosition(new THREE.Vector3());
+  detailedParts={airframe,found,rotations,meshes,materials,size:size.toArray(),
+   cameraStations:{pilot,panel,back,rightPilot}};
   detailedLoaded=true;
   applyDetailedControls(getInputs());
   status("FlightGear C172P inspection model loaded. Seats and panel belong to source mesh.");
@@ -372,10 +379,26 @@ modeSelect?.addEventListener("change",async()=>{
  }
 });
 byId("resetCamera")?.addEventListener("click",()=>{
+ controls.minDistance=5.8;camera.fov=49;camera.updateProjectionMatrix();
  camera.position.set(10,5.1,9.7);controls.target.set(0,-.15,.1);controls.update();
 });
 byId("cabinCamera")?.addEventListener("click",()=>{
+ controls.minDistance=.3;camera.fov=49;camera.updateProjectionMatrix();
  camera.position.set(2.5,.75,4.2);controls.target.set(0,-.15,1.14);controls.update();
+});
+byId("pilotCamera")?.addEventListener("click",()=>{
+ if(!detailedParts||!detailedHolder.visible){
+  status("Pilot camera needs the detailed FlightGear C172 evaluation model.");
+  return;
+ }
+ const {pilot,panel}=detailedParts.cameraStations;
+ // OrbitControls accepts very short camera-target distances for an in-cabin
+ // view, unlike the exterior 5.8m minimum. Perspective tracks source nodes.
+ controls.minDistance=.15;
+ camera.position.copy(pilot).add(new THREE.Vector3(0,.56,-.12));
+ controls.target.copy(panel).add(new THREE.Vector3(0,.18,0));
+ camera.fov=58;camera.updateProjectionMatrix();controls.update();
+ status("C172 pilot-seat view. Panel and cockpit are the original source mesh.");
 });
 byId("topCamera")?.addEventListener("click",()=>{
  camera.position.set(0,12,.01);controls.target.set(0,-.15,.01);controls.update();
@@ -433,6 +456,11 @@ window.__AGSA_V3={
   names:[...detailedParts.found.keys()],
   meshes:detailedParts.meshes,materials:detailedParts.materials,
   size:detailedParts.size,
+  cockpit:{
+   pilot:detailedParts.cameraStations.pilot.toArray(),
+   panel:detailedParts.cameraStations.panel.toArray(),
+   rear:detailedParts.cameraStations.back.toArray()
+  },
   seating:EXPECTED_DETAILED_NAMES.filter(x=>x.includes("seat")),
   mode:detailedHolder.visible?"detailed":"other"
  }):null,
