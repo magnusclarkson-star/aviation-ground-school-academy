@@ -39,6 +39,22 @@ try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
+ // The actual browser must have loaded the shared wind module before both
+ // renderer scripts. This complements the Node geometry/flight-model tests.
+ const windVisual=await desktop.evaluate(()=>{
+  const wind=window.AGSAFlightWindsocks;
+  const three=window.AGSAFlight3D;
+  if(!wind||!three)return null;
+  const direction=wind.sample(4.5,0,0,true);
+  const fabric=three.buildWindsockFabric(wind.positions[0]);
+  return {count:wind.positions.length,tipXM:direction.tipXM,
+   vertices:fabric.vertices,finite:fabric.positions.every(Number.isFinite)};
+ });
+ assert.ok(windVisual,"shared windsock module loads in the browser");
+ assert.equal(windVisual.count,2);
+ assert.ok(Math.abs(windVisual.tipXM-7)<1e-8);
+ assert.equal(windVisual.vertices,96);
+ assert.equal(windVisual.finite,true);
  const mapPointer=await desktop.evaluate(()=>{
   const N=window.AGSAFlightNavigation,holder=document.createElement("div");
   holder.appendChild(N.build(document));
