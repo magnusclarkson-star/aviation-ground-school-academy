@@ -164,6 +164,21 @@ try{
   return count;
  });
  assert.ok(runwayDrawn>4,"runway stays visible in 2D southbound return view");
+ const rolloutEdgeCoach=await desktop.evaluate(()=>{
+  const G=window.AGSAFlightGuidance,M=window.AGSAImmersiveFlight;
+  const s={...M.makeState("airplane","approach"),phase:"rollout",
+   onGround:true,xM:23,zM:600,altitudeM:0,speedKt:36,
+   rolloutBrakePressure:.8,rolloutDistanceM:240};
+  const edge=G.guidance(s,M.makeInput());
+  s.xM=0;
+  const centre=G.guidance(s,M.makeInput());
+  return {edge,centre};
+ });
+ assert.equal(rolloutEdgeCoach.edge.level,"caution");
+ assert.equal(rolloutEdgeCoach.edge.tag,"RUNWAY EDGE · ROLLOUT");
+ assert.match(rolloutEdgeCoach.edge.text,/RWY E23 m/);
+ assert.equal(rolloutEdgeCoach.centre.level,"normal");
+ assert.match(rolloutEdgeCoach.centre.text,/ROLL 240 m/);
  const rolloutResult=await desktop.evaluate(()=>{
   const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
   return ["classic","aero"].map(physicsId=>{
