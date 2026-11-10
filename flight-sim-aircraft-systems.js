@@ -71,6 +71,11 @@ function step(system,state,input,seconds){
   // Rudder pedals represent tail-rotor collective pitch, not RPM.
   r.rotorPitch=(collective-.48)*.13;
   r.tailPitch=rudder*.17;
+  // A lightweight moving swashplate visual makes cyclic commands apparent
+  // in the helicopter's exterior view even while flight is paused.
+  // These limited angles do not alter rotor force or flight physics.
+  r.swashBank=bank*.11;
+  r.swashPitch=-pitch*.11;
  }else{
   r.propeller=system.rotation;
   // The C172's actual stationary tyres are already part of the shared mesh.
