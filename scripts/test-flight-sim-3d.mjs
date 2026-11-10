@@ -72,6 +72,18 @@ const hasPoint=(mesh,x,y,z)=>{
 assert.equal(Countryside.fields.length,20);
 assert.equal(Countryside.farmTracks.length,20);
 assert.equal(Countryside.towers.length,3);
+assert.equal(Countryside.hedgerows.length,8);
+const hedge=Countryside.hedgerows[0];
+const hedgeY=Countryside.terrainHeight(hedge.x,hedge.z)+.14;
+for(const world of [runway,pad]){
+ assert.ok(hasPoint(world,hedge.x,hedgeY,hedge.z),
+  "fixed rural hedges appear at the same real local position in both 3D worlds");
+ assert.ok(hasPoint(world,hedge.x,hedgeY+hedge.h,hedge.z),
+  "the hedge is genuinely raised 3D geometry, not an aerial ground texture");
+}
+assert.ok(Countryside.hedgerows.every(h=>
+  Math.abs(h.x)>350&&h.w>50&&h.h>=4),
+ "hedgerows must be outside the touchdown runway and pad and tall enough to see");
 const landmark=Countryside.towers[0],landBase=Countryside.terrainHeight(landmark.x,landmark.z);
 assert.ok(hasPoint(runway,landmark.x-landmark.radius*.7-.25,
  landBase,landmark.z-landmark.radius*.7-.25),
