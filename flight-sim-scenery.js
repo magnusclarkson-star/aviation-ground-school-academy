@@ -120,7 +120,9 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   for(const light of config.approachLights){
    const p=project(state,light.x,.18,light.z,w,h);
    if(!p||p.depth>2100||p.x<0||p.x>w||p.y<0||p.y>h)continue;
-   const r=Math.max(1,Math.min(4,170/p.depth+1));
+   // A slightly larger daylit lens stays distinguishable on phone
+   // screens even from the far side of the base-to-final turn.
+   const r=Math.max(2,Math.min(5,260/p.depth+1.5));
    lamp(p.x,p.y,r,"#ffe8b6");
   }
   for(const light of config.rampLights){
