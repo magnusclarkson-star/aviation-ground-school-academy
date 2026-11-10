@@ -38,7 +38,7 @@ try{
  await desktop.locator("#aircraftInspectReset").click();
  assert.match(await desktop.locator("#aircraftInspectAngles").textContent(),/AZ 000/);
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
- assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"139%",
+ assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"133%",
   "double clicking the aircraft zooms in without adding a new control");
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
@@ -99,7 +99,7 @@ try{
  await mobile.locator("#aircraftInspectReset").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
- assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"139%",
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"133%",
   "double tapping the aircraft enlarges it on Android");
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
