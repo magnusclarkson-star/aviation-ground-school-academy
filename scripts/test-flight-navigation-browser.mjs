@@ -53,6 +53,26 @@ try{
  assert.equal(rejoinedFinal.leg,"final");
  assert.match(rejoinedFinal.readout,/FINAL/);
  assert.match(rejoinedFinal.readout,/E1[34][0-9]+m/);
+ const liveCoach=await desktop.evaluate(()=>{
+  const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance,
+   input=M.makeInput("airplane");
+  const position={xM:270,zM:1950,headingDeg:92,trackDeg:92,
+   altitudeM:120,onGround:false,phase:"flight",speedKt:83};
+  const observations={};
+  for(const physicsId of ["classic","aero"]){
+   const state=M.makeState("airplane","runway",{physicsId});
+   const progress=G.start(state);
+   Object.assign(state,position);
+   progress.circuit.stage="crosswind";
+   observations[physicsId]=G.guidance(state,input,progress);
+  }
+  return observations;
+ });
+ for(const physicsId of ["classic","aero"]){
+  assert.equal(liveCoach[physicsId].tag,"RETURN CIRCUIT · CROSSWIND");
+  assert.match(liveCoach[physicsId].text,/TURN LEFT 0[56][0-9]°/);
+  assert.match(liveCoach[physicsId].text,/to CROSSWIND/);
+ }
 
  const finalTurn=await desktop.evaluate(()=>{
   const mock={mode:"airplane",scenario:"approach",phase:"approach",
