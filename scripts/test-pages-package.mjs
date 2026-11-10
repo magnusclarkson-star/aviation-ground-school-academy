@@ -25,6 +25,13 @@ for(const [asset,minBytes] of [
  const details=await stat(path.join(output,asset));
  assert.ok(details.isFile()&&details.size>minBytes,"Imported aircraft missing from public bundle: "+asset);
 }
+for(const [file,minBytes] of [
+ ["flight-sim-v3-preview.html",1200],
+ ["flight-sim-v3.bundle.js",100000]
+]){
+ const fileInfo=await stat(path.join(output,file));
+ assert.ok(fileInfo.isFile()&&fileInfo.size>minBytes,"V3 preview must be published with an actual Three.js bundle: "+file);
+}
 for(const forbidden of ["services/training-api/src/http.mjs","services/training-api/portal/index.html","services/training-api/.env.example",".github/workflows/training-api.yml","docs/STUDENT-RECORDS-ARCHITECTURE.md"]){
  let found=false;
  try{await stat(path.join(output,forbidden));found=true;}catch(e){if(e.code!=="ENOENT")throw e;}

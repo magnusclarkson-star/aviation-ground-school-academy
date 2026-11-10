@@ -21,6 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build standalone V3 preview with pinned Three.js
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12
+          node scripts/build-flight-sim-v3.mjs
       - name: Build the allowlisted public website (never publish private backend files)
         run: node scripts/build-pages.mjs
       - name: Verify private sources are absent from deployment

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10202e">
+<meta name="description" content="Independent Aviation Ground School Academy V3 Cessna 172 scene-graph aircraft preview, before mobile acceptance.">
+<title>Cessna V3 Aircraft Development Preview — Aviation Ground School Academy</title>
+<style>
+:root{font:15px/1.45 system-ui,Arial,sans-serif;color:#e7f2f7;background:#101c27;
+ color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;max-width:1200px;margin-inline:auto;padding:0 14px 24px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
+header strong{font-size:17px;letter-spacing:.03em}
+header a{color:#b9e4ff;text-decoration:underline;text-underline-offset:3px}
+h1{font-size:clamp(19px,3vw,26px);line-height:1.2;margin:6px 0 8px}
+p{margin:6px 0 11px}
+.notice{font-size:13px;color:#cee1ec;max-width:900px}
+.viewer{position:relative;border-radius:12px;overflow:hidden;background:#9ebac5;border:1px solid #46647a}
+canvas{display:block;width:100%;height:clamp(275px,53vh,570px);touch-action:none;user-select:none;outline:0}
+.overlay{position:absolute;top:9px;left:9px;pointer-events:none;
+ background:rgba(11,24,38,.82);padding:5px 9px;border-radius:6px;font-size:12px}
+#fpsCounter{position:absolute;bottom:9px;right:9px;background:rgba(11,24,38,.82);
+ padding:4px 8px;border-radius:6px;font-size:11px}
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:9px 0}
+button,select{background:#223e52;border:1px solid #638aa1;border-radius:7px;
+ padding:9px 11px;color:white;font:inherit;min-height:41px;touch-action:manipulation}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #addef7;outline-offset:2px}
+select{max-width:100%;min-width:225px}
+.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.control{display:flex;flex-direction:column;gap:5px;background:#1c303f;border:1px solid #3c5a6b;
+ padding:9px 11px;border-radius:9px;min-width:0}
+.control span{display:flex;justify-content:space-between;align-items:center;gap:7px;font-size:13px}
+.control output{font-variant-numeric:tabular-nums;color:#aee3ff}
+.control input{width:100%;min-width:0;min-height:26px;accent-color:#7ad1ef}
+#previewStatus{min-height:20px;color:#baddf0;font-size:13px}
+footer{margin-top:13px;border-top:1px solid #365063;padding-top:8px;font-size:12px;color:#b9cbd8}
+@media(max-width:650px){
+ .controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+ canvas{height:clamp(290px,45vh,430px)}
+ .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .toolbar button,.toolbar select{width:100%;min-width:0}
+}
+</style>
+</head>
+<body>
+<header>
+ <strong>AVIATION GROUND SCHOOL ACADEMY</strong>
+ <a href="flight-sim.html">Return to existing flight simulator</a>
+</header>
+<main>
+<h1>Cessna 172 — independent V3 aircraft preview</h1>
+<p class="notice">This is a separate 3D model and controls demonstration, <strong>not a completed flight simulator</strong>. The current V2 academy and its flight lessons remain unchanged. Drag to orbit; pinch or scroll to zoom. Control surfaces below are physically attached to one 3D aircraft scene graph.</p>
+<section class="viewer" aria-label="Interactive Three-dimensional Cessna aircraft inspection">
+ <canvas id="preview3d" aria-label="3D Cessna 172 aircraft: touch to rotate and pinch to zoom"></canvas>
+ <div class="overlay">V3 prototype · C172 model alignment</div>
+ <div id="fpsCounter">Measuring render performance…</div>
+</section>
+<nav class="toolbar" aria-label="3D aircraft views">
+ <button id="resetCamera" type="button">Exterior view</button>
+ <button id="cabinCamera" type="button">Cabin close-up</button>
+ <button id="topCamera" type="button">Overhead view</button>
+ <select id="modelVersion" aria-label="Compare the experimental V3 model with the licensed imported Cessna">
+  <option value="v3">V3 named-airframe prototype</option>
+  <option value="source">Original licensed C172 GLB reference</option>
+ </select>
+ <button id="resetSurfaces" type="button">Reset surfaces</button>
+</nav>
+<section class="controls" aria-label="Interactive aircraft controls">
+ <label class="control"><span>Flaps <output id="flapsValue">0°</output></span>
+  <input id="flapControl" type="range" min="0" max="30" value="0" step="5"></label>
+ <label class="control"><span>Ailerons <output id="bankValue">0%</output></span>
+  <input id="aileronControl" type="range" min="-1" max="1" value="0" step=".05"></label>
+ <label class="control"><span>Elevator <output id="pitchValue">0%</output></span>
+  <input id="elevatorControl" type="range" min="-1" max="1" value="0" step=".05"></label>
+ <label class="control"><span>Rudder <output id="rudderValue">0%</output></span>
+  <input id="rudderControl" type="range" min="-1" max="1" value="0" step=".05"></label>
+ <label class="control"><span>Propeller power <output id="powerValue">60%</output></span>
+  <input id="powerControl" type="range" min="0" max="1" value=".6" step=".05"></label>
+</section>
+<p role="status" id="previewStatus">Preparing the Three.js scene…</p>
+</main>
+<footer>Development milestone only. Aircraft geometry and performance have not yet been independently verified on a physical Android device. The V2 lesson and cockpit system continues unchanged.</footer>
+<script src="flight-sim-v3.bundle.js?v=20261110-v3-prototype1" defer></script>
+</body>
+</html>
