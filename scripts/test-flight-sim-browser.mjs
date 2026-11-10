@@ -55,6 +55,32 @@ try{
   return count;
  });
  assert.ok(runwayDrawn>4,"runway stays visible in 2D southbound return view");
+ const approachRefs=await desktop.evaluate(()=>{
+  const Airport=window.AGSAFlightAirportDetail,S=window.AGSAFlightScenery;
+  const canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d");
+  const fill=ctx.fill;
+  let drawn=0;
+  ctx.fill=function(...args){
+   if(this.fillStyle==="#ffe8b6")drawn++;
+   return fill.apply(this,args);
+  };
+  const state={mode:"airplane",xM:0,zM:-1800,altitudeM:140,
+   headingDeg:0,pitchDeg:0,rollDeg:0,time:0,windXMps:0,windZMps:0};
+  S.draw(canvas,state,{view:"cockpit",lighting:"day"});
+  const light=Airport.config.approachLights.find(p=>p.z===-600&&p.x===0);
+  const aligned=S.project(state,light.x,.18,light.z,960,540);
+  state.xM=140;
+  const offset=S.project(state,light.x,.18,light.z,960,540);
+  return {count:drawn,expected:Airport.config.approachLights.length,
+   alignedX:aligned?.x,offsetX:offset?.x};
+ });
+ assert.equal(approachRefs.expected,18);
+ assert.equal(approachRefs.count,approachRefs.expected,
+  "approach light string should be visible on a returning mobile 2D final");
+ assert.ok(approachRefs.offsetX<approachRefs.alignedX,
+  "approach light positions move with the world, not a static cockpit overlay");
  const treeScene=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery;
   const list=xM=>{

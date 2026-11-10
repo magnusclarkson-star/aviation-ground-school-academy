@@ -135,8 +135,9 @@ function buildGroundGlow(mode){
  }else{
   for(let z=0;z<=1800;z+=75)
    for(const x of [-24,24])bulb(x,z,warm);
-  // A short synthetic approach-light string creates a perspective reference.
-  for(let z=-300;z<0;z+=50)bulb(0,z,warm);
+  // The same fixed approach string is used by the daytime scene and
+  // dusk lamp glow, so returning pilots see consistent landmarks.
+  for(const p of Airport?.config?.approachLights||[])bulb(p.x,p.z,warm);
  }
  return m.finish();
 }
@@ -266,10 +267,13 @@ function airportDetails(mesh){
   for(const x of [-1.2,1.2])for(const z of [-2,1.9])
    mesh.box(p.x+x-.33,.1,p.z+z-.4,.65,.75,.8,rgb(32,38,43));
  }
- // Light fixtures are dim visual points in a fictional scenery, not
- // real approach aids or aerodrome lighting specifications.
+ // The longer centreline and two transverse pairs show where the south
+ // threshold is from a returning base/final turn. Fixed-world geometry only:
+ // bright, low-cost rectangular fixture faces rather than cockpit overlays.
+ // These are fictional markers, not operational airport light guidance.
  for(const p of config.approachLights){
-  mesh.box(p.x-.52,.01,p.z-.52,1.04,.31,1.04,rgb(248,223,175));
+  mesh.box(p.x-.72,.02,p.z-.52,1.44,.42,1.04,rgb(245,219,158));
+  mesh.box(p.x-.65,.44,p.z-.35,1.30,.21,.70,rgb(252,244,210));
  }
  for(const p of config.rampLights){
   mesh.box(p.x-.28,0,p.z-.28,.56,12,.56,rgb(110,128,136));

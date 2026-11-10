@@ -575,3 +575,41 @@ test("approach phase can rejoin final without completing fixed circuit waypoints
  Circuit.update(route,state);
  assert.equal(route.stage,"landed");
 });
+
+test("approach fixtures provide matching fixed-world 2D and 3D runway lead-in",()=>{
+ const Airport=require("../flight-sim-airport-detail.js");
+ const lights=Airport.config.approachLights;
+ assert.equal(lights.length,18,"visible light chain has 10 centreline and four paired bars");
+ assert.equal(lights.filter(p=>p.x===0).length,10);
+ assert.deepEqual(lights.filter(p=>p.x===0).map(p=>p.z),
+  [-600,-540,-480,-420,-360,-300,-240,-180,-120,-60]);
+ for(const z of [-420,-240,-120,-60]){
+  const row=lights.filter(p=>p.z===z&&p.x!==0);
+  assert.equal(row.length,2,"paired approach lamps at "+z+" m");
+  assert.equal(row[0].x,-row[1].x,"paired lamps must mirror across runway");
+ }
+ assert.ok(lights.every(p=>p.z<0&&p.z>=-600&&Number.isFinite(p.x)));
+ const mesh=new Render.Mesh();
+ Render.airportDetails(mesh);
+ const vertices=mesh.finish().positions;
+ const has3D=(x,y,z)=>Array.from({length:vertices.length/3},(_,i)=>i*3).some(i=>
+  Math.abs(vertices[i]-x)<.04&&Math.abs(vertices[i+1]-y)<.04&&
+  Math.abs(vertices[i+2]-z)<.04);
+ for(const p of lights)
+  assert.ok(has3D(p.x-.72,.02,p.z-.52),
+   "3D daytime scene must render fixture at "+p.x+","+p.z);
+ const gradient={addColorStop(){}};
+ let visibleLamps=0;
+ const ctx=new Proxy({fillStyle:"",
+  createLinearGradient(){return gradient},
+  createRadialGradient(){return gradient},
+  fill(){if(this.fillStyle==="#ffe8b6")visibleLamps++}
+ },{get(target,key){return key in target?target[key]:()=>{}},
+   set(target,key,value){target[key]=value;return true}});
+ const canvas={width:960,height:540,getContext:()=>ctx};
+ const state={mode:"airplane",xM:0,zM:-1800,altitudeM:140,
+  headingDeg:0,pitchDeg:0,rollDeg:0,time:0,windXMps:0,windZMps:0};
+ assert.equal(Scenery.draw(canvas,state,{view:"cockpit",lighting:"day"}),true);
+ assert.equal(visibleLamps,lights.length,
+  "every approach lamp should project in the 2D view when returning on final");
+});

@@ -23,7 +23,7 @@ try{
  assert.ok(geometry.triangles>80&&geometry.triangles<4000);
  assert.equal(geometry.parked,2);
  assert.equal(geometry.taxi,3);
- assert.equal(geometry.lights,8);
+ assert.equal(geometry.lights,18);
  await phone.locator("#visualMode").selectOption("2d");
  assert.equal(await phone.locator("#outsideView").isVisible(),true);
  const changes=await phone.evaluate(()=>{
