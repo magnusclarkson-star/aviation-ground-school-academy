@@ -130,6 +130,17 @@ try{
  assert.equal(hoverFeedback.slipping.color,"#f0c680");
  assert.match(hoverFeedback.slipping.text,/DRIFT/);
  assert.equal(hoverFeedback.grounded,"hidden");
+ const driftVectorUI=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,container=document.createElement("div");
+  container.appendChild(N.build(document));
+  N.paint(container,{mode:"helicopter",scenario:"helipad",phase:"hover",
+   onGround:false,xM:2,zM:1,headingDeg:0,trackDeg:90,
+   groundSpeedKt:4,forwardMs:0,lateralMs:2,altitudeM:5,
+   verticalMs:0,yawRateDegS:0,hoverHoldSec:0});
+  return container.querySelector('[data-nav-field="speed"]').textContent;
+ });
+ assert.match(driftVectorUI,/GS 4 · DRIFT E/,
+  "phone navigator shows actual eastward rotorcraft drift, not only DRIFT");
  const observedSkid=await desktop.evaluate(()=>{
   const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
   const s=M.makeState("helicopter"),practice=G.start(s);
