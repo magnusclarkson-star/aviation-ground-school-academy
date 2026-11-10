@@ -33,6 +33,20 @@ The new emulated Android visual run produced actual imported-model screenshots i
 
 This is why the new screenshot gate is evidence for review, **not** an automatic declaration that the aircraft looks right. These defects should be addressed in the isolated V3 model/scene-graph build, not with additional shader colour masks on V2.
 
+## V3 C172 scene-graph milestone — not yet visually accepted
+
+The experimental `flight-sim-v3-preview.html` is a **separate Three.js scene-graph proof**. Its named C172 body, transparent cabin window geometry, four seats, panel, controls, wheel system and one propeller all live under one aircraft root; moving flaps, ailerons, elevator and rudder rotate around child groups. Its source-GLB comparison toggles between models instead of rendering them simultaneously. The V2 flight simulator is unchanged.
+
+An emulated 390px portrait / 844px landscape Chromium browser now tests the preview on WebGL2 and checks child transforms, touch orbit, GLB comparison, phone-sized canvas and screenshot artifacts. Those automated checks do not demonstrate flight dynamics or actual device support.
+
+**Manual screenshot review result:** the new scene structure is correctly separated and movable, but the hand-modelled fuselage, wings, seats and dashboard are **too simplified to approve as a realistic C172**. The 3D viewer is suitable for demonstrating rig architecture, not for becoming the default aircraft. **Do not merge V3 into V2 until a genuinely detailed and appropriately licensed aircraft asset has been selected and verified.** An engine change by itself does not supply high-fidelity geometry.
+
+### Potential model upgrade, pending licensing and technical review
+
+- The existing e737 Sketchfab C172 GLB is CC BY 4.0 with attribution, but is largely an exterior model with a sparse interior and unsegmented control surfaces.
+- FlightGear's detailed C172P project includes exterior and interior geometry ([c172p-team/c172p](https://github.com/c172p-team/c172p)); its source is GPL-2.0. A converted `c172.glb` is separately offered by [The Flight Playbook credits](https://theflightplaybook.com/credits/), under that same GPL license. This is a model **candidate**, not an approved or redistributed asset. Review exact copyright, original source, modification/redistribution obligations, file composition, performance and seats/control-surface hierarchy before any inclusion, especially for a commercial academy.
+- Prefer one coherent model containing cockpit and external parts to a sequence of overlays and approximate coordinate guesses.
+
 ## Non-negotiable completion gates
 
 1. **One aircraft, one source of truth:** a GLB with correctly named child meshes (`body`, `seat-front-left`, `seat-front-right`, `seat-rear-left`, `seat-rear-right`, `panel`, `propeller`, `left-flap`, `right-flap`, `left-aileron`, `right-aileron`, `elevator`, `rudder`). Source-space units, axes and attachment pivots documented. No duplicate procedural airframe overlays.
