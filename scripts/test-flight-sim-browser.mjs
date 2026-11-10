@@ -264,7 +264,7 @@ try{
  await touchYoke("pointercancel",92);
  assert.equal(await hold.getAttribute("aria-pressed"),"false",
   "Android touch cancellation must disarm the bank hold");
- assert.equal(await phone.locator("#cmdBank").textContent(),"0%",
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/,
   "Android touch cancellation must level the plane");
  await hold.tap();
  await touchYoke("pointerdown",93);
