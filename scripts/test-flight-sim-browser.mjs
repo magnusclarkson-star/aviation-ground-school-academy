@@ -546,6 +546,49 @@ try{
  assert.equal(await hold.getAttribute("aria-pressed"),"false",
   "lost pointer capture must not latch a long turn");
  assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
+ // Real multi-touch usability check at the actual 390 px mobile viewport:
+ // a short anti-torque pedal tap must be gentle, a longer hold stronger,
+ // while another finger can hold brakes and fly the cyclic independently.
+ await phone.locator("#cockpitAircraftSelect").selectOption("r44");
+ assert.equal(await phone.locator("#cockpitStation").getAttribute("data-family"),"rotor");
+ const touchButton=async(elementId,type,pointerId)=>{
+  await phone.locator("#"+elementId).evaluate((el,{type,pointerId})=>{
+   const b=el.getBoundingClientRect();
+   el.dispatchEvent(new PointerEvent(type,{
+    bubbles:true,cancelable:true,pointerType:"touch",pointerId,button:0,
+    clientX:b.left+b.width*.5,clientY:b.top+b.height*.5
+   }));
+  },{type,pointerId});
+ };
+ const rudderPct=async()=>Number((await phone.locator("#cmdRudder").textContent()).match(/-?\d+/)?.[0]||0);
+ await touchButton("rightRudder","pointerdown",103);
+ const smallPedal=await rudderPct();
+ assert.ok(smallPedal>=15&&smallPedal<=22,
+  "R44 touchscreen pedal starts at gentle yaw rather than jumping to full travel");
+ await phone.waitForTimeout(560);
+ const heldPedal=await rudderPct();
+ assert.ok(heldPedal>smallPedal+10&&heldPedal<=100,
+  "sustained R44 touch progressively gains pedal authority without a second button");
+ await touchButton("brake","pointerdown",104);
+ await touchYoke("pointerdown",105);
+ assert.ok(parseInt(await phone.locator("#cmdBank").textContent())>55,
+  "cyclic remains available while a separate finger controls the rotor pedals");
+ assert.ok(await phone.locator("#brake").evaluate(el=>el.classList.contains("held")));
+ assert.ok(await rudderPct()>0);
+ await touchYoke("pointerup",105);
+ assert.ok(await rudderPct()>0,
+  "releasing cyclic does not inadvertently release a second pedal finger");
+ await touchButton("brake","pointerup",104);
+ assert.ok(await rudderPct()>0);
+ await touchButton("rightRudder","pointerup",103);
+ assert.equal(await rudderPct(),0);
+ assert.ok(!await phone.locator("#brake").evaluate(el=>el.classList.contains("held")));
+ // Fixed-wing buttons remain the familiar direct rudder controls.
+ await phone.locator("#cockpitAircraftSelect").selectOption("c172");
+ await touchButton("leftRudder","pointerdown",106);
+ assert.equal(await rudderPct(),-100);
+ await touchButton("leftRudder","pointerup",106);
+ assert.equal(await rudderPct(),0);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[]);
  await phone.close();
