@@ -10,7 +10,7 @@ assert.equal(config.runwayLengthM,1800);
 assert.ok(Object.isFrozen(config.taxiway)&&Object.isFrozen(config.approachLights));
 assert.equal(config.taxiway.length,3);
 assert.equal(config.parkedTrainers.length,2);
-assert.equal(config.approachLights.length,8);
+assert.equal(config.approachLights.length,18);
 assert.ok(config.serviceVehicles.length>=2);
 assert.ok(config.taxiway.every(s=>[s.ax,s.az,s.bx,s.bz,s.widthM].every(Number.isFinite)));
 assert.ok(config.approachLights.every(p=>p.z<0),"fictional approach fixtures should lead toward runway threshold");
@@ -54,7 +54,7 @@ assert.ok(ctx.fills>0,"2D scene renders");
 const source=readFileSync(new URL("../flight-sim-scenery.js",import.meta.url),"utf8");
 const html=readFileSync(new URL("../flight-sim.html",import.meta.url),"utf8");
 assert.ok(source.includes("drawAirportDetails();"),"2D includes the shared airport fixture");
-assert.ok(html.includes('<script src="flight-sim-airport-detail.js" defer></script>'));
+assert.ok(html.includes('<script src="flight-sim-airport-detail.js?v=20261110-approachlights1" defer></script>'));
 assert.ok(html.indexOf("flight-sim-airport-detail.js")<html.indexOf("flight-sim-scenery.js"));
 assert.ok(html.indexOf("flight-sim-airport-detail.js")<html.indexOf("flight-sim-3d.js"));
 for(const txt of ["fetch(","getUserMedia","localStorage","sessionStorage","geolocation","XMLHttpRequest"]){
