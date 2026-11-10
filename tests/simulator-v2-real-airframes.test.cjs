@@ -45,6 +45,29 @@ test("both imported aircraft have four separate seats and a visible instrument b
  }
  assert.equal(Three.buildImportedCabin("fa18"),null);
 });
+test("both cabins, cockpit panels and glazing sit forward in the real airframes",()=>{
+ const layout=Three.IMPORTED_CABIN_LAYOUT;
+ for(const id of ["r44","c172"]){
+  const s=layout[id];
+  assert.ok(s.frontSeatZ>s.rearSeatZ+.5,id+" front seats must not sit behind rear seats");
+  assert.ok(s.rearSeatZ>s.glazingStartZ && s.rearSeatZ<s.glazingEndZ,
+   id+" rear seats should remain in the passenger window envelope");
+  assert.ok(s.frontSeatZ>s.glazingStartZ && s.frontSeatZ<s.glazingEndZ,
+   id+" front seats should be visible through windows");
+  assert.ok(s.panelZ>s.frontSeatZ+.4 && s.panelZ<s.glazingEndZ,
+   id+" pilot instrument panel should sit in front of seats, inside the nose");
+ }
+ // Guard against the original C172 rear row at Z=-.60 and panel at Z=1.70,
+ // and against the R44's old recessed instrument panel at Z=3.75.
+ assert.ok(layout.c172.rearSeatZ>.15 && layout.c172.frontSeatZ>1.35);
+ assert.ok(layout.c172.panelZ>2.2 && layout.c172.panelZ<2.45);
+ assert.ok(layout.r44.frontSeatZ>3.5 && layout.r44.panelZ>4.0);
+ const shell=Three.buildImportedC172Shell();
+ const glassZ=[];
+ for(let i=2;i<shell.glass.positions.length;i+=3)glassZ.push(shell.glass.positions[i]);
+ assert.ok(Math.min(...glassZ)>=layout.c172.glazingStartZ-.001);
+ assert.ok(Math.max(...glassZ)<=layout.c172.glazingEndZ+.001);
+});
 test("new C172 fuselage closes floating seats without extra wings or propellers",()=>{
  const shell=Three.buildImportedC172Shell();
  assert.equal(shell.windowPanels,5,"front windshield and four distinct side windows");
