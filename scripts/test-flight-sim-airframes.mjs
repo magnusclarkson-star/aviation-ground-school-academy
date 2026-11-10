@@ -70,6 +70,17 @@ const noseSupport=Array.from({length:c172P.length/3},(_,j)=>j*3).filter(i=>
  c172P[i+2]>=4.35*A.SCALE.c172[2]&&c172P[i+2]<5.03*A.SCALE.c172[2]);
 assert.ok(noseSupport.length>60,"Cessna nose wheel has a curved, attached gear fork");
 assert.ok(c172Exterior.vertices<4000,"extra Cessna geometry remains mobile-friendly");
+// Tiny visible fittings make the trainer's exterior identifiable even in a
+// side-on 360° inspection; its 2D fallback uses this exact same geometry.
+const cScale=A.SCALE.c172;
+assert.ok(nearVertex(c172P,-4.31*cScale[0],.35,.37*cScale[2]),
+ "C172 left under-wing pitot support is present");
+assert.ok(nearVertex(c172P,0,1.66,-.71*cScale[2]),
+ "C172 roof aerial has a distinct apex");
+assert.ok(nearVertex(c172P,-1.59*cScale[0],.92,1.19*cScale[2]),
+ "C172 wing-root lamp is visibly inset ahead of the windshield");
+assert.ok(nearVertex(c172P,-.075*cScale[0],2.39,-6.32*cScale[2]),
+ "C172 fin-top red beacon is positioned on the tail");
 
 // A visible annular exhaust rear face should exist at the end of each
 // engine, with exactly one nacelle for F-35 and pairs for the other jets.
@@ -135,8 +146,18 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  }
 
 }
-assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),["mainRotor","tailRotor"]);
-const [mainRotor,tailRotor]=T.buildMovingParts("r44");
+assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),
+ ["swashBank","swashPitch","mainRotor","tailRotor"]);
+const rotorAssemblies=T.buildMovingParts("r44");
+const mainRotor=rotorAssemblies.find(p=>p.name==="mainRotor");
+const tailRotor=rotorAssemblies.find(p=>p.name==="tailRotor");
+for(const name of ["swashBank","swashPitch"]){
+ const part=rotorAssemblies.find(p=>p.name===name);
+ assert.ok(part.mesh.triangles>=24&&part.mesh.triangles<=60,
+  name+" remains under the mobile mesh budget");
+ assert.ok(C.movingParts("r44").some(p=>p.name===name),
+  name+" must also appear in 2D non-WebGL inspection");
+}
 const extent=(m,axis)=>{
  const v=m.positions;
  let lo=Infinity,hi=-Infinity;

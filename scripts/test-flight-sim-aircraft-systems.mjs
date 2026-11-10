@@ -107,6 +107,7 @@ assert.equal(A.snapshot(rotor).powerValue,"48%");
 assert.equal(rotor.parts.rotorBlurOpacity,0,"new stationary rotor has no motion blur");
 const initialRotor=rotor.rotation;
 rotorInput.collective=.85;rotorInput.rudder=.7;rotorInput.bank=.2;
+rotorInput.pitch=-.4;
 for(let i=0;i<8;i++)A.step(rotor,rotorState,rotorInput,.05);
 assert.ok(rotor.rotation!==initialRotor);
 assert.ok(rotor.parts.mainRotor>=0&&rotor.parts.mainRotor<2*Math.PI);
@@ -119,6 +120,14 @@ assert.equal(rotor.time,seconds);
 assert.equal(rotor.parts.rotorBlurOpacity,opacity,"pause cannot add rotor motion");
 assert.ok(rotor.parts.rotorPitch>0);
 assert.ok(rotor.parts.tailPitch>0);
+assert.ok(rotor.parts.swashBank>0&&rotor.parts.swashBank<=.11,
+ "R44 swashplate bank ring visibly follows cyclic bank");
+assert.ok(rotor.parts.swashPitch>0&&rotor.parts.swashPitch<=.11,
+ "R44 swashplate pitch ring follows cyclic pitch");
+rotorInput.bank=-.6;rotorInput.pitch=.35;
+A.step(rotor,rotorState,rotorInput,0);
+assert.ok(rotor.parts.swashBank<0&&rotor.parts.swashPitch<0,
+ "paused exterior preview updates the cyclic rings without advancing RPM");
 assert.equal(A.snapshot(rotor).powerValue,"85%");
 assert.notEqual(A.snapshot(rotor).flapValue,"0%");
 const rotorPowerBefore=rotor.powerPct;
@@ -181,7 +190,14 @@ assert.ok(planeParts.find(p=>p.name==="propeller").mesh.vertices>=24,
  "The rotating two-blade propeller must contain tapered 3D blade faces");
 assert.ok(planeParts.filter(p=>p.name.includes("Aileron")||p.name.includes("Flap"))
  .every(p=>p.pivot[1]>.85),"All wing controls pivot at high-wing height");
-assert.deepEqual(rotorParts.map(p=>p.name),["mainRotor","tailRotor"]);
+assert.deepEqual(rotorParts.map(p=>p.name),
+ ["swashBank","swashPitch","mainRotor","tailRotor"]);
+for(const name of ["swashBank","swashPitch"]){
+ const ring=rotorParts.find(part=>part.name===name);
+ assert.ok(ring.mesh.vertices>=72,"visible, lightweight ring geometry");
+ assert.ok(ring.pivot[1]>2.5&&ring.pivot[1]<3.0,
+  "cyclic ring stays below the actual rotor hub");
+}
 for(const part of [...planeParts,...rotorParts]){
  assert.ok([1,2,3].includes(part.axis));
  assert.equal(part.pivot.length,3);
