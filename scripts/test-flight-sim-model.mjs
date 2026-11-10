@@ -97,6 +97,25 @@ M.step(contactInstant,{...M.makeInput(),throttle:.49},.05);
 assert.equal(contactInstant.phase,"rollout");
 assert.equal(contactInstant.rolloutDistanceM,0,
  "the touchdown tick starts the measured ground-roll distance at zero");
+assert.ok(Number.isFinite(contactInstant.touchdownData.pitchDeg) &&
+ Number.isFinite(contactInstant.touchdownData.bankDeg),
+ "contact snapshot captures airborne attitude before wheels settle");
+// A nose-up or banked touch-yoke held after contact must not leave the
+// aircraft visually floating above the runway during the rollout.
+const rollSettling=Object.assign(M.makeState("airplane","approach"),{
+ phase:"rollout",onGround:true,headingDeg:0,trackDeg:0,xM:0,zM:550,
+ speedKt:52,groundSpeedKt:52,pitchDeg:7,rollDeg:9,altitudeM:0
+});
+const settleInput={...M.makeInput(),pitch:-1,bank:1,throttle:0,brake:true};
+simulate(rollSettling,settleInput,1.4);
+assert.equal(rollSettling.phase,"rollout",
+ "ground attitude stabilization must not skip manual braking");
+assert.ok(Math.abs(rollSettling.pitchDeg)<7*.4,
+ "wheels progressively return to a near-level nose attitude");
+assert.ok(Math.abs(rollSettling.rollDeg)<9*.4,
+ "wheels progressively remove unrealistic ground banking");
+assert.ok(rollSettling.rolloutDistanceM>0&&rollSettling.altitudeM===0,
+ "the aircraft moves along the runway with no vertical teleport");
 finalInput.throttle=0;finalInput.brake=true;finalInput.pitch=0;
 simulate(approach,finalInput,20,landingEvents);
 assert.equal(approach.phase,"complete","brakes should end the runway rollout");
