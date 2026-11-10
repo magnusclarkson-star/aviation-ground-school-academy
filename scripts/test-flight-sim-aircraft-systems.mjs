@@ -120,15 +120,23 @@ assert.equal(rotor.time,seconds);
 assert.equal(rotor.parts.rotorBlurOpacity,opacity,"pause cannot add rotor motion");
 assert.ok(rotor.parts.rotorPitch>0);
 assert.ok(rotor.parts.tailPitch>0);
+assert.equal(rotor.parts.collectiveLink,rotor.parts.rotorPitch);
+assert.equal(rotor.parts.tailPitchLink,rotor.parts.tailPitch);
 assert.ok(rotor.parts.swashBank>0&&rotor.parts.swashBank<=.11,
  "R44 swashplate bank ring visibly follows cyclic bank");
 assert.ok(rotor.parts.swashPitch>0&&rotor.parts.swashPitch<=.11,
  "R44 swashplate pitch ring follows cyclic pitch");
 rotorInput.bank=-.6;rotorInput.pitch=.35;
+rotorInput.rudder=-.5;rotorInput.collective=.22;
+const rotorBeforePause=rotor.rotation,tailBeforePause=rotor.tailRotation;
 A.step(rotor,rotorState,rotorInput,0);
+assert.equal(rotor.rotation,rotorBeforePause);
+assert.equal(rotor.tailRotation,tailBeforePause);
+assert.ok(rotor.parts.collectiveLink<0&&rotor.parts.tailPitchLink<0,
+ "paused controls change link pitch but never rotate main or tail rotor");
 assert.ok(rotor.parts.swashBank<0&&rotor.parts.swashPitch<0,
  "paused exterior preview updates the cyclic rings without advancing RPM");
-assert.equal(A.snapshot(rotor).powerValue,"85%");
+assert.equal(A.snapshot(rotor).powerValue,"22%");
 assert.notEqual(A.snapshot(rotor).flapValue,"0%");
 const rotorPowerBefore=rotor.powerPct;
 rotorInput.collective=.25;
@@ -191,7 +199,13 @@ assert.ok(planeParts.find(p=>p.name==="propeller").mesh.vertices>=24,
 assert.ok(planeParts.filter(p=>p.name.includes("Aileron")||p.name.includes("Flap"))
  .every(p=>p.pivot[1]>.85),"All wing controls pivot at high-wing height");
 assert.deepEqual(rotorParts.map(p=>p.name),
- ["swashBank","swashPitch","mainRotor","tailRotor"]);
+ ["swashBank","swashPitch","collectiveLink","mainRotor","tailPitchLink","tailRotor"]);
+for(const name of ["collectiveLink","tailPitchLink"]){
+ const link=rotorParts.find(part=>part.name===name);
+ assert.ok(link.mesh.triangles>=20&&link.mesh.triangles<=28,
+  "R44 control linkage must remain tiny enough for phone rendering");
+ assert.ok([1,2,3].includes(link.axis));
+}
 for(const name of ["swashBank","swashPitch"]){
  const ring=rotorParts.find(part=>part.name===name);
  assert.ok(ring.mesh.vertices>=72,"visible, lightweight ring geometry");
