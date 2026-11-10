@@ -127,7 +127,7 @@ function parseAC3D(text,textureBytes){
    colors,
    indices:count<=65535?Uint16Array.from(group.indices):
     Uint32Array.from(group.indices),
-   imageId:0,
+   imageId:0,opacity:mat.opacity,
    alphaMask:false,alphaCutoff:0
   });
  }
