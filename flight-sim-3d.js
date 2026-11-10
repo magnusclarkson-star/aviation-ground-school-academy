@@ -747,6 +747,105 @@ function buildMovingParts(mode="airplane"){
  }
  return result.map(part=>scalePart(part,mode==="helicopter"?"r44":"c172"));
 }
+// Dedicated components for the *imported* R44. The earlier procedural
+// helicopter's decorative swash rings, tail-pitch boxes, and generic boom
+// fittings must never be mounted on the licensed FlightGear hull.
+function buildCleanR44Rotors(){
+ const steel=rgb(125,142,153),bright=rgb(221,230,233),
+  dark=rgb(59,74,84),tip=rgb(236,208,110);
+ const parts=[];
+ function add(name,pivot,axis,draw){
+  const m=new Mesh();draw(m);
+  parts.push({name,pivot:[...pivot],axis,mesh:m.finish()});
+ }
+ const hub=REAL_R44_HARDWARE_ANCHORS.main.actual;
+ add("mainRotor",hub,2,m=>{
+  const [cx,cy,cz]=hub;
+  for(const sign of [-1,1]){
+   const x0=cx+sign*.23,x1=cx+sign*4.67,x2=cx+sign*5.03;
+   const rootFront=[x0,cy,cz-.205],rootRear=[x0,cy,cz+.205];
+   const tipFront=[x1,cy+.10,cz-.175],tipRear=[x1,cy+.10,cz+.175];
+   const endFront=[x2,cy+.115,cz-.11],endRear=[x2,cy+.115,cz+.11];
+   // R44's single teetering two-blade rotor, with no old extra hub boxes.
+   m.quad(rootFront,tipFront,tipRear,rootRear,bright);
+   m.quad(rootRear,tipRear,tipFront,rootFront,dark);
+   m.quad(tipFront,endFront,endRear,tipRear,tip);
+   m.quad(tipRear,endRear,endFront,tipFront,steel);
+   m.box(Math.min(x0,cx+sign*.68),cy-.045,cz-.18,
+    Math.abs(sign*.68-sign*.23),.10,.36,steel);
+  }
+  m.box(cx-.23,cy-.085,cz-.24,.46,.17,.48,steel);
+  // Mast and top fairing are centred at the actual imported roof attachment.
+  m.box(cx-.095,cy-.23,cz-.095,.19,.17,.19,dark);
+ });
+ const tail=REAL_R44_HARDWARE_ANCHORS.tail.actual;
+ add("tailRotor",tail,1,m=>{
+  const [cx,cy,cz]=tail;
+  for(const sign of [-1,1]){
+   const y0=cy+sign*.10,y1=cy+sign*.70;
+   const a=[cx-.018,y0,cz-.105],b=[cx-.018,y1,cz-.075],
+    c=[cx-.018,y1,cz+.11],d=[cx-.018,y0,cz+.135];
+   m.quad(a,b,c,d,bright);
+   m.quad([cx+.018,d[1],d[2]],[cx+.018,c[1],c[2]],
+    [cx+.018,b[1],b[2]],[cx+.018,a[1],a[2]],dark);
+   m.box(cx-.045,sign>0?cy+.60:cy-.72,cz-.10,.09,.12,.20,tip);
+  }
+  m.box(cx-.09,cy-.12,cz-.12,.18,.24,.24,steel);
+ });
+ return parts;
+}
+// Lightweight physical interior in the same local metres as each imported
+// airframe. Four distinct seats, restraints, a floor, and instrument binnacle
+// sit behind the existing window glass in chase and 360-degree inspection.
+// This does not interfere with the separate pilot-facing training cockpit UI.
+function buildImportedCabin(id){
+ if(id!=="r44"&&id!=="c172")return null;
+ const m=new Mesh(),leather=rgb(56,75,87),cushion=rgb(92,111,120),
+  highlight=rgb(157,174,179),panel=rgb(35,48,57),
+  screen=rgb(56,103,118),trim=rgb(180,191,189),floor=rgb(64,71,75);
+ let seats=0;
+ const r44=id==="r44";
+ if(r44){
+  m.box(-.54,-1.04,2.16,1.08,.065,1.65,floor);
+  for(const z of [3.27,2.57])for(const x of [-.30,.30]){
+   seats++;
+   m.box(x-.215,-.71,z-.23,.43,.15,.49,cushion);
+   m.box(x-.215,-.59,z-.30,.43,.61,.14,leather);
+   m.box(x-.16,.015,z-.34,.32,.17,.16,cushion);
+   m.box(x-.17,-.57,z-.14,.045,.50,.055,highlight);
+   m.box(x+.125,-.57,z-.14,.045,.50,.055,highlight);
+   m.box(x-.17,-.94,z-.045,.055,.24,.065,trim);
+   m.box(x+.12,-.94,z-.045,.055,.24,.065,trim);
+  }
+  // Forward instrument binnacle and hood, plus two identifiable cyclic grips.
+  m.box(-.51,-.47,3.75,1.02,.34,.18,panel);
+  m.box(-.39,-.32,3.927,.30,.12,.035,screen);
+  m.box(.085,-.32,3.927,.30,.12,.035,screen);
+  for(const x of [-.30,.30]){
+   m.box(x-.025,-.78,3.49,.05,.51,.05,trim);
+   m.box(x-.095,-.31,3.46,.19,.07,.09,panel);
+  }
+ }else{
+  m.box(-.55,-1.02,-1.20,1.10,.07,2.75,floor);
+  for(const z of [.63,-.60])for(const x of [-.30,.30]){
+   seats++;
+   m.box(x-.225,-.68,z-.30,.45,.17,.58,cushion);
+   m.box(x-.225,-.52,z-.39,.45,.60,.15,leather);
+   m.box(x-.17,.055,z-.40,.34,.17,.16,cushion);
+   m.box(x-.20,-.49,z-.20,.04,.42,.055,highlight);
+   m.box(x+.16,-.49,z-.20,.04,.42,.055,highlight);
+   m.box(x-.17,-.94,z+.05,.065,.25,.075,trim);
+   m.box(x+.11,-.94,z+.05,.065,.25,.075,trim);
+  }
+  m.box(-.56,-.35,1.70,1.12,.47,.19,panel);
+  for(const x of [-.32,.32]){
+   m.box(x-.19,-.18,1.897,.38,.16,.035,screen);
+   m.box(x-.025,-.62,1.47,.05,.40,.07,trim);
+   m.box(x-.20,-.29,1.46,.40,.055,.075,panel);
+  }
+ }
+ return {...m.finish(),seats,hasPanel:true};
+}
 // The licensed C172 GLB already contains wings, flaps, elevator, rudder,
 // tyres and cabin. Drawing the old illustrated surfaces over it creates
 // detached, double flaps/elevators in exterior and 360-degree cameras.
@@ -754,7 +853,7 @@ function buildMovingParts(mode="airplane"){
 // is still necessary for the fallback aircraft and its 2D companion.
 function exteriorAnimatedParts(id,imported,model){
  if(id==="r44"&&imported)return model.authenticParts||[];
- if(id==="c172"&&imported)return (model.parts||[]).filter(p=>p.name==="propeller");
+ if(id==="c172"&&imported)return []; // Imported GLB already has its own propeller.
  return model.parts||[];
 }
 function cameraPose(state,view="cockpit",orbit={}){
