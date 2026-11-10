@@ -22,6 +22,11 @@ test("authentic R44 FlightGear body, windows and skids have indexed textured geo
  assert.ok(imported.primitives.length>=3);
  assert.equal(imported.images.length,1);
  assert.equal(imported.mimeTypes[0],"image/png");
+ const glass=imported.primitives.filter(p=>p.isGlazing);
+ assert.ok(glass.length>0,"source windows are identified separately from opaque body");
+ assert.ok(glass.every(p=>p.opacity<.5),"glazing preserves source transparency");
+ assert.ok(imported.primitives.some(p=>!p.isGlazing&&p.opacity===1),
+  "opaque fuselage does not become see-through");
  assert.ok(imported.bounds[5]-imported.bounds[4]>8.5);
  assert.ok(imported.bounds[1]-imported.bounds[0]>2.2);
  assert.ok(imported.bounds[3]-imported.bounds[2]>2.7);
