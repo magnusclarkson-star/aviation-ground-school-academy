@@ -22,6 +22,9 @@ const PadDetail=root?.AGSAHelipadDetail||
 const Countryside=root?.AGSACountryside||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-countryside.js"):null);
+const Windsocks=root?.AGSAFlightWindsocks||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-windsocks.js"):null);
 
 class Mesh{
  constructor(){this.p=[];this.c=[];this.n=[];this.triangles=0}
@@ -329,10 +332,33 @@ function airportDetails(mesh){
   mesh.box(p.x-1.7,12,p.z-1,3.4,.8,2,rgb(252,226,161));
  }
 }
+// Low-polygon four-sided fabric tube for both wind-blown and calm states.
+// Mesh is uploaded once; a vertex shader rotates it about the world-anchored
+// pole in response to the same deterministic wind sample as the Canvas view.
+function buildWindsockFabric(anchor,limp=false){
+ const m=new Mesh();
+ const ring=t=>{
+  const width=Math.max(.18,1.4*(1-t));
+  const x=anchor.x,y=12-(limp?4.5*t:0),z=anchor.z+(limp?.6*t:7*t);
+  return [[x-width,y-width*.4,z],[x+width,y-width*.4,z],
+   [x+width,y+width*.4,z],[x-width,y+width*.4,z]];
+ };
+ for(let i=0;i<4;i++){
+  const a=ring(i/4),b=ring((i+1)/4);
+  const color=i%2?rgb(249,229,223):rgb(221,100,78);
+  for(let j=0;j<4;j++)
+   m.quad(a[j],a[(j+1)%4],b[(j+1)%4],b[j],color);
+ }
+ return m.finish();
+}
 function buildWorld(mode="airplane"){
  if(!["airplane","helicopter"].includes(mode))throw Error("Unknown 3D airfield mode");
  const m=new Mesh();ground(m);countryside(m);
- if(mode==="airplane"){runway(m);airportDetails(m);}else helipad(m);
+ if(mode==="airplane"){
+  runway(m);airportDetails(m);
+  for(const anchor of Windsocks.positions)
+   m.box(anchor.x-.11,0,anchor.z-.11,.22,12,.22,rgb(225,226,218));
+ }else helipad(m);
  airfield(m);
  const out=m.finish();
  if(out.vertices>130000)throw Error("3D mesh exceeds mobile geometry budget");
@@ -707,7 +733,12 @@ vec3 rotatePart(vec3 v,int axis,float angle){
 void main(){
  vec3 p=aPosition;
  vec3 normal=aNormal;
- if(uActor>2.5){
+ if(uActor>3.5){
+  // Windsocks rotate around their fixed runway pole, never with the
+  // aircraft. The same downwind angle is used by the Canvas fallback.
+  p=rotatePart(p-uPartPivot,2,uPartAngle)+uPartPivot;
+  normal=rotatePart(normal,2,uPartAngle);
+ }else if(uActor>2.5){
   // Artistic light cards stay in world coordinates rather than following
   // the moving aircraft. They are shaded as emissive in the fragment shader.
   normal=vec3(0.,1.,0.);
@@ -747,7 +778,7 @@ void main(){
    1.000080003*depth-0.800032001,depth);
  vColor=aColor;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
- vEmissive=uActor>2.5?1.:0.;
+ vEmissive=(uActor>2.5&&uActor<3.5)?1.:0.;
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
@@ -828,6 +859,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
    glowHeli=inspectionOnly?null:upload(buildGroundGlow("helicopter"));
+  const windSocks=inspectionOnly?[]:Windsocks.positions.map(anchor=>({
+   anchor,
+   flying:upload(buildWindsockFabric(anchor,false)),
+   limp:upload(buildWindsockFabric(anchor,true))
+  }));
   const airframes=Object.create(null);
   for(const id of Exterior.IDS){
    airframes[id]={
@@ -899,6 +935,24 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
      gl.uniform1f(uni.uActor,0);
     }
+   }
+   // Draw the fixed-position windsocks after the static terrain.
+   // No new GPU resources are created on individual animation frames.
+   if(!inspectionOnly&&view!=="inspect"&&state.mode==="airplane"){
+    const wind=Windsocks.sample(state.windXMps,state.windZMps,state.time,reducedMotion);
+    gl.uniform1f(uni.uActor,4);
+    gl.uniform1i(uni.uPartAxis,2);
+    gl.uniform1f(uni.uPartAngle,wind.angleRad);
+    for(const sock of windSocks){
+     gl.uniform3fv(uni.uPartPivot,[sock.anchor.x,0,sock.anchor.z]);
+     const mesh=wind.active?sock.flying:sock.limp;
+     gl.bindVertexArray(mesh.vao);
+     gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+    }
+    gl.uniform1i(uni.uPartAxis,0);
+    gl.uniform1f(uni.uPartAngle,0);
+    gl.uniform3fv(uni.uPartPivot,[0,0,0]);
+    gl.uniform1f(uni.uActor,0);
    }
    if(view!=="cockpit"){
     const selected=Exterior.normalize(airframeId||state.mode);
@@ -984,7 +1038,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildWorld,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
