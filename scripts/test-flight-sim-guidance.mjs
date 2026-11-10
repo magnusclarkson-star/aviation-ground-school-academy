@@ -114,4 +114,49 @@ assert.throws(()=>G.start({phase:"unknown"}),/state required/);
 assert.throws(()=>G.observe(session,heli,[]),/Start a new practice session/);
 assert.throws(()=>G.guidance(null,controls),/required/);
 assert.throws(()=>G.observe(session,runway,null),/must be a list/);
+// Circuit cues must respond to the current position rather than telling
+// learners to fly a fixed heading after they overshoot a turn. Both engines
+// share the same local runway map and warning priorities.
+for(const physicsId of ["classic","aero"]){
+ const model=M.makeState("airplane","runway",{physicsId});
+ const pilot=M.makeInput("airplane");
+ const progress=G.start(model);
+ Object.assign(model,{phase:"flight",onGround:false,xM:250,zM:1900,
+  headingDeg:90,trackDeg:90,altitudeM:120,speedKt:86,verticalMs:0});
+ progress.circuit.stage="crosswind";
+ const first=G.guidance(model,pilot,progress);
+ assert.equal(first.tag,"RETURN CIRCUIT · CROSSWIND");
+ assert.match(first.text,/TURN LEFT 0[56][0-9]°/);
+ assert.match(first.text,/to CROSSWIND/);
+ model.xM=520;
+ const second=G.guidance(model,pilot,progress);
+ assert.notEqual(second.text,first.text,
+  "new aircraft position must update bearing and distance to waypoint");
+ model.speedKt=10;model.phase="climb";
+ const slow=G.guidance(model,pilot,progress);
+ assert.equal(slow.tag,"FICTIONAL LOW-ENERGY CUE",
+  physicsId+" navigation may never mask critical low-speed observation");
+ assert.equal(slow.level,"caution");
+}
+const returned=M.makeState("airplane","runway");
+const returnedProgress=G.start(returned);
+Object.assign(returned,{phase:"approach",onGround:false,xM:130,
+ zM:-1100,altitudeM:95,headingDeg:0,trackDeg:0,
+ verticalMs:-1.4,speedKt:84});
+G.observe(returnedProgress,returned,[]);
+const returningCue=G.guidance(returned,M.makeInput(),returnedProgress);
+assert.equal(returningCue.tag,"RETURN CIRCUIT · FINAL");
+assert.match(returningCue.text,/E130m/);
+assert.match(returningCue.text,/L[1-9][0-9]*°/);
+assert.equal(returningCue.level,"caution","off-centre return calls for alignment");
+returned.xM=0;
+G.observe(returnedProgress,returned,[]);
+assert.match(G.guidance(returned,M.makeInput(),returnedProgress).text,/CTR/);
+returned.verticalMs=-5;
+assert.match(G.guidance(returned,M.makeInput(),returnedProgress).tag,/RAPID DESCENT/,
+ "excessive simulated descent rate overrides waypoint cue");
+assert.match(G.guidance({...runway,phase:"flight",speedKt:83},controls).text,
+ /turn back toward the runway/,
+ "unguided flight hint should not imply landing requires teleport/reset");
+
 console.log("Immersive practice guidance passed: fictional takeoff, climb, free flight, approach, warning states, rotorcraft and session-only observation summary.");
