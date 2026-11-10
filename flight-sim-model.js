@@ -136,15 +136,20 @@ function step(state,input,seconds){
    6*Math.pow(Math.abs(bank),3):0;
  const cyclicBank=state.mode==="helicopter"?shapeRotorCyclic(bank):bank;
  const cyclicPitch=state.mode==="helicopter"?shapeRotorCyclic(pitch):pitch;
- const rollTarget=cyclicBank*(state.mode==="helicopter"?13:p.bankDeg+turnAssist)+
+ const wheelRollout=state.mode==="airplane"&&state.onGround&&state.phase==="rollout";
+ const rollTarget=wheelRollout?0:
+  cyclicBank*(state.mode==="helicopter"?13:p.bankDeg+turnAssist)+
   state.turbulence*2.5;
  // An aft/forward CG modifies *only* the experimental fictional pitch
  // response. Classic and conceptual rotorcraft handling are unchanged.
  const loadingPitch=state.physicsId==="aero"?
   (state.loading?.pitchAuthority??1):1;
- const pitchTarget=-cyclicPitch*(state.mode==="helicopter"?9:p.pitchDeg*loadingPitch)+state.turbulence*1.2;
- state.rollDeg=smooth(state.rollDeg,rollTarget,state.mode==="helicopter"?2:p.rollResponse,dt);
- state.pitchDeg=smooth(state.pitchDeg,pitchTarget,state.mode==="helicopter"?1.7:p.pitchResponse,dt);
+ const pitchTarget=wheelRollout?0:
+  -cyclicPitch*(state.mode==="helicopter"?9:p.pitchDeg*loadingPitch)+state.turbulence*1.2;
+ state.rollDeg=smooth(state.rollDeg,rollTarget,wheelRollout?3.2:
+  state.mode==="helicopter"?2:p.rollResponse,dt);
+ state.pitchDeg=smooth(state.pitchDeg,pitchTarget,wheelRollout?2.7:
+  state.mode==="helicopter"?1.7:p.pitchResponse,dt);
  if(turb>.25&&Math.abs(state.turbulence)>.12)events.push("turbulence");
  if(Math.abs(state.rollDeg)>14)events.push("turn");
  if(state.mode==="helicopter"){
@@ -247,6 +252,8 @@ function step(state,input,seconds){
  const throttle=clamp(input.throttle,0,1);
  const flap=clamp(input.flaps,0,30);
  if(state.onGround){
+  // In rollout, the earlier pitch/bank response now targets level wheels
+  // independently of a still-held touchscreen yoke; rudder remains manual.
   const brake=input.brake===true;
   // Wheel braking builds and releases progressively after actual touchdown.
   // This avoids the old single-frame full-brake impulse and retains clear
@@ -346,7 +353,8 @@ function step(state,input,seconds){
     state.touchdownData=Object.freeze({
      speedKt:state.speedKt,sinkMs:state.verticalMs,
      offsetM:state.xM,runwayPositionM:state.zM,
-     headingDeg:state.headingDeg,trackDeg:state.trackDeg
+     headingDeg:state.headingDeg,trackDeg:state.trackDeg,
+     pitchDeg:state.pitchDeg,bankDeg:state.rollDeg
     });
     state.rolloutBrakePressure=0;state.rolloutDistanceM=0;
    }
