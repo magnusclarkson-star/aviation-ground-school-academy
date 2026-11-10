@@ -91,6 +91,10 @@ assert.equal(mission.r44Lesson.stage,"return",
 assert.equal(mission.r44Lesson.turnsCompleted,1);
 assert.equal(G.r44LessonStatus(mission,turned).short,"4/4 · RETURN & LAND");
 assert.match(G.guidance(turned,cyclic,mission).text,/helipad centre/i);
+assert.match(G.guidance(turned,cyclic,mission).text,/PAD RIGHT/,
+ "the R44 return cue points toward the actual helipad from its position");
+const padCentred=G.r44LessonStatus(mission,{...turned,xM:0,zM:0});
+assert.match(padCentred.hint,/PAD CENTER/);
 G.observe(mission,{...turned,onGround:true,phase:"landed",
  altitudeM:0,landingGrade:"precision",time:26},["touchdown"]);
 assert.equal(mission.r44Lesson.status,"completed");
