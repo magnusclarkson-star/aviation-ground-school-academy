@@ -35,6 +35,16 @@ try{
  assert.equal(derived.track,"rotate(15.00 110 82)");
  assert.ok(derived.readouts.includes("E230 S1450"));
  assert.ok(derived.readouts.includes("GS 72"));
+ const finalTurn=await desktop.evaluate(()=>{
+  const mock={mode:"airplane",scenario:"approach",phase:"approach",
+   onGround:false,xM:180,zM:-850,altitudeM:110,headingDeg:0,trackDeg:0,groundSpeedKt:72};
+  const route=window.AGSACircuitGuide.create(mock);
+  window.AGSAFlightNavigation.paint(document.querySelector("#cockpitVisualPanel"),mock,route);
+  return document.querySelector(".cockpit-nav-screen [data-nav-field=runway]").textContent;
+ });
+ assert.match(finalTurn,/FINAL/);
+ assert.match(finalTurn,/E180m/);
+ assert.match(finalTurn,/L9°/,"live screen should show left intercept while east of runway");
  await desktop.locator(".cockpit-nav-screen").click({position:{x:42,y:50}});
  assert.equal(await desktop.locator("#cockpitZoomPanel").isVisible(),true,"tap on nav map opens expanded screen");
  assert.equal(await desktop.locator("#cockpitZoomContent [data-nav-map]").count(),1);
