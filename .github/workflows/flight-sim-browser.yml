@@ -33,6 +33,7 @@ on:
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
       - 'flight-sim-real-airframes.js'
+      - 'flight-sim-r44-airframe.js'
       - 'assets/aircraft/**'
       - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'flight-sim-airframe-geometry.js'
@@ -118,6 +119,7 @@ on:
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
       - 'flight-sim-real-airframes.js'
+      - 'flight-sim-r44-airframe.js'
       - 'assets/aircraft/**'
       - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'flight-sim-airframe-geometry.js'
@@ -199,6 +201,7 @@ jobs:
           node --check flight-sim-scenery.js
           node --check flight-sim-3d.js
           node --check flight-sim-real-airframes.js
+          node --check flight-sim-r44-airframe.js
           node --check flight-sim-airframe-geometry.js
           node --check flight-sim-exterior-2d.js
           node --check flight-sim-inspection.js
@@ -269,7 +272,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: real-c172-v2-browser-preview
-          path: artifacts/real-c172-3d-preview.png
+          name: real-cessna-r44-v2-browser-preview
+          path: |
+            artifacts/real-c172-3d-preview.png
+            artifacts/real-r44-3d-preview.png
           if-no-files-found: ignore
           retention-days: 14
