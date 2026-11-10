@@ -61,7 +61,7 @@ function status(circuit,state){
   stage:circuit.stage,label:step.label,hint:step.hint,
   waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
-  courseDeg:step.course,courseText:course,turn,
+  courseDeg:step.course,courseText:course,turn,finalCue,
   short:step.label+" · "+course+" · "+distanceText,
   instructions:step.hint+" Heading reference "+course+".",
   active:!["landed","stopped"].includes(circuit.stage)
