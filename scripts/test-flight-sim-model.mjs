@@ -562,9 +562,13 @@ for(let tick=0;tick<Math.ceil(415/dt)&&!["complete","halted"].includes(fullCircu
    stage==="crosswind"?(fullCircuit.xM<650?90:180):
    stage==="downwind"?180:
    stage==="base"?(fullCircuit.xM>310?270:0):
-   stage==="final"?Math.atan2(-fullCircuit.xM,
-    Math.max(440,300-fullCircuit.zM))*180/Math.PI:0;
-  fullInput.bank=limit(signedTurn(bearing,fullCircuit.headingDeg)/28,-.94,.94);
+   stage==="final"?Math.atan2(-fullCircuit.xM*1.35,
+    Math.max(290,300-fullCircuit.zM))*180/Math.PI:0;
+  // When testing a crosswind, steer the actual GROUND TRACK towards
+  // the runway centreline instead of pretending heading equals track.
+  // The virtual test pilot has no access to any hidden simulator data.
+  const observedTrack=stage==="final"?fullCircuit.trackDeg:fullCircuit.headingDeg;
+  fullInput.bank=limit(signedTurn(bearing,observedTrack)/28,-.94,.94);
   const targetHeight=stage==="final"?
    Math.max(0,200-fullCircuit.zM)*Math.tan(3*Math.PI/180):
    stage==="base"?105:stage==="downwind"&&fullCircuit.zM< -850?120:145;
