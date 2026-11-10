@@ -28,6 +28,9 @@ const Traffic=root?.AGSAAirfieldTraffic||
 const RealAirframes=root?.AGSARealAirframes||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-real-airframes.js"):null);
+const R44Airframe=root?.AGSAR44Airframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-r44-airframe.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -888,6 +891,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
+ let realR44=null,realR44Status="loading";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -935,7 +939,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     indexType:primitive.indices instanceof Uint16Array?
      gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
-    alphaCutoff:primitive.alphaCutoff};
+    alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1,
+    partName:primitive.partName||null,
+    partAxis:primitive.partAxis||0,partPivot:primitive.partPivot||[0,0,0]};
    objects.push(object);return object;
   };
   async function importC172(){
@@ -972,9 +978,45 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(typeof console!=="undefined")console.warn("C172 mesh fallback:",error);
    }
   }
-  // This is deliberately non-blocking: controls and simulated flight start
-  // immediately with the legacy model, then swap to genuine C172 geometry.
+  async function importR44(){
+   if(!R44Airframe){realR44Status="unavailable";return;}
+   try{
+    const model=await R44Airframe.ensureR44();
+    if(disposed||lost)return;
+    const decoded=await Promise.all(model.images.map(async(bytes,i)=>{
+     const blob=new Blob([bytes],{type:model.imageMimeTypes[i]||"image/png"});
+     return root.createImageBitmap(blob);
+    }));
+    if(disposed||lost){decoded.forEach(i=>i.close?.());return;}
+    const images=decoded.map(bitmap=>{
+     const texture=gl.createTexture();textures.push(texture);
+     gl.bindTexture(gl.TEXTURE_2D,texture);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
+     gl.generateMipmap(gl.TEXTURE_2D);
+     bitmap.close?.();
+     return texture;
+    });
+    gl.bindTexture(gl.TEXTURE_2D,null);
+    const primitives=model.primitives.map(uploadImported);
+    // Transparent cabin glazing is drawn after opaque cabin, tail and rotors.
+    primitives.sort((a,b)=>(a.opacity<.99?1:0)-(b.opacity<.99?1:0));
+    realR44={primitives,images,vertices:model.vertices,triangles:model.triangles,
+     mainParts:model.mainParts,tailParts:model.tailParts};
+    realR44Status="imported";
+   }catch(error){
+    realR44Status="fallback";
+    if(typeof console!=="undefined")console.warn("R44 model fallback:",error);
+   }
+  }
+  // Controls and flight physics start immediately; only the detailed
+  // exterior takes an asynchronous moment to replace its placeholder.
   void importC172();
+  void importR44();
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
@@ -1114,20 +1156,36 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const isReal=id==="c172"&&realC172!==null;
-    if(canvas.dataset)canvas.dataset.airframeSource=isReal?"licensed-c172-glb":"procedural";
-    if(isReal){
+    const imported=id==="c172"?realC172:id==="r44"?realR44:null;
+    const importedR44=id==="r44"&&imported!==null;
+    if(canvas.dataset)canvas.dataset.airframeSource=imported?
+     (id==="r44"?"mit-r44-glb":"licensed-c172-glb"):"procedural";
+    if(imported){
      gl.activeTexture(gl.TEXTURE0);
-     for(const part of realC172.primitives){
-      const img=part.imageId===null?null:realC172.images[part.imageId];
+     for(const part of imported.primitives){
+      const img=part.imageId===null?null:imported.images[part.imageId];
+      const transparent=part.opacity<.99;
+      if(transparent){
+       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+       gl.depthMask(false);
+      }
+      gl.uniform1f(uni.uOpacity,transparent?part.opacity:1);
       gl.uniform1f(uni.uHasTexture,img?1:0);
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
+      gl.uniform1i(uni.uPartAxis,part.partAxis||0);
+      gl.uniform3fv(uni.uPartPivot,part.partPivot||[0,0,0]);
+      const phase=part.partName?animation?.[part.partName]:0;
+      gl.uniform1f(uni.uPartAngle,Number.isFinite(phase)?phase:0);
       gl.bindTexture(gl.TEXTURE_2D,img);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
+      if(transparent){gl.depthMask(true);gl.disable(gl.BLEND);}
      }
      gl.bindTexture(gl.TEXTURE_2D,null);
      gl.uniform1f(uni.uHasTexture,0);
+     gl.uniform1f(uni.uOpacity,1);
+     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+     gl.uniform3fv(uni.uPartPivot,[0,0,0]);
     }else{
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
@@ -1135,7 +1193,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // Motion-sweep draws before the actual two blades; never conceals them.
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
-    if(model.rotorSweep&&sweepOpacity>0){
+    if(!importedR44&&model.rotorSweep&&sweepOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,sweepOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -1147,7 +1205,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }
     const tailOpacity=Number.isFinite(animation?.tailBlurOpacity)?
      limit(animation.tailBlurOpacity,0,.20):0;
-    if(model.tailRotorSweep&&tailOpacity>0){
+    if(!importedR44&&model.tailRotorSweep&&tailOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,tailOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -1171,6 +1229,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
     }
     for(const part of model.parts){
+     if(importedR44)continue; // Do not draw a second R44 rotor over the imported one.
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      const angle=animation?.[part.name];
@@ -1194,6 +1253,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   }
   return {draw,destroy,resetCamera(){cameraRig?.reset()},
    get realC172Status(){return realC172Status},
+   get realR44Status(){return realR44Status},
    supported:true,engine:"webgl2",get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
