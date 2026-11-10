@@ -20,6 +20,9 @@ const PadDetail=root?.AGSAHelipadDetail||
 const Countryside=root?.AGSACountryside||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-countryside.js"):null);
+const Traffic=root?.AGSAAirfieldTraffic||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-ground-traffic.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -168,6 +171,10 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   poly([[-800,0,z],[-70,0,z],[-70,0,z+75],[-800,0,z+75]],shade);
   poly([[70,0,z],[800,0,z],[800,0,z+75],[70,0,z+75]],shade);
  }
+ // Light-grey service routes match the WebGL geometry, remain attached
+ // to airport ground and never slide with the camera or a phone gesture.
+ for(const road of Traffic.roadPolygons)
+  poly(road.map(([x,z])=>[x,.19,z]),"#606464");
  // Country lanes and planted fields sit in persistent world coordinates.
  // They drift across the phone windscreen because the airplane moves, not
  // because a decorative scrolling image is attached to the camera.
@@ -402,6 +409,32 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
     line([x,peak,z],[x+.6,peak-4,z+1],"#df6652",4);
    }
   }
+ }
+ // The same two genuine moving ground vehicles appear in Canvas fallback
+ // and WebGL. Geometry tracks the synthetic flight clock, not wall time.
+ const vehicles=Traffic.sample(state.time,reducedMotion);
+ for(const v of vehicles){
+  if(Math.abs(v.z-state.zM)>2300)continue;
+  const cos=Math.cos(v.headingRad),sin=Math.sin(v.headingRad);
+  const p=(x,y,z)=>[v.x+x*cos+z*sin,y+.15,v.z-x*sin+z*cos];
+  const box=(x,y,z,ww,hh,dd,color)=>{
+   poly([p(x,y+hh,z),p(x+ww,y+hh,z),
+    p(x+ww,y+hh,z+dd),p(x,y+hh,z+dd)],color);
+   poly([p(x,y,z),p(x+ww,y,z),
+    p(x+ww,y+hh,z),p(x,y+hh,z)],color);
+   poly([p(x+ww,y,z),p(x+ww,y,z+dd),
+    p(x+ww,y+hh,z+dd),p(x+ww,y+hh,z)],color);
+   poly([p(x,y,z+dd),p(x+ww,y,z+dd),
+    p(x+ww,y+hh,z+dd),p(x,y+hh,z+dd)],color);
+  };
+  box(-1.18,.27,-2.15,2.36,1.02,4.30,v.color);
+  box(-1.02,1.19,-.82,2.04,.82,2.20,
+   v.kind==="service"?"#fcd669":"#cfdee6");
+  box(-1.07,1.34,-.46,.07,.49,1.25,"#2d546a");
+  box(1.0,1.34,-.46,.07,.49,1.25,"#2d546a");
+  box(-.9,1.33,1.30,1.80,.44,.07,"#2d546a");
+  for(const sign of [-1,1])for(const z of [-1.25,1.26])
+   box(sign<0?-1.30:1.08,.07,z-.42,.22,.64,.84,"#1e262c");
  }
  ctx.restore();
  // Grade only the illustrated outside scenery. The cockpit PFD/controls remain
