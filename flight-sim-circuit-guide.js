@@ -61,13 +61,22 @@ function update(circuit,state){
  const x=Number(state.xM)||0,z=Number(state.zM)||0,h=heading(state.headingDeg);
  const airborne=!state.onGround;
  if(!airborne)return circuit;
- if(circuit.stage==="departure"&&z>=1650&&state.altitudeM>=30)
+ // Advance after a pilot has actually begun turning toward the next leg.
+ // Speed-dependent lead prevents the old "reach the corner then turn" trap;
+ // geographical guards avoid skipping legs during a wide or erratic circuit.
+ // No steering, autopilot, or flight-physics modification occurs here.
+ const lead=cornerLeadMetres(state);
+ if(circuit.stage==="departure"&&state.altitudeM>=30&&
+    (z>=1650||(z>=1650-lead&&signedDelta(0,h)>=45&&signedDelta(0,h)<=140)))
   circuit.stage="crosswind";
- if(circuit.stage==="crosswind"&&x>=500&&h>=125&&h<=245)
+ if(circuit.stage==="crosswind"&&x>=500&&
+    (h>=125&&h<=245)&&z>=-200)
   circuit.stage="downwind";
- if(circuit.stage==="downwind"&&z<=-1500&&h>=130&&h<=235)
+ if(circuit.stage==="downwind"&&z<=-1500&&
+    h>=130&&h<=270)
   circuit.stage="base";
- if(circuit.stage==="base"&&z<=-650&&Math.abs(signedDelta(h,0))<=35&&Math.abs(x)<650)
+ if(circuit.stage==="base"&&z<=-650&&
+    Math.abs(signedDelta(h,0))<=35&&Math.abs(x)<650)
   circuit.stage="final";
  return circuit;
 }
