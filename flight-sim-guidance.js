@@ -232,13 +232,19 @@ function guidance(state,input,progress){
   const crossM=Number.isFinite(state.xM)?state.xM:0;
   const nearEdge=Math.abs(crossM)>=20;
   const offCenter=Math.abs(crossM)>=12;
+  const endForecast=E.runwayStopForecast(state,input,Flight?.flightProfile?.(state));
+  const nearEnd=Boolean(endForecast?.endRisk);
   const offset=offCenter?" · RWY "+(crossM>0?"E":"W")+
    round(Math.abs(crossM))+" m":"";
   const motion="GS "+round(state.speedKt)+" kt · BRAKE "+
    round((state.rolloutBrakePressure||0)*100)+"%";
-  return {...base,tag:nearEdge?"RUNWAY EDGE · ROLLOUT":"AFTER TOUCHDOWN · ROLLOUT",
-   level:nearEdge?"caution":"normal",
-   text:motion+offset+(offCenter?"":" · ROLL "+round(state.rolloutDistanceM)+" m")};
+  return {...base,
+   tag:nearEdge?"RUNWAY EDGE · ROLLOUT":nearEnd?
+    "RUNWAY END · ROLLOUT":"AFTER TOUCHDOWN · ROLLOUT",
+   level:nearEdge||nearEnd?"caution":"normal",
+   text:motion+offset+(nearEdge?"":nearEnd?
+    " · END "+round(endForecast.remainingM)+" m":
+    offCenter?"":" · ROLL "+round(state.rolloutDistanceM)+" m")};
  }
  return base;
 }
