@@ -19,6 +19,9 @@ const Airport=root?.AGSAFlightAirportDetail||
 const PadDetail=root?.AGSAHelipadDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-helipad-detail.js"):null);
+const Countryside=root?.AGSACountryside||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-countryside.js"):null);
 
 class Mesh{
  constructor(){this.p=[];this.c=[];this.n=[];this.triangles=0}
@@ -71,6 +74,22 @@ function ground(mesh){
   mesh.quad([x,elevation(x,z)-.2,z],[x+cell,elevation(x+cell,z)-.2,z],
    [x+cell,elevation(x+cell,z+cell)-.2,z+cell],
    [x,elevation(x,z+cell)-.2,z+cell],col);
+ }
+}
+function countryside(mesh){
+ if(!Countryside)return;
+ // Static crop fields and narrow farm lanes provide true ground parallax
+ // during the full circuit. Low-poly quads are built only once and shared
+ // by the runway and helipad worlds, not uploaded each rendered frame.
+ const y=(x,z)=>Countryside.terrainHeight(x,z)+.14;
+ for(const field of Countryside.fields){
+  const {x,z,w,d,color}=field;
+  mesh.quad([x,y(x,z),z],[x+w,y(x+w,z),z],
+   [x+w,y(x+w,z+d),z+d],[x,y(x,z+d),z+d],hexRgb(color));
+ }
+ for(const track of Countryside.farmTracks){
+  const corners=Countryside.trackCorners(track);
+  mesh.quad(...corners.map(([x,z])=>[x,y(x,z)+.02,z]),rgb(155,141,108));
  }
 }
 function runway(mesh){
@@ -282,7 +301,7 @@ function airportDetails(mesh){
 }
 function buildWorld(mode="airplane"){
  if(!["airplane","helicopter"].includes(mode))throw Error("Unknown 3D airfield mode");
- const m=new Mesh();ground(m);
+ const m=new Mesh();ground(m);countryside(m);
  if(mode==="airplane"){runway(m);airportDetails(m);}else helipad(m);
  airfield(m);
  const out=m.finish();
