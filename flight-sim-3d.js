@@ -775,6 +775,15 @@ function cameraPose(state,view="cockpit",orbit={}){
   yaw,pitch:-Math.atan2(rise,distance),
   roll:(state.rollDeg||0)*RAD*.13,craft};
 }
+// Frame genuinely imported compact aircraft closer, rather than leaving
+// them a tiny speck at the distance chosen for the old oversized dummy mesh.
+// The viewpoint angles and flight state remain exactly unchanged.
+function importedCameraFraming(camera,view,scale=1){
+ if(!camera||!["chase","side","top"].includes(view))return camera;
+ const factor=limit(scale,.55,1);
+ return {...camera,eye:camera.eye.map((v,i)=>
+  camera.craft[i]+(v-camera.craft[i])*factor)};
+}
 const VERTEX=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPosition;
@@ -1090,7 +1099,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uHasTexture,0);
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
-   const targetCamera=cameraPose(state,view,orbit);
+   const baseCamera=cameraPose(state,view,orbit);
+   const realHelicopter=state.mode==="helicopter"&&realR44!==null;
+   const realTrainer=state.mode==="airplane"&&realC172!==null&&
+    Exterior.normalize(airframeId||state.mode)==="c172";
+   const targetCamera=importedCameraFraming(baseCamera,view,
+    realHelicopter?.72:realTrainer?.82:1);
    const clock=root?.performance?.now?.()??Date.now();
    const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
    const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera);
@@ -1282,7 +1296,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,importedCameraFraming,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
