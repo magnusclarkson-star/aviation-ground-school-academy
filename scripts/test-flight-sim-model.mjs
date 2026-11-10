@@ -86,7 +86,17 @@ assert.ok(approach.touchdownData&&approach.touchdownData.sinkMs<0,
  "touchdown records actual pre-contact sink rate before vertical speed resets");
 assert.ok(approach.touchdownData.speedKt>40&&approach.touchdownData.speedKt<100);
 assert.ok(Object.isFrozen(approach.touchdownData));
-assert.equal(approach.rolloutDistanceM,0,"rollout begins exactly at actual contact");
+// The existing 72-second approach helper continues to coast after contact,
+// so its rollout distance is expected to be positive at this point.
+assert.ok(approach.rolloutDistanceM>0,"rolling distance accumulates after contact");
+assert.equal(approach.rolloutBrakePressure,0,"coasting without brakes has no brake pressure");
+// Check the boundary itself with a single physics step, not a long coast.
+const contactInstant=M.makeState("airplane","approach");
+Object.assign(contactInstant,{xM:0,zM:400,altitudeM:.01,verticalMs:-1.0,rollDeg:0});
+M.step(contactInstant,{...M.makeInput(),throttle:.49},.05);
+assert.equal(contactInstant.phase,"rollout");
+assert.equal(contactInstant.rolloutDistanceM,0,
+ "the touchdown tick starts the measured ground-roll distance at zero");
 finalInput.throttle=0;finalInput.brake=true;finalInput.pitch=0;
 simulate(approach,finalInput,20,landingEvents);
 assert.equal(approach.phase,"complete","brakes should end the runway rollout");
