@@ -4,6 +4,13 @@
  */
 (function(root){"use strict";
 const RAD=Math.PI/180;
+// Trees belong to fixed world columns, never camera-relative offsets.
+// The index changes only as the pilot travels; shared columns retain the
+// exact same X coordinate, colour and size as they enter/leave the frame.
+const TREE_SPACING_M=260;
+const treeColumnAt=x=>Math.round((Number.isFinite(x)?x:0)/TREE_SPACING_M);
+const treeWorldX=(column,z)=>column*TREE_SPACING_M+
+ Math.sin(z*.091+column*9.2)*51;
 const Airport=root?.AGSAFlightAirportDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-airport-detail.js"):null);
@@ -276,15 +283,16 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
     lamp(p.x,p.y,r);
    }
   }
-  // Deterministic tree positions around the moving aircraft. The fixed
-  // local grid prevents trees following the camera and keeps the countryside
-  // populated well past the original small airport rectangle.
-  const xBase=Math.round(state.xM/360)*360;
+  // Visible columns follow the aircraft, but their coordinates stay
+  // anchored to the world. The old xBase jumped 360 metres when crossing
+  // a 180 m boundary, making the entire tree line snap on mobile.
+  const centreColumn=treeColumnAt(state.xM);
   const firstZ=Math.ceil((state.zM+2450)/200)*200;
   for(let z=firstZ;z>=state.zM-2450;z-=200){
-   for(let column=-3;column<=3;column++){
+   for(let offset=-3;offset<=3;offset++){
+    const column=centreColumn+offset;
     const seed=Math.sin(z*.037+column*4.37);
-    const x=xBase+column*260+Math.sin(z*.091+column*9.2)*51;
+    const x=treeWorldX(column,z);
     if(Math.abs(x)<92&&z>=-1000&&z<2350)continue;
     if(state.mode==="helicopter"&&Math.hypot(x,z)<140)continue;
     const p=project(state,x,0,z,w,h);
@@ -356,7 +364,7 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  }
  return true;
 }
-const api={project,draw};
+const api={project,draw,treeColumnAt,treeWorldX};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlightScenery=api;
 })(typeof window!=="undefined"?window:null);
