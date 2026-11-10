@@ -209,7 +209,9 @@ function guidance(state,input,progress){
    text:"Scan runway alignment, artificial horizon and vertical-rate indication. Observe their relationship as the imaginary threshold approaches."};
  }
  if(phase==="rollout")return {...base,tag:"AFTER TOUCHDOWN · ROLLOUT",
-  text:"Observe the fictional speed decreasing as power is reduced and the wheel-brake control is held. This is not an aircraft operating procedure."};
+  text:"GS "+round(state.speedKt)+" kt · BRAKE "+
+   round((state.rolloutBrakePressure||0)*100)+"% · ROLL "+
+   round(state.rolloutDistanceM)+" m"};
  return base;
 }
 function summary(progress,state){
