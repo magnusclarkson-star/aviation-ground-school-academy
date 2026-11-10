@@ -35,6 +35,25 @@ try{
  assert.equal(derived.track,"rotate(15.00 110 82)");
  assert.ok(derived.readouts.includes("E230 S1450"));
  assert.ok(derived.readouts.includes("GS 72"));
+ const rejoinedFinal=await desktop.evaluate(()=>{
+  const M=window.AGSAImmersiveFlight,C=window.AGSACircuitGuide,
+   N=window.AGSAFlightNavigation;
+  const state=M.makeState("airplane","runway",{airframeId:"c172"});
+  Object.assign(state,{phase:"flight",onGround:false,xM:145,zM:-1450,
+   altitudeM:115,headingDeg:358,trackDeg:358,speedKt:73,verticalMs:-1});
+  const route=C.create(state),input=M.makeInput("airplane");
+  input.throttle=.49;
+  M.step(state,input,.05);
+  C.update(route,state);
+  const nav=N.paint(document.querySelector("#cockpitVisualPanel"),state,route);
+  return {phase:state.phase,leg:route.stage,readout:nav.circuitText};
+ });
+ assert.equal(rejoinedFinal.phase,"approach",
+  "real return leg becomes final approach without pressing reset");
+ assert.equal(rejoinedFinal.leg,"final");
+ assert.match(rejoinedFinal.readout,/FINAL/);
+ assert.match(rejoinedFinal.readout,/E1[34]\\d+m/);
+
  const finalTurn=await desktop.evaluate(()=>{
   const mock={mode:"airplane",scenario:"approach",phase:"approach",
    onGround:false,xM:180,zM:-850,altitudeM:110,headingDeg:0,trackDeg:0,groundSpeedKt:72};
