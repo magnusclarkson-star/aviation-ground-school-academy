@@ -73,7 +73,8 @@ assert.equal(Countryside.fields.length,20);
 assert.equal(Countryside.farmTracks.length,20);
 assert.equal(Countryside.towers.length,3);
 assert.equal(Countryside.hedgerows.length,8);
-assert.equal(Countryside.farmsteads.length,4);
+assert.ok(Countryside.farmsteads.length>=9);
+assert.equal(Countryside.trees.length,60);
 for(const farm of Countryside.farmsteads){
  const floor=Countryside.terrainHeight(farm.x,farm.z)+.14;
  for(const world of [runway,pad]){
