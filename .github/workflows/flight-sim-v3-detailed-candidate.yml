@@ -1,0 +1,30 @@
+name: Audit Detailed FlightGear C172 Candidate
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-flightgear-c172-candidate.mjs'
+      - '.github/workflows/flight-sim-v3-detailed-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-c172-asset:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download and examine third-party FlightGear model candidate
+        run: node scripts/audit-flightgear-c172-candidate.mjs
+      - name: Save the model asset and detailed source-space metadata for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detailed-flightgear-c172-source-review-only
+          path: |
+            artifacts/c172-detailed-audit.json
+            artifacts/c172-detailed-candidate.glb
+          if-no-files-found: ignore
+          retention-days: 7
