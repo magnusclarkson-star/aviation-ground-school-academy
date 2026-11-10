@@ -661,7 +661,12 @@ $("controlPad").addEventListener("pointermove",e=>{
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  $("controlPad").addEventListener(eventType,e=>{
   if(dragPointer!==e.pointerId)return;
-  if(bankHold?.status().armed&&state.mode==="airplane")bankHold.release(input.bank);
+  // Only a deliberate finger lift may save the current bank for a long
+  // circuit turn. If Android cancels the gesture (scroll, interruption,
+  // capture loss), level instead of unexpectedly holding a steep turn.
+  if(eventType!=="pointerup")bankHold?.clear();
+  else if(bankHold?.status().armed&&state.mode==="airplane")
+   bankHold.release(input.bank);
   dragPointer=null;input.bank=0;input.pitch=0;
   syncKeys();syncBankHoldUI();gripTransform();
  });
