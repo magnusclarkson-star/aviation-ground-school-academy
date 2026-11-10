@@ -1209,7 +1209,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     indexType:primitive.indices instanceof Uint16Array?
      gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
-    alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1};
+    alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1,
+    isGlazing:primitive.isGlazing===true};
    objects.push(object);return object;
   };
   async function importC172(){
@@ -1499,7 +1500,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
       for(const part of realModel.primitives){
-       const alpha=Math.max(0,Math.min(1,part.opacity??1));
+       // Keep tinted windows mostly transparent so the new front and
+       // rear seats remain visible; navigation lights retain source alpha.
+       const alpha=part.isGlazing?.14:
+        Math.max(0,Math.min(1,part.opacity??1));
        if(alpha<.99)drawPrimitive(part,alpha);
       }
      }
