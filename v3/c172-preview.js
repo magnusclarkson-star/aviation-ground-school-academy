@@ -265,6 +265,80 @@ async function loadReference(){
   return false;
  }
 }
+// A detailed FlightGear-derived candidate is evaluated in CI only. The
+// public option stays disabled until the GPL source obligations and visual
+// evidence are reviewed. It is NEVER overlaid on the procedural V3 model.
+const detailedHolder=new THREE.Group();
+detailedHolder.name="detailed-FlightGear-C172-only";
+scene.add(detailedHolder);detailedHolder.visible=false;
+let detailedLoaded=false,detailedParts=null,detailedPropAngle=0;
+const EXPECTED_DETAILED_NAMES=[
+ "fuselage","pilotseat_left","pilotseat_right","backseat_left",
+ "panel_1_gauges","Propeller","flaps","leftaileron","rightaileron",
+ "elevatorleft","elevatorright","rudder_1","leftwindow","rightwindow"
+];
+async function loadDetailedCandidate(){
+ if(detailedLoaded)return true;
+ status("Examining source FlightGear C172 geometry…");
+ try{
+  const model=new GLTFLoader();
+  const gltf=await model.loadAsync("assets/aircraft/c172-detailed-evaluation.glb");
+  const airframe=gltf.scene;
+  // Source FlightGear nose faces -X. Academy uses +Z forward.
+  airframe.rotation.y=Math.PI/2;
+  airframe.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(airframe),size=bounds.getSize(new THREE.Vector3());
+  if(size.x<7||size.x>16||size.z<7||size.z>15||size.y<2||size.y>7)
+   throw Error("Unexpected detailed aircraft dimensions: "+size.toArray());
+  const found=new Map();
+  for(const name of EXPECTED_DETAILED_NAMES){
+   const obj=airframe.getObjectByName(name);
+   if(!obj)throw Error("Missing real C172 mesh/node: "+name);
+   found.set(name,obj);
+  }
+  // Center the entire assembled source plane once. Seats, panel, propeller,
+  // wing and tail retain their original local transforms and attachments.
+  const center=bounds.getCenter(new THREE.Vector3());
+  airframe.position.sub(center);
+  airframe.updateMatrixWorld(true);
+  airframe.name="FlightGear-C172P-detailed-source-GLB";
+  detailedHolder.add(airframe);
+  const rotations=new Map();
+  for(const name of ["flaps","leftaileron","rightaileron",
+    "elevatorleft","elevatorright","rudder_1","Propeller"]){
+   rotations.set(name,found.get(name).quaternion.clone());
+  }
+  let meshes=0,materials=0;
+  airframe.traverse(obj=>{if(obj.isMesh){meshes++;materials+=Array.isArray(obj.material)?
+   obj.material.length:1;}});
+  detailedParts={airframe,found,rotations,meshes,materials,size:size.toArray()};
+  detailedLoaded=true;
+  applyDetailedControls(getInputs());
+  status("FlightGear C172P inspection model loaded. Seats and panel belong to source mesh.");
+  return true;
+ }catch(error){
+  console.error("Detailed C172 evaluation model:",error);
+  status("Detailed C172 unavailable (still under model/source review): "+String(error.message||error));
+  return false;
+ }
+}
+function applyDetailedControls({flaps=0,bank=0,pitch=0,rudder=0,power=0}={}){
+ if(!detailedParts)return;
+ const {found,rotations}=detailedParts;
+ const turn=(name,axis,radians)=>{
+  const object=found.get(name);if(!object)return;
+  object.quaternion.copy(rotations.get(name));
+  object.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(axis,radians));
+ };
+ const z=new THREE.Vector3(0,0,1),y=new THREE.Vector3(0,1,0);
+ turn("flaps",z,clamp(flaps,0,30)*Math.PI/180);
+ turn("leftaileron",z,clamp(bank,-1,1)*.30);
+ turn("rightaileron",z,-clamp(bank,-1,1)*.30);
+ turn("elevatorleft",z,clamp(pitch,-1,1)*.25);
+ turn("elevatorright",z,clamp(pitch,-1,1)*.25);
+ turn("rudder_1",y,clamp(rudder,-1,1)*.26);
+ found.get("Propeller").userData.power=clamp(power,0,1);
+}
 const modeSelect=byId("modelVersion"),inputs={
  flaps:byId("flapControl"),bank:byId("aileronControl"),
  pitch:byId("elevatorControl"),rudder:byId("rudderControl"),power:byId("powerControl")
@@ -273,6 +347,7 @@ function getInputs(){return Object.fromEntries(Object.entries(inputs).map(([k,v]
 function setValueUI(){
  const state=getInputs();
  model.applyControls(state);
+ applyDetailedControls(state);
  for(const [k,v] of Object.entries(state)){
   const el=byId(k+"Value");if(el)el.textContent=k==="flaps"?v+"°":Math.round(v*100)+"%";
  }
@@ -280,12 +355,19 @@ function setValueUI(){
 for(const input of Object.values(inputs))input?.addEventListener("input",setValueUI);
 setValueUI();
 modeSelect?.addEventListener("change",async()=>{
- if(modeSelect.value==="source"){
+ if(modeSelect.value==="detailed"){
+  if(!(await loadDetailedCandidate())){modeSelect.value="v3";return;}
+  model.root.visible=false;
+  referenceHolder.visible=false;
+  detailedHolder.visible=true;
+ }else if(modeSelect.value==="source"){
   if(!(await loadReference())){modeSelect.value="v3";return;}
   model.root.visible=false;referenceHolder.visible=true;
-  status("Source C172 GLB shown unchanged for visual comparison. Surfaces do not articulate.");
+  detailedHolder.visible=false;
+  status("Original lightweight C172 GLB shown unchanged. Surfaces do not articulate.");
  }else{
   model.root.visible=true;referenceHolder.visible=false;
+  detailedHolder.visible=false;
   status("V3 named-airframe preview: inspect cabin, surfaces and nose alignment.");
  }
 });
@@ -313,6 +395,13 @@ function animate(t){
   renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
  }
  if(model.root.visible)model.prop.rotation.z+=dt*(.3+model.prop.userData.power*33);
+ if(detailedHolder.visible&&detailedParts){
+  const p=detailedParts.found.get("Propeller");
+  detailedPropAngle+=dt*(.3+(p.userData.power??.6)*33);
+  p.quaternion.copy(detailedParts.rotations.get("Propeller"));
+  p.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
+   new THREE.Vector3(1,0,0),detailedPropAngle));
+ }
  controls.update();renderer.render(scene,camera);
  if(++frames===36){
   const fps=Math.round(frames*1000/Math.max(1,t-start));
@@ -337,6 +426,17 @@ window.__AGSA_V3={
   leftElevator:model.tail.elevators[0].rotation.x,
   rudder:model.tail.rudder.rotation.y
  }),
- getMode:()=>referenceHolder.visible?"reference":"v3",
- getReferenceLoaded:()=>referenceLoaded
+ getMode:()=>detailedHolder.visible?"detailed":referenceHolder.visible?"reference":"v3",
+ getReferenceLoaded:()=>referenceLoaded,
+ getDetailedLoaded:()=>detailedLoaded,
+ getDetailedMeta:()=>detailedParts?({
+  names:[...detailedParts.found.keys()],
+  meshes:detailedParts.meshes,materials:detailedParts.materials,
+  size:detailedParts.size,
+  seating:EXPECTED_DETAILED_NAMES.filter(x=>x.includes("seat")),
+  mode:detailedHolder.visible?"detailed":"other"
+ }):null,
+ getDetailedTransforms:()=>detailedParts?Object.fromEntries(
+  ["flaps","leftaileron","rightaileron","elevatorleft","rudder_1"].map(name=>
+   [name,detailedParts.found.get(name).quaternion.toArray()])):null
 };
