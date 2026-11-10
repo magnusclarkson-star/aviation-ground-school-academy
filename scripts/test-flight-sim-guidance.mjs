@@ -138,6 +138,16 @@ for(const physicsId of ["classic","aero"]){
   physicsId+" navigation may never mask critical low-speed observation");
  assert.equal(slow.level,"caution");
 }
+// An illustrative jet has a different fictional energy envelope from the
+// original basic trainer; warning status must follow the selected airframe.
+const fighter=M.makeState("airplane","runway",{airframeId:"f22"});
+Object.assign(fighter,{phase:"flight",onGround:false,speedKt:75,altitudeM:130});
+const fighterSession=G.start(fighter);
+assert.equal(G.guidance(fighter,M.makeInput("airplane"),fighterSession).tag,
+ "FICTIONAL LOW-ENERGY CUE");
+fighter.speedKt=88;
+assert.equal(G.guidance(fighter,M.makeInput("airplane"),fighterSession).tag,
+ "RETURN CIRCUIT · DEPARTURE");
 const returned=M.makeState("airplane","runway");
 const returnedProgress=G.start(returned);
 Object.assign(returned,{phase:"approach",onGround:false,xM:130,
