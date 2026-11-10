@@ -38,6 +38,23 @@ assert.equal(fixedHover.hoverText,"HOV 4/8");
 const sliding=N.coordinates({...hoverFixed,groundSpeedKt:5});
 assert.equal(sliding.hoverStable,false);
 assert.equal(sliding.hoverText,"DRIFT");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:2,forwardMs:0,headingDeg:0}).hoverText,"DRIFT E");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:-2,forwardMs:0,headingDeg:0}).hoverText,"DRIFT W");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:0,forwardMs:2,headingDeg:0}).hoverText,"DRIFT N");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:0,forwardMs:-2,headingDeg:0}).hoverText,"DRIFT S");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:0,forwardMs:2,headingDeg:90}).hoverText,"DRIFT E",
+ "direction rotates with actual helicopter heading");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:0,forwardMs:0,windXMps:-3}).hoverText,"DRIFT W",
+ "wind alone can move a stationary cyclic helicopter sideways");
+assert.equal(N.coordinates({...hoverFixed,groundSpeedKt:5,
+ lateralMs:2,forwardMs:0,onGround:true}).hoverText,null,
+ "do not show an airborne drift cue when the skids are on the ground");
 const descending=N.coordinates({...hoverFixed,verticalMs:-1.3});
 assert.equal(descending.hoverStable,false);
 assert.equal(descending.hoverText,"VERT");
