@@ -190,6 +190,18 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    poly([[x,y+h,z],[x+w,y+h,z],[x+w,y+h,z+d],[x,y+h,z+d]],color);
    poly([[x,y,z],[x+w,y,z],[x+w,y+h,z],[x,y+h,z]],"#375b3d");
   }
+  // Raised pitched-roof farm buildings use the exact same fixed X/Z
+  // coordinates, dimensions and wall/roof colours as WebGL2.
+  for(const farm of Countryside.farmsteads){
+   if(Math.abs(farm.z-state.zM)>3600)continue;
+   const {x,z,w,d,h,wall,roof}=farm,y=Countryside.terrainHeight(x,z)+.14;
+   const peak=y+h+Math.min(w,d)*.27;
+   poly([[x,y+h,z],[x+w,y+h,z],[x+w,y,z],[x,y,z]],wall);
+   poly([[x,y+h,z],[x+w/2,peak,z],
+    [x+w/2,peak,z+d],[x,y+h,z+d]],roof);
+   poly([[x+w/2,peak,z],[x+w,y+h,z],
+    [x+w,y+h,z+d],[x+w/2,peak,z+d]],"#76564e");
+  }
   // Project the SAME fixed tower footprints as WebGL, so the distinctive
   // silhouettes actually slide past as the aircraft flies or banks.
   for(const tower of Countryside.towers){
