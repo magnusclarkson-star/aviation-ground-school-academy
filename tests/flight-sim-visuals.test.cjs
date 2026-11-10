@@ -478,3 +478,40 @@ test("landing rollout keeps north-aligned heading through 360-degree wrap",()=>{
  assert.ok(departure.headingDeg>=15&&departure.headingDeg<17,
   "existing limited takeoff steering remains unchanged");
 });
+
+test("landing alignment is reciprocal and wrap-safe but rejects runway crossings",()=>{
+ const E=require("../flight-sim-environment.js");
+ for(const [heading,track] of [[0,0],[180,180],[358,359],[-1,1],[20,10]]){
+  assert.equal(E.runwayAlignment(heading,track).aligned,true,
+   heading+"°/"+track+"° should line up with north-south runway");
+ }
+ for(const [heading,track] of [[90,90],[0,90],[90,0],[44,44],[0,48]]){
+  assert.equal(E.runwayAlignment(heading,track).aligned,false,
+   heading+"°/"+track+"° should not count as an aligned touchdown");
+ }
+ assert.equal(E.runwayAlignment(Number.NaN,0).aligned,false);
+ assert.equal(E.runwayAlignment(0,Infinity).aligned,false);
+});
+test("both flight models reject sideways low-speed runway contact",()=>{
+ for(const physicsId of ["classic","aero"]){
+  const state=Flight.makeState("airplane","approach",{airframeId:"c172",physicsId});
+  Object.assign(state,{xM:0,zM:710,altitudeM:.005,verticalMs:-2,
+   headingDeg:90,trackDeg:90,rollDeg:0,speedKt:65});
+  const input=Flight.makeInput("airplane");input.throttle=.48;
+  const result=Flight.step(state,input,.1);
+  assert.ok(result.events.includes("hardLanding"),
+   physicsId+": sideways runway crossing must not receive touchdown event");
+  assert.equal(state.phase,"halted",physicsId);
+  assert.match(state.message,/crossing angle/,physicsId);
+ }
+});
+test("experimental 358-degree rollout does not snap to east heading",()=>{
+ const state=Flight.makeState("airplane","approach",{physicsId:"aero"});
+ Object.assign(state,{onGround:true,phase:"rollout",zM:550,xM:0,
+  headingDeg:358,trackDeg:358,altitudeM:0,speedKt:48});
+ const input=Flight.makeInput("airplane");input.throttle=0;input.brake=true;
+ Flight.step(state,input,.05);
+ assert.ok(state.headingDeg>350,"358-degree heading must remain near north on rollout");
+ assert.ok(state.zM>550,"rolling aircraft must continue along runway instead of veering off");
+ assert.ok(Math.abs(state.xM)<1,"brief rollout stays close to runway centreline");
+});

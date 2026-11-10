@@ -269,11 +269,15 @@ function step(state,input,seconds){
   if(state.altitudeM<=0){
    state.altitudeM=0;state.onGround=true;
    const onRunway=state.zM>=-35&&state.zM<=1800&&Math.abs(state.xM)<24;
-   const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&state.speedKt<(p.landingMaxKt??93)&&onRunway;
+   const alignment=E.runwayAlignment(state.headingDeg,state.trackDeg);
+   const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&
+    state.speedKt<(p.landingMaxKt??93)&&onRunway&&alignment.aligned;
    state.verticalMs=0;
    state.phase=gentle?"rollout":"halted";
    state.message=gentle?"Simulated touchdown. Reduce power and hold the brake to finish the rollout.":
-    "Hard or off-runway contact. Use the approach reset and try a gentler descent.";
+    onRunway&&!alignment.aligned?
+     "Runway crossing angle too large. Approach along the strip for a controlled landing.":
+     "Hard or off-runway contact. Use the approach reset and try a gentler descent.";
    events.push(gentle?"touchdown":"hardLanding");
   }
  }

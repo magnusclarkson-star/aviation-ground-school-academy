@@ -94,7 +94,14 @@ function step(state,input,dt,events=[],wind){
   const v=Math.max(0,state.speedKt*KNOT+clamp(accel,-12,6)*dt);
   state.speedKt=clamp(v/KNOT,0,115);
   state.verticalMs=0;state.altitudeM=0;state.flightPathDeg=0;
-  state.headingDeg=clamp(state.headingDeg+rudder*.65*dt,-40,40);
+  // Departure is a bounded ground-steering exercise. Once landed, keep
+  // a genuine compass heading across 360° instead of snapping to +40°.
+  if(state.phase==="roll"){
+   const signed=((state.headingDeg+540)%360)-180;
+   state.headingDeg=clamp(signed+rudder*.65*dt,-40,40);
+  }else{
+   state.headingDeg=(state.headingDeg+rudder*.65*dt+360)%360;
+  }
   const heading=state.headingDeg*DEG;
   state.zM+=v*Math.cos(heading)*dt;
   state.xM+=v*Math.sin(heading)*dt;
@@ -159,10 +166,14 @@ function step(state,input,dt,events=[],wind){
    state.altitudeM=0;state.onGround=true;state.verticalMs=0;
    state.flightPathDeg=0;
    const onRunway=state.zM>=-35&&state.zM<=1800&&Math.abs(state.xM)<24;
-   const gentle=impactRate>=-3.3&&Math.abs(state.rollDeg)<13&&state.speedKt<93&&onRunway;
+   const alignment=E.runwayAlignment(state.headingDeg,state.trackDeg);
+   const gentle=impactRate>=-3.3&&Math.abs(state.rollDeg)<13&&
+    state.speedKt<93&&onRunway&&alignment.aligned;
    state.phase=gentle?"rollout":"halted";
    state.message=gentle?"Experimental-model touchdown. Reduce throttle and brake to finish the fictional rollout.":
-    "Experimental-model hard or off-runway contact. Reset and compare the energy trend.";
+    onRunway&&!alignment.aligned?
+     "Runway crossing angle too large. Approach along the strip for a controlled landing.":
+     "Experimental-model hard or off-runway contact. Reset and compare the energy trend.";
    events.push(gentle?"touchdown":"hardLanding");
   }
  }
