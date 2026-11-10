@@ -209,6 +209,19 @@ function addC172(m){
  m.box(.39,-.55,4.30,.23,.18,.55,palette.dark);
  m.box(-.42,-.45,5.05,.84,.14,.48,palette.dark);
  m.box(-.38,-.24,5.56,.76,.12,.21,palette.metal);
+ // High-contrast aircraft-specific cabin and aft-fuselage paintwork,
+ // drawn directly on both sides of the curved trainer rather than
+ // attaching a flat bar across the entire aircraft.
+ for(const sign of [-1,1]){
+  const side=sign;
+  m.quad([side*.79,.13,-1.62],[side*.73,.16,-2.58],
+   [side*.64,-.03,-3.62],[side*.80,-.03,-1.62],palette.navy);
+  m.quad([side*.64,-.03,-3.62],[side*.56,.08,-4.72],
+   [side*.39,-.09,-5.88],[side*.62,-.17,-3.62],palette.blue);
+  // Painted front cowling accent follows the trainer's tapered nose.
+  m.quad([side*.69,-.02,3.56],[side*.47,-.14,5.14],
+   [side*.48,-.29,5.14],[side*.75,-.23,3.56],palette.navy);
+ }
  const spinner=[0,-.04,6.50],spinnerZ=6.14;
  for(let j=0;j<10;j++){
   const a=j*Math.PI/5,b=(j+1)*Math.PI/5;
@@ -332,6 +345,20 @@ function addR44(m){
  // Tail-rotor shaft and hinge on left side of empennage.
  m.box(-.72,1.01,-8.34,.24,.30,.24,palette.metal);
  m.box(-.83,1.11,-8.27,.18,.14,.19,palette.dark);
+ // Model-specific cabin and tailboom paint bands make the R44's shape
+ // readable in the chase camera and low-resolution 360 inspection.
+ // These are flush, low-poly surfaces so the phone mesh budget remains safe.
+ for(const sign of [-1,1]){
+  m.quad([sign*1.27,-.37,-1.64],[sign*1.25,-.34,-.55],
+   [sign*1.20,-.47,.59],[sign*1.20,-.61,-1.68],trim);
+  m.quad([sign*.36,.44,-2.30],[sign*.29,.34,-4.75],
+   [sign*.22,.15,-6.72],[sign*.35,.26,-2.30],palette.blue);
+  // Two distinct pieces on the engine cowling instead of a generic blob.
+  m.quad([sign*1.09,.16,-2.02],[sign*1.04,.25,-1.17],
+   [sign*1.02,.10,-1.18],[sign*1.09,.02,-2.02],palette.metal);
+  m.quad([sign*.90,.63,-2.34],[sign*.82,.68,-2.02],
+   [sign*.85,.48,-2.02],[sign*.93,.44,-2.34],palette.dark);
+ }
 }
 function genericJet(m,id){
  const c=id==="f22"?palette.stealth:id==="f35"?palette.lightning:
