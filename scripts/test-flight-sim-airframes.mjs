@@ -193,8 +193,27 @@ assert.ok(C.movingParts("r44").some(p=>p.name==="mainRotor"&&p.triangles.length>
 assert.notDeepEqual(C.rotate([1,3.16,-.4],[0,3.16,-.4],2,1.2),[1,3.16,-.4],
  "main rotor blade vertices rotate around the hub");
 assert.deepEqual(T.buildMovingParts("c172").map(p=>p.name),[
- "propeller","leftAileron","rightAileron","leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"]);
+ "propeller","mainWheels","noseWheel","leftAileron","rightAileron",
+ "leftFlap","rightFlap","elevatorLeft","elevatorRight","rudder"]);
 const trainerParts=T.buildMovingParts("c172");
+for(const name of ["mainWheels","noseWheel"]){
+ const part=trainerParts.find(p=>p.name===name);
+ assert.equal(part.axis,1,name+" must spin around lateral wheel axle");
+ assert.ok(part.mesh.triangles>=12&&part.mesh.triangles<=40,
+  name+" adds only inexpensive coloured hub-mark triangles");
+ assert.ok(part.mesh.positions.every(Number.isFinite));
+ assert.ok(C.movingParts("c172").some(p=>p.name===name),
+  name+" is visible in the same geometry for non-WebGL Android views");
+ const vertex=part.mesh.positions.slice(0,3);
+ const initial=[...vertex],rotated=C.rotate(initial,part.pivot,part.axis,.85);
+ assert.notDeepEqual(rotated,initial,name+" hub markers rotate about their actual axle");
+}
+const mains=trainerParts.find(p=>p.name==="mainWheels");
+const front=trainerParts.find(p=>p.name==="noseWheel");
+assert.ok(Math.abs(mains.pivot[1]+1.25)<.01);
+assert.ok(Math.abs(front.pivot[2]-4.45*A.SCALE.c172[2])<.01);
+assert.ok(front.mesh.triangles<mains.mesh.triangles,
+ "the single nose wheel must have fewer rotating faces than two main wheels");
 const prop=trainerParts.find(p=>p.name==="propeller");
 const coordinates=prop.mesh.positions;
 const axisExtent=axis=>{
