@@ -98,6 +98,18 @@ function countryside(mesh){
   const {x,z,w,d,h,color}=hedgerow;
   mesh.box(x,y(x,z),z,w,h,d,hexRgb(color));
  }
+ for(const farm of Countryside.farmsteads){
+  const {x,z,w,d,h,wall,roof}=farm;
+  const floor=y(x,z),yRoof=floor+h,peak=yRoof+Math.min(w,d)*.27;
+  // One box and two sloped roof planes per small building; no textures,
+  // instanced animation or additional WebGL resource per landmark.
+  mesh.box(x,floor,z,w,h,d,hexRgb(wall));
+  const ridgeX=x+w/2;
+  const col=hexRgb(roof),shade=tint(col,.75);
+  mesh.quad([x,yRoof,z],[ridgeX,peak,z],[ridgeX,peak,z+d],[x,yRoof,z+d],col);
+  mesh.quad([ridgeX,peak,z],[x+w,yRoof,z],[x+w,yRoof,z+d],
+   [ridgeX,peak,z+d],shade);
+ }
  for(const tower of Countryside.towers){
   const {x,z,height:h,radius:r,color}=tower;
   const groundY=Countryside.terrainHeight(x,z);
