@@ -20,6 +20,9 @@ const PadDetail=root?.AGSAHelipadDetail||
 const Countryside=root?.AGSACountryside||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-countryside.js"):null);
+const Windsocks=root?.AGSAFlightWindsocks||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-windsocks.js"):null);
 
 function project(state,x,y,z,width=960,height=540){
  const dx=x-state.xM,dz=z-state.zM,yaw=state.headingDeg*RAD;
@@ -378,15 +381,13 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   }
   // Procedural windsocks point *downwind*. Their physical geometry is an
   // educational illustration, not a meteorological measurement.
-  for(const [x,z] of [[55,170],[-58,1000]]){
-   const windX=Number.isFinite(state.windXMps)?state.windXMps:0;
-   const windZ=Number.isFinite(state.windZMps)?state.windZMps:0;
-   const strength=Math.hypot(windX,windZ),scale=strength>.25?7/strength:0;
-   const endX=x+windX*scale,endZ=z+windZ*scale;
+  const windsock=Windsocks.sample(state.windXMps,state.windZMps,state.time,reducedMotion);
+  for(const {x,z} of Windsocks.positions){
+   const endX=x+windsock.tipXM,endZ=z+windsock.tipZM;
    const peak=12;
    line([x,0,z],[x,peak,z],"#e1e2da",3);
    // Staggered triangular fabric sections approximate a windsock in depth.
-   if(strength>.25){
+   if(windsock.active){
     for(let i=0;i<4;i++){
      const k=i/4,n=(i+1)/4;
      const wide=Math.max(.3,1.4*(1-k));
