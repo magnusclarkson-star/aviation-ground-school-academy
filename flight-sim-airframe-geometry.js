@@ -369,7 +369,9 @@ function genericJet(m,id){
     sign===-1?palette.navRed:palette.navGreen);
  }
  // Rear-facing white lens for aircraft direction identification.
- m.box(-.12,.30,zTail-.30,.24,.15,.20,palette.navWhite);
+ // Keep the lens within the original tail outline to preserve each
+ // aircraft's overall length and existing scale-calibration tests.
+ m.box(-.12,.30,zTail+.15,.24,.15,.20,palette.navWhite);
  // Tailplanes: canted twin fins for F/A-18, F-22, F-35 and Su-37,
  // single tall fin for Eurofighter Typhoon.
  if(id==="typhoon"){
