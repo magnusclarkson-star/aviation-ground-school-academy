@@ -4,7 +4,7 @@
  */
 (function(root){"use strict";
  const RAD=Math.PI/180;
- const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map(),PROP_CACHE=new Map();
+ const MESH_CACHE=new Map(),TRI_CACHE=new Map(),PART_CACHE=new Map(),SWEEP_CACHE=new Map(),TAIL_CACHE=new Map(),PROP_CACHE=new Map();
  const SHADOW_CACHE=new Map();
  const rgb=(r,g,b)=>"rgb("+Math.round(r*255)+","+Math.round(g*255)+","+Math.round(b*255)+")";
  const modelApi=()=>root?.AGSAFlight3D||(typeof module!=="undefined"&&module.exports?
@@ -54,12 +54,23 @@
    SWEEP_CACHE.set(resolved,trianglesOf(modelApi().buildRotorSweep(resolved)));
   return SWEEP_CACHE.get(resolved);
  }
+ function tailRotorSweepTriangles(id){
+  const resolved=exterior().normalize(id);
+  if(resolved!=="r44")return [];
+  if(!TAIL_CACHE.has(resolved))
+   TAIL_CACHE.set(resolved,trianglesOf(modelApi().buildTailRotorSweep(resolved)));
+  return TAIL_CACHE.get(resolved);
+ }
  function propellerSweepTriangles(id){
   const resolved=exterior().normalize(id);
   if(resolved!=="c172")return [];
   if(!PROP_CACHE.has(resolved))
    PROP_CACHE.set(resolved,trianglesOf(modelApi().buildPropellerSweep(resolved)));
   return PROP_CACHE.get(resolved);
+ }
+ function tailBlurOpacity(animation){
+  const value=animation?.tailBlurOpacity;
+  return Number.isFinite(value)?Math.max(0,Math.min(.20,value)):0;
  }
  function propBlurOpacity(animation){
   const value=animation?.propBlurOpacity;
@@ -100,6 +111,10 @@
   for(const tri of geometry(id))put(tri,null);
    const blur=rotorBlurOpacity(animation);
    if(blur>0)for(const tri of rotorSweepTriangles(id))put(tri,null,blur);
+   const tailBlur=tailBlurOpacity(animation);
+   if(tailBlur>0)for(const tri of tailRotorSweepTriangles(id))put(tri,null,tailBlur);
+   const propBlur=propBlurOpacity(animation);
+   if(propBlur>0)for(const tri of propellerSweepTriangles(id))put(tri,null,propBlur);
   for(const part of movingParts(id)){
    const angle=Number.isFinite(animation[part.name])?animation[part.name]:0;
    for(const tri of part.triangles)put(tri,{...part,angle});
@@ -159,6 +174,8 @@
   for(const tri of geometry(id))append(tri);
   const blur=rotorBlurOpacity(animation);
   if(blur>0)for(const tri of rotorSweepTriangles(id))append(tri,null,blur);
+  const tailBlur=tailBlurOpacity(animation);
+  if(tailBlur>0)for(const tri of tailRotorSweepTriangles(id))append(tri,null,tailBlur);
   const propBlur=propBlurOpacity(animation);
   if(propBlur>0)for(const tri of propellerSweepTriangles(id))append(tri,null,propBlur);
   for(const part of movingParts(id)){
@@ -236,7 +253,7 @@
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,propellerSweepTriangles,rotate,attitudePoint,viewDepth,projectedFaces,paint,paintInspection});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,tailRotorSweepTriangles,propellerSweepTriangles,rotate,attitudePoint,viewDepth,projectedFaces,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);
