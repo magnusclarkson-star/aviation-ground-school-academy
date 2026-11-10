@@ -1216,6 +1216,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   }));
   const airframes=Object.create(null);
   for(const id of Exterior.IDS){
+   const cabin=buildImportedCabin(id);
    airframes[id]={
     body:upload(buildVehicle(id)),
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
@@ -1223,10 +1224,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     tailRotorSweep:id==="r44"?upload(buildTailRotorSweep(id)):null,
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
     shadow:inspectionOnly?null:upload(buildShadow(id)),
-    authenticParts:id==="r44"?buildMovingParts("r44").map(part=>{
-     const mapped=alignRealR44MovingPart(part);
-     return {...mapped,gpu:upload(mapped.mesh)};
-    }):null,
+    cabin:cabin?upload(cabin):null,
+    authenticParts:id==="r44"?buildCleanR44Rotors().map(part=>({
+     ...part,gpu:upload(part.mesh)
+    })):null,
     authenticRotorSweep:id==="r44"?
      upload(alignRealR44Hardware(buildRotorSweep(id))):null,
     authenticTailRotorSweep:id==="r44"?
@@ -1357,28 +1358,57 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const realModel=id==="c172"?realC172:id==="r44"?realR44:null;
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
      (id==="c172"?"licensed-c172-glb":"licensed-r44-ac3d"):"procedural";
+    if(canvas.dataset)canvas.dataset.airframeInterior=realModel&&model.cabin?
+     "four-seats-and-panel":"not-rendered";
+    const drawCabin=()=>{
+     if(!model.cabin)return;
+     gl.disable(gl.BLEND);gl.depthMask(true);
+     gl.uniform1i(uni.uC172Pass,0);
+     gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
+     gl.uniform1f(uni.uOpacity,1);
+     gl.bindVertexArray(model.cabin.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.cabin.count);
+    };
     if(realModel){
      gl.activeTexture(gl.TEXTURE0);
-     for(const part of realModel.primitives){
+     const drawPrimitive=(part,alpha)=>{
       const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
-      // glTF C172 omits opacity; only R44 glass overrides full opacity.
-      const alpha=Math.max(0,Math.min(1,part.opacity??1));
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
-      if(alpha<.99){
-       gl.enable(gl.BLEND);
-       gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-       gl.depthMask(false);
-      }
       gl.bindTexture(gl.TEXTURE_2D,img);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if(alpha<.99){gl.depthMask(true);gl.disable(gl.BLEND);}
-      gl.uniform1f(uni.uOpacity,1);
+     };
+     if(id==="c172"){
+      // Opaque Cessna skin does not block the interior through tinted glass;
+      // glazing is drawn only after the seats with depth writes disabled.
+      gl.disable(gl.BLEND);gl.depthMask(true);
+      gl.uniform1i(uni.uC172Pass,1);
+      for(const part of realModel.primitives)drawPrimitive(part,1);
+      drawCabin();
+      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);gl.uniform1i(uni.uC172Pass,2);
+      for(const part of realModel.primitives)drawPrimitive(part,1);
+      gl.uniform1i(uni.uC172Pass,0);
+     }else{
+      // R44 source material 4 is 70% transparent glass. Treat windows as
+      // transparent after the solid body and new cabin, not before the seats.
+      gl.disable(gl.BLEND);gl.depthMask(true);
+      for(const part of realModel.primitives)
+       if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      drawCabin();
+      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      for(const part of realModel.primitives){
+       const alpha=Math.max(0,Math.min(1,part.opacity??1));
+       if(alpha<.99)drawPrimitive(part,alpha);
+      }
      }
+     gl.depthMask(true);gl.disable(gl.BLEND);
      gl.bindTexture(gl.TEXTURE_2D,null);
-     gl.uniform1f(uni.uHasTexture,0);
+     gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uOpacity,1);
+     gl.uniform1f(uni.uAlphaCutoff,0);gl.uniform1i(uni.uC172Pass,0);
     }else{
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
@@ -1416,7 +1446,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // actual blades remain distinct at startup and low power.
     const propOpacity=Number.isFinite(animation?.propBlurOpacity)?
      limit(animation.propBlurOpacity,0,.16):0;
-    if(model.propSweep&&propOpacity>0){
+    if(model.propSweep&&!realModel&&propOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,propOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -1458,7 +1488,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildCleanR44Rotors,buildImportedCabin,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
