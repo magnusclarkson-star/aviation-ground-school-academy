@@ -147,10 +147,14 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
 
 }
 assert.deepEqual(T.buildMovingParts("r44").map(p=>p.name),
- ["swashBank","swashPitch","mainRotor","tailRotor"]);
+ ["swashBank","swashPitch","collectiveLink","mainRotor","tailPitchLink","tailRotor"]);
 const rotorAssemblies=T.buildMovingParts("r44");
 const mainRotor=rotorAssemblies.find(p=>p.name==="mainRotor");
 const tailRotor=rotorAssemblies.find(p=>p.name==="tailRotor");
+for(const name of ["collectiveLink","tailPitchLink"]){
+ assert.ok(C.movingParts("r44").some(part=>part.name===name),
+  name+" is in both GPU and lightweight 2D views");
+}
 for(const name of ["swashBank","swashPitch"]){
  const part=rotorAssemblies.find(p=>p.name===name);
  assert.ok(part.mesh.triangles>=24&&part.mesh.triangles<=60,
