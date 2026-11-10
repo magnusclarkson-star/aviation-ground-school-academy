@@ -139,8 +139,8 @@ function makeTail(root){
  fin.lineTo(-4.25,.08);fin.closePath();
  const geometry=new THREE.ExtrudeGeometry(fin,{depth:.07,bevelEnabled:false});
  // Shape coordinate (z,y) -> world (x,y,z).
- geometry.rotateY(Math.PI/2);
- geometry.translate(-.035,0,0);
+ geometry.rotateY(-Math.PI/2);
+ geometry.translate(.035,0,0);
  mesh(stabilizer,"vertical-fin",geometry,paints.white);
  const rudder=new THREE.Group();rudder.name="rudder";rudder.position.set(0,.73,-4.22);
  stabilizer.add(rudder);
