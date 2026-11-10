@@ -102,6 +102,11 @@ assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spa
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
  "helicopter has its distinctive tall rotor mast");
 const doorMesh=T.buildVehicle("r44").positions;
+let furthestSkid=Number.NEGATIVE_INFINITY;
+for(let j=2;j<doorMesh.length;j+=3)
+ furthestSkid=Math.max(furthestSkid,doorMesh[j]);
+assert.ok(furthestSkid>3.20&&furthestSkid<3.35,
+ "R44 exterior has a visibly curled, protective forward skid nose");
 for(const sign of [-1,1]){
  let doorHandle=false;
  for(let i=0;i<doorMesh.length;i+=3){
