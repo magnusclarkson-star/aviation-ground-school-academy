@@ -128,6 +128,10 @@ function parseAC3D(text,textureBytes){
    indices:count<=65535?Uint16Array.from(group.indices):
     Uint32Array.from(group.indices),
    imageId:0,opacity:mat.opacity,
+   // FlightGear material 4 is the grey tinted passenger glazing; retain
+   // this distinction so its visibility can be tuned without changing
+   // coloured navigation lights or solid yellow fuselage materials.
+   isGlazing:group.materialId===4,
    alphaMask:false,alphaCutoff:0
   });
  }

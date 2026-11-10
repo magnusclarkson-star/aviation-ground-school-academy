@@ -69,10 +69,11 @@ try{
   return {status:renderer.realC172Status,source:canvas.dataset.airframeSource,
    drawn,vertices:model.vertices,triangles:model.triangles,
    textureImages:model.images.length,chromaticPixels:changed,
-   width:w,height:h};
+   cabin:canvas.dataset.airframeInterior,width:w,height:h};
  });
  assert.equal(info.status,"imported");
  assert.equal(info.source,"licensed-c172-glb");
+ assert.equal(info.cabin,"four-seats-and-panel");
  assert.ok(info.drawn);
  assert.ok(info.vertices>12000);
  assert.ok(info.triangles>13000);
@@ -80,6 +81,12 @@ try{
  assert.ok(info.chromaticPixels>1000,"actual WebGL screenshot has textured colours");
  fs.mkdirSync("artifacts",{recursive:true});
  await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-3d-preview.png"});
+ await page.evaluate(()=>{
+  const state={mode:"airplane",xM:0,zM:0,altitudeM:60,headingDeg:0,pitchDeg:0,rollDeg:0};
+  window.__c172TestRenderer.draw(state,{view:"inspect",airframeId:"c172",
+   orbit:{azimuth:58,elevation:5,distance:10}});
+ });
+ await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-cabin-closeup.png"});
  // The imported Robinson R44 must actually replace the procedural hull
  // while retaining the existing simulator's animated main/tail rotors.
  await page.waitForFunction(()=>window.__c172TestRenderer?.realR44Status==="imported",null,
@@ -114,6 +121,8 @@ try{
  });
  assert.equal(rotor.status,"imported");
  assert.equal(rotor.source,"licensed-r44-ac3d");
+ assert.equal(await page.evaluate(()=>window.__c172TestCanvas.dataset.airframeInterior),
+  "four-seats-and-panel");
  assert.ok(rotor.vertices>22000);
  assert.ok(rotor.triangles>7500);
  assert.equal(rotor.imageCount,1);
@@ -165,6 +174,14 @@ try{
    path:"artifacts/real-r44-"+view+"-preview.png"});
  }
  await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-3d-preview.png"});
+ await page.evaluate(()=>{
+  const state={mode:"helicopter",xM:0,zM:0,altitudeM:60,
+   headingDeg:0,pitchDeg:0,rollDeg:0};
+  window.__c172TestRenderer.draw(state,{view:"inspect",airframeId:"r44",
+   animation:{mainRotor:.45,tailRotor:.6},
+   orbit:{azimuth:65,elevation:3,distance:9}});
+ });
+ await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-cabin-closeup.png"});
  assert.deepEqual(errors,[]);
  console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
  console.log("Real R44 textured mesh Browser passed:",JSON.stringify(rotor));
