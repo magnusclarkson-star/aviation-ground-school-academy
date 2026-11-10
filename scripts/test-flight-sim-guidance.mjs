@@ -134,6 +134,18 @@ assert.match(padCentred.hint,/PAD CENTER/);
 G.observe(mission,{...turned,onGround:true,phase:"landed",
  altitudeM:0,landingGrade:"precision",time:26},["touchdown"]);
 assert.equal(mission.r44Lesson.status,"completed");
+const reviewedSkid={...turned,onGround:true,phase:"landed",
+ touchdownData:Object.freeze({sinkMs:-1.26,groundSpeedKt:1.65,
+  padOffsetM:3.8,yawRateDegS:1,bankDeg:2,grade:"precision"})};
+const skidFinish=G.r44LessonStatus(mission,reviewedSkid);
+assert.equal(skidFinish.short,"LESSON COMPLETE");
+assert.match(skidFinish.hint,/SKIDS 1\.3 m\/s · DRIFT 1\.6 kt · PAD 4 m/);
+assert.deepEqual(G.summary(mission,reviewedSkid).rotorTouchdown,{
+ sinkMs:1.3,driftKt:1.6,padOffsetM:4,grade:"precision"
+});
+assert.equal(G.summary(mission,reviewedSkid).touchdown,null,
+ "helicopter skid values must not be mistaken for fixed-wing wheel landing");
+assert.ok(Object.isFrozen(G.summary(mission,reviewedSkid).rotorTouchdown));
 assert.equal(G.r44LessonStatus(mission,turned).short,"LESSON COMPLETE");
 assert.equal(G.guidance({...turned,phase:"landed"},cyclic,mission).complete,true);
 G.observe(mission,{...turned,time:27},[]);
