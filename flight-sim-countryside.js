@@ -45,6 +45,19 @@ const towers=freeze([
  freeze({id:"south-silo",x:-1040,z:-1830,height:28,radius:6,color:"#d4c29a"}),
  freeze({id:"east-tower",x:1310,z:-650,height:33,radius:4,color:"#b6c0c7"})
 ]);
+// Low rural hedgerows provide near-ground depth while circling back to
+// the runway. Eight fixed strips, no textures/network requests or camera
+// anchoring; both renderers use these exact X/Z footprints.
+const hedgerows=freeze([
+ {id:"north-east",x:780,z:1760,w:130,d:7,h:5,color:"#416f48"},
+ {id:"north-west",x:-920,z:1540,w:105,d:7,h:4,color:"#4d7850"},
+ {id:"east-mid",x:685,z:910,w:155,d:7,h:5,color:"#3f6d45"},
+ {id:"west-mid",x:-800,z:680,w:120,d:7,h:4,color:"#547a4f"},
+ {id:"east-home",x:550,z:120,w:150,d:7,h:4,color:"#47744a"},
+ {id:"east-downwind",x:690,z:-680,w:180,d:7,h:5,color:"#3a6c43"},
+ {id:"south-west",x:-760,z:-1350,w:150,d:7,h:5,color:"#53794d"},
+ {id:"south-east",x:690,z:-2120,w:135,d:7,h:4,color:"#426e45"}
+].map(f=>freeze(f)));
 function terrainHeight(x,z){
  const edge=Math.max(0,Math.abs(x)-650),far=Math.max(0,z-2100);
  return Math.min(210,edge*.052+far*.015*(.55+.45*Math.sin(x*.002+z*.004)));
@@ -55,7 +68,7 @@ function trackCorners(track){
  return [[track.ax+ox,track.az+oz],[track.bx+ox,track.bz+oz],
   [track.bx-ox,track.bz-oz],[track.ax-ox,track.az-oz]];
 }
-const api=freeze({fields,farmTracks,towers,terrainHeight,trackCorners});
+const api=freeze({fields,farmTracks,towers,hedgerows,terrainHeight,trackCorners});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACountryside=api;
 })(typeof window!=="undefined"?window:null);
