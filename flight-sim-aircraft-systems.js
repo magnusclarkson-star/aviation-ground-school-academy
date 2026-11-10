@@ -71,6 +71,11 @@ function step(system,state,input,seconds){
   // Rudder pedals represent tail-rotor collective pitch, not RPM.
   r.rotorPitch=(collective-.48)*.13;
   r.tailPitch=rudder*.17;
+  // Small hub-control linkages visibly change with collective and pedals.
+  // Main/tail rotor RPM remains independent of these pitch controls.
+  // Their motion is visual only and continues to preview while paused.
+  r.collectiveLink=r.rotorPitch;
+  r.tailPitchLink=r.tailPitch;
   // A lightweight moving swashplate visual makes cyclic commands apparent
   // in the helicopter's exterior view even while flight is paused.
   // These limited angles do not alter rotor force or flight physics.

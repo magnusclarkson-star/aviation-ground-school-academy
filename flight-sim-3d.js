@@ -547,6 +547,12 @@ function buildMovingParts(mode="airplane"){
   };
   swashRing("swashBank",2.76,3,metal);
   swashRing("swashPitch",2.67,1,blue);
+  // Separate yellow root linkage illustrates changes to the collective
+  // lever independently of the two rotating rotor blades.
+  add("collectiveLink",[0,3.02,-.40],1,m=>{
+   m.box(-.05,2.95,-.75,.10,.12,.64,yellow);
+   m.box(-.18,3.00,-.21,.36,.12,.14,metal);
+  });
   // R44 rotor arrangement: one teetering TWO-blade main rotor, 10.06 m
   // diameter; one TWO-blade tail rotor, 1.47 m diameter. Blade sections
   // have slight coning, tapered tips and contrasting edges for legibility.
@@ -585,6 +591,12 @@ function buildMovingParts(mode="airplane"){
    m.box(-.39,y-.12,hubZ-.35,.78,.23,.70,blue);
    m.box(-.24,y+.10,hubZ-.19,.48,.18,.38,yellow);
    m.box(-.12,y+.26,hubZ-.12,.24,.09,.24,metal);
+  });
+  // Pitch-control arm near the outboard tail rotor hub. Pedals tilt this
+  // lever without falsely accelerating the rotor or altering heading.
+  add("tailPitchLink",[-.77,1.19,-8.18],1,m=>{
+   m.box(-.96,1.11,-8.50,.13,.13,.59,blue);
+   m.box(-1.03,1.13,-8.10,.22,.16,.13,yellow);
   });
   add("tailRotor",[-.77,1.19,-8.18],1,m=>{
    // Distinct, opaque two-blade anti-torque rotor on the left of the boom.
