@@ -130,21 +130,28 @@
  // axis followed by pitch about X. The fixed wing, helicopter mast and
  // animated control surfaces all undergo the same actual rigid-body bank.
  // No camera, navigation or flight-state values are modified.
- function attitudePoint(point,rollDeg=0,pitchDeg=0){
+ // Compute rotation constants ONCE per frame, rather than several
+ // trigonometric functions for every mobile Canvas triangle vertex.
+ function attitudeTransform(rollDeg=0,pitchDeg=0){
   const roll=Math.max(-85,Math.min(85,Number.isFinite(rollDeg)?rollDeg:0))*RAD;
   const pitch=Math.max(-85,Math.min(85,Number.isFinite(pitchDeg)?pitchDeg:0))*RAD;
-  const [x,y,z]=point,cr=Math.cos(roll),sr=Math.sin(roll);
-  const bx=x*cr+y*sr,by=-x*sr+y*cr;
-  const cp=Math.cos(pitch),sp=Math.sin(pitch);
-  return [bx,by*cp+z*sp,-by*sp+z*cp];
+  const cr=Math.cos(roll),sr=Math.sin(roll),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  return ([x,y,z])=>{
+   const bx=x*cr+y*sr,by=-x*sr+y*cr;
+   return [bx,by*cp+z*sp,-by*sp+z*cp];
+  };
+ }
+ function attitudePoint(point,rollDeg=0,pitchDeg=0){
+  return attitudeTransform(rollDeg,pitchDeg)(point);
  }
  function projectedFaces(id,view="chase",animation={},attitude={}){
   const faces=[];
+  const tilted=(attitude?.rollDeg||attitude?.pitchDeg)?
+   attitudeTransform(attitude.rollDeg,attitude.pitchDeg):null;
   let order=0;
   function append(shape,part=null,opacity=1){
    const moving=part?shape.points.map(point=>rotate(point,part.pivot,part.axis,part.angle)):shape.points;
-   const points=(attitude?.rollDeg||attitude?.pitchDeg)?
-    moving.map(point=>attitudePoint(point,attitude.rollDeg,attitude.pitchDeg)):moving;
+   const points=tilted?moving.map(tilted):moving;
    faces.push({points,color:shape.color,
     depth:points.reduce((sum,p)=>sum+viewDepth(p,view),0)/3,
     opacity,order:order++});
