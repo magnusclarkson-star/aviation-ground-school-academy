@@ -33,6 +33,13 @@ function update(circuit,state){
  if(state.phase==="halted"){circuit.stage="stopped";return circuit}
  if(state.phase==="rollout"||state.phase==="complete"){circuit.stage="landed";return circuit}
  if(["landed","stopped"].includes(circuit.stage))return circuit;
+ // A pilot can rejoin the runway from outside the illustrated rectangular
+ // route. Once flight physics marks a real return final, show its live
+ // centreline/glidepath cues rather than a stale downwind waypoint.
+ if(state.phase==="approach"){
+  circuit.stage="final";
+  return circuit;
+ }
  const x=Number(state.xM)||0,z=Number(state.zM)||0,h=heading(state.headingDeg);
  const airborne=!state.onGround;
  if(!airborne)return circuit;

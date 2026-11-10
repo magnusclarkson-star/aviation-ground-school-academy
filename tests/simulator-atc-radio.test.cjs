@@ -30,7 +30,8 @@ function mockWorld({voices=true}={}){
  const els=new Map(),docListeners={};
  function element(id){
   if(!els.has(id))els.set(id,{
-   id,textContent:'',disabled:false,children:[],handlers:{},className:'',
+   id,textContent:'',disabled:false,children:[],handlers:{},attrs:{},className:'',
+   setAttribute(k,v){this.attrs[k]=v;},
    addEventListener(event,fn){this.handlers[event]=fn;},
    replaceChildren(){this.children=[];},
    appendChild(x){this.children.push(x);},
@@ -91,11 +92,34 @@ test('without synthesized voice, transcript remains readable and all buttons wor
 test('radio UI requires user gesture and no microphone or network',()=>{
  for(const id of ['atcBefore','atcDuring','atcAfter','atcAll','atcStop','atcTranscript','atcStatus'])
   assert.ok(html.includes('id="'+id+'"'));
- assert.ok(html.includes('src="flight-sim-atc-radio.js"'));
+ assert.ok(html.includes('src="flight-sim-atc-radio.js?v=20261110-fullcircuit1"'));
  assert.ok(script.includes('atcRadio=F.attach('));
  assert.ok(script.includes('onBegin:()=>{'));
  assert.ok(script.includes('instructorVoice?.isSpeaking()'));
  const code=fs.readFileSync(path.join(root,'flight-sim-atc-radio.js'),'utf8');
  for(const forbidden of ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage','getUserMedia','sendBeacon'])
   assert.ok(!code.includes(forbidden));
+});
+
+test('phase-linked radio includes one arrival exchange after a full runway circuit',()=>{
+ const env=mockWorld();
+ const radio=Radio.attach({windowLike:env.win,documentLike:env.doc,
+  getMode:()=> 'airplane',getScenario:()=> 'runway',getPhase:()=> 'roll'});
+ radio.arm(true);
+ assert.equal(radio.cuePhase('climb'),true);
+ assert.match(env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' '),/reports a climb/);
+ const spokenBefore=env.spoken.length;
+ assert.equal(radio.cuePhase('approach'),true,
+  'returning to runway must speak final despite earlier climb exchange');
+ assert.ok(env.spoken.length>spokenBefore);
+ const transcript=env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' ');
+ assert.match(transcript,/reports an approach/);
+ assert.match(transcript,/landing clearance/);
+ assert.equal(radio.cuePhase('approach'),false,
+  'same final-approach radio phase never plays repeatedly');
+ assert.equal(radio.cuePhase('flight'),false,
+  'already-delivered departure flight stage is unchanged');
+ assert.equal(radio.cuePhase('rollout'),true);
+ assert.match(env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' '),/completed the simulated landing/);
+ radio.disarm();
 });

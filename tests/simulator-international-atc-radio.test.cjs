@@ -78,7 +78,7 @@ test('UI wiring provides airport, situation, radio FX and mobile-safe start/stop
  for(const id of ['atcAirport','atcSituation','radioFxChoice','radioFxStatus'])
   assert.ok(html.includes('id="'+id+'"'),id);
  for(const file of ['flight-sim-atc-world.js','flight-sim-radio-effects.js','flight-sim-atc-radio.js'])
-  assert.ok(html.includes('src="'+file+'"'));
+  assert.ok(html.includes('src="'+file),file);
  assert.match(html,/value="on" selected>ON/);
  for(const key of ['getAirport:','getSituation:','onTransmissionStart:','onTransmissionEnd:','radioFx.disable()'])
   assert.ok(js.includes(key),key);
