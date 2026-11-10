@@ -281,4 +281,29 @@ for(const id of A.IDS){
    id+" bank and climb alter actual airframe coordinates in "+view);
  }
 }
+// Position lights have a fixed aviation orientation: port/left red,
+// starboard/right green, and an aft-facing white lens. Local -X is left
+// because the nose points +Z. Both renderers share this same geometry.
+const lightVertices=(model,[r,g,b])=>{
+ const points=[];
+ for(let i=0;i<model.positions.length;i+=3){
+  if(Math.abs(model.colors[i]-r/255)<.006&&
+   Math.abs(model.colors[i+1]-g/255)<.006&&
+   Math.abs(model.colors[i+2]-b/255)<.006)
+   points.push([model.positions[i],model.positions[i+1],model.positions[i+2]]);
+ }
+ return points;
+};
+for(const id of A.IDS){
+ const mesh=T.buildVehicle(id);
+ const left=lightVertices(mesh,[235,56,48]);
+ const right=lightVertices(mesh,[54,214,111]);
+ const aft=lightVertices(mesh,[236,241,226]);
+ assert.ok(left.some(p=>p[0]<-0.7),id+" has a red LEFT position-light lens");
+ assert.ok(right.some(p=>p[0]>0.7),id+" has a green RIGHT position-light lens");
+ assert.ok(aft.some(p=>p[2]<-3),id+" has a white rear position-light lens");
+ const fallback=C.getMesh(id);
+ assert.deepEqual(Array.from(fallback.colors),Array.from(mesh.colors),
+  id+" uses the same correct navigation light colors in the Canvas fallback");
+}
 console.log("Seven external aircraft meshes passed: distinct Cessna, R44, F/A-18, F-22, F-35, Typhoon and Su-37 shapes, matching 2D/3D airframe geometry, controls and mobile budgets.");
