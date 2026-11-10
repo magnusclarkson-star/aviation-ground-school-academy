@@ -15,6 +15,19 @@ assert.equal(nextRight.waypointRotation,"rotate(60.95 110 82)",
 const towardWest=N.coordinates({...circuitState,headingDeg:90},{stage:"crosswind"});
 assert.equal(towardWest.waypointRotation,"rotate(-29.05 110 82)",
  "turning east moves the same waypoint to the aircraft's left");
+const heli=N.coordinates({mode:"helicopter",scenario:"helipad",xM:0,zM:0,
+ headingDeg:0,trackDeg:0,groundSpeedKt:0});
+assert.equal(heli.isHelipad,true,"R44 moving map uses the helipad, not the runway");
+assert.equal(heli.padText,"PAD CENTER");
+assert.equal(heli.waypointRotation,null,"no directional pointer needed at pad centre");
+assert.ok(heli.scale>.45,"R44 pad is readable at mobile map scale");
+const padWest=N.coordinates({mode:"helicopter",scenario:"helipad",xM:30,zM:0,
+ headingDeg:0,trackDeg:0,groundSpeedKt:3});
+assert.match(padWest.padText,/PAD 30 m · BRG 270° · L/);
+assert.equal(padWest.waypointRotation,"rotate(-90.00 110 82)");
+const padAhead=N.coordinates({mode:"helicopter",scenario:"helipad",xM:0,zM:-60,
+ headingDeg:0,trackDeg:0,groundSpeedKt:3});
+assert.match(padAhead.padText,/PAD 60 m · BRG 000° · AHEAD/);
 const inactive=N.coordinates(circuitState,{stage:"landed"});
 assert.equal(inactive.waypointRotation,null,"pointer disappears after the circuit ends");
 const arriving=N.coordinates({xM:-230.5,zM:-1450,headingDeg:90,trackDeg:100,groundSpeedKt:74});

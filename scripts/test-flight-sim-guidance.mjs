@@ -3,6 +3,7 @@ import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const G=require("../flight-sim-guidance.js");
 const M=require("../flight-sim-model.js");
+const Circuit=require("../flight-sim-circuit-guide.js");
 
 const runway=M.makeState("airplane");
 const controls=M.makeInput("airplane");
@@ -160,6 +161,38 @@ heightState.speedKt=12;
 assert.equal(G.guidance(heightState,M.makeInput(),heightProgress).tag,
  "FICTIONAL LOW-ENERGY CUE",
  "circuit height hints cannot override low-speed caution");
+
+// A 90-degree corner needs preparation while the moving aircraft is still
+// travelling toward it. Route text must advise the NEXT right turn before
+// arriving, rather than telling students to chase an already passed dot.
+const cornerState=M.makeState("airplane","runway");
+Object.assign(cornerState,{phase:"flight",onGround:false,xM:900,zM:-1000,
+ headingDeg:180,trackDeg:180,speedKt:86,groundSpeedKt:86,altitudeM:145});
+const cornerSession=G.start(cornerState);
+cornerSession.circuit.stage="downwind";
+const farCorner=Circuit.status(cornerSession.circuit,cornerState);
+assert.equal(farCorner.turnNow,false,"far from corner: stay on downwind");
+assert.match(G.guidance(cornerState,M.makeInput(),cornerSession).text,/to DOWNWIND/);
+cornerState.zM=-1480;
+const nearCorner=Circuit.status(cornerSession.circuit,cornerState);
+assert.ok(nearCorner.turnLeadM>250&&nearCorner.turnLeadM<380);
+assert.equal(nearCorner.turnNow,true);
+assert.equal(nearCorner.nextCourseDeg,270);
+assert.match(G.guidance(cornerState,M.makeInput(),cornerSession).text,
+ /NEXT RIGHT 270° to BASE/,
+ "student gets an early right-base turn instruction without automatic steering");
+cornerState.speedKt=12;cornerState.groundSpeedKt=12;
+assert.equal(G.guidance(cornerState,M.makeInput(),cornerSession).tag,
+ "FICTIONAL LOW-ENERGY CUE","turn prompts must not hide low-energy caution");
+const postLanding={...cornerState,phase:"complete",onGround:true,speedKt:0};
+Circuit.update(cornerSession.circuit,postLanding);
+assert.equal(Circuit.status(cornerSession.circuit,postLanding).turnNow,false);
+assert.equal(Circuit.status(cornerSession.circuit,postLanding).active,false);
+// The speed-dependent lead must be finite, bounded, and increase as the
+// fictional learner's groundspeed rises, not depend on wall-clock time.
+assert.ok(Circuit.cornerLeadMetres({...cornerState,groundSpeedKt:100})>
+ Circuit.cornerLeadMetres({...cornerState,groundSpeedKt:40,speedKt:40}));
+assert.ok(Circuit.cornerLeadMetres({speedKt:1000})<=380);
 
 // An illustrative jet has a different fictional energy envelope from the
 // original basic trainer; warning status must follow the selected airframe.

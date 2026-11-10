@@ -18,22 +18,39 @@
   const correction=((runwayBearingDeg-heading+540)%360)-180;
   const runwayTurn=correction>5?"R":correction< -5?"L":"HOLD";
   const runwayLandingHeadingDeg=z>=900?180:0;
-  const leg=Circuit?.status(circuit,state)||null;
+  const heli=state?.mode==="helicopter";
+  const padDistanceM=Math.hypot(x,z);
+  const padBearingDeg=bearing(Math.atan2(-x,-z)*180/Math.PI);
+  const padRelativeDeg=((padBearingDeg-heading+540)%360)-180;
+  const padTurn=padRelativeDeg>5?"R":padRelativeDeg< -5?"L":"AHEAD";
+  const leg=heli?null:(Circuit?.status(circuit,state)||null);
   // Keep the next circuit waypoint visible as a small direction pointer
   // even when that fixed waypoint is outside the map's narrow viewport.
   // The heading-up arrow is only a drawing; it never changes controls.
   const waypointRelativeDeg=leg?.active?
-   ((leg.waypointBearingDeg-heading+540)%360)-180:null;
+   ((leg.waypointBearingDeg-heading+540)%360)-180:
+   heli&&padDistanceM>2?padRelativeDeg:null;
   // Zooms out as the field recedes, allowing the runway to remain on the
   // heading-up map throughout a normal circuit, then zooms in on approach.
-  const scale=Math.max(.0055,Math.min(SCALE,77/Math.max(1600,runwayDistanceM)));
+  // The 60-m-wide helipad is nearly invisible at runway-map scale.
+  // Use a short-range heading-up pad map while preserving the original
+  // Cessna circuit scale for all airplane states.
+  const scale=heli?
+   Math.max(.095,Math.min(.55,75/Math.max(130,padDistanceM))):
+   Math.max(.0055,Math.min(SCALE,77/Math.max(1600,runwayDistanceM)));
   return Object.freeze({
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
-   groundSpeedKt:groundSpeed,scale,
+   groundSpeedKt:groundSpeed,scale,isHelipad:heli,
+   padDistanceM,padBearingDeg,padTurn,
    runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
    waypointRotation:waypointRelativeDeg===null?null:
     "rotate("+waypointRelativeDeg.toFixed(2)+" 110 82)",
-   circuitText:leg?(leg.finalCue?leg.label+" "+(leg.waypointDistanceM>=1000?(leg.waypointDistanceM/1000).toFixed(1)+" km":Math.round(leg.waypointDistanceM)+" m")+" · "+leg.finalCue:leg.short+" · "+leg.turn+" · WP "+String(Math.round(leg.waypointBearingDeg)%360).padStart(3,"0")+"°"):null,
+   circuitText:leg?(leg.finalCue?leg.label+" "+(leg.waypointDistanceM>=1000?(leg.waypointDistanceM/1000).toFixed(1)+" km":Math.round(leg.waypointDistanceM)+" m")+" · "+leg.finalCue:
+    leg.turnNow?"NEXT R "+String(leg.nextCourseDeg).padStart(3,"0")+"° · "+Math.round(leg.waypointDistanceM)+" m":
+    leg.short+" · "+leg.turn+" · WP "+String(Math.round(leg.waypointBearingDeg)%360).padStart(3,"0")+"°"):null,
+   padText:padDistanceM<2?"PAD CENTER":
+    "PAD "+Math.round(padDistanceM)+" m · BRG "+
+    String(Math.round(padBearingDeg)%360).padStart(3,"0")+"° · "+padTurn,
    runwayText:"RWY "+(runwayDistanceM>=1000?(runwayDistanceM/1000).toFixed(1)+" km":Math.round(runwayDistanceM)+" m")+
     " · BRG "+String(Math.round(runwayBearingDeg)%360).padStart(3,"0")+"° · "+runwayTurn,
    worldTransform:"translate(110 82) rotate("+(-heading).toFixed(2)+") scale("+scale.toFixed(5)+" "+(-scale).toFixed(5)+") translate("+(-x).toFixed(2)+" "+(-z).toFixed(2)+")",
@@ -59,28 +76,38 @@
    grid.push("M"+n+" -6000 V6000","M-6000 "+n+" H6000");
   }
   node(doc,"path",{d:grid.join(" "),stroke:"#31565b","stroke-width":12,fill:"none"},base);
-  node(doc,"rect",{x:-23,y:0,width:46,height:1800,rx:4,fill:"#526065",stroke:"#9aac9a","stroke-width":6},base);
+  const airport=node(doc,"g",{"data-nav-airfield":"true"},base);
+  node(doc,"rect",{x:-23,y:0,width:46,height:1800,rx:4,fill:"#526065",stroke:"#9aac9a","stroke-width":6},airport);
   // The circuit is a fixed dashed suggestion over the local field map.
   // It never moves the aircraft or overrides touch controls.
   const route=Circuit?.PATH||[];
   if(route.length){
    const line=route.map(([x,z],i)=>(i?"L":"M")+x+" "+z).join(" ");
    node(doc,"path",{d:line,fill:"none",stroke:"#edc579","stroke-width":28,
-    "stroke-dasharray":"95 100","stroke-linejoin":"round","data-nav-circuit-route":"true",visibility:"hidden"},base);
+    "stroke-dasharray":"95 100","stroke-linejoin":"round","data-nav-circuit-route":"true",visibility:"hidden"},airport);
   }
   const waypoint=node(doc,"circle",{cx:0,cy:0,r:75,fill:"#f2d99a",
-   stroke:"#113b49","stroke-width":18,"data-nav-circuit-waypoint":"true"},base);
+   stroke:"#113b49","stroke-width":18,"data-nav-circuit-waypoint":"true"},airport);
   waypoint.setAttribute("visibility","hidden");
-  node(doc,"rect",{x:58,y:20,width:20,height:1760,fill:"#596b6b",stroke:"#65787a","stroke-width":3},base);
-  node(doc,"path",{d:"M0 140 H68 M0 1610 H68",stroke:"#86937d","stroke-width":26,fill:"none"},base);
-  node(doc,"line",{x1:0,y1:35,x2:0,y2:1760,stroke:"#edf5e4","stroke-width":4,"stroke-dasharray":"75 65"},base);
+  node(doc,"rect",{x:58,y:20,width:20,height:1760,fill:"#596b6b",stroke:"#65787a","stroke-width":3},airport);
+  node(doc,"path",{d:"M0 140 H68 M0 1610 H68",stroke:"#86937d","stroke-width":26,fill:"none"},airport);
+  node(doc,"line",{x1:0,y1:35,x2:0,y2:1760,stroke:"#edf5e4","stroke-width":4,"stroke-dasharray":"75 65"},airport);
   node(doc,"path",{d:"M-18 80 L0 140 L18 80 M-18 1720 L0 1660 L18 1720",
-   stroke:"#e8e6d2","stroke-width":6,fill:"none"},base);
-  node(doc,"circle",{cx:-250,cy:-170,r:41,fill:"#3b646b",stroke:"#d3d1a3","stroke-width":7},base);
-  node(doc,"path",{d:"M-280 -170 H-220 M-250 -200 V-140",stroke:"#e8dfac","stroke-width":8},base);
+   stroke:"#e8e6d2","stroke-width":6,fill:"none"},airport);
+  node(doc,"circle",{cx:-250,cy:-170,r:41,fill:"#3b646b",stroke:"#d3d1a3","stroke-width":7},airport);
+  node(doc,"path",{d:"M-280 -170 H-220 M-250 -200 V-140",stroke:"#e8dfac","stroke-width":8},airport);
   for(const [x,z] of [[120,220],[140,340],[160,510],[165,890],[-160,370]]){
-   node(doc,"rect",{x,y:z,width:65,height:85,rx:4,fill:"#364c50",stroke:"#658186","stroke-width":3},base);
+   node(doc,"rect",{x,y:z,width:65,height:85,rx:4,fill:"#364c50",stroke:"#658186","stroke-width":3},airport);
   }
+  const helipad=node(doc,"g",{"data-nav-helipad":"true",visibility:"hidden"},base);
+  node(doc,"circle",{cx:0,cy:0,r:30,fill:"#33454f",
+   stroke:"#edcb7b","stroke-width":2},helipad);
+  node(doc,"circle",{cx:0,cy:0,r:21,fill:"none",
+   stroke:"#a0dce3","stroke-width":1.6},helipad);
+  node(doc,"circle",{cx:0,cy:0,r:9,fill:"none",
+   stroke:"#d8e5dd","stroke-width":1.2},helipad);
+  node(doc,"path",{d:"M-8 -12 V12 M8 -12 V12 M-8 0 H8",
+   stroke:"#f1f5e8","stroke-width":3,fill:"none"},helipad);
   // Heading-up map: central aircraft is fixed; the airfield moves under it.
   node(doc,"circle",{cx:110,cy:82,r:43,stroke:"#9fc1bb66","stroke-width":1,
    fill:"none","stroke-dasharray":"3 4"},svg);
@@ -120,6 +147,9 @@
   const c=coordinates(state,circuit);
   for(const el of holder.querySelectorAll("[data-nav-map]")){
    el.querySelector("[data-nav-world]")?.setAttribute("transform",c.worldTransform);
+   el.querySelector("[data-nav-airfield]")?.setAttribute("visibility",c.isHelipad?"hidden":"visible");
+   el.querySelector("[data-nav-helipad]")?.setAttribute("visibility",c.isHelipad?"visible":"hidden");
+   el.dataset.navTarget=c.isHelipad?"helipad":"runway";
    el.querySelector("[data-nav-track-pointer]")?.setAttribute("transform",c.trackRotation);
    const circuitPointer=el.querySelector("[data-nav-circuit-pointer]");
    if(circuitPointer){
@@ -143,7 +173,7 @@
     field.textContent=value==="heading"?"HDG "+String(Math.round(c.headingDeg)%360).padStart(3,"0"):
      value==="track"?"TRK "+String(Math.round(c.trackDeg)%360).padStart(3,"0"):
      value==="position"?c.positionText:
-     value==="runway"?(c.circuitText||c.runwayText):
+     value==="runway"?(c.isHelipad?c.padText:(c.circuitText||c.runwayText)):
      "GS "+Math.round(c.groundSpeedKt);
    }
   }

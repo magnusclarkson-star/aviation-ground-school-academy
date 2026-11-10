@@ -25,6 +25,24 @@ const LEGS=Object.freeze({
   hint:"The exercise stopped after terrain or runway contact. Restart to try again."})
 });
 const PATH=Object.freeze([[0,250],[0,1750],[900,2250],[900,-1750],[0,-1900],[0,250]]);
+// At the illustrated corners, start a right turn *before* reaching the
+// waypoint: otherwise a moving aircraft overshoots the turn by hundreds of
+// metres and can struggle to get back to the home runway on a phone.
+// These are visual practice cues, not real aircraft turn procedures.
+const NEXT=Object.freeze({
+ departure:Object.freeze({label:"CROSSWIND",course:90}),
+ crosswind:Object.freeze({label:"DOWNWIND",course:180}),
+ downwind:Object.freeze({label:"BASE",course:270}),
+ base:Object.freeze({label:"FINAL",course:0})
+});
+const pad3=n=>String(Math.round(n)%360).padStart(3,"0")+"°";
+function cornerLeadMetres(state){
+ const knots=Math.max(0,Number(state?.groundSpeedKt)||0,Number(state?.speedKt)||0);
+ const metresPerSecond=Math.max(25,knots)*.514444;
+ // Typical illustration: distance to begin a turn grows with the square
+ // of speed, clamped to avoid hiding the waypoint on a short leg.
+ return Math.max(120,Math.min(380,metresPerSecond**2/(9.81*Math.tan(30*Math.PI/180))));
+}
 function create(state){
  return {stage:!eligible(state)?"inactive":state.scenario==="approach"?"final":"departure"};
 }
@@ -62,6 +80,9 @@ function status(circuit,state){
  const bearing=heading(Math.atan2(dx,dz)*RAD);
  const offset=signedDelta(state.headingDeg,bearing);
  const turn=offset>8?"RIGHT":offset< -8?"LEFT":"AHEAD";
+ const next=NEXT[circuit.stage]||null;
+ const turnLeadM=next?cornerLeadMetres(state):null;
+ const turnNow=Boolean(next&&!state.onGround&&distance<=turnLeadM);
  const distanceText=distance>=1000?(distance/1000).toFixed(1)+" km":Math.round(distance)+" m";
  const bearingText=String(Math.round(bearing)%360).padStart(3,"0")+"°";
  const course=String(step.course).padStart(3,"0")+"°";
@@ -102,18 +123,21 @@ function status(circuit,state){
   waypoint:step.target.slice(),
   waypointBearingDeg:bearing,waypointDistanceM:distance,
   courseDeg:step.course,courseText:course,turn,finalCue,
-  referenceHeightM,heightCue,
+  referenceHeightM,heightCue,turnLeadM,turnNow,
+  nextCourseDeg:next?.course??null,nextLabel:next?.label??null,
   short:step.label+" · "+course+" · "+distanceText,
   // The printed leg course alone can steer a learner away from the
   // next waypoint after a wide banked turn. Use the current bearing and
   // distance to the *fixed* leg waypoint instead; no controls are moved.
-  instructions:finalCue?"FINAL · "+finalCue:
+  instructions:finalCue?"FINAL · "+finalCue:turnNow?
+   "NEXT RIGHT "+pad3(next.course)+" to "+next.label+
+   " · "+distanceText+" to corner"+(heightCue?" · "+heightCue:""):
    (turn==="AHEAD"?"AHEAD":"TURN "+turn)+" "+bearingText+" · "+distanceText+
    " to "+step.label+(heightCue?" · "+heightCue:""),
   active:!["landed","stopped"].includes(circuit.stage)
  });
 }
-const api=Object.freeze({create,update,status,PATH,signedDelta,eligible});
+const api=Object.freeze({create,update,status,PATH,signedDelta,eligible,cornerLeadMetres});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACircuitGuide=api;
 })(typeof window!=="undefined"?window:null);
