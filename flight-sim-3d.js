@@ -28,6 +28,9 @@ const Traffic=root?.AGSAAirfieldTraffic||
 const RealAirframes=root?.AGSARealAirframes||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-real-airframes.js"):null);
+const RealR44=root?.AGSARealR44||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-real-r44.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -523,6 +526,26 @@ function buildPropellerSweep(mode="c172"){
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
+// R44 source dimensions differ from the earlier procedural placeholder.
+// Remap rotor hardware to the genuine cabin roof and tailboom; the original
+// animated axes and flight-model commands remain unchanged.
+function alignRealR44HardwarePoint(point,tail=false){
+ return [point[0],point[1]-(tail?.30:1.15),point[2]*.60+1.30];
+}
+function alignRealR44Hardware(mesh,tail=false){
+ const positions=new Float32Array(mesh.positions.length);
+ for(let i=0;i<positions.length;i+=3){
+  const p=alignRealR44HardwarePoint([
+   mesh.positions[i],mesh.positions[i+1],mesh.positions[i+2]],tail);
+  positions.set(p,i);
+ }
+ return {...mesh,positions};
+}
+function alignRealR44MovingPart(part){
+ const tail=part.name.toLowerCase().includes("tail");
+ return {...part,pivot:alignRealR44HardwarePoint(part.pivot,tail),
+  mesh:alignRealR44Hardware(part.mesh,tail)};
+}
 function buildMovingParts(mode="airplane"){
  if(Exterior.IDS.includes(mode)&&mode!=="c172"&&mode!=="r44"){
   return Exterior.buildJetParts(Mesh,mode).map(part=>scalePart(part,mode));
@@ -716,7 +739,7 @@ function cameraPose(state,view="cockpit",orbit={}){
  if(view==="inspect"){
   const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
   const elevation=limit(orbit.elevation??28,-70,78)*RAD;
-  const distance=limit(orbit.distance??29,17,70);
+  const distance=limit(orbit.distance??18,9,70);
   const direction=yaw+Math.PI+azimuth;
   const horizontal=distance*Math.cos(elevation);
   return {view,eye:[craft[0]+Math.sin(direction)*horizontal,
@@ -751,6 +774,15 @@ function cameraPose(state,view="cockpit",orbit={}){
     Math.max(4,craft[1]+rise),state.zM-distance*Math.cos(yaw)],
   yaw,pitch:-Math.atan2(rise,distance),
   roll:(state.rollDeg||0)*RAD*.13,craft};
+}
+// Frame genuinely imported compact aircraft closer, rather than leaving
+// them a tiny speck at the distance chosen for the old oversized dummy mesh.
+// The viewpoint angles and flight state remain exactly unchanged.
+function importedCameraFraming(camera,view,scale=1){
+ if(!camera||!["chase","side","top"].includes(view))return camera;
+ const factor=limit(scale,.55,1);
+ return {...camera,eye:camera.eye.map((v,i)=>
+  camera.craft[i]+(v-camera.craft[i])*factor)};
 }
 const VERTEX=`#version 300 es
 precision highp float;
@@ -846,7 +878,7 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  vec3 shaded=mix(clamp(albedo*vLight*uLightColor,0.,1.),albedo,vEmissive);
- outColor=vec4(mix(shaded,uFogColor,fog),uOpacity);
+ outColor=vec4(mix(shaded,uFogColor,fog),uOpacity*texel.a);
 }`;
 const SKY_VERTEX=`#version 300 es
 precision mediump float;
@@ -888,6 +920,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
+ let realR44=null,realR44Status="loading";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -935,7 +968,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     indexType:primitive.indices instanceof Uint16Array?
      gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
-    alphaCutoff:primitive.alphaCutoff};
+    alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1};
    objects.push(object);return object;
   };
   async function importC172(){
@@ -972,9 +1005,41 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(typeof console!=="undefined")console.warn("C172 mesh fallback:",error);
    }
   }
+  async function importR44(){
+   if(!RealR44){realR44Status="unavailable";return;}
+   try{
+    const model=await RealR44.ensureR44();
+    if(disposed||lost)return;
+    const decoded=await Promise.all(model.images.map(async(bytes,i)=>{
+     const blob=new Blob([bytes],{type:model.mimeTypes?.[i]||"image/png"});
+     return root.createImageBitmap(blob);
+    }));
+    if(disposed||lost){decoded.forEach(bitmap=>bitmap.close?.());return;}
+    const images=decoded.map(bitmap=>{
+     const texture=gl.createTexture();textures.push(texture);
+     gl.bindTexture(gl.TEXTURE_2D,texture);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
+     gl.generateMipmap(gl.TEXTURE_2D);
+     bitmap.close?.();return texture;
+    });
+    gl.bindTexture(gl.TEXTURE_2D,null);
+    realR44={primitives:model.primitives.map(uploadImported),images,
+     vertices:model.vertices,triangles:model.triangles};
+    realR44Status="imported";
+   }catch(error){
+    realR44Status="fallback";
+    if(typeof console!=="undefined")console.warn("R44 mesh fallback:",error);
+   }
+  }
   // This is deliberately non-blocking: controls and simulated flight start
   // immediately with the legacy model, then swap to genuine C172 geometry.
   void importC172();
+  void importR44();
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
@@ -996,7 +1061,15 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     rotorSweep:id==="r44"?upload(buildRotorSweep(id)):null,
     tailRotorSweep:id==="r44"?upload(buildTailRotorSweep(id)):null,
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
-    shadow:inspectionOnly?null:upload(buildShadow(id))
+    shadow:inspectionOnly?null:upload(buildShadow(id)),
+    authenticParts:id==="r44"?buildMovingParts("r44").map(part=>{
+     const mapped=alignRealR44MovingPart(part);
+     return {...mapped,gpu:upload(mapped.mesh)};
+    }):null,
+    authenticRotorSweep:id==="r44"?
+     upload(alignRealR44Hardware(buildRotorSweep(id))):null,
+    authenticTailRotorSweep:id==="r44"?
+     upload(alignRealR44Hardware(buildTailRotorSweep(id),true)):null
    };
   }
   function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null,orbit={}}={}){
@@ -1026,7 +1099,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uHasTexture,0);
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
-   const targetCamera=cameraPose(state,view,orbit);
+   const baseCamera=cameraPose(state,view,orbit);
+   const realHelicopter=state.mode==="helicopter"&&realR44!==null;
+   const realTrainer=state.mode==="airplane"&&realC172!==null&&
+    Exterior.normalize(airframeId||state.mode)==="c172";
+   const targetCamera=importedCameraFraming(baseCamera,view,
+    realHelicopter?.72:realTrainer?.82:1);
    const clock=root?.performance?.now?.()??Date.now();
    const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
    const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera);
@@ -1114,17 +1192,28 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const isReal=id==="c172"&&realC172!==null;
-    if(canvas.dataset)canvas.dataset.airframeSource=isReal?"licensed-c172-glb":"procedural";
-    if(isReal){
+    const realModel=id==="c172"?realC172:id==="r44"?realR44:null;
+    if(canvas.dataset)canvas.dataset.airframeSource=realModel?
+     (id==="c172"?"licensed-c172-glb":"licensed-r44-ac3d"):"procedural";
+    if(realModel){
      gl.activeTexture(gl.TEXTURE0);
-     for(const part of realC172.primitives){
-      const img=part.imageId===null?null:realC172.images[part.imageId];
+     for(const part of realModel.primitives){
+      const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
+      // glTF C172 omits opacity; only R44 glass overrides full opacity.
+      const alpha=Math.max(0,Math.min(1,part.opacity??1));
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
+      gl.uniform1f(uni.uOpacity,alpha);
+      if(alpha<.99){
+       gl.enable(gl.BLEND);
+       gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+       gl.depthMask(false);
+      }
       gl.bindTexture(gl.TEXTURE_2D,img);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
+      if(alpha<.99){gl.depthMask(true);gl.disable(gl.BLEND);}
+      gl.uniform1f(uni.uOpacity,1);
      }
      gl.bindTexture(gl.TEXTURE_2D,null);
      gl.uniform1f(uni.uHasTexture,0);
@@ -1133,27 +1222,31 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
     // Motion-sweep draws before the actual two blades; never conceals them.
+    const isImportedRotorcraft=id==="r44"&&realR44!==null;
+    const rotorSweep=isImportedRotorcraft?model.authenticRotorSweep:model.rotorSweep;
+    const tailRotorSweep=isImportedRotorcraft?model.authenticTailRotorSweep:model.tailRotorSweep;
+    const animatedParts=isImportedRotorcraft?model.authenticParts:model.parts;
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
-    if(model.rotorSweep&&sweepOpacity>0){
+    if(rotorSweep&&sweepOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,sweepOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
      gl.depthMask(false);
-     gl.bindVertexArray(model.rotorSweep.vao);
-     gl.drawArrays(gl.TRIANGLES,0,model.rotorSweep.count);
+     gl.bindVertexArray(rotorSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,rotorSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
     const tailOpacity=Number.isFinite(animation?.tailBlurOpacity)?
      limit(animation.tailBlurOpacity,0,.20):0;
-    if(model.tailRotorSweep&&tailOpacity>0){
+    if(tailRotorSweep&&tailOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,tailOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
      gl.depthMask(false);
-     gl.bindVertexArray(model.tailRotorSweep.vao);
-     gl.drawArrays(gl.TRIANGLES,0,model.tailRotorSweep.count);
+     gl.bindVertexArray(tailRotorSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,tailRotorSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
@@ -1170,7 +1263,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,model.propSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
     }
-    for(const part of model.parts){
+    for(const part of animatedParts){
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      const angle=animation?.[part.name];
@@ -1194,6 +1287,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   }
   return {draw,destroy,resetCamera(){cameraRig?.reset()},
    get realC172Status(){return realC172Status},
+   get realR44Status(){return realR44Status},
    supported:true,engine:"webgl2",get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
@@ -1202,7 +1296,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,importedCameraFraming,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);

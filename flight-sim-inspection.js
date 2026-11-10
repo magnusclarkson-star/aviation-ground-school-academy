@@ -1,7 +1,7 @@
 /* Touch-friendly, aircraft-specific orbit viewer. The inspection canvas never
  * receives or changes flight control input; it only renders the current type. */
 (function(root){"use strict";
- const limits=Object.freeze({minDistance:17,maxDistance:70,minElevation:-65,maxElevation:78});
+ const limits=Object.freeze({minDistance:9,maxDistance:70,minElevation:-65,maxElevation:78});
  const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(v)?v:min));
  const wrap=degrees=>((degrees%360)+360)%360;
  function orbitStep(orbit,deltaX,deltaY){
@@ -23,8 +23,8 @@
  }
  // Double-tap toggles a useful close view while preserving the exact
  // aircraft bearing and elevation. Fitted size returns to 100% on second use.
- function doubleTapZoom(orbit){
-  const far=30,close=21.6;
+ function doubleTapZoom(orbit,far=18){
+  const close=far<=12?9:11;
   return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
  }
  function separation(points){
@@ -39,7 +39,7 @@
    canvas2D=$("aircraftInspectCanvas2D"),select=$("cockpitAircraftSelect");
   if(!trigger||!modal||!viewport||!canvas3D||!canvas2D||!select)
    throw Error("360° inspector requires its cockpit controls and canvases");
-  let orbit={azimuth:0,elevation:26,distance:30};
+  let orbit={azimuth:0,elevation:26,distance:18};
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
   // Pointer IDs are tracked independently so a second touch changes zoom,
   // rather than making the model unexpectedly spin or the flight yoke move.
@@ -49,13 +49,15 @@
   const engine=win.AGSAFlight3D,exterior=win.AGSAExteriorChase2D,types=win.AGSAExteriorAirframes;
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
+  // The two compact training aircraft need closer framing than large jets.
+  const fitDistance=()=>["c172","r44"].includes(selected())?12:18;
   function updateHeading(){
    const id=selected();
    $("aircraftInspectModelSelect").value=id;
    $("aircraftInspectModel").textContent=types.LABELS[id];
    $("aircraftInspectAngles").textContent="AZ "+String(Math.round(orbit.azimuth)).padStart(3,"0")+
     "° · EL "+Math.round(orbit.elevation)+"°";
-   $("aircraftInspectZoomValue").textContent=Math.round(30/orbit.distance*100)+"%";
+   $("aircraftInspectZoomValue").textContent=Math.round(fitDistance()/orbit.distance*100)+"%";
    $("aircraftInspectSpin").setAttribute("aria-pressed",String(autoRotate));
    $("aircraftInspectSpin").textContent=autoRotate?"Stop rotation":"Auto rotate";
   }
@@ -102,7 +104,7 @@
   let lastFrameTime=0;
   function open(){
    if(!modal.hidden)return;
-   orbit={azimuth:0,elevation:26,distance:30};autoRotate=false;last=0;lastFrameTime=0;
+   orbit={azimuth:0,elevation:26,distance:fitDistance()};autoRotate=false;last=0;lastFrameTime=0;
    modal.hidden=false;doc.body.dataset.aircraftInspect="on";
    trigger.setAttribute("aria-expanded","true");
    canvas2D.hidden=false;canvas3D.hidden=true;
@@ -130,7 +132,7 @@
    (triggerVisible?trigger:photoButton||trigger).focus({preventScroll:true});
   }
   function reset(){
-   orbit={azimuth:0,elevation:26,distance:30};
+   orbit={azimuth:0,elevation:26,distance:fitDistance()};
    autoRotate=false;updateHeading();
   }
   $("aircraftInspectModelSelect").addEventListener("change",event=>{
@@ -140,6 +142,7 @@
     select.value=id;
     select.dispatchEvent(new Event("change",{bubbles:true}));
    }
+   orbit={...orbit,distance:fitDistance()};
    updateHeading();
   });
   trigger.addEventListener("click",open);
@@ -201,7 +204,7 @@
      event.timeStamp-start.time<350;
     if(valid&&lastTap&&event.timeStamp-lastTap.time<360&&
        Math.hypot(event.clientX-lastTap.x,event.clientY-lastTap.y)<36){
-     orbit=doubleTapZoom(orbit);lastTap=null;updateHeading();
+     orbit=doubleTapZoom(orbit,fitDistance());lastTap=null;updateHeading();
     }else if(valid){
      lastTap={x:event.clientX,y:event.clientY,time:event.timeStamp};
     }else lastTap=null;
