@@ -924,6 +924,7 @@ uniform vec3 uPartPivot;
 uniform float uPartAngle;
 uniform int uPartAxis;
 out vec3 vColor;
+out vec3 vLocalPosition;
 out vec2 vTexCoord;
 out float vDistance,vLight,vEmissive;
 // Surface illumination must follow the surface, including animated hinges,
@@ -985,17 +986,19 @@ void main(){
  float yy=side*sr+up*cr;
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
    1.000080003*depth-0.800032001,depth);
- vColor=aColor;vTexCoord=aTexCoord;vDistance=depth;
+ vColor=aColor;vLocalPosition=aPosition;
+ vTexCoord=aTexCoord;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
  vEmissive=(uActor>2.5&&uActor<3.5)?1.:0.;
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
-in vec3 vColor;
+in vec3 vColor,vLocalPosition;
 in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
 uniform vec3 uFogColor,uLightColor;
 uniform float uOpacity,uHasTexture,uAlphaCutoff;
+uniform int uC172Pass;
 uniform sampler2D uTexture;
 out vec4 outColor;
 void main(){
@@ -1003,8 +1006,40 @@ void main(){
  vec4 texel=uHasTexture>.5?texture(uTexture,vTexCoord):vec4(1.);
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
+ float alpha=uOpacity*texel.a;
+ if(uC172Pass>0){
+  // Imported C172 texture has near-black fuselage regions and gray wings.
+  // Preserve faint panel texture while applying a light training-aircraft
+  // livery. Side trim stays on the cabin/fuselage, not across the wings.
+  vec3 p=vLocalPosition;
+  float fuselage=1.-smoothstep(.76,1.22,abs(p.x));
+  float fuselageSpan=smoothstep(-3.5,-2.5,p.z)*
+    (1.-smoothstep(2.7,3.7,p.z));
+  float band=(1.-smoothstep(.045,.115,abs(p.y+.30-p.z*.022)))*
+    fuselage*fuselageSpan;
+  vec3 paint=mix(vec3(.91,.935,.953),vec3(.13,.32,.48),band);
+  albedo=mix(paint,albedo,.12);
+  // Two render passes allow the existing tinted window region to remain
+  // transparent WITHOUT punching holes in the solid wing/cowling. Opaque
+  // skin first, new seats and panel second, glazing last.
+  float side=(smoothstep(.39,.50,abs(p.x))*
+    (1.-smoothstep(.90,1.02,abs(p.x))))*
+    smoothstep(-1.15,-.65,p.z)*(1.-smoothstep(1.6,2.05,p.z))*
+    smoothstep(-.18,-.04,p.y)*(1.-smoothstep(.62,.82,p.y));
+  float front=(1.-smoothstep(.65,.95,abs(p.x)))*
+    smoothstep(1.35,1.70,p.z)*(1.-smoothstep(2.4,2.7,p.z))*
+    smoothstep(-.26,-.10,p.y)*(1.-smoothstep(.75,.95,p.y));
+  float luminance=dot(texel.rgb,vec3(.2126,.7152,.0722));
+  float glass=max(side,front)*(1.-smoothstep(.22,.49,luminance));
+  if(uC172Pass==1 && glass>.5)discard;
+  if(uC172Pass==2){
+   if(glass<=.5)discard;
+   albedo=vec3(.15,.28,.35);
+   alpha=.27;
+  }
+ }
  vec3 shaded=mix(clamp(albedo*vLight*uLightColor,0.,1.),albedo,vEmissive);
- outColor=vec4(mix(shaded,uFogColor,fog),uOpacity*texel.a);
+ outColor=vec4(mix(shaded,uFogColor,fog),alpha);
 }`;
 const SKY_VERTEX=`#version 300 es
 precision mediump float;
@@ -1061,7 +1096,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal",
    "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity",
-    "uHasTexture","uAlphaCutoff","uTexture"])
+    "uHasTexture","uAlphaCutoff","uTexture","uC172Pass"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -1225,6 +1260,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uHasTexture,0);
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
+   gl.uniform1i(uni.uC172Pass,0);
    const baseCamera=cameraPose(state,view,orbit);
    const realHelicopter=state.mode==="helicopter"&&realR44!==null;
    const realTrainer=state.mode==="airplane"&&realC172!==null&&
