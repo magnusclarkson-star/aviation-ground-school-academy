@@ -826,7 +826,7 @@ function buildImportedCabin(id){
    m.box(x-.095,-.31,3.46,.19,.07,.09,panel);
   }
  }else{
-  m.box(-.55,-1.02,-1.20,1.10,.07,2.75,floor);
+  m.box(-.51,-.85,-1.18,1.02,.07,2.76,floor);
   for(const z of [.63,-.60])for(const x of [-.30,.30]){
    seats++;
    m.box(x-.225,-.68,z-.30,.45,.17,.58,cushion);
@@ -834,8 +834,8 @@ function buildImportedCabin(id){
    m.box(x-.17,.055,z-.40,.34,.17,.16,cushion);
    m.box(x-.20,-.49,z-.20,.04,.42,.055,highlight);
    m.box(x+.16,-.49,z-.20,.04,.42,.055,highlight);
-   m.box(x-.17,-.94,z+.05,.065,.25,.075,trim);
-   m.box(x+.11,-.94,z+.05,.065,.25,.075,trim);
+   m.box(x-.17,-.82,z+.05,.065,.14,.075,trim);
+   m.box(x+.11,-.82,z+.05,.065,.14,.075,trim);
   }
   m.box(-.56,-.35,1.70,1.12,.47,.19,panel);
   for(const x of [-.32,.32]){
@@ -845,6 +845,69 @@ function buildImportedCabin(id){
   }
  }
  return {...m.finish(),seats,hasPanel:true};
+}
+// The licensed C172 GLB has a very sparse, dark cabin shell. Its two mesh
+// primitives already provide the wing, tail, undercarriage and propeller, but
+// leave the four upholstered seats visibly floating in the 360-degree view.
+// Restore a properly shaped, *single* tapered outer fuselage and a distinct
+// window-only glass mesh. No extra wings, flaps, rudder or propeller are added.
+function buildImportedC172Shell(){
+ const skin=new Mesh(),glass=new Mesh(),ivory=rgb(228,238,244),
+  underside=rgb(196,207,214),navy=rgb(33,84,118),
+  glassBlue=rgb(91,144,162);
+ // Local metres of source GLB (+Z nose). The cabin is widest below the wing;
+ // the cowling narrows toward the imported propeller and the aft boom tapers.
+ const sections=[
+  [-3.65,.16,-.27,-.12,.05,false],
+  [-2.40,.29,-.46,-.08,.21,false],
+  [-1.45,.50,-.72,-.09,.54,false],
+  [-1.22,.61,-.84,-.11,.73,false],
+  [-1.02,.65,-.86,-.10,.77,true],
+  [ .22,.66,-.86,-.10,.79,true],
+  [1.52,.62,-.81,-.12,.71,true],
+  [1.79,.57,-.76,-.13,.57,false],
+  [2.43,.46,-.66,-.17,.30,false],
+  [3.55,.32,-.48,-.15,.11,false],
+  [3.78,.23,-.34,-.15,.07,false]
+ ];
+ const point=(sign,s,y)=>[sign*s[1],y,s[0]];
+ for(let k=0;k+1<sections.length;k++){
+  const a=sections[k],b=sections[k+1];
+  // A soft lower keel instead of a rectangular open black cabin floor.
+  skin.quad(point(-1,a,a[2]),point(-1,b,b[2]),
+   [0,b[2]-.09,b[0]],[0,a[2]-.09,a[0]],underside);
+  skin.quad([0,a[2]-.09,a[0]],[0,b[2]-.09,b[0]],
+   point(1,b,b[2]),point(1,a,a[2]),underside);
+  skin.quad(point(-1,a,a[4]),point(-1,b,b[4]),
+   point(1,b,b[4]),point(1,a,a[4]),ivory);
+  for(const sign of [-1,1]){
+   const side=(y0,y1,color,mesh=skin)=>{
+    mesh.quad(point(sign,a,y0[0]),point(sign,b,y0[1]),
+     point(sign,b,y1[1]),point(sign,a,y1[0]),color);
+   };
+   side([a[2],b[2]],[a[3],b[3]],ivory);
+   // Painted navy mid-body accent makes white fuselage distinct from gray
+   // imported wings, and traces the taper without unrelated old surfaces.
+   side([a[3]-.15,b[3]-.15],[a[3]-.09,b[3]-.09],navy);
+   if(a[5]&&b[5]){
+    side([a[3]+.015,b[3]+.015],[a[4]-.09,b[4]-.09],
+     glassBlue,glass);
+   }else{
+    side([a[3],b[3]],[a[4],b[4]],ivory);
+   }
+  }
+ }
+ // White window posts visually separate forward/rear side panels.
+ for(const [z,w,y0,y1] of [[-1.01,.65,-.09,.77],[.22,.66,-.10,.79],
+                             [1.52,.62,-.12,.71]]){
+  for(const sign of [-1,1])
+   skin.box(sign>0?w-.025:-w-.025,y0,z-.035,.05,y1-y0,.07,ivory);
+ }
+ // Sloped front windshield, glass retained as a separate transparent layer.
+ glass.quad([-.59,-.08,1.72],[.59,-.08,1.72],
+  [.43,.51,2.13],[-.43,.51,2.13],glassBlue);
+ skin.box(-.035,-.07,1.72,.07,.61,.40,ivory);
+ return {skin:skin.finish(),glass:glass.finish(),windowPanels:5};
 }
 // The licensed C172 GLB already contains wings, flaps, elevator, rudder,
 // tyres and cabin. Drawing the old illustrated surfaces over it creates
