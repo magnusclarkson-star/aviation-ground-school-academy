@@ -56,6 +56,59 @@ try{
  await page.waitForTimeout(110);
  assert.equal(await page.locator("#systemsFlapValue").textContent(),"30°",
   "flap lever and animated illustrated flaps must receive the same command");
+
+ // Pause must freeze the aircraft, not the instructional control surfaces:
+ // flap detents and two-finger controls still refresh the same 2D/3D meshes.
+ await page.locator("#pauseFlight").click();
+ assert.equal(await page.locator("#pauseFlight").getAttribute("aria-pressed"),"true");
+ await page.locator("#visualMode").selectOption("2d");
+ await page.locator("#cameraMode").selectOption("side");
+ await page.evaluate(()=>{
+  const S=window.AGSAFlightScenery,original=S.draw;
+  window.__pausedSurfaceSamples=[];
+  window.__restoreSurfaceDraw=()=>{S.draw=original;};
+  S.draw=(canvas,state,options={})=>{
+   if(canvas.id==="outsideView"){
+    window.__pausedSurfaceSamples.push({
+     clock:state.time,z:state.zM,heading:state.headingDeg,
+     flap:options.animation?.leftFlap,rudder:options.animation?.rudder,
+     aileron:options.animation?.leftAileron,elevator:options.animation?.elevatorLeft
+    });
+   }
+   return original(canvas,state,options);
+  };
+ });
+ const samplePaused=()=>page.evaluate(()=>window.__pausedSurfaceSamples.at(-1));
+ await page.locator("#flaps").selectOption("0");
+ await page.waitForTimeout(120);
+ assert.equal(await page.locator("#systemsFlapValue").textContent(),"0°");
+ const closed=await samplePaused();
+ assert.ok(Math.abs(closed.flap)<.001,"paused Cessna flaps retract in the exterior view");
+ await page.locator("#flaps").selectOption("30");
+ await page.waitForTimeout(120);
+ assert.equal(await page.locator("#systemsFlapValue").textContent(),"30°");
+ const extended=await samplePaused();
+ assert.ok(extended.flap<-.5,"flap selector deflects illustrated Cessna panels even while paused");
+ assert.equal(extended.clock,closed.clock,"flap inspection cannot advance flight clock");
+ assert.equal(extended.z,closed.z,"flap inspection cannot move the plane");
+ const rudder=page.locator("#rightRudder");
+ await rudder.dispatchEvent("pointerdown",
+  {pointerId:81,pointerType:"touch",button:0,bubbles:true,cancelable:true});
+ await page.waitForTimeout(120);
+ assert.equal(await page.locator("#cmdRudder").textContent(),"RUDDER 100%");
+ const deflected=await samplePaused();
+ assert.ok(deflected.rudder>.4,"rudder pedal moves the exterior rudder while paused");
+ assert.equal(deflected.z,closed.z);
+ await rudder.dispatchEvent("pointerup",
+  {pointerId:81,pointerType:"touch",bubbles:true,cancelable:true});
+ await page.waitForTimeout(120);
+ assert.ok(Math.abs((await samplePaused()).rudder)<.001,
+  "releasing the rudder pedal returns the stationary surface to centre");
+ await page.evaluate(()=>window.__restoreSurfaceDraw());
+ await page.locator("#cameraMode").selectOption("cockpit");
+ await page.locator("#visualMode").selectOption("3d");
+ await page.locator("#pauseFlight").click();
+
  await page.locator("#power").evaluate(el=>{
   el.value="95";el.dispatchEvent(new Event("input",{bubbles:true}));
  });
