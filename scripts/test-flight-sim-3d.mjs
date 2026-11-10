@@ -73,6 +73,21 @@ assert.equal(Countryside.fields.length,20);
 assert.equal(Countryside.farmTracks.length,20);
 assert.equal(Countryside.towers.length,3);
 assert.equal(Countryside.hedgerows.length,8);
+assert.equal(Countryside.farmsteads.length,4);
+for(const farm of Countryside.farmsteads){
+ const floor=Countryside.terrainHeight(farm.x,farm.z)+.14;
+ for(const world of [runway,pad]){
+  assert.ok(hasPoint(world,farm.x,floor,farm.z),
+   "farmstead ground wall is fixed in the common WebGL world");
+  assert.ok(hasPoint(world,farm.x,floor+farm.h,farm.z),
+   "farmstead has real 3D wall height, not a flat picture");
+  assert.ok(hasPoint(world,farm.x+farm.w/2,
+   floor+farm.h+Math.min(farm.w,farm.d)*.27,farm.z),
+   "farmstead has a real pitched roof silhouette in both worlds");
+ }
+ assert.ok(Math.abs(farm.x)>400,
+  "farmstead must not obstruct the fictional active runway");
+}
 const hedge=Countryside.hedgerows[0];
 const hedgeY=Countryside.terrainHeight(hedge.x,hedge.z)+.14;
 for(const world of [runway,pad]){

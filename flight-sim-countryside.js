@@ -45,6 +45,15 @@ const towers=freeze([
  freeze({id:"south-silo",x:-1040,z:-1830,height:28,radius:6,color:"#d4c29a"}),
  freeze({id:"east-tower",x:1310,z:-650,height:33,radius:4,color:"#b6c0c7"})
 ]);
+// A handful of actual three-dimensional farmsteads provide distinctive
+// near/mid-distance depth cues around the returning flight path. All are
+// fixed in the same small, fictional local coordinate world in both renderers.
+const farmsteads=freeze([
+ {id:"east-farm",x:910,z:1330,w:18,d:24,h:8,roof:"#964e42",wall:"#d8c6ab"},
+ {id:"west-farm",x:-930,z:230,w:22,d:19,h:7,roof:"#805448",wall:"#dbcfb3"},
+ {id:"south-farm",x:-900,z:-1250,w:20,d:28,h:9,roof:"#755b4d",wall:"#c5beae"},
+ {id:"north-farm",x:940,z:2500,w:21,d:23,h:8,roof:"#935e4f",wall:"#d9c8a8"}
+].map(f=>freeze(f)));
 // Low rural hedgerows provide near-ground depth while circling back to
 // the runway. Eight fixed strips, no textures/network requests or camera
 // anchoring; both renderers use these exact X/Z footprints.
@@ -68,7 +77,7 @@ function trackCorners(track){
  return [[track.ax+ox,track.az+oz],[track.bx+ox,track.bz+oz],
   [track.bx-ox,track.bz-oz],[track.ax-ox,track.az-oz]];
 }
-const api=freeze({fields,farmTracks,towers,hedgerows,terrainHeight,trackCorners});
+const api=freeze({fields,farmTracks,towers,hedgerows,farmsteads,terrainHeight,trackCorners});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACountryside=api;
 })(typeof window!=="undefined"?window:null);

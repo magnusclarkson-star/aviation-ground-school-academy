@@ -306,6 +306,29 @@ try{
  assert.ok(rural.patches>0,"2D world draws a shared countryside field");
  assert.ok(rural.laterX<rural.firstX,
   "country field shifts with aircraft movement, not a static scrolling overlay");
+ const farmhouseParallax=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery,C=window.AGSACountryside;
+  const farm=C.farmsteads[0],canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d"),oldFill=ctx.fill;
+  let roofs=0;
+  ctx.fill=function(...args){
+   if(this.fillStyle===farm.roof)roofs++;
+   return oldFill.apply(this,args);
+  };
+  const s={mode:"airplane",xM:farm.x,zM:farm.z-200,
+   headingDeg:0,altitudeM:30,pitchDeg:0,rollDeg:0,time:0};
+  S.draw(canvas,s,{view:"cockpit"});
+  const before=S.project(s,farm.x+farm.w/2,14,farm.z,960,540);
+  const after=S.project({...s,xM:s.xM+65},
+   farm.x+farm.w/2,14,farm.z,960,540);
+  return {count:C.farmsteads.length,roofs,before:before?.x,after:after?.x};
+ });
+ assert.equal(farmhouseParallax.count,4);
+ assert.ok(farmhouseParallax.roofs>0,
+  "the mobile 2D canvas paints a real farm roof");
+ assert.ok(farmhouseParallax.after<farmhouseParallax.before,
+  "farmstead stays in world coordinates as the airplane passes");
  const towerParallax=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery,C=window.AGSACountryside;
   const t=C.towers[0],canvas=document.createElement("canvas");
