@@ -114,6 +114,30 @@ try{
   "approach light string should be visible on a returning mobile 2D final");
  assert.ok(approachRefs.offsetX<approachRefs.alignedX,
   "approach light positions move with the world, not a static cockpit overlay");
+ const rural=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery,C=window.AGSACountryside;
+  const f=C.fields[0],canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d"),original=ctx.fill;
+  let patches=0;
+  ctx.fill=function(...args){
+   if(this.fillStyle===f.color)patches++;
+   return original.apply(this,args);
+  };
+  const aircraft={mode:"airplane",xM:f.x-250,zM:f.z-1300,altitudeM:130,
+   headingDeg:0,pitchDeg:0,rollDeg:0,time:0,windXMps:0,windZMps:0};
+  S.draw(canvas,aircraft,{view:"cockpit"});
+  const a=S.project(aircraft,f.x,C.terrainHeight(f.x,f.z),f.z);
+  const b=S.project({...aircraft,xM:aircraft.xM+100},
+   f.x,C.terrainHeight(f.x,f.z),f.z);
+  return {fields:C.fields.length,tracks:C.farmTracks.length,patches,
+   firstX:a?.x,laterX:b?.x};
+ });
+ assert.equal(rural.fields,20);
+ assert.equal(rural.tracks,20);
+ assert.ok(rural.patches>0,"2D world draws a shared countryside field");
+ assert.ok(rural.laterX<rural.firstX,
+  "country field shifts with aircraft movement, not a static scrolling overlay");
  const treeScene=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery;
   const list=xM=>{
