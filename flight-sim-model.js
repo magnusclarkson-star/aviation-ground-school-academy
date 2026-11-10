@@ -119,7 +119,15 @@ function step(state,input,seconds){
  const turb=clamp(input.turbulence,0,1);
  state.turbulence=turb*(Math.sin(t*2.91)*.55+Math.sin(t*7.31)*.3);
  const bank=clamp(input.bank,-1,1),pitch=clamp(input.pitch,-1,1),rudder=clamp(input.rudder,-1,1);
- const rollTarget=bank*(state.mode==="helicopter"?13:p.bankDeg)+state.turbulence*2.5;
+ // Make a fully deflected C172 phone yoke useful for a compact
+ // out-and-back circuit without changing gentle hand movements. This
+ // fictional steep-turn assist adds at most 6° of bank near full deflection;
+ // it does not turn the aircraft on its own or affect other airframes.
+ const turnAssist=state.mode==="airplane"&&state.airframeId==="c172"&&
+  state.profileId==="trainer"&&state.physicsId==="classic"?
+   6*Math.pow(Math.abs(bank),3):0;
+ const rollTarget=bank*(state.mode==="helicopter"?13:p.bankDeg+turnAssist)+
+  state.turbulence*2.5;
  // An aft/forward CG modifies *only* the experimental fictional pitch
  // response. Classic and conceptual rotorcraft handling are unchanged.
  const loadingPitch=state.physicsId==="aero"?
