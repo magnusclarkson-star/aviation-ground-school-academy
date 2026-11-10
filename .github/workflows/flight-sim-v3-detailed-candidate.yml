@@ -1,0 +1,43 @@
+name: Audit Detailed FlightGear C172 Candidate
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-flightgear-c172-candidate.mjs'
+      - 'scripts/test-flight-sim-v3-detailed-browser.mjs'
+      - 'v3/c172-preview.js'
+      - 'flight-sim-v3-preview.html'
+      - '.github/workflows/flight-sim-v3-detailed-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-c172-asset:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download and examine third-party FlightGear model candidate
+        run: node scripts/audit-flightgear-c172-candidate.mjs
+      - name: Check detailed native C172 source hierarchy in independent Three.js viewer
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 playwright@1.56.1
+          npx playwright install chromium
+          cp artifacts/c172-detailed-candidate.glb assets/aircraft/c172-detailed-evaluation.glb
+          node scripts/build-flight-sim-v3.mjs
+          node scripts/test-flight-sim-v3-detailed-browser.mjs
+          node scripts/build-pages.mjs
+          node -e "const fs=require('node:fs');if(fs.existsSync('dist-pages/assets/aircraft/c172-detailed-evaluation.glb'))process.exit(2);console.log('GPL model excluded from public site')"
+      - name: Save the model asset and detailed source-space metadata for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detailed-flightgear-c172-source-review-only
+          path: |
+            artifacts/c172-detailed-audit.json
+            artifacts/c172-detailed-candidate.glb
+            artifacts/detailed-c172-*.png
+          if-no-files-found: ignore
+          retention-days: 7
