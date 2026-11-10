@@ -138,6 +138,27 @@ try{
  assert.ok(rural.patches>0,"2D world draws a shared countryside field");
  assert.ok(rural.laterX<rural.firstX,
   "country field shifts with aircraft movement, not a static scrolling overlay");
+ const towerParallax=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery,C=window.AGSACountryside;
+  const t=C.towers[0],canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d"),original=ctx.fill;
+  let painted=0;
+  ctx.fill=function(...args){
+   if(this.fillStyle===t.color)painted++;
+   return original.apply(this,args);
+  };
+  const s={mode:"airplane",xM:t.x,zM:t.z-280,altitudeM:40,
+   headingDeg:0,rollDeg:0,pitchDeg:0,time:0};
+  S.draw(canvas,s,{view:"cockpit"});
+  const before=S.project(s,t.x,t.height,t.z,960,540);
+  const after=S.project({...s,xM:s.xM+70},t.x,t.height,t.z,960,540);
+  return {count:C.towers.length,painted,xBefore:before.x,xAfter:after.x};
+ });
+ assert.equal(towerParallax.count,3);
+ assert.ok(towerParallax.painted>=1,"north tower should be drawn in mobile Canvas scenery");
+ assert.ok(towerParallax.xAfter<towerParallax.xBefore,
+  "a fixed tower shifts relative to moving cockpit, never sticks to the screen");
  const treeScene=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery;
   const list=xM=>{
