@@ -258,6 +258,9 @@ function addR44(m){
   sheet(m,[[x,.41,-1.72],[x,1.12,-1.63],[x,1.15,-.78],
    [x,.38,-.89]],glass,.07);
   m.box(x-.065,.37,-.78,.13,1.01,.10,palette.metal);
+  // A distinct low-profile release handle on each cabin door is visible
+  // in both the WebGL model and the matching lightweight 2D inspector.
+  m.box(x-.075,.18,.41,.15,.07,.25,palette.metal);
   m.box(x-.08,-.62,-1.45,.16,.15,2.85,trim);
   for(let i=0;i<4;i++)m.box(x-.065,.15,-2.32+i*.27,.13,.08,.18,palette.dark);
  }
