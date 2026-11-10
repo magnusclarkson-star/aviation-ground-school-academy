@@ -12,6 +12,19 @@ for(const name of names){
 for(const expected of ["index.html","cockpit-v3.html","instructor-review.html","standards-readiness.html","ground-school-modules.html","flight-sim.html","accreditation"]){
  const f=await stat(path.join(output,expected));assert.ok(f.isFile()||f.isDirectory(),expected+" missing");
 }
+// A successful GitHub Pages job must actually include the high-fidelity
+// airframes. Missing assets previously caused silent procedural placeholders.
+for(const [asset,minBytes] of [
+ ["assets/aircraft/c172-e737-optimized.glb",100000],
+ ["assets/aircraft/r44-flightgear.ac",100000],
+ ["assets/aircraft/r44-flightgear-texture.png",10000],
+ ["assets/aircraft/ATTRIBUTION.md",100],
+ ["assets/aircraft/R44-ATTRIBUTION.md",100],
+ ["assets/aircraft/R44-GPL-2.0-COPYING.txt",1000]
+]){
+ const details=await stat(path.join(output,asset));
+ assert.ok(details.isFile()&&details.size>minBytes,"Imported aircraft missing from public bundle: "+asset);
+}
 for(const forbidden of ["services/training-api/src/http.mjs","services/training-api/portal/index.html","services/training-api/.env.example",".github/workflows/training-api.yml","docs/STUDENT-RECORDS-ARCHITECTURE.md"]){
  let found=false;
  try{await stat(path.join(output,forbidden));found=true;}catch(e){if(e.code!=="ENOENT")throw e;}
