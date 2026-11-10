@@ -56,6 +56,34 @@ assert.throws(()=>A.step(A.create("airplane"),M.makeState("helicopter"),control,
 // A frozen lesson must let students explore control-surface geometry
 // without unpausing or moving the aircraft. The UI invokes this zero-step
 // preview on flap detents, pedals and touch yoke input.
+// C172 gear is fixed, but the illustrated hub paint should turn during
+// taxi, roll and landing. It must freeze when the simulation is paused.
+const rollingState=M.makeState("airplane","runway",{airframeId:"c172"});
+const rollingInput=M.makeInput("airplane"),rolling=A.create("airplane");
+rollingState.speedKt=29;
+A.step(rolling,rollingState,rollingInput,.05);
+assert.ok(rolling.wheelRate>0,"on-ground wheel spin derives from aircraft speed");
+assert.ok(rolling.parts.mainWheels>0&&rolling.parts.noseWheel>0);
+assert.notEqual(rolling.parts.mainWheels,rolling.parts.noseWheel,
+ "the smaller nose wheel rotates more rapidly at a given ground speed");
+const rollingBefore=rolling.parts.mainWheels,noseBefore=rolling.parts.noseWheel;
+A.step(rolling,rollingState,rollingInput,0);
+assert.equal(rolling.parts.mainWheels,rollingBefore);
+assert.equal(rolling.parts.noseWheel,noseBefore);
+rollingState.onGround=false;
+const airborneRate=rolling.wheelRate;
+A.step(rolling,rollingState,rollingInput,.05);
+assert.ok(rolling.wheelRate>0&&rolling.wheelRate<airborneRate,
+ "wheels coast down in the air without moving the aircraft");
+rollingState.onGround=true;rollingState.speedKt=0;
+for(let i=0;i<30;i++)A.step(rolling,rollingState,rollingInput,.05);
+assert.ok(rolling.wheelRate<.001,
+ "braking to a stationary parked aircraft should stop the illustrated wheel spin");
+const fighterState=M.makeState("airplane","runway",{airframeId:"f22"});
+const fighterSys=A.create("airplane");fighterState.speedKt=50;
+A.step(fighterSys,fighterState,rollingInput,.05);
+assert.equal(fighterSys.parts.mainWheels,0,
+ "C172-style fixed-wheel animation must not be applied to retractable jet gear");
 const frozenState=M.makeState("airplane");
 const frozenInput=M.makeInput("airplane");
 const frozen=A.create("airplane");
