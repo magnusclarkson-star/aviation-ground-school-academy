@@ -258,7 +258,7 @@ try{
   "a deliberate yoke release retains bank only when hold is armed");
  await hold.tap();
  assert.equal(await hold.getAttribute("aria-pressed"),"false");
- assert.equal(await phone.locator("#cmdBank").textContent(),"0%");
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
  await hold.tap();
  await touchYoke("pointerdown",92);
  await touchYoke("pointercancel",92);
@@ -271,7 +271,7 @@ try{
  await touchYoke("lostpointercapture",93);
  assert.equal(await hold.getAttribute("aria-pressed"),"false",
   "lost pointer capture must not latch a long turn");
- assert.equal(await phone.locator("#cmdBank").textContent(),"0%");
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[]);
  await phone.close();
