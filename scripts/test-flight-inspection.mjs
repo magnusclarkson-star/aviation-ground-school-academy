@@ -26,7 +26,7 @@ assert.deepEqual(O.doubleTapZoom(initial),
  "double tap brings aircraft closer without losing its orientation");
 assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(initial)),initial,
  "a second double tap restores the original fitted viewing distance");
-assert.deepEqual(O.doubleTapZoom({azimuth:145,elevation:-14,distance:18}),
+assert.deepEqual(O.doubleTapZoom({azimuth:145,elevation:-14,distance:12}),
  {azimuth:145,elevation:-14,distance:18},
  "double tap restores fit even after manual pinch zoom");
 
