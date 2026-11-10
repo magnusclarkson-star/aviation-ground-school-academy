@@ -22,6 +22,17 @@ The web app is the delivery path for now; no need to discard existing lessons, i
 | Deployment | GitHub Pages deploys a static web app; the repository has no root `package.json` | Keep V2 static. The new V3 engine needs a reproducible pinned build/bundle, tested separately |
 | Licensing | Bundled C172 model has CC BY 4.0 attribution; bundled FlightGear R44 material is marked GPL-2.0 | Review attribution, compatible source redistribution and commercial distribution implications *before* shipping a proprietary app |
 
+## First screenshot review — 10 November 2026
+
+The new emulated Android visual run produced actual imported-model screenshots in portrait and landscape, not merely console logs: [GitHub Actions imported-airframe previews](https://github.com/magnusclarkson-star/aviation-ground-school-academy/actions/runs/42916708215). Both aircraft loaded, rendered and passed mechanical pixel checks.
+
+**Human review of those screenshot artifacts still finds visual problems:**
+- **R44:** the bright-yellow outline is more coherent than the early placeholder, but the cabin details are not convincingly visible and the tail/rotor geometry is still rudimentary. **Not visually accepted.**
+- **C172:** the airplane is recognizable, but the cabin is too indistinct to confirm correct seating, and body/tail/wing appearance remains inconsistent. **Not visually accepted.**
+- Both desktop and emulated Android screenshots show aircraft, but **do not demonstrate a capable phone app**. Real-device performance and control handling remain unverified.
+
+This is why the new screenshot gate is evidence for review, **not** an automatic declaration that the aircraft looks right. These defects should be addressed in the isolated V3 model/scene-graph build, not with additional shader colour masks on V2.
+
 ## Non-negotiable completion gates
 
 1. **One aircraft, one source of truth:** a GLB with correctly named child meshes (`body`, `seat-front-left`, `seat-front-right`, `seat-rear-left`, `seat-rear-right`, `panel`, `propeller`, `left-flap`, `right-flap`, `left-aileron`, `right-aileron`, `elevator`, `rudder`). Source-space units, axes and attachment pivots documented. No duplicate procedural airframe overlays.
