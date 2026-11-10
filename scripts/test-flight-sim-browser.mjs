@@ -39,6 +39,23 @@ try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
+ const runwayDrawn=await desktop.evaluate(()=>{
+  const canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d");
+  const fill=ctx.fill;
+  let count=0;
+  ctx.fill=function(...args){
+   if(this.fillStyle==="#4f5a61"||this.fillStyle==="#535e64")count++;
+   return fill.apply(this,args);
+  };
+  const state={mode:"airplane",xM:0,zM:2450,altitudeM:145,
+   headingDeg:180,rollDeg:0,pitchDeg:0,time:0,windXMps:0,windZMps:0};
+  window.AGSAFlightScenery.draw(canvas,state,{view:"cockpit"});
+  return count;
+ });
+ assert.ok(runwayDrawn>4,"runway stays visible in 2D southbound return view");
+
  assert.equal(await desktop.locator("#visualMode").inputValue(),"3d");
  assert.equal(await desktop.locator("#cameraMode").inputValue(),"cockpit");
  assert.ok(await desktop.locator("#outsideView").isVisible());

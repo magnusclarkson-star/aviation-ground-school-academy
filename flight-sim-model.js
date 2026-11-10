@@ -202,7 +202,16 @@ function step(state,input,seconds){
   const acceleration=p.groundAccel*throttle-1.2-.00065*state.speedKt**2-flap*.014-(brake?9:0);
   state.speedKt=clamp(state.speedKt+acceleration*dt,0,p.maxGroundKt??115);
   state.verticalMs=0;state.altitudeM=0;
-  state.headingDeg=clamp(state.headingDeg+rudder*.65*dt,-40,40);
+  // The departure roll uses a limited illustrated steering envelope, but
+  // a returning aircraft can touch down at heading 358° (equivalent to -2°).
+  // Never clamp that compass heading straight to +40° on the first rollout
+  // frame: it would make a correctly aligned landing turn off the runway.
+  if(state.phase==="roll"){
+   const signed=((state.headingDeg+540)%360)-180;
+   state.headingDeg=clamp(signed+rudder*.65*dt,-40,40);
+  }else{
+   state.headingDeg=(state.headingDeg+rudder*.65*dt+360)%360;
+  }
   state.zM+=state.speedKt*KNOT*Math.cos(state.headingDeg*RAD)*dt;
   state.xM+=state.speedKt*KNOT*Math.sin(state.headingDeg*RAD)*dt;
   state.groundSpeedKt=state.speedKt;
