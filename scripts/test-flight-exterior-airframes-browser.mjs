@@ -92,6 +92,44 @@ try{
  });
  assert.notEqual(propellerImages.normal,propellerImages.spinning,
   "Cessna two-blade propeller motion sweep is visible on non-WebGL phone fallback");
+ // True bank and pitch must move the model's triangles in fallback mode,
+ // including the rotorcraft blades, with shadows remaining on the ground.
+ const outsideAttitude=await desktop.evaluate(()=>{
+  const ctx=document.createElement("canvas").getContext("2d");
+  ctx.canvas.width=800;ctx.canvas.height=490;
+  const X=window.AGSAExteriorChase2D;
+  const results={};
+  for(const id of ["c172","r44","f35"]){
+   results[id]={};
+   const state={mode:id==="r44"?"helicopter":"airplane",
+    rollDeg:0,pitchDeg:0,altitudeM:20,groundSpeedKt:45};
+   const unchanged=JSON.stringify(state);
+   const draw=(view,roll,pitch)=>{
+    ctx.clearRect(0,0,800,490);
+    X.paint(ctx,{...state,rollDeg:roll,pitchDeg:pitch},
+     {id,view,width:800,height:490,animation:{mainRotor:.7,tailRotor:1.2,propeller:.8}});
+    return ctx.canvas.toDataURL("image/png");
+   };
+   for(const view of ["chase","side","top"]){
+    const level=draw(view,0,0),bank=draw(view,30,0),
+     climb=draw(view,0,16);
+    results[id][view]={level:level.length,banked:bank!==level,climbed:climb!==level};
+   }
+   results[id].immutable=JSON.stringify(state)===unchanged;
+  }
+  return results;
+ });
+ for(const id of ["c172","r44","f35"]){
+  for(const view of ["chase","side","top"]){
+   const result=outsideAttitude[id][view];
+   assert.ok(result.level>1500,id+" "+view+" shows aircraft pixels");
+   assert.equal(result.banked,true,id+" "+view+" visibly banks in fallback 2D");
+   assert.equal(result.climbed,true,id+" "+view+" visibly pitches in fallback 2D");
+  }
+  assert.equal(outsideAttitude[id].immutable,true,
+   "rendered rotations do not overwrite "+id+" flight state");
+ }
+
  await desktop.locator("#cameraMode").selectOption("top");
  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"top");
  const topFallback=await shot(desktop,"#outsideView");
