@@ -1061,7 +1061,7 @@ in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
 uniform vec3 uFogColor,uLightColor;
 uniform float uOpacity,uHasTexture,uAlphaCutoff;
-uniform int uC172Pass;
+uniform int uC172Pass,uR44Skin;
 uniform sampler2D uTexture;
 out vec4 outColor;
 void main(){
@@ -1070,6 +1070,23 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  float alpha=uOpacity*texel.a;
+ if(uR44Skin==1){
+  // Source opaque fuselage may cover the separate translucent window
+  // polygons. Cut only *inside* the source windows, preserving the R44
+  // original frames and cabin roof. Those windows are painted afterward.
+  vec3 p=vLocalPosition;
+  float side=(smoothstep(.55,.575,abs(p.x))*
+   (1.-smoothstep(.68,.71,abs(p.x))))*
+   smoothstep(-.50,-.43,p.y)*(1.-smoothstep(-.10,-.04,p.y));
+  float front=side*smoothstep(3.02,3.12,p.z)*
+   (1.-smoothstep(3.59,3.71,p.z));
+  float rear=side*smoothstep(2.49,2.57,p.z)*
+   (1.-smoothstep(2.84,2.96,p.z));
+  float wind=(1.-smoothstep(.48,.58,abs(p.x)))*
+   smoothstep(4.09,4.22,p.z)*(1.-smoothstep(4.47,4.54,p.z))*
+   smoothstep(-.57,-.45,p.y)*(1.-smoothstep(.04,.13,p.y));
+  if(max(max(front,rear),wind)>.5)discard;
+ }
  if(uC172Pass>0){
   // Imported C172 texture has near-black fuselage regions and gray wings.
   // Preserve faint panel texture while applying a light training-aircraft
@@ -1159,7 +1176,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal",
    "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity",
-    "uHasTexture","uAlphaCutoff","uTexture","uC172Pass"])
+    "uHasTexture","uAlphaCutoff","uTexture","uC172Pass","uR44Skin"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -1328,6 +1345,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
    gl.uniform1i(uni.uC172Pass,0);
+   gl.uniform1i(uni.uR44Skin,0);
    const baseCamera=cameraPose(state,view,orbit);
    const realHelicopter=state.mode==="helicopter"&&realR44!==null;
    const realTrainer=state.mode==="airplane"&&realC172!==null&&
@@ -1473,8 +1491,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       // R44 source material 4 is 70% transparent glass. Treat windows as
       // transparent after the solid body and new cabin, not before the seats.
       gl.disable(gl.BLEND);gl.depthMask(true);
+      gl.uniform1i(uni.uR44Skin,1);
       for(const part of realModel.primitives)
        if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      gl.uniform1i(uni.uR44Skin,0);
       drawCabin();
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
