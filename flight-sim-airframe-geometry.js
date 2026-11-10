@@ -148,6 +148,15 @@ function addC172(m){
  }
  m.box(-.045,.28,2.86,.09,.55,.16,palette.metal);
  m.box(-.75,.76,.60,1.5,.13,1.39,c);
+ // Distinguishing external trainer fittings, kept deliberately low-poly:
+ // an under-wing pitot, a short roof radio aerial, and a wing-root
+ // landing lamp. These are static illustrations, not working instruments.
+ m.box(-4.31,.35,.37,.075,.60,.075,palette.metal);
+ m.box(-4.34,.31,.38,.085,.09,.50,palette.dark);
+ sheet(m,[[0,1.03,-.42],[0,1.66,-.71],
+  [0,1.08,-1.06]],palette.dark,.035);
+ m.box(-1.65,.87,1.07,.34,.15,.13,palette.ivory);
+ m.box(-1.59,.92,1.19,.22,.065,.045,palette.gold);
  m.box(-.74,.73,1.86,1.48,.10,.10,palette.metal);
  // Wing struts and undercarriage help distinguish trainer from fighters.
  for(const sign of [-1,1]){
@@ -192,8 +201,11 @@ function addC172(m){
   sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
    [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
  }
- // White rearward position-light lens at the tail.
+ // White rearward position-light lens at the tail, with a separate
+ // small red fin-top beacon and an exhaust outlet under the cowling.
  m.box(-.10,.72,-6.59,.20,.15,.19,palette.navWhite);
+ m.box(-.075,2.39,-6.32,.15,.11,.16,palette.navRed);
+ m.box(.39,-.55,4.30,.23,.18,.55,palette.dark);
  m.box(-.42,-.45,5.05,.84,.14,.48,palette.dark);
  m.box(-.38,-.24,5.56,.76,.12,.21,palette.metal);
  const spinner=[0,-.04,6.50],spinnerZ=6.14;
