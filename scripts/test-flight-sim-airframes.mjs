@@ -102,6 +102,14 @@ assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spa
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
  "helicopter has its distinctive tall rotor mast");
 const doorMesh=T.buildVehicle("r44").positions;
+// The fuller rotorcraft bubble windscreen has a forward high glass ring
+// in the SAME geometry used by WebGL and 2D 360° inspection.
+let canopyCrown=false;
+for(let i=0;i<doorMesh.length;i+=3){
+ if(Math.abs(doorMesh[i])<.02&&Math.abs(doorMesh[i+1]-1.29)<.025&&
+  Math.abs(doorMesh[i+2]-2.45)<.025)canopyCrown=true;
+}
+assert.ok(canopyCrown,"R44 rounded bubble canopy has a visible forward crown");
 let furthestSkid=Number.NEGATIVE_INFINITY;
 for(let j=2;j<doorMesh.length;j+=3)
  furthestSkid=Math.max(furthestSkid,doorMesh[j]);

@@ -249,7 +249,9 @@ function addR44(m){
  fuselage(m,[[-2.90,.54,.53,.20],[-2.12,1.04,1.08,.18],
   [-1.00,1.24,1.27,.18],[.70,1.26,1.28,.10],
   [1.85,1.14,1.09,.08],[2.50,.69,.80,.06],[2.80,.18,.24,.04]],ivory,14);
- canopy(m,.47,2.76,1.12,1.07,.15,glass);
+ // A slightly fuller, forward-raked bubble canopy makes the R44 distinct
+ // from an aeroplane windshield, without increasing phone mesh vertices.
+ canopy(m,.43,2.90,1.14,1.13,.16,glass);
  // Individual door windows, centre pillar, engine ventilation and colour trim.
  for(const sign of [-1,1]){
   const x=sign*1.20;
@@ -257,7 +259,7 @@ function addR44(m){
    [x,.45,.66]],glass,.08);
   sheet(m,[[x,.41,-1.72],[x,1.12,-1.63],[x,1.15,-.78],
    [x,.38,-.89]],glass,.07);
-  m.box(x-.065,.37,-.78,.13,1.01,.10,palette.metal);
+  m.box(x-.065,.37,-.78,.13,1.01,.10,palette.dark);
   // A distinct low-profile release handle on each cabin door is visible
   // in both the WebGL model and the matching lightweight 2D inspector.
   m.box(x-.075,.18,.41,.15,.07,.25,palette.metal);
