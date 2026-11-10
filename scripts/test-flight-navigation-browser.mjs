@@ -52,7 +52,7 @@ try{
   "real return leg becomes final approach without pressing reset");
  assert.equal(rejoinedFinal.leg,"final");
  assert.match(rejoinedFinal.readout,/FINAL/);
- assert.match(rejoinedFinal.readout,/E1[34]\\d+m/);
+ assert.match(rejoinedFinal.readout,/E1[34][0-9]+m/);
 
  const finalTurn=await desktop.evaluate(()=>{
   const mock={mode:"airplane",scenario:"approach",phase:"approach",
