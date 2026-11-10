@@ -181,6 +181,15 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    const corners=Countryside.trackCorners(farmRoad);
    poly(corners.map(([x,z])=>[x,heightAt(x,z)+.02,z]),"#9b8d6c");
   }
+  // Nearby hedges change size and position with the actual aircraft,
+  // providing strong parallax even on the lightweight Android fallback.
+  for(const hedge of Countryside.hedgerows){
+   if(Math.abs(hedge.z-state.zM)>3600)continue;
+   const {x,z,w,d,h,color}=hedge;
+   const y=Countryside.terrainHeight(x,z)+.14;
+   poly([[x,y+h,z],[x+w,y+h,z],[x+w,y+h,z+d],[x,y+h,z+d]],color);
+   poly([[x,y,z],[x+w,y,z],[x+w,y+h,z],[x,y+h,z]],"#375b3d");
+  }
   // Project the SAME fixed tower footprints as WebGL, so the distinctive
   // silhouettes actually slide past as the aircraft flies or banks.
   for(const tower of Countryside.towers){

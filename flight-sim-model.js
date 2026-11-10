@@ -19,6 +19,17 @@ function shapeRotorCyclic(value){
  const signed=clamp(value,-1,1),amount=Math.abs(signed);
  return Math.sign(signed)*amount*(.56+.44*amount);
 }
+// The hover trim point follows directly from the existing fictional lift
+// equation. Small collective changes while close to the pad gain finer
+// touch resolution; decisive climb/descent inputs keep full authority.
+function shapeRotorCollective(value,altitudeM,onGround){
+ const collective=clamp(value,0,1),trim=.48+.12/8.2;
+ if(onGround||altitudeM>=12)return collective;
+ const displacement=collective-trim,amount=Math.abs(displacement);
+ const fineFactor=.58+.42*Math.min(1,amount/.14);
+ const proximity=clamp((12-Math.max(0,altitudeM))/6,0,1);
+ return trim+displacement*(1-proximity*(1-fineFactor));
+}
 const KNOT=0.514444;
 // Five distinct *illustrative*, bounded jet responses. These are teaching
 // settings, not manufacturer speeds, performance or flight-envelope data.
@@ -170,7 +181,8 @@ function step(state,input,seconds){
   const commandedYaw=clamp(pedal*18+turnAssist,-19,19);
   const yawResponse=carefulYaw&&Math.abs(rudder)<.04?3.1:2.4;
   state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,yawResponse,dt);
-  const targetVS=clamp((collective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
+  const hoverCollective=shapeRotorCollective(collective,state.altitudeM,state.onGround);
+  const targetVS=clamp((hoverCollective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
   state.verticalMs=smooth(state.verticalMs,targetVS,1.5,dt);
   // The helipad supports the skids. A grounded helicopter cannot show
   // a negative vertical speed or accumulate an invisible downward impulse.
@@ -380,7 +392,8 @@ function step(state,input,seconds){
  markReturnFinal(state);
  return {state,events};
 }
-const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,shapeRotorCyclic,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,
+ shapeRotorCyclic,shapeRotorCollective,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
