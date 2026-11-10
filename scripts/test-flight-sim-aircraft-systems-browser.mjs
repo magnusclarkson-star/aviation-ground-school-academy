@@ -104,6 +104,23 @@ try{
  await page.waitForTimeout(120);
  assert.ok(Math.abs((await samplePaused()).rudder)<.001,
   "releasing the rudder pedal returns the stationary surface to centre");
+ await page.locator("#controlPad").evaluate(pad=>{
+  const r=pad.getBoundingClientRect();
+  pad.dispatchEvent(new PointerEvent("pointerdown",{
+   bubbles:true,cancelable:true,pointerType:"touch",pointerId:82,
+   clientX:r.left+r.width*.78,clientY:r.top+r.height*.23}));
+ });
+ await page.waitForTimeout(120);
+ const pitched=await samplePaused();
+ assert.ok(pitched.aileron<-.1&&pitched.elevator>.1,
+  "paused touch yoke tilts the aileron and elevator geometry");
+ await page.locator("#controlPad").dispatchEvent("pointerup",{
+  pointerId:82,pointerType:"touch",bubbles:true,cancelable:true});
+ await page.waitForTimeout(120);
+ const centred=await samplePaused();
+ assert.ok(Math.abs(centred.aileron)<.001&&Math.abs(centred.elevator)<.001,
+  "releasing the yoke centres its simulated surfaces");
+ assert.equal(centred.clock,closed.clock,"the paused control check never advances time");
  await page.evaluate(()=>window.__restoreSurfaceDraw());
  await page.locator("#cameraMode").selectOption("cockpit");
  await page.locator("#visualMode").selectOption("3d");
