@@ -32,6 +32,9 @@ on:
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
+      - 'flight-sim-real-airframes.js'
+      - 'assets/aircraft/**'
+      - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-exterior-2d.js'
       - 'flight-sim-inspection.js'
@@ -114,6 +117,9 @@ on:
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
+      - 'flight-sim-real-airframes.js'
+      - 'assets/aircraft/**'
+      - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-exterior-2d.js'
       - 'flight-sim-inspection.js'
@@ -192,6 +198,7 @@ jobs:
           node --check flight-sim-haptics.js
           node --check flight-sim-scenery.js
           node --check flight-sim-3d.js
+          node --check flight-sim-real-airframes.js
           node --check flight-sim-airframe-geometry.js
           node --check flight-sim-exterior-2d.js
           node --check flight-sim-inspection.js
@@ -248,6 +255,7 @@ jobs:
           node scripts/test-flight-sim-gamepad-browser.mjs
           node scripts/test-flight-sim-environment-browser.mjs
           node scripts/test-flight-sim-3d-browser.mjs
+          node scripts/test-flight-sim-real-airframes-browser.mjs
           node scripts/test-flight-exterior-airframes-browser.mjs
           node scripts/test-flight-inspection-browser.mjs
           node scripts/test-flight-sim-airport-detail-browser.mjs
@@ -256,3 +264,12 @@ jobs:
           node scripts/test-flight-sim-loading-browser.mjs
           node scripts/test-flight-sim-exercises-browser.mjs
           node scripts/test-flight-sim-instructor-voice-browser.mjs
+
+      - name: Save actual C172 WebGL render for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-c172-v2-browser-preview
+          path: artifacts/real-c172-3d-preview.png
+          if-no-files-found: ignore
+          retention-days: 14
