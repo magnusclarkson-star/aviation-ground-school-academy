@@ -794,6 +794,16 @@ function buildCleanR44Rotors(){
  });
  return parts;
 }
+// Aircraft-space Z has +Z toward the nose. These source-aligned cabin
+// stations replace earlier guesses which placed students in the tail cone.
+// The C172 imported mesh's broad windshield/wing-root body runs roughly
+// Z .2..2.4; R44 passenger windows span Z 2.4..4.5.
+const IMPORTED_CABIN_LAYOUT=Object.freeze({
+ r44:Object.freeze({frontSeatZ:3.59,rearSeatZ:2.92,panelZ:4.12,
+  glazingStartZ:2.40,glazingEndZ:4.54}),
+ c172:Object.freeze({frontSeatZ:1.46,rearSeatZ:.35,panelZ:2.31,
+  glazingStartZ:.18,glazingEndZ:2.45})
+});
 // Lightweight physical interior in the same local metres as each imported
 // airframe. Four distinct seats, restraints, a floor, and instrument binnacle
 // sit behind the existing window glass in chase and 360-degree inspection.
@@ -806,8 +816,9 @@ function buildImportedCabin(id){
  let seats=0;
  const r44=id==="r44";
  if(r44){
-  m.box(-.54,-1.04,2.16,1.08,.065,1.65,floor);
-  for(const z of [3.27,2.57])for(const x of [-.30,.30]){
+  const station=IMPORTED_CABIN_LAYOUT.r44;
+  m.box(-.54,-1.04,2.44,1.08,.065,1.71,floor);
+  for(const z of [station.frontSeatZ,station.rearSeatZ])for(const x of [-.30,.30]){
    seats++;
    m.box(x-.215,-.71,z-.23,.43,.15,.49,cushion);
    m.box(x-.215,-.59,z-.30,.43,.61,.14,leather);
@@ -818,16 +829,17 @@ function buildImportedCabin(id){
    m.box(x+.12,-.94,z-.045,.055,.24,.065,trim);
   }
   // Forward instrument binnacle and hood, plus two identifiable cyclic grips.
-  m.box(-.51,-.47,3.75,1.02,.34,.18,panel);
-  m.box(-.39,-.32,3.927,.30,.12,.035,screen);
-  m.box(.085,-.32,3.927,.30,.12,.035,screen);
+  m.box(-.51,-.47,station.panelZ,1.02,.34,.18,panel);
+  m.box(-.39,-.32,station.panelZ+.177,.30,.12,.035,screen);
+  m.box(.085,-.32,station.panelZ+.177,.30,.12,.035,screen);
   for(const x of [-.30,.30]){
-   m.box(x-.025,-.78,3.49,.05,.51,.05,trim);
-   m.box(x-.095,-.31,3.46,.19,.07,.09,panel);
+   m.box(x-.025,-.78,station.panelZ-.27,.05,.51,.05,trim);
+   m.box(x-.095,-.31,station.panelZ-.30,.19,.07,.09,panel);
   }
  }else{
-  m.box(-.51,-.85,-1.18,1.02,.07,2.76,floor);
-  for(const z of [.63,-.60])for(const x of [-.30,.30]){
+  const station=IMPORTED_CABIN_LAYOUT.c172;
+  m.box(-.51,-.85,-.17,1.02,.07,2.67,floor);
+  for(const z of [station.frontSeatZ,station.rearSeatZ])for(const x of [-.30,.30]){
    seats++;
    m.box(x-.225,-.68,z-.30,.45,.17,.58,cushion);
    m.box(x-.225,-.52,z-.39,.45,.60,.15,leather);
@@ -837,11 +849,11 @@ function buildImportedCabin(id){
    m.box(x-.17,-.82,z+.05,.065,.14,.075,trim);
    m.box(x+.11,-.82,z+.05,.065,.14,.075,trim);
   }
-  m.box(-.56,-.35,1.70,1.12,.47,.19,panel);
+  m.box(-.56,-.35,station.panelZ,1.12,.47,.19,panel);
   for(const x of [-.32,.32]){
-   m.box(x-.19,-.18,1.897,.38,.16,.035,screen);
-   m.box(x-.025,-.62,1.47,.05,.40,.07,trim);
-   m.box(x-.20,-.29,1.46,.40,.055,.075,panel);
+   m.box(x-.19,-.18,station.panelZ+.197,.38,.16,.035,screen);
+   m.box(x-.025,-.62,station.panelZ-.23,.05,.40,.07,trim);
+   m.box(x-.20,-.29,station.panelZ-.24,.40,.055,.075,panel);
   }
  }
  return {...m.finish(),seats,hasPanel:true};
@@ -860,12 +872,13 @@ function buildImportedC172Shell(){
  const sections=[
   [-3.65,.16,-.27,-.12,.05,false],
   [-2.40,.29,-.46,-.08,.21,false],
-  [-1.45,.50,-.72,-.09,.54,false],
-  [-1.22,.61,-.84,-.11,.73,false],
-  [-1.02,.65,-.86,-.10,.77,true],
-  [ .22,.66,-.86,-.10,.79,true],
-  [1.52,.62,-.81,-.12,.71,true],
-  [1.79,.57,-.76,-.13,.57,false],
+  [-1.45,.32,-.57,-.09,.27,false],
+  [ -.70,.46,-.72,-.09,.44,false],
+  [ -.32,.52,-.78,-.10,.62,false],
+  [ .18,.60,-.83,-.10,.73,true],
+  [ .86,.63,-.83,-.10,.75,true],
+  [1.82,.60,-.81,-.12,.69,true],
+  [2.11,.55,-.76,-.13,.53,false],
   [2.43,.46,-.66,-.17,.30,false],
   [3.55,.32,-.48,-.15,.11,false],
   [3.78,.23,-.34,-.15,.07,false]
@@ -898,15 +911,15 @@ function buildImportedC172Shell(){
   }
  }
  // White window posts visually separate forward/rear side panels.
- for(const [z,w,y0,y1] of [[-1.01,.65,-.09,.77],[.22,.66,-.10,.79],
-                             [1.52,.62,-.12,.71]]){
+ for(const [z,w,y0,y1] of [[.18,.60,-.10,.73],[.86,.63,-.10,.75],
+                             [1.82,.60,-.12,.69]]){
   for(const sign of [-1,1])
    skin.box(sign>0?w-.025:-w-.025,y0,z-.035,.05,y1-y0,.07,ivory);
  }
  // Sloped front windshield, glass retained as a separate transparent layer.
- glass.quad([-.59,-.08,1.72],[.59,-.08,1.72],
-  [.43,.51,2.13],[-.43,.51,2.13],glassBlue);
- skin.box(-.035,-.07,1.72,.07,.61,.40,ivory);
+ glass.quad([-.55,-.13,2.11],[.55,-.13,2.11],
+  [.43,.46,2.43],[-.43,.46,2.43],glassBlue);
+ skin.box(-.035,-.12,2.11,.07,.60,.34,ivory);
  return {skin:skin.finish(),glass:glass.finish(),windowPanels:5};
 }
 // The licensed C172 GLB already contains wings, flaps, elevator, rudder,
@@ -1070,6 +1083,14 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  float alpha=uOpacity*texel.a;
+ if(uR44Skin==1 && uHasTexture>.5){
+  // Original FlightGear texture is the source of the apparent "old skin":
+  // red/white checker across the rear cabin and black patches on the boom.
+  // Repaint one continuous imported fuselage/fin rather than piling an
+  // extra tail cover on top; retain 4% surface texture for subtle variation.
+  // Clear window material is a separate later pass and remains transparent.
+  albedo=mix(vec3(.93,.79,.08),albedo,.04);
+ }
  if(uR44Skin==1){
   // Source opaque fuselage may cover the separate translucent window
   // polygons. Cut only *inside* the source windows, preserving the R44
@@ -1590,7 +1611,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
