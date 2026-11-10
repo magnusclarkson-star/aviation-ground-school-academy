@@ -82,10 +82,47 @@ simulate(approach,finalInput,72,landingEvents);
 assert.equal(approach.phase,"rollout","controlled fictional short final should reach runway");
 assert.ok(landingEvents.includes("touchdown"));
 assert.ok(approach.altitudeM===0&&approach.onGround);
+assert.ok(approach.touchdownData&&approach.touchdownData.sinkMs<0,
+ "touchdown records actual pre-contact sink rate before vertical speed resets");
+assert.ok(approach.touchdownData.speedKt>40&&approach.touchdownData.speedKt<100);
+assert.ok(Object.isFrozen(approach.touchdownData));
+assert.equal(approach.rolloutDistanceM,0,"rollout begins exactly at actual contact");
 finalInput.throttle=0;finalInput.brake=true;finalInput.pitch=0;
 simulate(approach,finalInput,20,landingEvents);
 assert.equal(approach.phase,"complete","brakes should end the runway rollout");
 assert.ok(landingEvents.includes("completed"));
+assert.ok(approach.rolloutBrakePressure>.9);
+assert.ok(approach.rolloutDistanceM>50,
+ "aircraft follows the runway for a measurable distance after touchdown");
+// Coasting and braking should feel different, with no instant full-pressure
+// brakes or sudden compass wrapping at heading 359 degrees.
+const testRoll=()=>Object.assign(M.makeState("airplane","approach"),{
+ phase:"rollout",onGround:true,xM:0,zM:250,altitudeM:0,
+ headingDeg:359,trackDeg:359,speedKt:72,groundSpeedKt:72});
+const braking=testRoll(),coasting=testRoll(),groundInput=M.makeInput();
+groundInput.throttle=0;groundInput.flaps=20;groundInput.brake=true;
+M.step(braking,groundInput,.05);
+assert.ok(braking.rolloutBrakePressure>0&&braking.rolloutBrakePressure<.2,
+ "a single touch frame cannot apply 100% of ground braking");
+assert.ok(braking.headingDeg>358&&braking.headingDeg<360,
+ "north-aligned rollout heading must not jump to a 40 degree turn");
+const coastingInput={...groundInput,brake:false};
+for(let i=0;i<39;i++){M.step(braking,groundInput,.05);M.step(coasting,coastingInput,.05);}
+assert.ok(braking.rolloutBrakePressure>.99,
+ "holding the brake builds wheel pressure within a few simulated seconds");
+assert.ok(coasting.rolloutBrakePressure===0);
+assert.ok(braking.speedKt<coasting.speedKt-5,
+ "firm wheel braking reduces speed much faster than simply coasting");
+assert.ok(braking.rolloutDistanceM>0&&coasting.rolloutDistanceM>0);
+assert.ok(braking.zM<coasting.zM,
+ "braked aircraft travels less distance along the same runway");
+const brakedSpeed=braking.speedKt;
+groundInput.brake=false;
+M.step(braking,groundInput,.1);
+assert.ok(braking.rolloutBrakePressure<.99,
+ "releasing the brake immediately starts relaxing pressure");
+assert.ok(braking.speedKt<=brakedSpeed,
+ "release does not inject speed or teleport the aircraft");
 
 const hard=M.makeState("airplane","approach");
 hard.altitudeM=.01;hard.verticalMs=-6;hard.xM=88;hard.zM=500;
