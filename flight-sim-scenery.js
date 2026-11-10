@@ -178,6 +178,20 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    const corners=Countryside.trackCorners(farmRoad);
    poly(corners.map(([x,z])=>[x,heightAt(x,z)+.02,z]),"#9b8d6c");
   }
+  // Project the SAME fixed tower footprints as WebGL, so the distinctive
+  // silhouettes actually slide past as the aircraft flies or banks.
+  for(const tower of Countryside.towers){
+   if(Math.abs(tower.z-state.zM)>3600)continue;
+   const {x,z,height:ht,radius:r,color}=tower;
+   const y=Countryside.terrainHeight(x,z);
+   for(const sx of [-.7,.7])for(const sz of [-.7,.7])
+    line([x+sx*r,y,z+sz*r],[x+sx*r,y+ht*.72,z+sz*r],"#526667",2);
+   poly([[x-r,y+ht*.7,z-r],[x+r,y+ht*.7,z-r],
+    [x+r,y+ht*.95,z-r],[x-r,y+ht*.95,z-r]],color);
+   poly([[x-r,y+ht*.95,z-r],[x+r,y+ht*.95,z-r],
+    [x+r,y+ht*.95,z+r],[x-r,y+ht*.95,z+r]],"#d7dfd4");
+   line([x,y+ht*.96,z],[x,y+ht*1.18,z],"#61777a",2);
+  }
  }
  if(state.mode==="helicopter"){
   // A shared fixed X/Z environment matches the 3D helipad geometry. Every
