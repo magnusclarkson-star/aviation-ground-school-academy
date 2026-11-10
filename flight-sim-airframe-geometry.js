@@ -129,8 +129,9 @@ function addC172(m){
  const c=palette.white,strip=palette.navy;
  fuselage(m,[[-6.5,.17,.22,0],[-5,.51,.55,.05],[-2.6,.73,.67,.08],
   [1.2,.95,.83,.10],[3.45,.81,.72,.02],[5.1,.40,.43,-.02],[6.2,.12,.16,-.03]],c);
- // High-wing, straight leading edge, broad rectangular trainer wings.
- mirrored(m,[[.72,.95,1.25],[7.4,.99,.7],[7.4,.99,-1.75],
+ // The C172's high wings rise gently from roots towards both tips.
+ // Preserve the same low-poly panel topology and full three-axis 360 view.
+ mirrored(m,[[.72,.95,1.25],[7.4,1.16,.7],[7.4,1.16,-1.75],
   [.72,.95,-1.40]],c,.2);
  mirrored(m,[[.4,.9,-4.75],[2.9,.9,-5.10],[2.9,.9,-6.0],[.36,.9,-5.78]],c,.16);
  // Swept vertical tail and rudder outline (not the previous rectangular block).
@@ -161,7 +162,7 @@ function addC172(m){
  // Wing struts and undercarriage help distinguish trainer from fighters.
  for(const sign of [-1,1]){
   const s=sign;
-  sheet(m,[[s*.67,-.39,.15],[s*4.7,.76,-.55],[s*4.7,.94,-.38],
+  sheet(m,[[s*.67,-.39,.15],[s*4.7,.90,-.55],[s*4.7,1.08,-.38],
    [s*.67,-.13,.50]],palette.metal,.09);
   gear(m,s*2.10,-.8,.35);
   // Tubular spring-steel strut reaches the actual wheel hub, replacing the
@@ -176,14 +177,14 @@ function addC172(m){
   [0,-1.18,4.45]],.085,palette.metal,8);
  m.box(-.26,-1.21,4.39,.52,.10,.12,tint(palette.metal,.80));
  // Trim along each wing rather than a square bar spanning the aircraft.
- mirrored(m,[[.83,1.04,-1.41],[7.25,1.04,-1.77],
-  [7.24,1.04,-1.52],[.84,1.04,-1.20]],strip,.035);
+ mirrored(m,[[.83,1.04,-1.41],[7.25,1.25,-1.77],
+  [7.24,1.25,-1.52],[.84,1.04,-1.20]],strip,.035);
  // Slim trailing-edge hinge seams divide inboard flaps from ailerons;
  // the existing animated flap and aileron meshes remain independent.
- mirrored(m,[[1.03,1.025,-1.46],[4.74,1.025,-1.60],
-  [4.74,1.025,-1.53],[1.03,1.025,-1.39]],tint(c,.65),.017);
- mirrored(m,[[5.06,1.03,-1.66],[7.28,1.03,-1.76],
-  [7.28,1.03,-1.70],[5.06,1.03,-1.59]],tint(c,.73),.017);
+ mirrored(m,[[1.03,1.025,-1.46],[4.74,1.16,-1.60],
+  [4.74,1.16,-1.53],[1.03,1.025,-1.39]],tint(c,.65),.017);
+ mirrored(m,[[5.06,1.18,-1.66],[7.28,1.25,-1.76],
+  [7.28,1.25,-1.70],[5.06,1.18,-1.59]],tint(c,.73),.017);
  m.box(-2.85,.87,.66,.46,.10,.08,palette.ivory);
  // Separate cabin windows and doors with realistic wing root spacing.
  for(const side of [-1,1]){
@@ -196,7 +197,7 @@ function addC172(m){
   m.box(x-.055,.25,-1.04,.11,.06,2.17,tint(c,.79));
   m.box(x-.055,.69,-1.04,.11,.055,2.10,tint(c,.89));
   // Port (local -X) is red; starboard (local +X) is green.
-  m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,
+  m.box(side*7.18-.11,1.23,-1.81,.22,.11,.25,
    side<0?palette.navRed:palette.navGreen);
   sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
    [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
