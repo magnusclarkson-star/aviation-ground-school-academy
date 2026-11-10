@@ -241,6 +241,12 @@ function step(state,input,seconds){
  const throttle=clamp(input.throttle,0,1);
  const flap=clamp(input.flaps,0,30);
  if(state.onGround){
+  // Wheel contact progressively settles the aircraft's pitch and bank.
+  // Its original airborne contact attitude remains in touchdownData.
+  if(state.phase==="rollout"){
+   state.pitchDeg=smooth(state.pitchDeg,0,2.7,dt);
+   state.rollDeg=smooth(state.rollDeg,0,3.2,dt);
+  }
   const brake=input.brake===true;
   // Wheel braking builds and releases progressively after actual touchdown.
   // This avoids the old single-frame full-brake impulse and retains clear
@@ -340,7 +346,8 @@ function step(state,input,seconds){
     state.touchdownData=Object.freeze({
      speedKt:state.speedKt,sinkMs:state.verticalMs,
      offsetM:state.xM,runwayPositionM:state.zM,
-     headingDeg:state.headingDeg,trackDeg:state.trackDeg
+     headingDeg:state.headingDeg,trackDeg:state.trackDeg,
+     pitchDeg:state.pitchDeg,bankDeg:state.rollDeg
     });
     state.rolloutBrakePressure=0;state.rolloutDistanceM=0;
    }
