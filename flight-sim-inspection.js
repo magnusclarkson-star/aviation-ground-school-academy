@@ -229,8 +229,10 @@
      event.key==="ArrowUp"?-10:event.key==="ArrowDown"?10:0);return;
    }
    if(event.key==="Tab"){
-    const els=[ $("aircraftInspectClose"),$("aircraftInspectModelSelect"),$("aircraftInspectZoomIn"),
-      $("aircraftInspectZoomOut"),$("aircraftInspectReset"),$("aircraftInspectSpin") ];
+    // Match the actual DOM tab order so focus never escapes the modal
+    // and shift-Tab from the first field wraps to the last button.
+    const els=[ $("aircraftInspectModelSelect"),$("aircraftInspectClose"),$("aircraftInspectZoomOut"),
+      $("aircraftInspectZoomIn"),$("aircraftInspectReset"),$("aircraftInspectSpin") ];
     const first=els[0],last=els[els.length-1];
     if(event.shiftKey&&doc.activeElement===first){event.preventDefault();last.focus()}
     else if(!event.shiftKey&&doc.activeElement===last){event.preventDefault();first.focus()}
