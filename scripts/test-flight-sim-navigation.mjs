@@ -28,6 +28,22 @@ assert.equal(padWest.waypointRotation,"rotate(-90.00 110 82)");
 const padAhead=N.coordinates({mode:"helicopter",scenario:"helipad",xM:0,zM:-60,
  headingDeg:0,trackDeg:0,groundSpeedKt:3});
 assert.match(padAhead.padText,/PAD 60 m · BRG 000° · AHEAD/);
+const hoverFixed={mode:"helicopter",scenario:"helipad",phase:"hover",
+ onGround:false,xM:2,zM:1,altitudeM:5,verticalMs:.1,
+ yawRateDegS:1,groundSpeedKt:1,hoverHoldSec:4.8};
+const fixedHover=N.coordinates(hoverFixed);
+assert.equal(fixedHover.hoverStable,true);
+assert.equal(fixedHover.hoverAirborne,true);
+assert.equal(fixedHover.hoverText,"HOV 4/8");
+const sliding=N.coordinates({...hoverFixed,groundSpeedKt:5});
+assert.equal(sliding.hoverStable,false);
+assert.equal(sliding.hoverText,"DRIFT");
+const descending=N.coordinates({...hoverFixed,verticalMs:-1.3});
+assert.equal(descending.hoverStable,false);
+assert.equal(descending.hoverText,"VERT");
+const padded=N.coordinates({...hoverFixed,onGround:true});
+assert.equal(padded.hoverAirborne,false);
+assert.equal(padded.hoverText,null);
 const inactive=N.coordinates(circuitState,{stage:"landed"});
 assert.equal(inactive.waypointRotation,null,"pointer disappears after the circuit ends");
 const arriving=N.coordinates({xM:-230.5,zM:-1450,headingDeg:90,trackDeg:100,groundSpeedKt:74});

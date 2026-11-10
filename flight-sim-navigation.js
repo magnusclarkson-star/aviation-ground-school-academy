@@ -23,6 +23,15 @@
   const padBearingDeg=bearing(Math.atan2(-x,-z)*180/Math.PI);
   const padRelativeDeg=((padBearingDeg-heading+540)%360)-180;
   const padTurn=padRelativeDeg>5?"R":padRelativeDeg< -5?"L":"AHEAD";
+  const hoverAirborne=heli&&state?.onGround===false;
+  const hoverStable=hoverAirborne&&finite(state?.altitudeM)>=2&&
+   finite(state?.altitudeM)<=9&&padDistanceM<=10&&
+   groundSpeed<2&&Math.abs(finite(state?.verticalMs))<.45&&
+   Math.abs(finite(state?.yawRateDegS))<3;
+  const hoverHold=hoverStable?Math.max(0,Math.min(8,Math.floor(finite(state?.hoverHoldSec)))):0;
+  const hoverText=!hoverAirborne?null:hoverStable?
+   "HOV "+hoverHold+"/8":groundSpeed>=2?"DRIFT":
+   Math.abs(finite(state?.verticalMs))>=.45?"VERT":"POSITION";
   const leg=heli?null:(Circuit?.status(circuit,state)||null);
   // Keep the next circuit waypoint visible as a small direction pointer
   // even when that fixed waypoint is outside the map's narrow viewport.
@@ -41,7 +50,7 @@
   return Object.freeze({
    xM:x,zM:z,headingDeg:heading,trackDeg:track,
    groundSpeedKt:groundSpeed,scale,isHelipad:heli,
-   padDistanceM,padBearingDeg,padTurn,
+   padDistanceM,padBearingDeg,padTurn,hoverAirborne,hoverStable,hoverText,
    runwayDistanceM,runwayBearingDeg,runwayLandingHeadingDeg,runwayTurn,leg,
    projectedTouchdownX:leg?.projectedTouchdownX??null,
    landingProjectionCue:leg?.landingProjectionCue??null,
@@ -121,6 +130,11 @@
   // Heading-up map: central aircraft is fixed; the airfield moves under it.
   node(doc,"circle",{cx:110,cy:82,r:43,stroke:"#9fc1bb66","stroke-width":1,
    fill:"none","stroke-dasharray":"3 4"},svg);
+  // A subtle hover stability ring is instrument feedback, not a map object.
+  // It avoids introducing another oversized status button on phones.
+  node(doc,"circle",{cx:110,cy:82,r:43,fill:"none",
+   "data-nav-hover-cue":"true",visibility:"hidden",
+   stroke:"#f0c680","stroke-width":2.5},svg);
   node(doc,"circle",{cx:110,cy:82,r:82,stroke:"#9fc1bb55","stroke-width":1,
    fill:"none","stroke-dasharray":"3 6"},svg);
   node(doc,"path",{d:"M110 0 V8 M110 156 V160 M0 82 H9 M211 82 H220",
@@ -160,6 +174,11 @@
    el.querySelector("[data-nav-airfield]")?.setAttribute("visibility",c.isHelipad?"hidden":"visible");
    el.querySelector("[data-nav-helipad]")?.setAttribute("visibility",c.isHelipad?"visible":"hidden");
    el.dataset.navTarget=c.isHelipad?"helipad":"runway";
+   const hoverRing=el.querySelector("[data-nav-hover-cue]");
+   if(hoverRing){
+    hoverRing.setAttribute("visibility",c.hoverAirborne?"visible":"hidden");
+    hoverRing.setAttribute("stroke",c.hoverStable?"#80ebc5":"#f0c680");
+   }
    el.querySelector("[data-nav-track-pointer]")?.setAttribute("transform",c.trackRotation);
    const circuitPointer=el.querySelector("[data-nav-circuit-pointer]");
    if(circuitPointer){
@@ -194,7 +213,7 @@
      value==="track"?"TRK "+String(Math.round(c.trackDeg)%360).padStart(3,"0"):
      value==="position"?c.positionText:
      value==="runway"?(c.isHelipad?c.padText:(c.circuitText||c.runwayText)):
-     "GS "+Math.round(c.groundSpeedKt);
+     "GS "+Math.round(c.groundSpeedKt)+(c.hoverText?" · "+c.hoverText:"");
    }
   }
   return c;

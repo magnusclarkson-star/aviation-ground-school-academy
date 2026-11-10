@@ -64,7 +64,9 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  const horizon=h*.49+Math.tan(state.pitchDeg*RAD)*h*1.2;
  // Clouds and remote hills drift slowly as the heading changes, with a
  // smaller parallax effect than the foreground runway and roadside trees.
- const cloudOffset=state.headingDeg*3+(reducedMotion?0:state.zM*.008);
+ // Real positional parallax continues even with reduced motion enabled;
+ // only synthetic time-based cloud bobbing is suppressed in that mode.
+ const cloudOffset=state.headingDeg*3+state.xM*.012+state.zM*.008;
  for(let i=-2;i<7;i++){
   const x=((i*227+138-cloudOffset)%(w+460)+w+460)%(w+460)-120;
   const y=horizon-130-(i%3)*33+(reducedMotion?0:Math.sin(state.time*.1+i)*4);
@@ -79,7 +81,8 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  ctx.beginPath();ctx.moveTo(-w,horizon+30);
  for(let i=0;i<=24;i++){
   const x=-w+i*(3*w/24);
-  const ridge=26*Math.sin(i*.64+state.headingDeg*.018)+21*Math.sin(i*1.22+2);
+  const ridge=26*Math.sin(i*.64+state.headingDeg*.018+state.xM*.0005)+
+   21*Math.sin(i*1.22+2+state.zM*.00012);
   ctx.lineTo(x,horizon-20+ridge);
  }
  ctx.lineTo(w*3,h*2);ctx.lineTo(-w,h*2);ctx.fill();
