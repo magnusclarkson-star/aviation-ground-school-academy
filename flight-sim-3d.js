@@ -1084,11 +1084,12 @@ void main(){
  vec3 albedo=vColor*texel.rgb;
  float alpha=uOpacity*texel.a;
  if(uR44Skin==1 && uHasTexture>.5){
-  // The imported FlightGear tailboom/cabin back carried old black panels
-  // and red/white checker paint. Refinish that *existing hull* as coherent
-  // yellow, without adding another tail mesh or affecting clear windows.
-  float oldTail=1.-smoothstep(2.0,2.65,vLocalPosition.z);
-  albedo=mix(albedo,vec3(.93,.79,.08),oldTail*.97);
+  // Original FlightGear texture is the source of the apparent "old skin":
+  // red/white checker across the rear cabin and black patches on the boom.
+  // Repaint one continuous imported fuselage/fin rather than piling an
+  // extra tail cover on top; retain 4% surface texture for subtle variation.
+  // Clear window material is a separate later pass and remains transparent.
+  albedo=mix(vec3(.93,.79,.08),albedo,.04);
  }
  if(uR44Skin==1){
   // Source opaque fuselage may cover the separate translucent window
