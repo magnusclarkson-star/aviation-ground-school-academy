@@ -25,7 +25,8 @@ const palette=Object.freeze({
  blue:rgb(71,127,155),window:rgb(37,86,113),metal:rgb(151,162,172),
  jet:rgb(147,164,174),stealth:rgb(106,128,142),lightning:rgb(122,143,150),
  typhoon:rgb(157,172,179),su:rgb(137,162,159),dark:rgb(42,54,62),
- black:rgb(19,25,30),red:rgb(174,80,69),gold:rgb(208,179,112)
+ black:rgb(19,25,30),red:rgb(174,80,69),gold:rgb(208,179,112),
+ navRed:rgb(235,56,48),navGreen:rgb(54,214,111),navWhite:rgb(236,241,226)
 });
 function normalize(id){
  if(id==="airplane")return "c172";
@@ -185,10 +186,14 @@ function addC172(m){
   m.box(x-.048,.23,.06,.096,.11,.18,palette.metal);
   m.box(x-.055,.25,-1.04,.11,.06,2.17,tint(c,.79));
   m.box(x-.055,.69,-1.04,.11,.055,2.10,tint(c,.89));
-  m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,side>0?palette.red:palette.blue);
+  // Port (local -X) is red; starboard (local +X) is green.
+  m.box(side*7.18-.11,1.03,-1.81,.22,.11,.25,
+   side<0?palette.navRed:palette.navGreen);
   sheet(m,[[side*.61,-.63,.15],[side*2.20,-1.05,-.77],
    [side*2.20,-.84,-.65],[side*.61,-.41,.35]],palette.metal,.04);
  }
+ // White rearward position-light lens at the tail.
+ m.box(-.10,.72,-6.59,.20,.15,.19,palette.navWhite);
  m.box(-.42,-.45,5.05,.84,.14,.48,palette.dark);
  m.box(-.38,-.24,5.56,.76,.12,.21,palette.metal);
  const spinner=[0,-.04,6.50],spinnerZ=6.14;
@@ -244,6 +249,12 @@ function addR44(m){
   m.box(x-.08,-.62,-1.45,.16,.15,2.85,trim);
   for(let i=0;i<4;i++)m.box(x-.065,.15,-2.32+i*.27,.13,.08,.18,palette.dark);
  }
+ // Red left/green right position-light housings by the cabin front,
+ // plus the rear-facing white lens on the tail boom.
+ for(const sign of [-1,1])
+  m.box(sign*1.19-.095,.70,1.31,.19,.16,.23,
+   sign<0?palette.navRed:palette.navGreen);
+ m.box(-.10,.47,-8.76,.20,.15,.16,palette.navWhite);
  // Separate engine cooling grille, cowling vents and skid steps.
  m.box(-.80,.92,-2.22,1.60,.14,.55,palette.metal);
  m.box(-.66,.98,-2.09,1.32,.09,.28,palette.dark);
@@ -356,8 +367,10 @@ function genericJet(m,id){
   const point=planforms[id][1];
   const tipX=sign*point[0],tipZ=point[2];
   m.box(tipX-.12,.18,tipZ-.12,.24,.18,.25,
-    sign===-1?palette.red:palette.blue);
+    sign===-1?palette.navRed:palette.navGreen);
  }
+ // Rear-facing white lens for aircraft direction identification.
+ m.box(-.12,.30,zTail-.30,.24,.15,.20,palette.navWhite);
  // Tailplanes: canted twin fins for F/A-18, F-22, F-35 and Su-37,
  // single tall fin for Eurofighter Typhoon.
  if(id==="typhoon"){
