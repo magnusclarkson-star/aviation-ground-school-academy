@@ -38,6 +38,13 @@ for(const side of [-1,1]){
  }
 }
 const farmTracks=freeze(tracks);
+// Distinct fixed-position silhouettes make long base/downwind turns easier
+// to recognise visually. These fictional towers aren't GPS waypoints.
+const towers=freeze([
+ freeze({id:"north-tank",x:1210,z:1850,height:36,radius:5,color:"#a9c5cb"}),
+ freeze({id:"south-silo",x:-1040,z:-1830,height:28,radius:6,color:"#d4c29a"}),
+ freeze({id:"east-tower",x:1310,z:-650,height:33,radius:4,color:"#b6c0c7"})
+]);
 function terrainHeight(x,z){
  const edge=Math.max(0,Math.abs(x)-650),far=Math.max(0,z-2100);
  return Math.min(210,edge*.052+far*.015*(.55+.45*Math.sin(x*.002+z*.004)));
@@ -48,7 +55,7 @@ function trackCorners(track){
  return [[track.ax+ox,track.az+oz],[track.bx+ox,track.bz+oz],
   [track.bx-ox,track.bz-oz],[track.ax-ox,track.az-oz]];
 }
-const api=freeze({fields,farmTracks,terrainHeight,trackCorners});
+const api=freeze({fields,farmTracks,towers,terrainHeight,trackCorners});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSACountryside=api;
 })(typeof window!=="undefined"?window:null);
