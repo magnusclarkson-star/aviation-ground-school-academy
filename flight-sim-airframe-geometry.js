@@ -249,19 +249,17 @@ function addR44(m){
   m.box(x-.08,-.62,-1.45,.16,.15,2.85,trim);
   for(let i=0;i<4;i++)m.box(x-.065,.15,-2.32+i*.27,.13,.08,.18,palette.dark);
  }
- // Red left/green right position-light housings by the cabin front,
- // plus the rear-facing white lens on the tail boom.
- for(const sign of [-1,1])
-  m.box(sign*1.19-.095,.70,1.31,.19,.16,.23,
-   sign<0?palette.navRed:palette.navGreen);
- m.box(-.10,.47,-8.76,.20,.15,.16,palette.navWhite);
+ // Recolour existing small light fittings instead of adding new boxes:
+ // the R44 is close to its strict Android-friendly mesh budget.
  // Separate engine cooling grille, cowling vents and skid steps.
  m.box(-.80,.92,-2.22,1.60,.14,.55,palette.metal);
  m.box(-.66,.98,-2.09,1.32,.09,.28,palette.dark);
  for(const side of [-1,1]){
   const x=side*1.04;
   m.box(x-.065,-.68,-1.45,.13,.16,1.1,palette.metal);
-  m.box(x-.06,.11,.96,.12,.10,.22,trim);
+  // Cabin-side lens: left red, right green, using the old fitting's faces.
+  m.box(x-.06,.68,1.31,.12,.13,.20,
+   side<0?palette.navRed:palette.navGreen);
  }
  // A slim, tapered tailcone and upper/lower vertical stabilizers.
  fuselage(m,[[-8.52,.08,.12,.56],[-7.67,.20,.20,.52],
@@ -308,7 +306,8 @@ function addR44(m){
  // Tail boom accent, navigation lights and tail-rotor drive cover.
  m.box(-.20,.58,-6.70,.40,.085,3.40,trim);
  m.box(-.14,1.81,-8.10,.28,.11,.30,palette.red);
- m.box(-.25,.79,-8.57,.50,.09,.24,palette.gold);
+ // Existing rear tail-cap surface doubles as the aft white position lens.
+ m.box(-.25,.79,-8.57,.50,.09,.24,palette.navWhite);
  // Tail-rotor shaft and hinge on left side of empennage.
  m.box(-.72,1.01,-8.34,.24,.30,.24,palette.metal);
  m.box(-.83,1.11,-8.27,.18,.14,.19,palette.dark);
