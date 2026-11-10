@@ -344,3 +344,17 @@ test("Su-37 dual cockpit includes a live navigation map and original systems rea
  assert.ok(html.includes("flight-sim-cockpit.js?v=20261109-sunav4"));
  assert.ok(html.includes("flight-sim-all-aircraft-fit.css?v=20261109-sunav4"));
 });
+
+test("compact circuit readout gives next waypoint distance and bearing",()=>{
+ const state=Flight.makeState("airplane","runway",{airframeId:"c172"});
+ const circuit=Circuit.create(state);
+ const nav=Navigation.coordinates(state,circuit);
+ assert.ok(nav.circuitText.includes("DEPARTURE"));
+ assert.ok(nav.circuitText.includes("1.9 km"),"show distance to next waypoint");
+ assert.ok(nav.circuitText.includes("WP 000°"),"show bearing to next waypoint");
+ assert.ok(nav.circuitText.includes("AHEAD"),"show turn relative to heading");
+ state.xM=600;
+ const revised=Navigation.coordinates(state,circuit);
+ assert.ok(revised.circuitText.includes("LEFT"),"bearing cue changes with position");
+ assert.ok(revised.circuitText.includes("WP"),"waypoint label remains distinguishable");
+});
