@@ -22,6 +22,9 @@ const PadDetail=root?.AGSAHelipadDetail||
 const Countryside=root?.AGSACountryside||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-countryside.js"):null);
+const Traffic=root?.AGSAAirfieldTraffic||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-ground-traffic.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -62,6 +65,28 @@ class Mesh{
  finish(){return {positions:new Float32Array(this.p),colors:new Float32Array(this.c),
   normals:new Float32Array(this.n),vertices:this.p.length/3,triangles:this.triangles}}
 }
+// Low-poly cars remain small on Android and reuse one GPU mesh per type.
+function buildGroundVehicle(kind="service"){
+ const m=new Mesh(),service=kind==="service";
+ const body=service?rgb(242,183,46):rgb(110,168,210);
+ const roof=service?rgb(252,214,105):rgb(207,222,230);
+ const glass=rgb(45,84,106),rubber=rgb(30,38,44),lights=rgb(244,244,216);
+ m.box(-1.18,.27,-2.15,2.36,1.02,4.30,body);
+ m.box(-1.02,1.19,-.82,2.04,.82,2.20,roof);
+ // Cab glass on both sides; broad dark front and rear windscreens.
+ m.box(-1.065,1.34,-.46,.06,.49,1.25,glass);
+ m.box(1.005,1.34,-.46,.06,.49,1.25,glass);
+ m.box(-.90,1.33,1.30,1.80,.44,.06,glass);
+ m.box(-.90,1.33,-.87,1.80,.42,.06,glass);
+ // Four visible dark tires, bumper and paired marker lights.
+ for(const side of [-1,1])for(const z of [-1.25,1.26])
+  m.box(side<0?-1.30:1.08,.07,z-.42,.22,.64,.84,rubber);
+ m.box(-1.10,.30,2.13,2.20,.18,.16,rubber);
+ m.box(-.93,.61,2.18,.37,.26,.10,lights);
+ m.box(.56,.61,2.18,.37,.26,.10,lights);
+ if(service)m.box(-.52,2.02,-.42,1.04,.14,.86,rgb(252,217,87));
+ return m.finish();
+}
 function elevation(x,z){
  const edge=Math.max(0,Math.abs(x)-650),far=Math.max(0,z-2100);
  return Math.min(210,edge*.052+far*.015*(.55+.45*Math.sin(x*.002+z*.004)));
@@ -85,6 +110,13 @@ function countryside(mesh){
  // during the full circuit. Low-poly quads are built only once and shared
  // by the runway and helipad worlds, not uploaded each rendered frame.
  const y=(x,z)=>Countryside.terrainHeight(x,z)+.14;
+ // Visible service roads follow the actual circular vehicle routes;
+ // their geometry is static and adds no extra animation draw calls.
+ for(const route of Traffic.routes){
+  for(const corners of Traffic.roadSegments(route,48)){
+   mesh.quad(...corners.map(([x,z])=>[x,.19,z]),rgb(96,100,100));
+  }
+ }
  for(const field of Countryside.fields){
   const {x,z,w,d,color}=field;
   mesh.quad([x,y(x,z),z],[x+w,y(x+w,z),z],
@@ -733,7 +765,11 @@ vec3 rotatePart(vec3 v,int axis,float angle){
 void main(){
  vec3 p=aPosition;
  vec3 normal=aNormal;
- if(uActor>3.5){
+ if(uActor>4.5){
+  // Ground vehicle geometry is local to its moving world position.
+  p=rotatePart(p,2,uPartAngle)+uPartPivot;
+  normal=rotatePart(normal,2,uPartAngle);
+ }else if(uActor>3.5){
   // Windsocks rotate around their fixed runway pole, never with the
   // aircraft. The same downwind angle is used by the Canvas fallback.
   p=rotatePart(p-uPartPivot,2,uPartAngle)+uPartPivot;
@@ -859,6 +895,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
    glowHeli=inspectionOnly?null:upload(buildGroundGlow("helicopter"));
+  const trafficMeshes=inspectionOnly?null:{
+   service:upload(buildGroundVehicle("service")),
+   shuttle:upload(buildGroundVehicle("shuttle"))
+  };
   const windSocks=inspectionOnly?[]:Windsocks.positions.map(anchor=>({
    anchor,
    flying:upload(buildWindsockFabric(anchor,false)),
@@ -935,6 +975,23 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
      gl.uniform1f(uni.uActor,0);
     }
+   }
+   // Moving airfield vehicles run entirely on simulated flight time.
+   // Their GPU geometry is reused; only the world transform changes.
+   if(!inspectionOnly&&view!=="inspect"){
+    gl.uniform1f(uni.uActor,5);
+    gl.uniform1i(uni.uPartAxis,2);
+    for(const vehicle of Traffic.sample(state.time,reducedMotion)){
+     const car=trafficMeshes[vehicle.kind];
+     gl.uniform3fv(uni.uPartPivot,[vehicle.x,.15,vehicle.z]);
+     gl.uniform1f(uni.uPartAngle,vehicle.headingRad);
+     gl.bindVertexArray(car.vao);
+     gl.drawArrays(gl.TRIANGLES,0,car.count);
+    }
+    gl.uniform1i(uni.uPartAxis,0);
+    gl.uniform1f(uni.uPartAngle,0);
+    gl.uniform3fv(uni.uPartPivot,[0,0,0]);
+    gl.uniform1f(uni.uActor,0);
    }
    // Draw the fixed-position windsocks after the static terrain.
    // No new GPU resources are created on individual animation frames.
@@ -1038,7 +1095,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
