@@ -47,6 +47,20 @@ An emulated 390px portrait / 844px landscape Chromium browser now tests the prev
 - FlightGear's detailed C172P project includes exterior and interior geometry ([c172p-team/c172p](https://github.com/c172p-team/c172p)); its source is GPL-2.0. A converted `c172.glb` is separately offered by [The Flight Playbook credits](https://theflightplaybook.com/credits/), under that same GPL license. This is a model **candidate**, not an approved or redistributed asset. Review exact copyright, original source, modification/redistribution obligations, file composition, performance and seats/control-surface hierarchy before any inclusion, especially for a commercial academy.
 - Prefer one coherent model containing cockpit and external parts to a sequence of overlays and approximate coordinate guesses.
 
+## High-detail FlightGear C172P source candidate — technical evaluation
+
+**Status (10 November 2026):** Source evaluated separately; **not yet packaged in the public app**.
+
+- Source credits: [The Flight Playbook (converted C172P model, GPL-2.0)](https://theflightplaybook.com/credits/), derived from [c172p-team FlightGear C172P](https://github.com/c172p-team/c172p).
+- Tested binary: 2,729,484 bytes, SHA-256 `c7f848568edcdebd334b7bac0331c5a197f6fdcda13ba443a410dfc2d88588b1`; GLB 2.0 with 226 nodes, 204 meshes, 9 materials, 10 textures. Its available source includes cockpit panels, front seats, rear seating, window/door frames, authentic source propeller, flaps, ailerons, elevator and rudder.
+- The source C172P is a *different* airframe standard from the previously used general C172; do not imply that flight performance is calibrated by changing visuals.
+- Unlike V2, the detailed evaluation loads the complete source scene as one Three.js graph and uses its own mesh names for control-surface movement. There is no second procedural airplane drawn over it.
+- The model is GPL-2.0; the third-party converter's site offers their conversion source and texture edits on request. Their conversion scripts and modified texture source are **not yet in this repository**. Do not publish the detailed binary in the academy until source-availability/licensing obligations are satisfied, credits documented and model inspected visually.
+- The only place the candidate is used today is the isolated GitHub Actions evaluation run. The Pages build deliberately excludes `assets/aircraft/c172-detailed-evaluation.glb`.
+- **Acceptance still open:** true cockpit pilot view, source control-surface pivot direction, visible 4-place interior, Android hardware performance, flight-state integration, and a full circuit.
+
+The technical proof is a necessary step toward the V3 aircraft; the GPL and visual sign-off gates are real conditions, not excuses to resume patching V2.
+
 ## Non-negotiable completion gates
 
 1. **One aircraft, one source of truth:** a GLB with correctly named child meshes (`body`, `seat-front-left`, `seat-front-right`, `seat-rear-left`, `seat-rear-right`, `panel`, `propeller`, `left-flap`, `right-flap`, `left-aileron`, `right-aileron`, `elevator`, `rudder`). Source-space units, axes and attachment pivots documented. No duplicate procedural airframe overlays.
