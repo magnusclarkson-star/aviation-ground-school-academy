@@ -12,6 +12,13 @@ const RAD=Math.PI/180;
 const HOVER_HOLD_SECONDS=8;
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number.isFinite(x)?x:0));
 const smooth=(x,target,rate,dt)=>x+(target-x)*(1-Math.exp(-rate*dt));
+// Exponential-feeling cyclic deflection softens tiny phone movements while
+// retaining full control throw. This is an invented training-game curve,
+// not an R44 linkage or aerodynamic performance calibration.
+function shapeRotorCyclic(value){
+ const signed=clamp(value,-1,1),amount=Math.abs(signed);
+ return Math.sign(signed)*amount*(.56+.44*amount);
+}
 const KNOT=0.514444;
 // Five distinct *illustrative*, bounded jet responses. These are teaching
 // settings, not manufacturer speeds, performance or flight-envelope data.
@@ -127,13 +134,15 @@ function step(state,input,seconds){
  const turnAssist=state.mode==="airplane"&&state.airframeId==="c172"&&
   state.profileId==="trainer"&&state.physicsId==="classic"?
    6*Math.pow(Math.abs(bank),3):0;
- const rollTarget=bank*(state.mode==="helicopter"?13:p.bankDeg+turnAssist)+
+ const cyclicBank=state.mode==="helicopter"?shapeRotorCyclic(bank):bank;
+ const cyclicPitch=state.mode==="helicopter"?shapeRotorCyclic(pitch):pitch;
+ const rollTarget=cyclicBank*(state.mode==="helicopter"?13:p.bankDeg+turnAssist)+
   state.turbulence*2.5;
  // An aft/forward CG modifies *only* the experimental fictional pitch
  // response. Classic and conceptual rotorcraft handling are unchanged.
  const loadingPitch=state.physicsId==="aero"?
   (state.loading?.pitchAuthority??1):1;
- const pitchTarget=-pitch*(state.mode==="helicopter"?9:p.pitchDeg*loadingPitch)+state.turbulence*1.2;
+ const pitchTarget=-cyclicPitch*(state.mode==="helicopter"?9:p.pitchDeg*loadingPitch)+state.turbulence*1.2;
  state.rollDeg=smooth(state.rollDeg,rollTarget,state.mode==="helicopter"?2:p.rollResponse,dt);
  state.pitchDeg=smooth(state.pitchDeg,pitchTarget,state.mode==="helicopter"?1.7:p.pitchResponse,dt);
  if(turb>.25&&Math.abs(state.turbulence)>.12)events.push("turbulence");
@@ -164,8 +173,14 @@ function step(state,input,seconds){
    // Translate from the visible rotor-disc attitude, not directly from
    // the touch input. The cyclic first tilts the illustrated helicopter,
    // then horizontal velocity builds and decays gradually.
-   const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),0.95,dt);
-   const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),0.95,dt);
+   // With the touch cyclic re-centred over the helipad, residual horizontal
+   // drift settles a little sooner. No autopilot: this only damps momentum;
+   // directional corrections and position control remain entirely manual.
+   const nearPad=state.altitudeM<12&&state.speedKt<6&&
+    Math.abs(bank)<.08&&Math.abs(pitch)<.08;
+   const horizontalResponse=nearPad?1.38:.95;
+   const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),horizontalResponse,dt);
+   const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),horizontalResponse,dt);
    state.forwardMs=forward;state.lateralMs=lateral;
    const heading=state.headingDeg*RAD;
    const vx=forward*Math.sin(heading)+lateral*Math.cos(heading);
@@ -341,7 +356,7 @@ function step(state,input,seconds){
  markReturnFinal(state);
  return {state,events};
 }
-const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,shapeRotorCyclic,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
