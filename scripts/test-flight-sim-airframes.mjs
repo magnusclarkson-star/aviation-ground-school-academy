@@ -101,6 +101,17 @@ assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spa
  "trainer has a broader high wing compared with the fighter model");
 assert.ok(metrics.find(x=>x.id==="r44").height>metrics.find(x=>x.id==="f35").height,
  "helicopter has its distinctive tall rotor mast");
+const doorMesh=T.buildVehicle("r44").positions;
+for(const sign of [-1,1]){
+ let doorHandle=false;
+ for(let i=0;i<doorMesh.length;i+=3){
+  const px=doorMesh[i],py=doorMesh[i+1],pz=doorMesh[i+2];
+  if(Math.abs(px-(sign*1.2-.075))<.012&&Math.abs(py-.18)<.012&&
+   Math.abs(pz-.41)<.012)doorHandle=true;
+ }
+ assert.ok(doorHandle,(sign<0?"left":"right")+
+  " R44 cabin door retains a distinct external handle");
+}
 // The R44 uses two ROUND landing skids: several circular cross-section
 // coordinates at the skid sides, upturned noses and two curved cross tubes.
 const rotorPositions=T.buildVehicle("r44").positions;
