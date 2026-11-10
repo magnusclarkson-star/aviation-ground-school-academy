@@ -121,6 +121,36 @@ try{
   "actual textured R44 body must be visible, not only the sky");
  assert.equal(new Set(rotor.details.map(v=>v.hash)).size,4,
   "R44 exterior camera angles must display distinct images");
+ // Verify the actual GPU pixels change when the student's rotor controls
+ // change. Merely confirming that JavaScript accepts a rotor angle would
+ // not prove the imported helicopter remains animated in WebGL.
+ const rotorControlVisual=await page.evaluate(()=>{
+  const renderer=window.__c172TestRenderer,
+   canvas=window.__c172TestCanvas,gl=canvas.getContext("webgl2");
+  const s={mode:"helicopter",xM:0,zM:0,altitudeM:60,
+   headingDeg:0,pitchDeg:0,rollDeg:0,groundSpeedKt:0};
+  function sample(angle,cyclic){
+   renderer.draw(s,{view:"top",airframeId:"r44",
+    animation:{mainRotor:angle,tailRotor:angle*2,
+     swashBank:cyclic,swashPitch:-cyclic,collectiveLink:cyclic},
+    orbit:{azimuth:0,elevation:65,distance:12}});
+   const out=new Uint8Array(canvas.width*canvas.height*4);
+   gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,out);
+   return out;
+  }
+  const original=sample(.12,.02),moved=sample(1.18,.28);
+  let changed=0;
+  for(let i=0;i<original.length;i+=4){
+   const d=Math.abs(original[i]-moved[i])+
+    Math.abs(original[i+1]-moved[i+1])+
+    Math.abs(original[i+2]-moved[i+2]);
+   if(d>35)changed++;
+  }
+  return {changed,pixels:canvas.width*canvas.height};
+ });
+ assert.ok(rotorControlVisual.changed>100,
+  "R44 rotor/cyclic animation must alter actual rendered GPU pixels");
+
  for(const view of ["side","chase","top","inspect"]){
   await page.evaluate(view=>{
    window.__c172TestRenderer.draw({
