@@ -246,6 +246,34 @@ simulate(fullControl,fullControlInput,3);
 assert.ok(fullControl.rollDeg>11,
  "full cyclic travel retains the established turning authority");
 
+// On actual mobile button controls, a short R44 pedal tap starts with a
+// smaller command and grows to full travel only while held. The test-only
+// function is free of wall-clock timing and never interferes with desktop
+// keyboard, gamepad or C172 direct rudder.
+const TouchPedals=require("../flight-sim-touch-pedals.js");
+const phonePedals=TouchPedals.create();
+assert.equal(phonePedals.step({mode:"helicopter",right:true,dt:0}),.18);
+const initialPhonePedal=phonePedals.status().right;
+for(let i=0;i<8;i++)phonePedals.step({mode:"helicopter",right:true,dt:.1});
+assert.ok(phonePedals.status().right>initialPhonePedal+.5 &&
+ phonePedals.status().right<1,
+ "holding helicopter pedal steadily grows yaw command");
+for(let i=0;i<5;i++)phonePedals.step({mode:"helicopter",right:true,dt:.1});
+assert.equal(phonePedals.status().right,1,
+ "full continuous hold still reaches full R44 pedal authority");
+assert.equal(phonePedals.step({mode:"helicopter",right:false,dt:0}),0,
+ "releasing the pedal centres the physical touch input immediately");
+assert.equal(phonePedals.step({mode:"airplane",left:true,dt:0}),-1,
+ "fixed-wing rudder pedal buttons remain direct");
+phonePedals.reset();
+assert.deepEqual(phonePedals.status(),{left:0,right:0});
+assert.ok(Object.isFrozen(phonePedals.status()));
+const doublePedals=TouchPedals.create();
+doublePedals.step({mode:"helicopter",right:true,dt:.1});
+assert.ok(doublePedals.step({mode:"helicopter",left:true,right:true,dt:.1})<0,
+ "opposing taps do not reset the other held finger unexpectedly");
+assert.equal(doublePedals.step({mode:"helicopter",left:false,right:false}),0);
+
 // Low-hover pedal controls should be more precise on touchscreen than
 // at normal forward-flight height, yet full-pedal turning remains strong.
 const lowYaw=M.makeState("helicopter"),highYaw=M.makeState("helicopter");
