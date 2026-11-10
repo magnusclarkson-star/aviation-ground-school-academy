@@ -276,7 +276,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: real-r44-v2-browser-preview
-          path: artifacts/real-r44-3d-preview.png
+          path: artifacts/real-r44-*.png
           if-no-files-found: ignore
           retention-days: 14
 
