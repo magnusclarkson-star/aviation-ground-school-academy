@@ -93,6 +93,21 @@ function makeState(mode="airplane",scenario="runway",options={}){
   message:approach?"Fictional short-final setup. Descend toward the pictured runway.":"Set simulated power, build speed and gently rotate to explore liftoff."};
  return physicsId==="aero"?D.prepare(plane,options.loadout):plane;
 }
+// Promote a real airborne home-runway return to the final-approach display
+// phase. This changes lesson status and optional phase-linked ATC only:
+// it never changes airspeed, steering, pitch, altitude or the flight path.
+function markReturnFinal(state){
+ if(state?.mode!=="airplane"||state.scenario!=="runway"||
+    state.phase!=="flight"||state.onGround)return false;
+ const signed=n=>((n+540)%360)-180;
+ const h=signed(state.headingDeg||0);
+ const t=signed(state.trackDeg??state.headingDeg??0);
+ if(state.zM>=-650||state.zM< -3700||Math.abs(state.xM)>=600||
+    Math.abs(h)>35||Math.abs(t)>48)return false;
+ state.phase="approach";
+ state.message="Returned to the home-runway final. Compare the moving map, centreline and descent trend while continuing to fly manually.";
+ return true;
+}
 function step(state,input,seconds){
  const dt=clamp(seconds,0,.1);
  if(!dt||["landed","halted","complete"].includes(state.phase))return {state,events:[]};
@@ -194,7 +209,11 @@ function step(state,input,seconds){
   }
   return {state,events};
  }
- if(state.physicsId==="aero")return D.step(state,input,dt,events,wind);
+ if(state.physicsId==="aero"){
+  const result=D.step(state,input,dt,events,wind);
+  markReturnFinal(state);
+  return result;
+ }
  const throttle=clamp(input.throttle,0,1);
  const flap=clamp(input.flaps,0,30);
  if(state.onGround){
@@ -281,9 +300,10 @@ function step(state,input,seconds){
    events.push(gentle?"touchdown":"hardLanding");
   }
  }
+ markReturnFinal(state);
  return {state,events};
 }
-const api={makeInput,makeState,step,rotorHoverCue,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
