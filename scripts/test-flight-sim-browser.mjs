@@ -55,6 +55,22 @@ try{
  assert.ok(Math.abs(windVisual.tipXM-7)<1e-8);
  assert.equal(windVisual.vertices,96);
  assert.equal(windVisual.finite,true);
+ const groundTraffic=await desktop.evaluate(()=>{
+  const traffic=window.AGSAAirfieldTraffic,graphics=window.AGSAFlight3D;
+  if(!traffic||!graphics)return null;
+  const start=traffic.sample(0),after=traffic.sample(20);
+  return {vehicleCount:start.length,roadCount:traffic.roadPolygons.length,
+   moved:start.every((v,i)=>Math.hypot(v.x-after[i].x,v.z-after[i].z)>3),
+   reducedStationary:JSON.stringify(traffic.sample(0,true))===
+    JSON.stringify(traffic.sample(50,true)),
+   serviceMesh:graphics.buildGroundVehicle("service").vertices};
+ });
+ assert.ok(groundTraffic,"moving airfield traffic loads on desktop and phone pages");
+ assert.equal(groundTraffic.vehicleCount,2);
+ assert.equal(groundTraffic.roadCount,96);
+ assert.ok(groundTraffic.moved);
+ assert.ok(groundTraffic.reducedStationary);
+ assert.ok(groundTraffic.serviceMesh>360&&groundTraffic.serviceMesh<650);
  const mapPointer=await desktop.evaluate(()=>{
   const N=window.AGSAFlightNavigation,holder=document.createElement("div");
   holder.appendChild(N.build(document));
