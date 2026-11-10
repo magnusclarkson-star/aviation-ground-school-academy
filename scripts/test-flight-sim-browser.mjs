@@ -55,6 +55,32 @@ try{
  assert.equal(mapPointer.transform,"rotate(60.95 110 82)",
   "map waypoint arrow rotates toward the real next waypoint bearing");
  assert.equal(mapPointer.hidden,"hidden","waypoint arrow hides when circuit is inactive");
+ const padMap=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,map=document.createElement("section");
+  map.appendChild(N.build(document));
+  const heli={mode:"helicopter",scenario:"helipad",xM:30,zM:0,
+   headingDeg:0,trackDeg:0,groundSpeedKt:3};
+  const first=N.paint(map,heli);
+  const heliFrame={mode:map.querySelector("[data-nav-map]").dataset.navTarget,
+   pad:map.querySelector("[data-nav-helipad]").getAttribute("visibility"),
+   runway:map.querySelector("[data-nav-airfield]").getAttribute("visibility"),
+   text:map.querySelector('[data-nav-field="runway"]').textContent,
+   scale:first.scale,
+   pointer:map.querySelector("[data-nav-circuit-pointer]").getAttribute("transform")};
+  N.paint(map,{...heli,mode:"airplane",scenario:"runway"},{stage:"departure"});
+  const fixedWing={mode:map.querySelector("[data-nav-map]").dataset.navTarget,
+   pad:map.querySelector("[data-nav-helipad]").getAttribute("visibility"),
+   runway:map.querySelector("[data-nav-airfield]").getAttribute("visibility")};
+  return {heliFrame,fixedWing};
+ });
+ assert.equal(padMap.heliFrame.mode,"helipad");
+ assert.equal(padMap.heliFrame.pad,"visible");
+ assert.equal(padMap.heliFrame.runway,"hidden");
+ assert.match(padMap.heliFrame.text,/PAD 30 m · BRG 270°/);
+ assert.ok(padMap.heliFrame.scale>.45);
+ assert.equal(padMap.heliFrame.pointer,"rotate(-90.00 110 82)");
+ assert.deepEqual(padMap.fixedWing,{mode:"runway",pad:"hidden",runway:"visible"},
+  "switching from R44 back to Cessna restores runway map, without stale pads");
  const runwayDrawn=await desktop.evaluate(()=>{
   const canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;
