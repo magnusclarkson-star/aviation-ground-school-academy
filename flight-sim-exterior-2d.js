@@ -126,11 +126,25 @@
   if(view==="side")return x;
   return z*.87-y*.48;
  }
- function projectedFaces(id,view="chase",animation={}){
+ // Match the WebGL flight-model attitude rotations: roll about the model Z
+ // axis followed by pitch about X. The fixed wing, helicopter mast and
+ // animated control surfaces all undergo the same actual rigid-body bank.
+ // No camera, navigation or flight-state values are modified.
+ function attitudePoint(point,rollDeg=0,pitchDeg=0){
+  const roll=Math.max(-85,Math.min(85,Number.isFinite(rollDeg)?rollDeg:0))*RAD;
+  const pitch=Math.max(-85,Math.min(85,Number.isFinite(pitchDeg)?pitchDeg:0))*RAD;
+  const [x,y,z]=point,cr=Math.cos(roll),sr=Math.sin(roll);
+  const bx=x*cr+y*sr,by=-x*sr+y*cr;
+  const cp=Math.cos(pitch),sp=Math.sin(pitch);
+  return [bx,by*cp+z*sp,-by*sp+z*cp];
+ }
+ function projectedFaces(id,view="chase",animation={},attitude={}){
   const faces=[];
   let order=0;
   function append(shape,part=null,opacity=1){
-   const points=part?shape.points.map(point=>rotate(point,part.pivot,part.axis,part.angle)):shape.points;
+   const moving=part?shape.points.map(point=>rotate(point,part.pivot,part.axis,part.angle)):shape.points;
+   const points=(attitude?.rollDeg||attitude?.pitchDeg)?
+    moving.map(point=>attitudePoint(point,attitude.rollDeg,attitude.pitchDeg)):moving;
    faces.push({points,color:shape.color,
     depth:points.reduce((sum,p)=>sum+viewDepth(p,view),0)/3,
     opacity,order:order++});
@@ -196,15 +210,16 @@
   ctx.save();
   ctx.translate(width/2,height*.60);
   paintGroundShadow(ctx,id,view,scale,height,altitude);
-  ctx.rotate(view==="top"?0:-roll*RAD*.55);
+  // The shadow remains attached to the runway, while the body now uses
+  // real three-axis geometry projected from the selected outside viewpoint.
   const project=([x,y,z])=>view==="top"?
    [x*scale,-z*scale*.92]:
    view==="side"?
    [z*scale*.91,(-(y+bounce)*.95-x*.17)*scale]:
-   [(x+z*.12)*scale,(-(y+bounce)*.91-z*(.43+pitch/350))*scale];
+   [(x+z*.12)*scale,(-(y+bounce)*.91-z*.43)*scale];
   // One painter pass for body, rotating blades and hinged surfaces preserves
   // the correct near/far layer when the camera or selected aircraft changes.
-  for(const face of projectedFaces(id,view,animation)){
+  for(const face of projectedFaces(id,view,animation,{rollDeg:roll,pitchDeg:pitch})){
    const [a,b,d]=face.points.map(project);
    ctx.globalAlpha=face.opacity;
    ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineTo(...d);
@@ -214,7 +229,7 @@
   ctx.restore();
   return true;
  }
- const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,propellerSweepTriangles,rotate,viewDepth,projectedFaces,paint,paintInspection});
+ const api=Object.freeze({getMesh,geometry,movingParts,rotorSweepTriangles,propellerSweepTriangles,rotate,attitudePoint,viewDepth,projectedFaces,paint,paintInspection});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root)root.AGSAExteriorChase2D=api;
 })(typeof window!=="undefined"?window:null);
