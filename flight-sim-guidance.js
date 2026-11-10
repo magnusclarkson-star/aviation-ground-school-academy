@@ -62,16 +62,23 @@ function r44LessonStatus(progress,state){
   Math.abs(relativePad)<8?"PAD AHEAD":
   (relativePad>0?"PAD RIGHT ":"PAD LEFT ")+Math.round(Math.abs(relativePad))+"°";
  const captions={takeoff:"TAKEOFF",hover:"HOVER",turn:"90° TURN",return:"RETURN & LAND"};
+ const contact=state?.mode==="helicopter"&&lesson.status!=="active"?
+  state.touchdownData:null;
+ const skidCue=contact?
+  "SKIDS "+Math.abs(Number(contact.sinkMs)||0).toFixed(1)+" m/s · DRIFT "+
+  (Number(contact.groundSpeedKt)||0).toFixed(1)+" kt · PAD "+
+  Math.round(Number(contact.padOffsetM)||0)+" m":null;
  const short=lesson.status==="completed"?"LESSON COMPLETE":
   lesson.status==="incomplete"?"RESTART LESSON":
   lesson.status==="stopped"?"RESTART AFTER CONTACT":
   n+"/4 · "+captions[stage];
- const hint=lesson.status==="completed"?"Precision landing completed after the hover and turn.":
+ const hint=skidCue||(
+  lesson.status==="completed"?"Precision landing completed after the hover and turn.":
   lesson.status!=="active"?"Restart the helicopter exercise to try all four stages.":
   stage==="takeoff"?"Lift into a steady low hover above the helipad.":
   stage==="hover"?"Hold height and position for 8 seconds: "+Math.floor(pct)+"/8.":
   stage==="turn"?"Turn 90° with the pedals, then steady the heading: "+lesson.turnDeg+"°.":
-  "Return to the helipad centre ("+Math.round(offset)+" m · "+padCue+") and land gently.";
+  "Return to the helipad centre ("+Math.round(offset)+" m · "+padCue+") and land gently.");
  return Object.freeze({stage,status:lesson.status,index:n,total:4,short,hint,
   progress:stage==="hover"?Math.floor(pct):stage==="turn"?lesson.turnDeg:null,
   complete:lesson.status==="completed"});
@@ -252,6 +259,13 @@ function summary(progress,state){
     sinkMs:Number(Math.abs(state.touchdownData.sinkMs||0).toFixed(1)),
     offsetM:round(Math.abs(state.touchdownData.offsetM)),
     rolloutM:round(state.rolloutDistanceM)
+   }):null,
+  rotorTouchdown:state.mode==="helicopter"&&state.touchdownData?
+   Object.freeze({
+    sinkMs:Number(Math.abs(state.touchdownData.sinkMs||0).toFixed(1)),
+    driftKt:Number((state.touchdownData.groundSpeedKt||0).toFixed(1)),
+    padOffsetM:round(state.touchdownData.padOffsetM),
+    grade:state.touchdownData.grade
    }):null,
   stopEvents:progress.hardContacts,
   warning:"Session-only, fictional observations; not assessed or independently verified. No training credit."
