@@ -630,6 +630,14 @@ function reset(scenario){
  haptics.stop();
  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
+// A paused simulator freezes the aircraft's position, NOT the illustrated
+// cockpit controls. Recalculate only control-surface geometry and gauges,
+// without advancing the engine, rotor, clock or flight physics.
+function previewPausedControls(){
+ if(!paused)return;
+ A.step(systems,state,input,0);
+ updateReadouts();
+}
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
  const sensitivity=cockpit?.sensitivity()??1;
@@ -638,6 +646,7 @@ function movePad(event){
  input.bank=M.clamp(dx,-1,1);
  input.pitch=M.clamp(dy,-1,1);
  gripTransform();
+ previewPausedControls();
 }
 $("controlPad").addEventListener("pointerdown",e=>{
  if(e.pointerType==="mouse"&&e.button!==0)return;
@@ -664,6 +673,7 @@ function updateHeld(){
  $("leftRudder").classList.toggle("held",left);
  $("rightRudder").classList.toggle("held",right);
  $("brake").classList.toggle("held",input.brake);
+ previewPausedControls();
 }
 function hold(id,key){
  const el=$(id);
@@ -717,7 +727,7 @@ window.addEventListener("keydown",e=>{
   if(state.mode==="airplane"){
    input.throttle=M.clamp(input.throttle+(key==="w"?.06:-.06),0,1);
   }else input.collective=M.clamp(input.collective+(key==="w"?.06:-.06),0,1);
-  setValues();haptics.pulse("control");return;
+  setValues();previewPausedControls();haptics.pulse("control");return;
  }
  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","a","d"," "].includes(key)){
   keys.add(key);syncKeys();
@@ -739,15 +749,18 @@ $("power").addEventListener("input",e=>{
  input.throttle=M.clamp(Number(e.target.value)/100,0,1);
  $("powerValue").textContent=round(input.throttle*100)+"%";
  hardware?.resetPower();haptics.pulse("control");
+ previewPausedControls();
 });
 $("collective").addEventListener("input",e=>{
  input.collective=M.clamp(Number(e.target.value)/100,0,1);
  $("collectiveValue").textContent=round(input.collective*100)+"%";
  syncCollectiveHardware();
  hardware?.resetPower();haptics.pulse("control");
+ previewPausedControls();
 });
 $("flaps").addEventListener("change",e=>{
  input.flaps=Number(e.target.value);haptics.pulse("flap");
+ previewPausedControls();
  if(!exerciseApplying)startExercise("Manual flap change: prior exercise observations cleared. Reapply the two setups.");
 });
 $("profileSelect").addEventListener("change",()=>{
