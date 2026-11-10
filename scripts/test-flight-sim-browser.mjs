@@ -497,6 +497,12 @@ try{
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
  assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","only the shallow windscreen sticks within the cockpit");
  assert.equal(await phone.locator("#controlPad").evaluate(el=>!!el.closest("#cockpitStation")),true);
+ assert.equal(await phone.locator("#brake").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","holding the brake under a second finger must not scroll or pinch-zoom");
+ assert.equal(await phone.locator("#controlPad").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","mobile yoke retains independent no-scroll pointer capture");
+ assert.notEqual(await phone.locator("body").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","the user must still be able to scroll normally elsewhere");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
