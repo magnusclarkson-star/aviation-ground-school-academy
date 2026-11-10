@@ -71,6 +71,14 @@ const hasPoint=(mesh,x,y,z)=>{
 };
 assert.equal(Countryside.fields.length,20);
 assert.equal(Countryside.farmTracks.length,20);
+assert.equal(Countryside.towers.length,3);
+const landmark=Countryside.towers[0],landBase=Countryside.terrainHeight(landmark.x,landmark.z);
+assert.ok(hasPoint(runway,landmark.x-landmark.radius*.7-.25,
+ landBase,landmark.z-landmark.radius*.7-.25),
+ "WebGL world includes the north-tank support at its permanent terrain coordinate");
+assert.ok(hasPoint(pad,landmark.x-landmark.radius*.7-.25,
+ landBase,landmark.z-landmark.radius*.7-.25),
+ "Helipad world shares the same downwind visual landmarks");
 const firstCrop=Countryside.fields[0];
 const terrainY=Countryside.terrainHeight(firstCrop.x,firstCrop.z)+.14;
 assert.ok(hasPoint(runway,firstCrop.x,terrainY,firstCrop.z),
