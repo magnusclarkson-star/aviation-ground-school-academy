@@ -604,5 +604,13 @@ assert.ok(slowerMobileFrames.rolloutM>50 &&
 const alternateWind=verifyCompleteCircuitAt(.05,"headwind");
 assert.ok(alternateWind.rolloutM>50 &&
  Object.isFrozen(alternateWind.landing));
+// A real-time teaching app must finish the SAME runway circuit when the
+// scene moves sideways in an illustrated crosswind, with no reset/teleport.
+// The deterministic virtual test pilot has no access to secret state and
+// uses the same control inputs and 50-ms simulation steps as the calm case.
+const crosswindCircuit=verifyCompleteCircuitAt(.05,"crosswind");
+assert.ok(crosswindCircuit.rolloutM>50 &&
+ Object.isFrozen(crosswindCircuit.landing),
+ "crosswind circuit must end in a measured runway contact and ground roll");
 
 console.log("Immersive flight model passed: runway liftoff, turn, final-approach landing/rollout, off-runway impact, collective/helipad and perspective scenery.");
