@@ -108,6 +108,46 @@ try{
   "landing prediction moves with actual changed ground track");
  assert.equal(touchdownMap.heliHidden,"hidden");
  assert.equal(touchdownMap.stopped,"hidden");
+ const hoverFeedback=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,container=document.createElement("div");
+  container.appendChild(N.build(document));
+  const s={mode:"helicopter",scenario:"helipad",phase:"hover",
+   onGround:false,xM:2,zM:1,altitudeM:5,groundSpeedKt:1,
+   verticalMs:.1,yawRateDegS:0,hoverHoldSec:5};
+  N.paint(container,s);
+  const ring=container.querySelector("[data-nav-hover-cue]");
+  const speed=container.querySelector('[data-nav-field="speed"]');
+  const fixed={visibility:ring.getAttribute("visibility"),
+   color:ring.getAttribute("stroke"),text:speed.textContent};
+  N.paint(container,{...s,groundSpeedKt:6,hoverHoldSec:0});
+  const slipping={color:ring.getAttribute("stroke"),text:speed.textContent};
+  N.paint(container,{...s,onGround:true});
+  return {fixed,slipping,grounded:ring.getAttribute("visibility")};
+ });
+ assert.equal(hoverFeedback.fixed.visibility,"visible");
+ assert.equal(hoverFeedback.fixed.color,"#80ebc5");
+ assert.match(hoverFeedback.fixed.text,/HOV 5\/8/);
+ assert.equal(hoverFeedback.slipping.color,"#f0c680");
+ assert.match(hoverFeedback.slipping.text,/DRIFT/);
+ assert.equal(hoverFeedback.grounded,"hidden");
+ const ruralParallax=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery,canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d"),original=ctx.ellipse;
+  let first=null;
+  ctx.ellipse=function(x,...rest){
+   if(first===null)first=x;
+   return original.call(this,x,...rest);
+  };
+  const s={mode:"airplane",xM:0,zM:0,altitudeM:100,
+   headingDeg:0,pitchDeg:0,rollDeg:0,time:0};
+  S.draw(canvas,s,{reducedMotion:true});
+  const before=first;first=null;
+  S.draw(canvas,{...s,xM:500},{reducedMotion:true});
+  return {before,after:first};
+ });
+ assert.ok(ruralParallax.after<ruralParallax.before-4,
+  "even in reduced-motion mode, distant clouds shift with real lateral flight");
  const runwayDrawn=await desktop.evaluate(()=>{
   const canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;
