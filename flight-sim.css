@@ -82,7 +82,11 @@ input[type=range]{width:100%;accent-color:#82d4ed;height:33px;cursor:pointer}
 .rudder-pedals button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:82px;min-width:0;font-size:10px;letter-spacing:.1em;border:5px ridge #718d9d;background:repeating-linear-gradient(90deg,#14202c 0 7px,#516779 7px 11px);border-radius:9px;touch-action:none;user-select:none}
 .rudder-pedals button.held{transform:translateY(6px);background:repeating-linear-gradient(90deg,#214a56 0 7px,#5b8993 7px 11px)}
 .pedal-icon{font-size:20px;color:#c5dfe8}
-.brake-button{margin-top:10px;width:100%;background:#41382b;border-color:#9f926b;color:#ffe4b3}
+.brake-button{margin-top:10px;width:100%;background:#41382b;border-color:#9f926b;color:#ffe4b3;
+ /* Braking must remain held under a second finger during a Cessna rollout.
+    Suppress browser scrolling/long-press menus on this ONE active surface,
+    while leaving PFD tap-to-enlarge and ordinary page scrolling untouched. */
+ touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .brake-button.held{background:#89613f}
 .shortcuts{margin-top:8px;font-size:11px!important}
 .instructions{margin-top:17px}.mission-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
