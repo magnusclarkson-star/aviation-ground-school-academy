@@ -200,9 +200,14 @@ function step(state,input,seconds){
    // With the touch cyclic re-centred over the helipad, residual horizontal
    // drift settles a little sooner. No autopilot: this only damps momentum;
    // directional corrections and position control remain entirely manual.
-   const nearPad=state.altitudeM<12&&state.speedKt<6&&
-    Math.abs(bank)<.08&&Math.abs(pitch)<.08;
-   const horizontalResponse=nearPad?1.38:.95;
+   // Earlier the "nearPad" gain was active only with a centred stick,
+   // so a learner moving the cyclic at hover height got the much slower
+   // full-flight response. Give deliberate small/large cyclic corrections
+   // a quicker but still damped low-speed response on a phone. Recentring
+   // gets a little extra damping to settle drift, never an autopilot hold.
+   const lowSlow=state.altitudeM<12&&state.speedKt<6;
+   const centred=Math.abs(bank)<.08&&Math.abs(pitch)<.08;
+   const horizontalResponse=lowSlow?(centred?1.72:1.52):.95;
    const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),horizontalResponse,dt);
    const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),horizontalResponse,dt);
    state.forwardMs=forward;state.lateralMs=lateral;
