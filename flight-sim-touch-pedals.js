@@ -10,6 +10,10 @@ function create(){
  function step({left=false,right=false,mode="airplane",dt=0}={}){
   const seconds=Math.max(0,Math.min(.1,Number.isFinite(dt)?dt:0));
   const fine=mode==="helicopter";
+  // On a multi-touch phone both pedals can overlap as fingers move.
+  // Neutralise the pair immediately so releasing one finger cannot cause
+  // an unexpected full-yaw command from the other held pointer.
+  if(left&&right){levels.left=0;levels.right=0;return 0;}
   for(const key of ["left","right"]){
    if(!(key==="left"?left:right))levels[key]=0;
    else if(!fine)levels[key]=1;
