@@ -45,7 +45,26 @@ const report=G.summary(finalSession,{...shortFinal,phase:"complete"});
 assert.equal(report.outcome,"Fictional exercise completed");
 assert.equal(report.seconds,38);
 assert.equal(report.touchdowns,1);
+assert.equal(report.touchdown,null,
+ "sessions without measured touchdown must not fabricate landing values");
 assert.match(report.warning,/No training credit/);
+const measuredState={...shortFinal,phase:"complete",onGround:true,
+ speedKt:0,rolloutDistanceM:376.4,
+ touchdownData:Object.freeze({speedKt:63.6,sinkMs:-1.87,
+  offsetM:-8.2,runwayPositionM:450,headingDeg:359,trackDeg:358})};
+const measuredCue=G.guidance(measuredState,controls);
+assert.equal(measuredCue.tag,"RUNWAY PRACTICE · FINISHED");
+assert.equal(measuredCue.complete,true);
+assert.match(measuredCue.text,/TD 64 kt · SINK 1\.9 m\/s · OFFSET 8 m · ROLL 376 m/);
+const landingSummary=G.summary(finalSession,measuredState);
+assert.deepEqual(landingSummary.touchdown,{
+ speedKt:64,sinkMs:1.9,offsetM:8,rolloutM:376
+});
+assert.ok(Object.isFrozen(landingSummary.touchdown),
+ "touchdown metrics are read-only and cannot be silently changed in the UI");
+assert.equal(G.guidance({...measuredState,mode:"helicopter"},controls).tag,
+ "PRACTICE SEQUENCE COMPLETE",
+ "helicopters do not receive airplane runway landing results");
 assert.equal("studentId" in report,false);
 
 const failed=G.start(shortFinal);
