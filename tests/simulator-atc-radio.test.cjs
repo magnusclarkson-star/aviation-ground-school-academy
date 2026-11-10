@@ -99,3 +99,26 @@ test('radio UI requires user gesture and no microphone or network',()=>{
  for(const forbidden of ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage','getUserMedia','sendBeacon'])
   assert.ok(!code.includes(forbidden));
 });
+
+test('phase-linked radio includes one arrival exchange after a full runway circuit',()=>{
+ const env=mockWorld();
+ const radio=Radio.attach({windowLike:env.win,documentLike:env.doc,
+  getMode:()=> 'airplane',getScenario:()=> 'runway',getPhase:()=> 'roll'});
+ radio.arm(true);
+ assert.equal(radio.cuePhase('climb'),true);
+ assert.match(env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' '),/reports a climb/);
+ const spokenBefore=env.spoken.length;
+ assert.equal(radio.cuePhase('approach'),true,
+  'returning to runway must speak final despite earlier climb exchange');
+ assert.ok(env.spoken.length>spokenBefore);
+ const transcript=env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' ');
+ assert.match(transcript,/reports an approach/);
+ assert.match(transcript,/landing clearance/);
+ assert.equal(radio.cuePhase('approach'),false,
+  'same final-approach radio phase never plays repeatedly');
+ assert.equal(radio.cuePhase('flight'),false,
+  'already-delivered departure flight stage is unchanged');
+ assert.equal(radio.cuePhase('rollout'),true);
+ assert.match(env.element('atcTranscript').children.map(item=>item.children[1]?.textContent).join(' '),/completed the simulated landing/);
+ radio.disarm();
+});
