@@ -251,4 +251,25 @@ assert.ok(near.x>far.x,"runway edge expands as aircraft approaches");
 const yawed=S.project({...q,headingDeg:25},0,0,0);
 assert.ok(yawed.x<center.x,"heading changes apparent runway alignment");
 assert.equal(S.project(q,0,0,-1500),null,"objects behind the camera are clipped");
+// Terrain remains anchored to the same coordinates as the user steers
+// across a grid boundary; only the entering/leaving outer tree may change.
+const treeRow=xM=>{
+ const middle=S.treeColumnAt(xM),result=new Map();
+ for(let offset=-3;offset<=3;offset++){
+  const column=middle+offset;
+  result.set(column,S.treeWorldX(column,600));
+ }
+ return result;
+};
+const leftSide=treeRow(129),rightSide=treeRow(131);
+assert.equal(S.treeColumnAt(129),0);
+assert.equal(S.treeColumnAt(131),1);
+const shared=[...leftSide.keys()].filter(column=>rightSide.has(column));
+assert.equal(shared.length,6,"moving 2 m should preserve six of seven visible tree columns");
+for(const column of shared)
+ assert.equal(leftSide.get(column),rightSide.get(column),
+  "tree must remain world-anchored across the camera grid boundary");
+assert.ok([...leftSide.values(),...rightSide.values()].every(Number.isFinite));
+assert.equal(S.treeColumnAt(Number.NaN),0);
+assert.ok(Math.abs(S.treeWorldX(0,600))<=51);
 console.log("Immersive flight model passed: runway liftoff, turn, final-approach landing/rollout, off-runway impact, collective/helipad and perspective scenery.");
