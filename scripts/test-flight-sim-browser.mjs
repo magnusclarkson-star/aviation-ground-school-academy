@@ -130,6 +130,17 @@ try{
  assert.equal(hoverFeedback.slipping.color,"#f0c680");
  assert.match(hoverFeedback.slipping.text,/DRIFT/);
  assert.equal(hoverFeedback.grounded,"hidden");
+ const driftVectorUI=await desktop.evaluate(()=>{
+  const N=window.AGSAFlightNavigation,container=document.createElement("div");
+  container.appendChild(N.build(document));
+  N.paint(container,{mode:"helicopter",scenario:"helipad",phase:"hover",
+   onGround:false,xM:2,zM:1,headingDeg:0,trackDeg:90,
+   groundSpeedKt:4,forwardMs:0,lateralMs:2,altitudeM:5,
+   verticalMs:0,yawRateDegS:0,hoverHoldSec:0});
+  return container.querySelector('[data-nav-field="speed"]').textContent;
+ });
+ assert.match(driftVectorUI,/GS 4 · DRIFT E/,
+  "phone navigator shows actual eastward rotorcraft drift, not only DRIFT");
  const observedSkid=await desktop.evaluate(()=>{
   const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
   const s=M.makeState("helicopter"),practice=G.start(s);
@@ -497,6 +508,12 @@ try{
  await phone.locator("#controlPad").scrollIntoViewIfNeeded();
  assert.equal(await phone.locator(".scene-shell").evaluate(el=>getComputedStyle(el).position),"sticky","only the shallow windscreen sticks within the cockpit");
  assert.equal(await phone.locator("#controlPad").evaluate(el=>!!el.closest("#cockpitStation")),true);
+ assert.equal(await phone.locator("#brake").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","holding the brake under a second finger must not scroll or pinch-zoom");
+ assert.equal(await phone.locator("#controlPad").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","mobile yoke retains independent no-scroll pointer capture");
+ assert.notEqual(await phone.locator("body").evaluate(el=>getComputedStyle(el).touchAction),
+  "none","the user must still be able to scroll normally elsewhere");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
