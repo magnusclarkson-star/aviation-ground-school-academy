@@ -16,7 +16,7 @@ function create(){
   for(const key of ["left","right"]){
    if(!(key==="left"?left:right))levels[key]=0;
    else if(!fine)levels[key]=1;
-   else levels[key]=bound(Math.max(.24,levels[key])+seconds*1.35);
+   else levels[key]=bound(Math.max(.22,levels[key])+seconds*1.35);
   }
   return Math.max(-1,Math.min(1,levels.right-levels.left));
  }
