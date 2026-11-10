@@ -1075,16 +1075,16 @@ void main(){
   // polygons. Cut only *inside* the source windows, preserving the R44
   // original frames and cabin roof. Those windows are painted afterward.
   vec3 p=vLocalPosition;
-  float side=(smoothstep(.55,.575,abs(p.x))*
-   (1.-smoothstep(.68,.71,abs(p.x))))*
-   smoothstep(-.50,-.43,p.y)*(1.-smoothstep(-.10,-.04,p.y));
-  float front=side*smoothstep(3.02,3.12,p.z)*
-   (1.-smoothstep(3.59,3.71,p.z));
-  float rear=side*smoothstep(2.49,2.57,p.z)*
-   (1.-smoothstep(2.84,2.96,p.z));
-  float wind=(1.-smoothstep(.48,.58,abs(p.x)))*
-   smoothstep(4.09,4.22,p.z)*(1.-smoothstep(4.47,4.54,p.z))*
-   smoothstep(-.57,-.45,p.y)*(1.-smoothstep(.04,.13,p.y));
+  float side=(smoothstep(.35,.43,abs(p.x))*
+   (1.-smoothstep(.70,.76,abs(p.x))))*
+   smoothstep(-.62,-.53,p.y)*(1.-smoothstep(-.03,.08,p.y));
+  float front=side*smoothstep(2.98,3.06,p.z)*
+   (1.-smoothstep(3.60,3.73,p.z));
+  float rear=side*smoothstep(2.40,2.48,p.z)*
+   (1.-smoothstep(2.90,3.02,p.z));
+  float wind=(1.-smoothstep(.57,.67,abs(p.x)))*
+   smoothstep(3.83,4.05,p.z)*(1.-smoothstep(4.46,4.60,p.z))*
+   smoothstep(-.79,-.64,p.y)*(1.-smoothstep(.11,.21,p.y));
   if(max(max(front,rear),wind)>.5)discard;
  }
  if(uC172Pass>0){
