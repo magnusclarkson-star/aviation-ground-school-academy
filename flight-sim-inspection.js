@@ -122,7 +122,12 @@
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;
    drag=null;pointers.clear();tapStarts.clear();pinchSpan=0;lastTap=null;
-   trigger.focus({preventScroll:true});
+   // On narrow phones the inspector launch button lives inside the collapsed
+   // More menu. Returning keyboard focus there leaves it invisible; restore
+   // focus to the always-visible aircraft picture action instead.
+   const photoButton=$("cockpitAircraftPhotoButton");
+   const triggerVisible=trigger.getClientRects().length>0;
+   (triggerVisible?trigger:photoButton||trigger).focus({preventScroll:true});
   }
   function reset(){
    orbit={azimuth:0,elevation:26,distance:30};
