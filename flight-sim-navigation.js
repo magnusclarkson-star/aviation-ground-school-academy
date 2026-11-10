@@ -29,8 +29,20 @@
    groundSpeed<2&&Math.abs(finite(state?.verticalMs))<.45&&
    Math.abs(finite(state?.yawRateDegS))<3;
   const hoverHold=hoverStable?Math.max(0,Math.min(8,Math.floor(finite(state?.hoverHoldSec)))):0;
+  // The helicopter's moving map should tell learners WHICH WAY they are
+  // actually drifting, not merely that the pad is slipping sideways.
+  // Resolve simulated forward/lateral motion and wind into world X/Z.
+  // This is feedback only; it does not steer, stabilise or apply GPS hold.
+  const hRad=heading*Math.PI/180;
+  const f=finite(state?.forwardMs),l=finite(state?.lateralMs);
+  const driftEast=f*Math.sin(hRad)+l*Math.cos(hRad)+finite(state?.windXMps);
+  const driftNorth=f*Math.cos(hRad)-l*Math.sin(hRad)+finite(state?.windZMps);
+  const driftDirection=Math.hypot(driftEast,driftNorth)>.35?
+   Math.abs(driftEast)>=Math.abs(driftNorth)?
+    (driftEast>=0?"E":"W"):(driftNorth>=0?"N":"S"):null;
   const hoverText=!hoverAirborne?null:hoverStable?
-   "HOV "+hoverHold+"/8":groundSpeed>=2?"DRIFT":
+   "HOV "+hoverHold+"/8":groundSpeed>=2?
+   "DRIFT"+(driftDirection?" "+driftDirection:""):
    Math.abs(finite(state?.verticalMs))>=.45?"VERT":"POSITION";
   const leg=heli?null:(Circuit?.status(circuit,state)||null);
   // Keep the next circuit waypoint visible as a small direction pointer
