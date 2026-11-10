@@ -43,13 +43,20 @@ test("C172 circuit transitions to landed only when flight state reports rollout"
  assert.equal(c.stage,"landed");
  assert.equal(Circuit.status(c,plane({phase:"rollout"})).active,false);
 });
-test("R44 overlapping touch pedals cancel yaw and clear held input history",()=>{
+test("R44 simultaneous pedals preserve differential travel and release cleanly",()=>{
  const p=Pedals.create();
- assert.ok(p.step({right:true,mode:"helicopter",dt:.08})>0);
- assert.equal(p.step({left:true,right:true,mode:"helicopter",dt:.08}),0);
+ for(let i=0;i<6;i++)p.step({right:true,mode:"helicopter",dt:.1});
+ const before=p.status().right;
+ assert.ok(before>.5);
+ const together=p.step({left:true,right:true,mode:"helicopter",dt:.016});
+ assert.ok(together>0&&together<before,
+  "the established longer-held right pedal retains differential yaw");
+ assert.ok(p.step({left:true,right:false,mode:"helicopter",dt:.016})<0,
+  "switching feet gives a fine left input without a stuck right pedal");
+ assert.equal(p.step({mode:"helicopter",dt:.016}),0,
+  "release immediately centres both pedals");
  const resumed=p.step({right:true,mode:"helicopter",dt:.016});
- assert.ok(resumed>0&&resumed<.25,"release must restart from a fine input");
- assert.equal(p.step({mode:"helicopter",dt:.016}),0);
+ assert.ok(resumed>0&&resumed<.25,"a new press restarts at fine travel");
 });
 test("R44 touch pedal commands remain clamped and symmetric",()=>{
  const p=Pedals.create();
