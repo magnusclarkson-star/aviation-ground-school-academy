@@ -25,6 +25,9 @@ const Countryside=root?.AGSACountryside||
 const Traffic=root?.AGSAAirfieldTraffic||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-ground-traffic.js"):null);
+const RealAirframes=root?.AGSARealAirframes||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-real-airframes.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -754,6 +757,7 @@ precision highp float;
 layout(location=0) in vec3 aPosition;
 layout(location=1) in vec3 aColor;
 layout(location=2) in vec3 aNormal;
+layout(location=3) in vec2 aTexCoord;
 uniform vec3 uEye;
 uniform vec3 uCraft;
 uniform float uYaw,uPitch,uRoll,uCraftYaw,uCraftPitch,uCraftRoll;
@@ -762,6 +766,7 @@ uniform vec3 uPartPivot;
 uniform float uPartAngle;
 uniform int uPartAxis;
 out vec3 vColor;
+out vec2 vTexCoord;
 out float vDistance,vLight,vEmissive;
 // Surface illumination must follow the surface, including animated hinges,
 // rather than remaining fixed when the aircraft rolls, pitches or turns.
@@ -822,20 +827,25 @@ void main(){
  float yy=side*sr+up*cr;
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
    1.000080003*depth-0.800032001,depth);
- vColor=aColor;vDistance=depth;
+ vColor=aColor;vTexCoord=aTexCoord;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
  vEmissive=(uActor>2.5&&uActor<3.5)?1.:0.;
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
 in vec3 vColor;
+in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
 uniform vec3 uFogColor,uLightColor;
-uniform float uOpacity;
+uniform float uOpacity,uHasTexture,uAlphaCutoff;
+uniform sampler2D uTexture;
 out vec4 outColor;
 void main(){
  float fog=clamp((vDistance-1150.)/5000.,0.,.8);
- vec3 shaded=mix(clamp(vColor*vLight*uLightColor,0.,1.),vColor,vEmissive);
+ vec4 texel=uHasTexture>.5?texture(uTexture,vTexCoord):vec4(1.);
+ if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
+ vec3 albedo=vColor*texel.rgb;
+ vec3 shaded=mix(clamp(albedo*vLight*uLightColor,0.,1.),albedo,vEmissive);
  outColor=vec4(mix(shaded,uFogColor,fog),uOpacity);
 }`;
 const SKY_VERTEX=`#version 300 es
@@ -876,7 +886,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  catch{return null}
  if(!gl)return null;
  let lost=false,disposed=false,program,skyProgram;
- const buffers=[],objects=[];
+ const buffers=[],objects=[],textures=[];
+ let realC172=null,realC172Status="loading";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -890,7 +901,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   };
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal",
-   "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity"])
+   "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity",
+    "uHasTexture","uAlphaCutoff","uTexture"])
    uni[name]=gl.getUniformLocation(program,name);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -901,6 +913,68 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    });gl.bindVertexArray(null);
    const object={vao,count:mesh.vertices};objects.push(object);return object;
   };
+  // Upload the genuinely imported Cessna's indexed triangles without
+  // expanding their vertex count. The legacy mesh remains a safe fallback.
+  const uploadImported=primitive=>{
+   const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+   for(const [i,array,size] of [
+    [0,primitive.positions,3],[1,primitive.colors,3],
+    [2,primitive.normals,3],[3,primitive.uvs,2]
+   ]){
+    const buffer=gl.createBuffer();buffers.push(buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    gl.bufferData(gl.ARRAY_BUFFER,array,gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(i);
+    gl.vertexAttribPointer(i,size,gl.FLOAT,false,0,0);
+   }
+   const element=gl.createBuffer();buffers.push(element);
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,element);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,primitive.indices,gl.STATIC_DRAW);
+   gl.bindVertexArray(null);
+   const object={vao,count:primitive.indices.length,
+    indexType:primitive.indices instanceof Uint16Array?
+     gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
+    imageId:primitive.imageId,alphaMask:primitive.alphaMask,
+    alphaCutoff:primitive.alphaCutoff};
+   objects.push(object);return object;
+  };
+  async function importC172(){
+   if(!RealAirframes){realC172Status="unavailable";return;}
+   try{
+    const model=await RealAirframes.ensureC172();
+    if(disposed||lost)return;
+    const decoded=await Promise.all(model.images.map(async bytes=>{
+     const blob=new Blob([bytes],{type:"image/webp"});
+     return root.createImageBitmap(blob);
+    }));
+    if(disposed||lost){decoded.forEach(image=>image.close?.());return;}
+    const images=decoded.map(bitmap=>{
+     const texture=gl.createTexture();textures.push(texture);
+     gl.bindTexture(gl.TEXTURE_2D,texture);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
+     gl.generateMipmap(gl.TEXTURE_2D);
+     bitmap.close?.();
+     return texture;
+    });
+    gl.bindTexture(gl.TEXTURE_2D,null);
+    const primitives=model.primitives.map(uploadImported);
+    realC172={primitives,images,vertices:model.vertices,
+     triangles:model.triangles};
+    realC172Status="imported";
+   }catch(error){
+    realC172Status="fallback";
+    // A broken or unsupported asset must never stop flight training.
+    if(typeof console!=="undefined")console.warn("C172 mesh fallback:",error);
+   }
+  }
+  // This is deliberately non-blocking: controls and simulated flight start
+  // immediately with the legacy model, then swap to genuine C172 geometry.
+  void importC172();
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
    worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
@@ -949,6 +1023,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform3fv(uni.uFogColor,palette.fog);
    gl.uniform3fv(uni.uLightColor,palette.light);
    gl.uniform1f(uni.uOpacity,1);
+   gl.uniform1f(uni.uHasTexture,0);
+   gl.uniform1f(uni.uAlphaCutoff,0);
+   gl.uniform1i(uni.uTexture,0);
    const targetCamera=cameraPose(state,view,orbit);
    const clock=root?.performance?.now?.()??Date.now();
    const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
@@ -1036,8 +1113,25 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
-    gl.uniform1f(uni.uActor,1);gl.bindVertexArray(model.body.vao);
-    gl.drawArrays(gl.TRIANGLES,0,model.body.count);
+    gl.uniform1f(uni.uActor,1);
+    const isReal=id==="c172"&&realC172!==null;
+    if(canvas.dataset)canvas.dataset.airframeSource=isReal?"licensed-c172-glb":"procedural";
+    if(isReal){
+     gl.activeTexture(gl.TEXTURE0);
+     for(const part of realC172.primitives){
+      const img=part.imageId===null?null:realC172.images[part.imageId];
+      gl.uniform1f(uni.uHasTexture,img?1:0);
+      gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
+      gl.bindTexture(gl.TEXTURE_2D,img);
+      gl.bindVertexArray(part.vao);
+      gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
+     }
+     gl.bindTexture(gl.TEXTURE_2D,null);
+     gl.uniform1f(uni.uHasTexture,0);
+    }else{
+     gl.bindVertexArray(model.body.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.body.count);
+    }
     // Motion-sweep draws before the actual two blades; never conceals them.
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
@@ -1094,10 +1188,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    if(!lost){
     for(const o of objects)gl.deleteVertexArray(o.vao);
     for(const b of buffers)gl.deleteBuffer(b);
+    for(const t of textures)gl.deleteTexture(t);
     gl.deleteProgram(program);gl.deleteProgram(skyProgram);
    }
   }
-  return {draw,destroy,resetCamera(){cameraRig?.reset()},supported:true,engine:"webgl2",get lost(){return lost}};
+  return {draw,destroy,resetCamera(){cameraRig?.reset()},
+   get realC172Status(){return realC172Status},
+   supported:true,engine:"webgl2",get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
