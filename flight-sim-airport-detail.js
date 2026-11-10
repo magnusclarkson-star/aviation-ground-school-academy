@@ -17,9 +17,17 @@ const config=Object.freeze({
   {x:290,z:590,headingDeg:-15,paint:"gold"}
  ]),
  serviceVehicles:freezeList([{x:324,z:395,paint:"yellow"},{x:325,z:648,paint:"white"}]),
+ // A longer original fictional approach-light chain makes the southern
+ // runway threshold readable when returning from a large phone-size circuit.
+ // All renderers reuse these fixed landmarks; these are not real PAPI/ILS aids.
  approachLights:freezeList([
-  {x:0,z:-240},{x:0,z:-180},{x:0,z:-120},{x:0,z:-60},
-  {x:-9,z:-120},{x:9,z:-120},{x:-9,z:-60},{x:9,z:-60}
+  {x:0,z:-600},{x:0,z:-540},{x:0,z:-480},{x:0,z:-420},
+  {x:0,z:-360},{x:0,z:-300},{x:0,z:-240},{x:0,z:-180},
+  {x:0,z:-120},{x:0,z:-60},
+  {x:-12,z:-420},{x:12,z:-420},
+  {x:-12,z:-240},{x:12,z:-240},
+  {x:-9,z:-120},{x:9,z:-120},
+  {x:-9,z:-60},{x:9,z:-60}
  ]),
  rampLights:freezeList([{x:112,z:340},{x:360,z:340},{x:112,z:690},{x:360,z:690}]),
  holdLine:Object.freeze({ax:42,az:280,bx:42,bz:314})
