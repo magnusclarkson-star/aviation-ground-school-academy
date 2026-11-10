@@ -40,6 +40,22 @@ G.observe(finalSession,{...shortFinal,phase:"rollout",time:25,altitudeM:0},["tou
 G.observe(finalSession,{...shortFinal,phase:"complete",time:38,altitudeM:0},["completed"]);
 assert.equal(finalSession.landings,1);
 assert.equal(G.guidance({...shortFinal,phase:"rollout"},controls).tag,"AFTER TOUCHDOWN · ROLLOUT");
+const centredRollout={...shortFinal,phase:"rollout",xM:0,
+ speedKt:34,rolloutBrakePressure:.7,rolloutDistanceM:208.7};
+const centredCue=G.guidance(centredRollout,controls);
+assert.equal(centredCue.level,"normal");
+assert.match(centredCue.text,/GS 34 kt · BRAKE 70% · ROLL 209 m/);
+const driftingRollout=G.guidance({...centredRollout,xM:-14.5},controls);
+assert.equal(driftingRollout.level,"normal");
+assert.match(driftingRollout.text,/RWY W15 m/);
+assert.doesNotMatch(driftingRollout.text,/ROLL 209 m/,
+ "side position takes precedence over nonessential distance while drifting");
+const edgeRollout=G.guidance({...centredRollout,xM:21.6},controls);
+assert.equal(edgeRollout.level,"caution");
+assert.equal(edgeRollout.tag,"RUNWAY EDGE · ROLLOUT");
+assert.match(edgeRollout.text,/RWY E22 m/);
+assert.equal(G.guidance({...centredRollout,xM:19.9},controls).level,"normal");
+assert.equal(G.guidance({...centredRollout,xM:20},controls).level,"caution");
 assert.equal(G.guidance({...shortFinal,phase:"complete"},controls).complete,true);
 const report=G.summary(finalSession,{...shortFinal,phase:"complete"});
 assert.equal(report.outcome,"Fictional exercise completed");
