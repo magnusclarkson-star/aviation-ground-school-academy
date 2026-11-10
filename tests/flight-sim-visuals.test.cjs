@@ -492,15 +492,18 @@ test("landing alignment is reciprocal and wrap-safe but rejects runway crossings
  assert.equal(E.runwayAlignment(Number.NaN,0).aligned,false);
  assert.equal(E.runwayAlignment(0,Infinity).aligned,false);
 });
-test("Classic runway approach rejects sideways low-speed contact",()=>{
- const state=Flight.makeState("airplane","approach",{airframeId:"c172"});
- Object.assign(state,{xM:0,zM:710,altitudeM:.005,verticalMs:-2,
-  headingDeg:90,trackDeg:90,rollDeg:0,speedKt:65});
- const input=Flight.makeInput("airplane");input.throttle=.48;
- const result=Flight.step(state,input,.1);
- assert.ok(result.events.includes("hardLanding"),"sideways runway crossing must not receive touchdown event");
- assert.equal(state.phase,"halted");
- assert.match(state.message,/crossing angle/);
+test("both flight models reject sideways low-speed runway contact",()=>{
+ for(const physicsId of ["classic","aero"]){
+  const state=Flight.makeState("airplane","approach",{airframeId:"c172",physicsId});
+  Object.assign(state,{xM:0,zM:710,altitudeM:.005,verticalMs:-2,
+   headingDeg:90,trackDeg:90,rollDeg:0,speedKt:65});
+  const input=Flight.makeInput("airplane");input.throttle=.48;
+  const result=Flight.step(state,input,.1);
+  assert.ok(result.events.includes("hardLanding"),
+   physicsId+": sideways runway crossing must not receive touchdown event");
+  assert.equal(state.phase,"halted",physicsId);
+  assert.match(state.message,/crossing angle/,physicsId);
+ }
 });
 test("experimental 358-degree rollout does not snap to east heading",()=>{
  const state=Flight.makeState("airplane","approach",{physicsId:"aero"});
