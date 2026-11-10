@@ -89,6 +89,25 @@ try{
  }
  assert.equal(new Set(signatures2D.values()).size,7,
   "all seven 2D exterior silhouettes must differ without WebGL");
+ const rollingC172=await desktop.evaluate(()=>{
+  const C=window.AGSAExteriorChase2D,
+   canvas=document.createElement("canvas");
+  canvas.width=760;canvas.height=490;
+  const ctx=canvas.getContext("2d");
+  const paint=(angle)=>{
+   ctx.clearRect(0,0,760,490);
+   C.paintInspection(ctx,{id:"c172",width:760,height:490,
+    orbit:{azimuth:90,elevation:8,distance:20},
+    animation:{mainWheels:angle,noseWheel:angle*(.35/.26)}});
+   return canvas.toDataURL("image/png");
+  };
+  return {stopped:paint(0),rolling:paint(1.37),
+   names:C.movingParts("c172").map(p=>p.name)};
+ });
+ assert.ok(rollingC172.names.includes("mainWheels")&&
+  rollingC172.names.includes("noseWheel"));
+ assert.notEqual(rollingC172.stopped,rollingC172.rolling,
+  "speed-linked C172 wheel hubs must visibly rotate in the 2D 360 inspector");
  const rotatingR44=await desktop.evaluate(()=>{
   const canvas=document.createElement("canvas");
   canvas.width=760;canvas.height=490;

@@ -173,7 +173,8 @@ try{
   "touchdown triggers a brief visual suspension bounce");
  assert.notEqual(exteriorMotion.before,exteriorMotion.after,
   "fallback 2D exterior visibly raises the airframe on touchdown");
- assert.equal(moving.names.length,8);
+ assert.equal(moving.names.length,10,
+  "C172 has two additional low-poly wheel-hub assemblies");
  assert.ok(moving.port<0&&moving.starboard>0);
  assert.ok(moving.rudder>0&&moving.flaps<0);
 

@@ -11,7 +11,8 @@ function create(mode="airplane"){
  const heli=mode==="helicopter";
  return {mode,time:0,powerPct:heli?80:10,rotation:0,tailRotation:0,
   displayedPower:0,flapDeg:0,gearRetraction:0,parts:Object.create(null),
-  lastGround:true,lastVerticalMs:0,touchdownAge:0,touchdownStrength:0};
+  lastGround:true,lastVerticalMs:0,touchdownAge:0,touchdownStrength:0,
+  wheelRotation:0,noseWheelRotation:0,wheelRate:0};
 }
 function step(system,state,input,seconds){
  if(!system||system.mode!==state?.mode)throw Error("System mode must match fictional aircraft");
@@ -72,6 +73,23 @@ function step(system,state,input,seconds){
   r.tailPitch=rudder*.17;
  }else{
   r.propeller=system.rotation;
+  // The C172's actual stationary tyres are already part of the shared mesh.
+  // Rotate small contrasting hub marks as the ground wheels roll, with a
+  // faster-spinning nose wheel due to its smaller illustrated radius.
+  // Airborne wheels coast briefly rather than stopping instantly. This is
+  // visual only: the aircraft's speed, brakes and flight grading are unchanged.
+  if(dt&&state.airframeId==="c172"){
+   const groundV=state.onGround===true?
+    clamp(state.speedKt,0,160)*.514444:0;
+   const targetRate=groundV/.35;
+   const response=state.onGround?(groundV>0?16:28):2;
+   system.wheelRate=smooth(system.wheelRate||0,targetRate,response,dt);
+   system.wheelRotation=(system.wheelRotation+system.wheelRate*dt)%TAU;
+   system.noseWheelRotation=(system.noseWheelRotation+
+    system.wheelRate*(.35/.26)*dt)%TAU;
+  }
+  r.mainWheels=system.wheelRotation||0;
+  r.noseWheel=system.noseWheelRotation||0;
   // A small transparent sweep complements, but never replaces, the actual
   // two-blade Cessna propeller as the simulated engine speeds up.
   r.propBlurOpacity=clamp((system.powerPct-26)/70,0,1)*
