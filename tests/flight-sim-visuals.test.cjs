@@ -96,6 +96,30 @@ test("banked trainer performs a 170-degree return turn without teleporting",()=>
  assert.ok(Math.abs(state.xM)<1700,"return turn must stay inside near-field scenery");
  assert.ok(state.altitudeM>0,"turn must not forcibly land the aircraft");
 });
+test("full C172 phone yoke allows a tighter return turn but keeps fine bank precision",()=>{
+ const simulate=bank=>{
+  const state=Flight.makeState("airplane","approach",
+   {airframeId:"c172",profileId:"trainer",physicsId:"classic"});
+  state.altitudeM=320;state.zM=-2000;state.speedKt=85;state.verticalMs=0;
+  const input=Flight.makeInput("airplane");
+  input.bank=bank;input.throttle=.62;input.turbulence=0;
+  for(let n=0;n<80;n++)Flight.step(state,input,.05);
+  return state;
+ };
+ const full=simulate(1),fine=simulate(.3),left=simulate(-1);
+ assert.ok(full.rollDeg>37&&full.rollDeg<39,
+  "fully held yoke should make a moderate fictional steep turn of about 38°");
+ assert.ok(fine.rollDeg>9.3&&fine.rollDeg<10,
+  "small phone yoke inputs should retain the original precise response");
+ assert.ok(left.rollDeg< -37&&left.rollDeg> -39,
+  "the stronger turn should be balanced in either direction");
+ assert.ok(full.headingDeg>10&&full.headingDeg<90,
+  "a real bank produces progressive yaw without changing position instantly");
+ assert.ok(full.xM>0&&left.xM<0,
+  "tight right/left turns must visibly bend the ground path");
+ for(const s of [full,fine,left])assert.ok(s.altitudeM>0&&s.phase!=="halted");
+});
+
 test("navigation keeps the home runway in view and calculates bearing",()=>{
  const nearby=Navigation.coordinates({xM:0,zM:900,headingDeg:90});
  const far=Navigation.coordinates({xM:1000,zM:6000,headingDeg:0});

@@ -232,6 +232,46 @@ try{
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
  assert.ok(await phone.locator("#outsideView").isVisible());
+
+ // On a small touch screen a deliberate HOLD+finger release retains the
+ // bank for the circuit, but an interrupted/cancelled gesture must LEVEL
+ // the plane rather than leave a surprise 38-degree turn engaged.
+ const hold=phone.locator("#bankHoldToggle");
+ assert.ok(await hold.isVisible());
+ await hold.tap();
+ assert.equal(await hold.getAttribute("aria-pressed"),"true");
+ const touchYoke=async(type,id)=>{
+  await phone.locator("#controlPad").evaluate((pad,{type,id})=>{
+   const b=pad.getBoundingClientRect();
+   const event=new PointerEvent(type,{bubbles:true,cancelable:true,
+    pointerType:"touch",pointerId:id,button:0,
+    clientX:b.left+b.width*.85,clientY:b.top+b.height*.5});
+   pad.dispatchEvent(event);
+  },{type,id});
+ };
+ await touchYoke("pointerdown",91);
+ assert.ok(parseInt(await phone.locator("#cmdBank").textContent())>60,
+  "touching the right side of the phone yoke commands a strong right bank");
+ await touchYoke("pointerup",91);
+ assert.equal(await hold.textContent(),"LEVEL");
+ assert.ok(parseInt(await phone.locator("#cmdBank").textContent())>60,
+  "a deliberate yoke release retains bank only when hold is armed");
+ await hold.tap();
+ assert.equal(await hold.getAttribute("aria-pressed"),"false");
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
+ await hold.tap();
+ await touchYoke("pointerdown",92);
+ await touchYoke("pointercancel",92);
+ assert.equal(await hold.getAttribute("aria-pressed"),"false",
+  "Android touch cancellation must disarm the bank hold");
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/,
+  "Android touch cancellation must level the plane");
+ await hold.tap();
+ await touchYoke("pointerdown",93);
+ await touchYoke("lostpointercapture",93);
+ assert.equal(await hold.getAttribute("aria-pressed"),"false",
+  "lost pointer capture must not latch a long turn");
+ assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.deepEqual(errors,[]);
  await phone.close();
