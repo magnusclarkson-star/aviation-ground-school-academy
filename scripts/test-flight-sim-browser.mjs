@@ -55,6 +55,23 @@ try{
   return count;
  });
  assert.ok(runwayDrawn>4,"runway stays visible in 2D southbound return view");
+ const rolloutResult=await desktop.evaluate(()=>{
+  const M=window.AGSAImmersiveFlight,G=window.AGSAFlightGuidance;
+  return ["classic","aero"].map(physicsId=>{
+   const s=M.makeState("airplane","approach",{physicsId});
+   Object.assign(s,{phase:"rollout",onGround:true,xM:27,zM:700,
+    headingDeg:90,trackDeg:90,speedKt:52,altitudeM:0});
+   const input=M.makeInput("airplane");input.throttle=0;
+   const events=M.step(s,input,.1).events;
+   return {physicsId,phase:s.phase,events,tag:G.guidance(s,input).tag};
+  });
+ });
+ for(const r of rolloutResult){
+  assert.equal(r.phase,"halted",r.physicsId+" runway exit stops rollout");
+  assert.ok(r.events.includes("runwayExcursion"),"browser model emits excursion event");
+  assert.equal(r.tag,"RUNWAY EXCURSION",
+   "cockpit learning cue reports the actual cause of the interrupted landing");
+ }
  const approachRefs=await desktop.evaluate(()=>{
   const Airport=window.AGSAFlightAirportDetail,S=window.AGSAFlightScenery;
   const canvas=document.createElement("canvas");
