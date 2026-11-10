@@ -94,6 +94,10 @@ function countryside(mesh){
  // Two-stage tank roofs and four slender supports provide recognisable
  // 3D silhouettes from the cockpit, chase, side and full 360° cameras.
  // They stay on the terrain and add only a few hundred triangles total.
+ for(const hedgerow of Countryside.hedgerows){
+  const {x,z,w,d,h,color}=hedgerow;
+  mesh.box(x,y(x,z),z,w,h,d,hexRgb(color));
+ }
  for(const tower of Countryside.towers){
   const {x,z,height:h,radius:r,color}=tower;
   const groundY=Countryside.terrainHeight(x,z);
