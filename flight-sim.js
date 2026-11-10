@@ -234,6 +234,7 @@ document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
+const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
 const keys=new Set();
 let lastPhase=state.phase;
 /* One authoritative live readout. Move its existing DOM node, never clone
@@ -672,7 +673,9 @@ for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  });
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
- input.rudder=M.clamp((right?1:0)-(left?1:0)+(keys.has("d")?.65:0)-(keys.has("a")?.65:0),-1,1);
+ const foot=touchPedals?.step({left,right,mode:state.mode,dt:0})??
+  ((right?1:0)-(left?1:0));
+ input.rudder=M.clamp(foot+(keys.has("d")?.65:0)-(keys.has("a")?.65:0),-1,1);
  $("cmdRudder").textContent="RUDDER "+Math.round(input.rudder*100)+"%";
  input.brake=pointers.brake!==null||keys.has(" ");
  $("leftRudder").classList.toggle("held",left);
@@ -717,6 +720,7 @@ function syncKeys(){
  gripTransform();
 }
 function releaseControls(){
+ touchPedals?.reset();
  bankHold?.clear();syncBankHoldUI();
  dragPointer=null;for(const key of Object.keys(pointers))pointers[key]=null;
  keys.clear();input.bank=0;input.pitch=0;input.rudder=0;input.brake=false;
@@ -1032,6 +1036,16 @@ function frame(now){
  const dt=lastFrame?Math.min(.08,Math.max(0,(now-lastFrame)/1000)):0;
  lastFrame=now;
  if(!paused&&!document.hidden&&dt>0){
+  // Rotorcraft phone pedal buttons are binary hardware, so graduate their
+  // strength with hold duration; short taps make genuine fine yaw inputs.
+  // Airplanes, keyboard pedals and optional gamepad axes remain direct.
+  if((pointers.left!==null||pointers.right!==null)&&touchPedals){
+   const foot=touchPedals.step({left:pointers.left!==null,
+    right:pointers.right!==null,mode:state.mode,dt});
+   input.rudder=M.clamp(foot+(keys.has("d")?.65:0)-
+    (keys.has("a")?.65:0),-1,1);
+   $("cmdRudder").textContent="RUDDER "+Math.round(input.rudder*100)+"%";
+  }
   hardware?.poll(dt,{input,mode:state.mode,dragActive:dragPointer!==null,keyboard:keys,pointers,paused});
   if(!paused){
   const result=M.step(state,input,dt);

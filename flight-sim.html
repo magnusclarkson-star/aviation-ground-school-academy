@@ -138,7 +138,8 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-touchdown-fx.js?v=20261109-touchdown1" defer></script>
 <script src="flight-sim-mini-pfd-zoom.js?v=20261109-pfdfix3" defer></script>
 <script src="flight-sim-bank-hold.js?v=20261109-circuit1" defer></script>
-<script src="flight-sim.js?v=20261110-c172turn1" defer></script>
+<script src="flight-sim-touch-pedals.js?v=20261110-v2pedals1" defer></script>
+<script src="flight-sim.js?v=20261110-v2pedals1" defer></script>
 </head>
 <body>
 <header class="site-head">
@@ -757,8 +758,8 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
    <div class="rudder-deck">
     <div><span class="eyebrow">RUDDER PEDALS</span><p class="hint">Hold a pedal with a second finger to command yaw. Release to centre. <strong id="cmdRudder">RUDDER 0%</strong></p></div>
     <div class="rudder-pedals" role="group" aria-label="Aircraft rudder pedal controls">
-     <button id="leftRudder" type="button" aria-label="Hold left rudder"><span class="pedal-icon" aria-hidden="true">▥</span>LEFT</button>
-     <button id="rightRudder" type="button" aria-label="Hold right rudder"><span class="pedal-icon" aria-hidden="true">▥</span>RIGHT</button>
+     <button id="leftRudder" type="button" aria-label="Hold left rudder or helicopter anti-torque pedal; short taps give fine R44 yaw control"><span class="pedal-icon" aria-hidden="true">▥</span>LEFT</button>
+     <button id="rightRudder" type="button" aria-label="Hold right rudder or helicopter anti-torque pedal; short taps give fine R44 yaw control"><span class="pedal-icon" aria-hidden="true">▥</span>RIGHT</button>
     </div>
     <div id="axisPedalDock" class="axis-pedal-dock" aria-label="Bank and pitch readouts to the right of rudder pedals">
      <div id="axisReadouts" class="axis-values axis-readouts-mini" aria-label="Live bank and pitch commands"><span>B <strong id="cmdBank">0%</strong></span><span>P <strong id="cmdPitch">0%</strong></span><button id="bankHoldToggle" type="button" aria-pressed="false" aria-label="Hold bank after releasing the yoke, then tap again to level the wings" title="Tap HOLD, bank the yoke, then tap LEVEL to release">HOLD</button></div>
