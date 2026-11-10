@@ -51,9 +51,13 @@ test('phase radio starts silent, explicitly arms, fires each stage once, and dis
  assert.equal(env.spoken.length,5);
  assert.equal(radio.cuePhase('climb'),true,'during stage follows fictional climb');
  assert.equal(env.spoken.length,9);
- assert.equal(radio.cuePhase('approach'),false,'other during phases cannot repeat');
- assert.equal(radio.cuePhase('rollout'),true,'after stage follows fictional rollout');
+ assert.equal(radio.cuePhase('approach'),true,
+  'returning to the original runway adds one final-approach transmission');
  assert.equal(env.spoken.length,13);
+ assert.equal(radio.cuePhase('approach'),false,'return-final transmission plays once');
+ assert.equal(radio.cuePhase('flight'),false,'earlier departure stage still plays only once');
+ assert.equal(radio.cuePhase('rollout'),true,'after stage follows fictional rollout');
+ assert.equal(env.spoken.length,17);
  assert.equal(radio.cuePhase('complete'),false,'after stage is one shot');
  assert.equal(radio.cuePhase('halted'),false);
  env.el('atcStop').handlers.click();
