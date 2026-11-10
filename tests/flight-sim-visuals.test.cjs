@@ -515,3 +515,63 @@ test("experimental 358-degree rollout does not snap to east heading",()=>{
  assert.ok(state.zM>550,"rolling aircraft must continue along runway instead of veering off");
  assert.ok(Math.abs(state.xM)<1,"brief rollout stays close to runway centreline");
 });
+
+test("real return to runway enters final phase in both flight models",()=>{
+ for(const physicsId of ["classic","aero"]){
+  const state=Flight.makeState("airplane","runway",{physicsId});
+  Object.assign(state,{phase:"flight",onGround:false,xM:160,zM:-1540,
+   altitudeM:125,speedKt:82,headingDeg:356,trackDeg:356,
+   verticalMs:-1.2});
+  const route=Circuit.create(state);
+  const input=Flight.makeInput("airplane");input.throttle=.5;
+  const before={x:state.xM,z:state.zM,alt:state.altitudeM};
+  Flight.step(state,input,.05);
+  assert.equal(state.phase,"approach",physicsId+" final phase");
+  assert.equal(state.scenario,"runway","takeoff origin is preserved");
+  assert.ok(state.xM!==before.x||state.zM!==before.z,
+   "aircraft continues under normal movement physics");
+  assert.ok(Math.abs(state.altitudeM-before.alt)<2,
+   "arrival cue must not teleport the aircraft vertically");
+  Circuit.update(route,state);
+  assert.equal(route.stage,"final","navigator shows the real final leg");
+  const nav=Navigation.coordinates(state,route);
+  assert.match(nav.circuitText,/FINAL/);
+  assert.match(nav.circuitText,/E1(?:5|6)\d+m/);
+  assert.match(nav.circuitText,/TRK|°/);
+ }
+});
+
+test("return phase ignores aircraft heading away or distant from the runway",()=>{
+ const cases=[
+  {xM:1000,zM:-1540,headingDeg:0},
+  {xM:0,zM:1100,headingDeg:0},
+  {xM:0,zM:-5000,headingDeg:0},
+  {xM:140,zM:-1540,headingDeg:180},
+  {xM:140,zM:-1540,headingDeg:65}
+ ];
+ for(const values of cases){
+  const state=Flight.makeState("airplane","runway");
+  Object.assign(state,{phase:"flight",onGround:false,speedKt:76,
+   altitudeM:130,trackDeg:values.headingDeg,...values});
+  assert.equal(Flight.markReturnFinal(state),false);
+  assert.equal(state.phase,"flight");
+ }
+ const approach=Flight.makeState("airplane","approach");
+ assert.equal(Flight.markReturnFinal(approach),false,
+  "direct short-final exercise is already in its own phase");
+ const heli=Flight.makeState("helicopter");
+ assert.equal(Flight.markReturnFinal(heli),false);
+});
+
+test("approach phase can rejoin final without completing fixed circuit waypoints",()=>{
+ const state=Flight.makeState("airplane","runway");
+ const route=Circuit.create(state);
+ route.stage="downwind";
+ Object.assign(state,{phase:"approach",onGround:false,xM:150,zM:-1350,headingDeg:1,trackDeg:1});
+ Circuit.update(route,state);
+ assert.equal(route.stage,"final");
+ assert.ok(Circuit.status(route,state).finalCue?.includes("E150m"));
+ state.phase="rollout";state.onGround=true;
+ Circuit.update(route,state);
+ assert.equal(route.stage,"landed");
+});
