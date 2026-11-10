@@ -74,6 +74,11 @@ jobs:
       - run: node --check flight-sim-gamepad.js
       - run: node --check flight-sim-gamepad-ui.js
       - run: node scripts/test-flight-sim-gamepad.mjs
+      # The V3 preview is an isolated, self-contained Three.js bundle.
+      # Pinned dependencies are build-time only and are never deployed.
+      - name: Install pinned V3 scene-graph build tools
+        run: npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12
+      - run: node scripts/build-flight-sim-v3.mjs
       # Check the exact package that GitHub Pages deploys, not just repository files.
       - run: node scripts/build-pages.mjs
       - run: node scripts/test-pages-package.mjs
