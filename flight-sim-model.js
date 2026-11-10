@@ -88,6 +88,7 @@ function makeState(mode="airplane",scenario="runway",options={}){
   phase:approach?"approach":"roll",xM:0,zM:approach?-1450:0,
   altitudeM:approach?84:0,speedKt:approach?profile.approachKt:0,groundSpeedKt:approach?profile.approachKt:0,
   trackDeg:0,windXMps:0,windZMps:0,
+  touchdownData:null,rolloutBrakePressure:0,rolloutDistanceM:0,
   verticalMs:approach?-1.8:0,pitchDeg:approach?-2.8:0,rollDeg:0,headingDeg:0,
   lateralMs:0,forwardMs:0,time:0,turbulence:0,onGround:!approach,
   message:approach?"Fictional short-final setup. Descend toward the pictured runway.":"Set simulated power, build speed and gently rotate to explore liftoff."};
@@ -226,7 +227,15 @@ function step(state,input,seconds){
  const flap=clamp(input.flaps,0,30);
  if(state.onGround){
   const brake=input.brake===true;
-  const acceleration=p.groundAccel*throttle-1.2-.00065*state.speedKt**2-flap*.014-(brake?9:0);
+  // Wheel braking builds and releases progressively after actual touchdown.
+  // This avoids the old single-frame full-brake impulse and retains clear
+  // distinction between coasting and holding the phone brake control.
+  const rolling=state.phase==="rollout";
+  state.rolloutBrakePressure=rolling?
+   smooth(state.rolloutBrakePressure||0,brake?1:0,brake?3.2:8,dt):0;
+  const wheelBrake=rolling?9*state.rolloutBrakePressure:(brake?9:0);
+  const acceleration=p.groundAccel*throttle-1.2-.00065*state.speedKt**2-
+   flap*.014-wheelBrake;
   state.speedKt=clamp(state.speedKt+acceleration*dt,0,p.maxGroundKt??115);
   state.verticalMs=0;state.altitudeM=0;
   // The departure roll uses a limited illustrated steering envelope, but
@@ -237,10 +246,14 @@ function step(state,input,seconds){
    const signed=((state.headingDeg+540)%360)-180;
    state.headingDeg=clamp(signed+rudder*.65*dt,-40,40);
   }else{
-   state.headingDeg=(state.headingDeg+rudder*.65*dt+360)%360;
+   // A little more wheel-steering authority only at taxi speeds; maintain
+   // the previous gentle behaviour at fast touchdown speeds.
+   const groundRate=.65+(rolling ? .8*Math.max(0,1-state.speedKt/55) : 0);
+   state.headingDeg=(state.headingDeg+rudder*groundRate*dt+360)%360;
   }
   state.zM+=state.speedKt*KNOT*Math.cos(state.headingDeg*RAD)*dt;
   state.xM+=state.speedKt*KNOT*Math.sin(state.headingDeg*RAD)*dt;
+  if(rolling)state.rolloutDistanceM=(state.rolloutDistanceM||0)+state.speedKt*KNOT*dt;
   state.groundSpeedKt=state.speedKt;
   state.trackDeg=state.headingDeg; // Wheels follow the fictional runway until liftoff.
   if(state.phase==="roll"&&state.speedKt>12)events.push("runwayRumble");
@@ -306,6 +319,16 @@ function step(state,input,seconds){
    const alignment=E.runwayAlignment(state.headingDeg,state.trackDeg);
    const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&
     state.speedKt<(p.landingMaxKt??93)&&onRunway&&alignment.aligned;
+   if(gentle){
+    // Read-only contact record for flight replay and post-landing feedback:
+    // never infer touchdown conditions from the next grounded physics tick.
+    state.touchdownData=Object.freeze({
+     speedKt:state.speedKt,sinkMs:state.verticalMs,
+     offsetM:state.xM,runwayPositionM:state.zM,
+     headingDeg:state.headingDeg,trackDeg:state.trackDeg
+    });
+    state.rolloutBrakePressure=0;state.rolloutDistanceM=0;
+   }
    state.verticalMs=0;
    state.phase=gentle?"rollout":"halted";
    state.message=gentle?"Simulated touchdown. Reduce power and hold the brake to finish the rollout.":
