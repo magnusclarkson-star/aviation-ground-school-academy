@@ -98,12 +98,15 @@ try{
    const gl=canvas.getContext("webgl2");
    const pixels=new Uint8Array(canvas.width*canvas.height*4);
    gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-   let colored=0;
+   let yellow=0,hash=2166136261>>>0;
    for(let i=0;i<pixels.length;i+=4){
-    if(Math.max(pixels[i],pixels[i+1],pixels[i+2])-
-       Math.min(pixels[i],pixels[i+1],pixels[i+2])>30)colored++;
+    const r=pixels[i],g=pixels[i+1],b=pixels[i+2];
+    // The bright textured yellow R44 hull must occupy nontrivial screen
+    // area; the blue sky alone must not satisfy the realism smoke test.
+    if(r>110&&g>100&&b<Math.min(r,g)*.75)yellow++;
+    if(i%28===0)hash=Math.imul(hash^r^g^b,16777619)>>>0;
    }
-   details.push({view,drawn,colored});
+   details.push({view,drawn,yellow,hash});
   }
   return {status:renderer.realR44Status,source:canvas.dataset.airframeSource,
    vertices:model.vertices,triangles:model.triangles,
@@ -114,8 +117,23 @@ try{
  assert.ok(rotor.vertices>22000);
  assert.ok(rotor.triangles>7500);
  assert.equal(rotor.imageCount,1);
- assert.ok(rotor.details.every(v=>v.drawn&&v.colored>500),
-  "genuine 3D R44 must render in chase, side, top and orbit views");
+ assert.ok(rotor.details.every(v=>v.drawn&&v.yellow>100),
+  "actual textured R44 body must be visible, not only the sky");
+ assert.equal(new Set(rotor.details.map(v=>v.hash)).size,4,
+  "R44 exterior camera angles must display distinct images");
+ for(const view of ["side","chase","top","inspect"]){
+  await page.evaluate(view=>{
+   window.__c172TestRenderer.draw({
+    mode:"helicopter",xM:0,zM:0,altitudeM:60,headingDeg:30,
+    pitchDeg:4,rollDeg:2,groundSpeedKt:18
+   },{view,airframeId:"r44",
+    animation:{mainRotor:1.2,tailRotor:2.4,swashBank:.12,
+     swashPitch:-.08,collectiveLink:.22},
+    orbit:{azimuth:28,elevation:14,distance:12}});
+  },view);
+  await page.locator("canvas").last().screenshot({
+   path:"artifacts/real-r44-"+view+"-preview.png"});
+ }
  await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-3d-preview.png"});
  assert.deepEqual(errors,[]);
  console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
