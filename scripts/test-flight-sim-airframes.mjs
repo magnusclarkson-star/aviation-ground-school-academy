@@ -73,6 +73,18 @@ assert.ok(c172Exterior.vertices<4000,"extra Cessna geometry remains mobile-frien
 // Tiny visible fittings make the trainer's exterior identifiable even in a
 // side-on 360° inspection; its 2D fallback uses this exact same geometry.
 const cScale=A.SCALE.c172;
+// Low-poly trainer dihedral: both outer wing tips visibly rise from the
+// root; matching wing trim and struts follow the new height in 3D/360/2D.
+for(const side of [-1,1]){
+ assert.ok(nearVertex(c172P,side*7.4*cScale[0],1.16,.7*cScale[2]),
+  "C172 wingtip should rise above the root without changing wing geometry");
+ assert.ok(nearVertex(c172P,side*.72*cScale[0],.95,1.25*cScale[2]),
+  "C172 root stays at the existing cabin elevation");
+ assert.ok(nearVertex(c172P,side*4.7*cScale[0],1.08,-.38*cScale[2]),
+  "high wing support strut rises toward the new outer dihedral panel");
+ assert.ok(nearVertex(c172P,side*7.25*cScale[0],1.25,-1.77*cScale[2]),
+  "wing-top colour trim continues along the sloped wing");
+}
 assert.ok(nearVertex(c172P,-4.31*cScale[0],.35,.37*cScale[2]),
  "C172 left under-wing pitot support is present");
 assert.ok(nearVertex(c172P,0,1.66,-.71*cScale[2]),
