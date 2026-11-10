@@ -219,11 +219,14 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
    ctx.beginPath();ctx.arc(tree.x,tree.y-r*.9,r,0,Math.PI*2);ctx.fill();
   }
  }else{
-  // A 1,800 metre fictional strip; segments far-to-near create a
-  // single-perspective runway and animated centre line.
-  for(let z=1800;z>=-120;z-=60){
+  // Draw the 1,800 m runway in camera-depth order, not just increasing
+  // world-Z order. The previous northbound-only cull removed the entire
+  // runway when returning south from the far end of the circuit.
+  // project()/poly() already reject geometry behind the selected view.
+  const northbound=Math.cos(state.headingDeg*RAD)>=0;
+  for(let segment=0;segment<=32;segment++){
+   const z=(northbound?1800:-120)+(northbound?-60:60)*segment;
    const far=z+60,near=z;
-   if(near<state.zM+7||far>2000)continue;
    poly([[-20,0,near],[20,0,near],[20,0,far],[-20,0,far]],
     Math.floor(z/60)%2?"#4f5a61":"#535e64");
    line([-20,.1,near],[-20,.1,far],"#eef3e2",3);
