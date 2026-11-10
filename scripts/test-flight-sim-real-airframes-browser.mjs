@@ -94,7 +94,7 @@ try{
    const drawn=renderer.draw(s,{view,airframeId:"r44",
     animation:{mainRotor:1.2,tailRotor:2.4,swashBank:.12,
      swashPitch:-.08,collectiveLink:.22},
-    orbit:{azimuth:28,elevation:14,distance:20}});
+    orbit:{azimuth:28,elevation:14,distance:12}});
    const gl=canvas.getContext("webgl2");
    const pixels=new Uint8Array(canvas.width*canvas.height*4);
    gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
