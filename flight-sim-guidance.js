@@ -54,7 +54,13 @@ function r44LessonStatus(progress,state){
  const stage=lesson.stage;
  const n=Math.max(1,R44_STAGES.indexOf(stage)+1);
  const pct=Math.max(0,Math.min(8,state?.hoverHoldSec||0));
- const offset=Math.hypot(Number(state?.xM)||0,Number(state?.zM)||0);
+ const east=Number(state?.xM)||0,north=Number(state?.zM)||0;
+ const offset=Math.hypot(east,north);
+ const padBearing=((Math.atan2(-east,-north)*180/Math.PI)%360+360)%360;
+ const relativePad=((padBearing-(Number(state?.headingDeg)||0)+540)%360)-180;
+ const padCue=offset<2?"PAD CENTER":
+  Math.abs(relativePad)<8?"PAD AHEAD":
+  (relativePad>0?"PAD RIGHT ":"PAD LEFT ")+Math.round(Math.abs(relativePad))+"°";
  const captions={takeoff:"TAKEOFF",hover:"HOVER",turn:"90° TURN",return:"RETURN & LAND"};
  const short=lesson.status==="completed"?"LESSON COMPLETE":
   lesson.status==="incomplete"?"RESTART LESSON":
@@ -65,7 +71,7 @@ function r44LessonStatus(progress,state){
   stage==="takeoff"?"Lift into a steady low hover above the helipad.":
   stage==="hover"?"Hold height and position for 8 seconds: "+Math.floor(pct)+"/8.":
   stage==="turn"?"Turn 90° with the pedals, then steady the heading: "+lesson.turnDeg+"°.":
-  "Return to the helipad centre ("+Math.round(offset)+" m away) and land gently.";
+  "Return to the helipad centre ("+Math.round(offset)+" m · "+padCue+") and land gently.";
  return Object.freeze({stage,status:lesson.status,index:n,total:4,short,hint,
   progress:stage==="hover"?Math.floor(pct):stage==="turn"?lesson.turnDeg:null,
   complete:lesson.status==="completed"});
