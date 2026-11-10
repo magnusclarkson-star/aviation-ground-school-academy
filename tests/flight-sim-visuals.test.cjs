@@ -430,3 +430,30 @@ test("runway final provides short left/right intercept using actual ground track
  assert.equal(Circuit.status(leg,state).finalCue,null,
   "final steering stops after touchdown");
 });
+
+test("2D runway remains drawn when returning from the north heading south",()=>{
+ const gradient={addColorStop(){}};
+ const counts={north:0,south:0,behind:0};
+ let sample="north";
+ const ctx=new Proxy({
+  fillStyle:"",
+  createLinearGradient(){return gradient},
+  createRadialGradient(){return gradient},
+  fill(){
+   if(this.fillStyle==="#4f5a61"||this.fillStyle==="#535e64")
+    counts[sample]++;
+  }
+ },{get(target,key){return key in target?target[key]:()=>{}},
+    set(target,key,value){target[key]=value;return true}});
+ const canvas={width:960,height:540,getContext:()=>ctx};
+ const state={mode:"airplane",xM:0,zM:-1450,altitudeM:140,
+  headingDeg:0,pitchDeg:0,rollDeg:0,time:0,windXMps:0,windZMps:0};
+ assert.equal(Scenery.draw(canvas,state,{view:"cockpit"}),true);
+ assert.ok(counts.north>4,"runway must appear on northbound final");
+ sample="south";state.zM=2400;state.headingDeg=180;
+ assert.equal(Scenery.draw(canvas,state,{view:"cockpit"}),true);
+ assert.ok(counts.south>4,"runway must appear during southbound return");
+ sample="behind";state.headingDeg=0;
+ assert.equal(Scenery.draw(canvas,state,{view:"cockpit"}),true);
+ assert.equal(counts.behind,0,"runway behind aircraft must remain culled");
+});
