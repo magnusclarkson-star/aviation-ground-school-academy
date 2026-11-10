@@ -78,8 +78,51 @@ try{
  assert.ok(info.chromaticPixels>1000,"actual WebGL screenshot has textured colours");
  fs.mkdirSync("artifacts",{recursive:true});
  await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-3d-preview.png"});
+
+ // Prove that the imported Raven II geometry, transparent cabin and
+ // BOTH native rotor groups actually render in the live WebGL program.
+ await page.waitForFunction(()=>window.__c172TestRenderer?.realR44Status==="imported",
+  null,{timeout:20000});
+ const r44=await page.evaluate(async()=>{
+  const model=await window.AGSAR44Airframe.ensureR44();
+  const s={mode:"helicopter",xM:0,zM:0,altitudeM:50,
+   headingDeg:0,pitchDeg:0,rollDeg:0,groundSpeedKt:0};
+  const renderer=window.__c172TestRenderer,canvas=window.__c172TestCanvas;
+  const gl=canvas.getContext("webgl2"),pixels=new Uint8Array(canvas.width*canvas.height*4);
+  const orbit={azimuth:32,elevation:16,distance:20};
+  const drawn=renderer.draw(s,{view:"inspect",airframeId:"r44",
+   orbit,animation:{mainRotor:0,tailRotor:0}});
+  gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  const before=pixels.slice();
+  renderer.draw(s,{view:"inspect",airframeId:"r44",
+   orbit,animation:{mainRotor:1.15,tailRotor:.9}});
+  gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  let changed=0,chromatic=0;
+  for(let i=0;i<pixels.length;i+=4){
+   if(Math.abs(before[i]-pixels[i])+Math.abs(before[i+1]-pixels[i+1])+
+      Math.abs(before[i+2]-pixels[i+2])>30)changed++;
+   if(Math.max(pixels[i],pixels[i+1],pixels[i+2])-
+      Math.min(pixels[i],pixels[i+1],pixels[i+2])>24)chromatic++;
+  }
+  return {status:renderer.realR44Status,source:canvas.dataset.airframeSource,
+   drawn,vertices:model.vertices,triangles:model.triangles,
+   rotorMeshes:model.mainParts,tailRotorMeshes:model.tailParts,
+   textureImages:model.images.length,rotorChangedPixels:changed,
+   chromaticPixels:chromatic,canvasWidth:canvas.width,canvasHeight:canvas.height};
+ });
+ assert.equal(r44.status,"imported");
+ assert.equal(r44.source,"mit-r44-glb");
+ assert.ok(r44.drawn);
+ assert.ok(r44.vertices>=15000&&r44.triangles>=15000);
+ assert.ok(r44.rotorMeshes>=2&&r44.tailRotorMeshes>=2);
+ assert.ok(r44.textureImages>=8);
+ assert.ok(r44.chromaticPixels>1000,"R44 cabin is visible in the actual GLB image");
+ assert.ok(r44.rotorChangedPixels>25,
+  "actual R44 rotor geometry must rotate visibly with aircraft animation");
+ await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-3d-preview.png"});
  assert.deepEqual(errors,[]);
  console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
+ console.log("Real R44 GLB Browser passed:",JSON.stringify(r44));
 }finally{
  if(browser)await browser.close();
  await new Promise(resolve=>server.close(resolve));
