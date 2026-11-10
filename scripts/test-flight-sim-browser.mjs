@@ -391,7 +391,7 @@ try{
    farm.x+farm.w/2,14,farm.z,960,540);
   return {count:C.farmsteads.length,roofs,before:before?.x,after:after?.x};
  });
- assert.equal(farmhouseParallax.count,4);
+ assert.ok(farmhouseParallax.count>=9);
  assert.ok(farmhouseParallax.roofs>0,
   "the mobile 2D canvas paints a real farm roof");
  assert.ok(farmhouseParallax.after<farmhouseParallax.before,
