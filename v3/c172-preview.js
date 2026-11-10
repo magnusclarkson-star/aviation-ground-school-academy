@@ -320,6 +320,7 @@ async function loadDetailedCandidate(){
   detailedParts={airframe,found,rotations,meshes,materials,size:size.toArray(),
    cameraStations:{pilot,panel,back,rightPilot}};
   detailedLoaded=true;
+  const pilotButton=byId("pilotCamera");if(pilotButton)pilotButton.hidden=false;
   applyDetailedControls(getInputs());
   status("FlightGear C172P inspection model loaded. Seats and panel belong to source mesh.");
   return true;
