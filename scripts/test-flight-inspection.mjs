@@ -24,6 +24,12 @@ assert.deepEqual(O.pinchStep(initial,NaN,90),initial,"non-finite span is ignored
 assert.deepEqual(O.doubleTapZoom(initial),
  {azimuth:0,elevation:26,distance:11},
  "double tap brings aircraft closer without losing its orientation");
+const trainerFit={azimuth:42,elevation:21,distance:12};
+assert.deepEqual(O.doubleTapZoom(trainerFit,12),
+ {azimuth:42,elevation:21,distance:9},
+ "C172/R44 double-tap gives a visibly closer real-aircraft view");
+assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(trainerFit,12),12),trainerFit,
+ "trainer double-tap restores genuine fitted 100% view");
 assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(initial)),initial,
  "a second double tap restores the original fitted viewing distance");
 assert.deepEqual(O.doubleTapZoom({azimuth:145,elevation:-14,distance:12}),
