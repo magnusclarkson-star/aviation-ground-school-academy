@@ -526,6 +526,26 @@ function buildPropellerSweep(mode="c172"){
 /* Animated parts have separate GPU vertex arrays. Part rotations are applied
  * around local hinge/hub pivots before the existing whole-aircraft transform.
  * This is a drawing model, not real hinge geometry or rotor dynamics. */
+// R44 source dimensions differ from the earlier procedural placeholder.
+// Remap rotor hardware to the genuine cabin roof and tailboom; the original
+// animated axes and flight-model commands remain unchanged.
+function alignRealR44HardwarePoint(point,tail=false){
+ return [point[0],point[1]-(tail?.30:1.15),point[2]*.60+1.30];
+}
+function alignRealR44Hardware(mesh,tail=false){
+ const positions=new Float32Array(mesh.positions.length);
+ for(let i=0;i<positions.length;i+=3){
+  const p=alignRealR44HardwarePoint([
+   mesh.positions[i],mesh.positions[i+1],mesh.positions[i+2]],tail);
+  positions.set(p,i);
+ }
+ return {...mesh,positions};
+}
+function alignRealR44MovingPart(part){
+ const tail=part.name.toLowerCase().includes("tail");
+ return {...part,pivot:alignRealR44HardwarePoint(part.pivot,tail),
+  mesh:alignRealR44Hardware(part.mesh,tail)};
+}
 function buildMovingParts(mode="airplane"){
  if(Exterior.IDS.includes(mode)&&mode!=="c172"&&mode!=="r44"){
   return Exterior.buildJetParts(Mesh,mode).map(part=>scalePart(part,mode));
@@ -1032,7 +1052,15 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     rotorSweep:id==="r44"?upload(buildRotorSweep(id)):null,
     tailRotorSweep:id==="r44"?upload(buildTailRotorSweep(id)):null,
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
-    shadow:inspectionOnly?null:upload(buildShadow(id))
+    shadow:inspectionOnly?null:upload(buildShadow(id)),
+    authenticParts:id==="r44"?buildMovingParts("r44").map(part=>{
+     const mapped=alignRealR44MovingPart(part);
+     return {...mapped,gpu:upload(mapped.mesh)};
+    }):null,
+    authenticRotorSweep:id==="r44"?
+     upload(alignRealR44Hardware(buildRotorSweep(id))):null,
+    authenticTailRotorSweep:id==="r44"?
+     upload(alignRealR44Hardware(buildTailRotorSweep(id),true)):null
    };
   }
   function draw(state,{view="cockpit",animation={},lighting="day",airframeId=null,orbit={}}={}){
@@ -1170,27 +1198,31 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
     // Motion-sweep draws before the actual two blades; never conceals them.
+    const isImportedRotorcraft=id==="r44"&&realR44!==null;
+    const rotorSweep=isImportedRotorcraft?model.authenticRotorSweep:model.rotorSweep;
+    const tailRotorSweep=isImportedRotorcraft?model.authenticTailRotorSweep:model.tailRotorSweep;
+    const animatedParts=isImportedRotorcraft?model.authenticParts:model.parts;
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
-    if(model.rotorSweep&&sweepOpacity>0){
+    if(rotorSweep&&sweepOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,sweepOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
      gl.depthMask(false);
-     gl.bindVertexArray(model.rotorSweep.vao);
-     gl.drawArrays(gl.TRIANGLES,0,model.rotorSweep.count);
+     gl.bindVertexArray(rotorSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,rotorSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
     const tailOpacity=Number.isFinite(animation?.tailBlurOpacity)?
      limit(animation.tailBlurOpacity,0,.20):0;
-    if(model.tailRotorSweep&&tailOpacity>0){
+    if(tailRotorSweep&&tailOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,tailOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
      gl.depthMask(false);
-     gl.bindVertexArray(model.tailRotorSweep.vao);
-     gl.drawArrays(gl.TRIANGLES,0,model.tailRotorSweep.count);
+     gl.bindVertexArray(tailRotorSweep.vao);
+     gl.drawArrays(gl.TRIANGLES,0,tailRotorSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);
      gl.uniform1f(uni.uOpacity,1);
     }
@@ -1207,7 +1239,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,model.propSweep.count);
      gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
     }
-    for(const part of model.parts){
+    for(const part of animatedParts){
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      const angle=animation?.[part.name];
@@ -1240,7 +1272,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
