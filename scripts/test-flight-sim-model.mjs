@@ -270,8 +270,8 @@ assert.deepEqual(phonePedals.status(),{left:0,right:0});
 assert.ok(Object.isFrozen(phonePedals.status()));
 const doublePedals=TouchPedals.create();
 doublePedals.step({mode:"helicopter",right:true,dt:.1});
-assert.ok(doublePedals.step({mode:"helicopter",left:true,right:true,dt:.1})<0,
- "opposing taps do not reset the other held finger unexpectedly");
+assert.ok(doublePedals.step({mode:"helicopter",left:true,right:true,dt:.1})>0,
+ "a previously held right pedal retains its greater travel when left is just pressed");
 assert.equal(doublePedals.step({mode:"helicopter",left:false,right:false}),0);
 
 // Low-hover pedal controls should be more precise on touchscreen than
