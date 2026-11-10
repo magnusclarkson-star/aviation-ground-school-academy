@@ -11,6 +11,7 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim.html'
       - 'tests/simulator-v2-windsocks.test.cjs'
+      - 'scripts/test-flight-sim-browser.mjs'
       - '.github/workflows/flight-sim-v2-reliability.yml'
   push:
     branches: [main]
@@ -24,6 +25,7 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim.html'
       - 'tests/simulator-v2-windsocks.test.cjs'
+      - 'scripts/test-flight-sim-browser.mjs'
       - '.github/workflows/flight-sim-v2-reliability.yml'
 permissions:
   contents: read
@@ -42,6 +44,7 @@ jobs:
       - run: node --check flight-sim-windsocks.js
       - run: node --check flight-sim-scenery.js
       - run: node --check flight-sim-3d.js
+      - run: node --check scripts/test-flight-sim-browser.mjs
       - run: node --test tests/simulator-v2-circuit-pedals.test.cjs tests/simulator-v2-flight-sequence.test.cjs tests/simulator-v2-windsocks.test.cjs
       - run: node scripts/test-flight-sim-model.mjs
       - run: node scripts/test-flight-sim-airframes.mjs
