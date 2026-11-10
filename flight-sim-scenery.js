@@ -17,6 +17,9 @@ const Airport=root?.AGSAFlightAirportDetail||
 const PadDetail=root?.AGSAHelipadDetail||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-helipad-detail.js"):null);
+const Countryside=root?.AGSACountryside||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-countryside.js"):null);
 
 function project(state,x,y,z,width=960,height=540){
  const dx=x-state.xM,dz=z-state.zM,yaw=state.headingDeg*RAD;
@@ -158,6 +161,23 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
   const shade=alternate?"#8baa7950":"#b1bf7d30";
   poly([[-800,0,z],[-70,0,z],[-70,0,z+75],[-800,0,z+75]],shade);
   poly([[70,0,z],[800,0,z],[800,0,z+75],[70,0,z+75]],shade);
+ }
+ // Country lanes and planted fields sit in persistent world coordinates.
+ // They drift across the phone windscreen because the airplane moves, not
+ // because a decorative scrolling image is attached to the camera.
+ if(Countryside){
+  const heightAt=(x,z)=>Countryside.terrainHeight(x,z)+.14;
+  for(const field of Countryside.fields){
+   if(Math.abs(field.z-state.zM)>3600)continue;
+   const {x,z,w:fw,d,color}=field;
+   poly([[x,heightAt(x,z),z],[x+fw,heightAt(x+fw,z),z],
+    [x+fw,heightAt(x+fw,z+d),z+d],[x,heightAt(x,z+d),z+d]],color);
+  }
+  for(const farmRoad of Countryside.farmTracks){
+   if(Math.abs(farmRoad.az-state.zM)>3600)continue;
+   const corners=Countryside.trackCorners(farmRoad);
+   poly(corners.map(([x,z])=>[x,heightAt(x,z)+.02,z]),"#9b8d6c");
+  }
  }
  if(state.mode==="helicopter"){
   // A shared fixed X/Z environment matches the 3D helipad geometry. Every
