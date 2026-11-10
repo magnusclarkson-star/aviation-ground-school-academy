@@ -56,6 +56,16 @@ assert.equal(edgeRollout.tag,"RUNWAY EDGE · ROLLOUT");
 assert.match(edgeRollout.text,/RWY E22 m/);
 assert.equal(G.guidance({...centredRollout,xM:19.9},controls).level,"normal");
 assert.equal(G.guidance({...centredRollout,xM:20},controls).level,"caution");
+const endCue=G.guidance({...centredRollout,zM:1760,
+ headingDeg:0,trackDeg:0,rolloutBrakePressure:.1,speedKt:50},controls);
+assert.equal(endCue.level,"caution");
+assert.equal(endCue.tag,"RUNWAY END · ROLLOUT");
+assert.match(endCue.text,/END 40 m/);
+const endAndEdge=G.guidance({...centredRollout,zM:1760,
+ headingDeg:0,trackDeg:0,xM:22,rolloutBrakePressure:.1,speedKt:50},controls);
+assert.equal(endAndEdge.tag,"RUNWAY EDGE · ROLLOUT",
+ "side clearance always wins over a forecast about the distant runway end");
+assert.match(endAndEdge.text,/RWY E22 m/);
 assert.equal(G.guidance({...shortFinal,phase:"complete"},controls).complete,true);
 const report=G.summary(finalSession,{...shortFinal,phase:"complete"});
 assert.equal(report.outcome,"Fictional exercise completed");
