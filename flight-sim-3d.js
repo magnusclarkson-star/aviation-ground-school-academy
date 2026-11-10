@@ -869,7 +869,7 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  vec3 shaded=mix(clamp(albedo*vLight*uLightColor,0.,1.),albedo,vEmissive);
- outColor=vec4(mix(shaded,uFogColor,fog),uOpacity);
+ outColor=vec4(mix(shaded,uFogColor,fog),uOpacity*texel.a);
 }`;
 const SKY_VERTEX=`#version 300 es
 precision mediump float;
@@ -959,7 +959,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     indexType:primitive.indices instanceof Uint16Array?
      gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
-    alphaCutoff:primitive.alphaCutoff};
+    alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1};
    objects.push(object);return object;
   };
   async function importC172(){
@@ -1186,10 +1186,19 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      for(const part of realModel.primitives){
       const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
+      const alpha=Math.max(0,Math.min(1,part.opacity));
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
+      gl.uniform1f(uni.uOpacity,alpha);
+      if(alpha<.99){
+       gl.enable(gl.BLEND);
+       gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+       gl.depthMask(false);
+      }
       gl.bindTexture(gl.TEXTURE_2D,img);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
+      if(alpha<.99){gl.depthMask(true);gl.disable(gl.BLEND);}
+      gl.uniform1f(uni.uOpacity,1);
      }
      gl.bindTexture(gl.TEXTURE_2D,null);
      gl.uniform1f(uni.uHasTexture,0);
