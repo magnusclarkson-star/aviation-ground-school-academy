@@ -150,6 +150,28 @@ try{
  assert.ok(observedSkid.offset>1&&observedSkid.offset<2);
  assert.ok(observedSkid.report.sinkMs>0,
   "browser lesson must show measured pre-contact skid sink rate");
+ const hedgerowParallax=await desktop.evaluate(()=>{
+  const S=window.AGSAFlightScenery,C=window.AGSACountryside;
+  const hedge=C.hedgerows[0],canvas=document.createElement("canvas");
+  canvas.width=960;canvas.height=540;
+  const ctx=canvas.getContext("2d"),originalFill=ctx.fill;
+  let hedgeFills=0;
+  ctx.fill=function(...args){if(this.fillStyle===hedge.color)hedgeFills++;
+   return originalFill.apply(this,args);
+  };
+  const state={mode:"airplane",xM:hedge.x+30,zM:hedge.z-280,
+   altitudeM:90,headingDeg:0,rollDeg:0,pitchDeg:0,time:0};
+  S.draw(canvas,state,{reducedMotion:true});
+  const before=S.project(state,hedge.x,hedge.h,hedge.z,960,540);
+  const after=S.project({...state,xM:state.xM+55},hedge.x,
+   hedge.h,hedge.z,960,540);
+  return {hedgeFills,before:before?.x,after:after?.x,count:C.hedgerows.length};
+ });
+ assert.equal(hedgerowParallax.count,8);
+ assert.ok(hedgerowParallax.hedgeFills>0,
+  "mobile fallback actually draws close rural windbreaks");
+ assert.ok(hedgerowParallax.after<hedgerowParallax.before-40,
+  "position-linked hedge shifts when flying laterally, even with reduced motion");
  const ruralParallax=await desktop.evaluate(()=>{
   const S=window.AGSAFlightScenery,canvas=document.createElement("canvas");
   canvas.width=960;canvas.height=540;
