@@ -68,7 +68,16 @@ function status(circuit,state){
   const lateral=Math.abs(x)<=20?"CTR":(x>0?"E":"W")+Math.round(Math.abs(x))+"m";
   const vertical=Math.abs(heightErrorM)<=12?"PATH":
    (heightErrorM>0?"HIGH":"LOW")+Math.round(Math.abs(heightErrorM))+"m";
-  finalCue=lateral+" · "+vertical;
+  // Small, position-dependent intercept toward the illustrated landing
+  // point. Use actual GROUND TRACK where available: crosswind can make
+  // nose heading and the route across the ground disagree.
+  const runwayAheadM=Math.max(350,300-z);
+  const targetTrack=heading(Math.max(-22,Math.min(22,Math.atan2(-x,runwayAheadM)*RAD)));
+  const actualTrack=Number.isFinite(state.trackDeg)?state.trackDeg:state.headingDeg;
+  const trackError=signedDelta(actualTrack,targetTrack);
+  const trackCue=Math.abs(trackError)<=3?"TRK OK":
+   (trackError>0?"R":"L")+Math.round(Math.abs(trackError))+"°";
+  finalCue=lateral+" · "+vertical+" · "+trackCue;
  }
  return Object.freeze({
   stage:circuit.stage,label:step.label,hint:step.hint,
