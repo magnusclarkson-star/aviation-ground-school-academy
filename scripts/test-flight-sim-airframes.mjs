@@ -248,4 +248,37 @@ const helicopterTop=C.projectedFaces("r44","top",{mainRotor:1.1,tailRotor:2.0});
 assert.ok(helicopterTop.at(-1).depth<helicopterTop[0].depth,
  "rotor blades are depth-sorted with helicopter cabin in overhead fallback");
 
+// Verify the Canvas fallback follows the SAME actual geometry rotations
+// as the GPU: aircraft banking changes wingtip height, pitching raises the
+// nose and the moving R44 rotor inherits the airframe's overall attitude.
+const nearly=(x,y)=>Math.abs(x-y)<1e-7;
+const wing=C.attitudePoint([5,0,0],30,0);
+assert.ok(nearly(wing[0],5*Math.cos(Math.PI/6))&&
+ nearly(wing[1],-2.5)&&nearly(wing[2],0),
+ "30° bank really lowers one wingtip instead of spinning a flat silhouette");
+const nose=C.attitudePoint([0,0,5],0,15);
+assert.ok(nearly(nose[1],5*Math.sin(15*Math.PI/180))&&
+ nearly(nose[2],5*Math.cos(15*Math.PI/180)),
+ "15° nose-up pitch lifts the actual aircraft geometry in side view");
+assert.deepEqual(C.attitudePoint([1,2,3],0,0),[1,2,3],
+ "level flight keeps the existing external model exactly unchanged");
+for(const id of A.IDS){
+ for(const view of ["chase","side","top"]){
+  const flightAnim={mainRotor:.9,tailRotor:1.3,propeller:1.1,
+   leftFlap:.22,rightFlap:.22};
+  const level=C.projectedFaces(id,view,flightAnim);
+  const banked=C.projectedFaces(id,view,flightAnim,
+   {rollDeg:26,pitchDeg:12});
+  assert.equal(banked.length,level.length,
+   id+" retains every original fuselage/rotor/control surface in "+view);
+  assert.ok(banked.every(x=>x.points.every(p=>p.every(Number.isFinite))),
+   id+" banked/pitched vertices remain finite");
+  assert.ok(banked.every((f,i)=>i===0||banked[i-1].depth>=f.depth-1e-8),
+   id+" banked surfaces remain correctly depth-sorted");
+  const signature=faces=>faces.reduce((sum,f)=>
+   sum+f.points[0][0]*.1+f.points[0][1]*.5+f.points[0][2]*.9,0);
+  assert.ok(Math.abs(signature(level)-signature(banked))>1,
+   id+" bank and climb alter actual airframe coordinates in "+view);
+ }
+}
 console.log("Seven external aircraft meshes passed: distinct Cessna, R44, F/A-18, F-22, F-35, Typhoon and Su-37 shapes, matching 2D/3D airframe geometry, controls and mobile budgets.");
