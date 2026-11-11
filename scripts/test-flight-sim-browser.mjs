@@ -753,6 +753,42 @@ try{
  // while another finger can hold brakes and fly the cyclic independently.
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
  assert.equal(await phone.locator("#cockpitStation").getAttribute("data-family"),"rotor");
+
+ // Holding the cyclic through a camera/layout reflow must not reinterpret
+ // the same finger as a large bank or pitch command. A previously observed
+ // helicopter departure from the helipad could originate in this jump.
+ const stableCyclic=await phone.evaluate(()=>{
+  const pad=document.querySelector("#controlPad"),view=document.querySelector("#cameraMode");
+  const b=pad.getBoundingClientRect(),x=b.left+b.width*.71,y=b.top+b.height*.55;
+  const t=new Touch({identifier:990,target:pad,clientX:x,clientY:y,
+   pageX:x+scrollX,pageY:y+scrollY,screenX:x,screenY:y});
+  const dispatch=(type,touches)=>pad.dispatchEvent(new TouchEvent(type,{
+   bubbles:true,cancelable:true,changedTouches:[t],touches,targetTouches:touches
+  }));
+  dispatch("touchstart",[t]);
+  const first={bank:document.querySelector("#cmdBank").textContent,
+   pitch:document.querySelector("#cmdPitch").textContent};
+  const beforeView=view.value;
+  view.value="top";
+  view.dispatchEvent(new Event("change",{bubbles:true}));
+  pad.style.transform="translateX(55px)";
+  dispatch("touchmove",[t]);
+  const after={bank:document.querySelector("#cmdBank").textContent,
+   pitch:document.querySelector("#cmdPitch").textContent};
+  pad.style.transform="";
+  dispatch("touchend",[]);
+  view.value=beforeView;
+  view.dispatchEvent(new Event("change",{bubbles:true}));
+  return {first,after,afterRelease:document.querySelector("#cmdBank").textContent};
+ });
+ assert.deepEqual(stableCyclic.after,stableCyclic.first,
+  "switching R44 camera and reflowing controls cannot create unintended cyclic input");
+ assert.match(stableCyclic.afterRelease,/0%/);
+ assert.match(await phone.locator("#scenePhase").textContent(),/PAD \d+m/,
+  "every R44 camera shows the actual offset from the helipad");
+ assert.match(await phone.locator("#sceneSpeed").textContent(),/GS \d+ KT/,
+  "R44 scene shows ground drift speed rather than ambiguous airspeed");
+
  const touchButton=async(elementId,type,pointerId)=>{
   await phone.locator("#"+elementId).evaluate((el,{type,pointerId})=>{
    const b=el.getBoundingClientRect();
