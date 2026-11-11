@@ -82,3 +82,4 @@ jobs:
       # Check the exact package that GitHub Pages deploys, not just repository files.
       - run: node scripts/build-pages.mjs
       - run: node scripts/test-pages-package.mjs
+      - run: node --check flight-sim-sw.js
