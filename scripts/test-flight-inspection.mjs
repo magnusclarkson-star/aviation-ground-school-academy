@@ -49,7 +49,7 @@ assert.ok(overhead.eye[1]>20,"high elevation provides upper rotor visibility");
 assert.ok(Math.abs(back.pitch)<.01);
 assert.ok(overhead.pitch<-.9);
 assert.equal(A.cameraPose(state,"inspect",{distance:1}).eye[2] < 0,true);
-assert.ok(Math.abs(A.cameraPose(state,"inspect",{distance:1}).eye[2]+6.8)<.001,
+assert.ok(Math.abs(A.cameraPose(state,"inspect",{distance:1,elevation:0}).eye[2]+6.8)<.001,
  "WebGL inspector must support new closer orbit without clipping to old 9m limit");
 assert.equal(X.IDS.length,7);
 
