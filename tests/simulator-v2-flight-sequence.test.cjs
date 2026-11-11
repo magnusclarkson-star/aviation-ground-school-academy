@@ -116,8 +116,7 @@ test("R44 forward-flight cyclic banking makes a useful turn with pedals centred"
  u.collective=.495;u.bank=.85;u.rudder=0;
  advance(s,u,160);
  const delta=(s.headingDeg-start+360)%360;
- console.log("R44 turn diag",JSON.stringify({delta,forward:s.forwardMs,alt:s.altitudeM,phase:s.phase,roll:s.rollDeg,heading:s.headingDeg,start}));
  assert.ok(delta>45&&delta<240,
-  "sustained cyclic bank turn: "+JSON.stringify({delta,forward:s.forwardMs,alt:s.altitudeM,phase:s.phase}));
+  "sustained cyclic bank should turn the flying helicopter noticeably");
  assert.equal(s.onGround,false);
 });
