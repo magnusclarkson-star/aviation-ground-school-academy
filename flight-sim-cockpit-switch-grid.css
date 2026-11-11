@@ -123,3 +123,67 @@
 #cockpitStation[data-airframe="c172"] #cockpitMain .hardware-yoke{
  filter:drop-shadow(0 5px 5px #000a) saturate(.92);
 }
+
+
+/* 2026-11-11: Takeoff/ALT micro-display. Keep stage, live altitude and
+   vertical speed, instructor sound and lesson info on one narrow row.
+   The controls remain independent and tappable; no full-width status bar. */
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip{
+ box-sizing:border-box!important;
+ display:grid!important;
+ grid-template-columns:max-content minmax(0,1fr) 25px 25px!important;
+ align-items:center!important;
+ column-gap:3px!important;
+ width:min(100%,288px)!important;
+ max-width:288px!important;
+ min-width:0!important;
+ min-height:27px!important;
+ margin:2px 0!important;
+ padding:1px 3px!important;
+ border-radius:4px!important;
+}
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip>strong{
+ min-width:0!important;
+ font-size:9px!important;
+ line-height:1.1!important;
+ white-space:nowrap!important;
+}
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip .r44-pilot-cue{
+ display:block!important;
+ min-width:0!important;
+ max-width:none!important;
+ width:100%!important;
+ margin:0!important;
+ font-size:9px!important;
+ line-height:1.1!important;
+ white-space:nowrap!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+}
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip .r44-voice-toggle,
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip .cockpit-info-dot{
+ position:static!important;
+ inset:auto!important;
+ transform:none!important;
+ box-sizing:border-box!important;
+ width:25px!important;
+ min-width:25px!important;
+ height:25px!important;
+ min-height:25px!important;
+ max-height:25px!important;
+ margin:0!important;
+ padding:0!important;
+ display:grid!important;
+ place-items:center!important;
+ border-radius:4px!important;
+}
+@media(max-width:360px){
+ #cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip{
+  width:min(100%,258px)!important;
+  grid-template-columns:max-content minmax(0,1fr) 24px 24px!important;
+  gap:2px!important;
+ }
+ #cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip .r44-pilot-cue{
+  font-size:8px!important;
+ }
+}
