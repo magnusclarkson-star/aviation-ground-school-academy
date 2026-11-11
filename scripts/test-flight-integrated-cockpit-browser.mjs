@@ -563,6 +563,18 @@ try{
  // cockpit without the user manually scrolling the panel upward.
  await phone.locator('#cockpitFocusButton').tap();
  await phone.locator('#cockpitAircraftSelect').selectOption('r44');
+ const switchDock=await phone.evaluate(()=>{
+  const dock=document.getElementById('cockpitSwitchPanel');
+  const pad=document.getElementById('controlPad').getBoundingClientRect();
+  const switches=dock.getBoundingClientRect();
+  return {parent:dock.parentElement.className,buttonCount:dock.querySelectorAll('.cockpit-switch').length,
+   rightOfCyclic:switches.left>=pad.right-5,
+   topAligned:Math.abs(switches.top-pad.top)<45,
+   withinViewport:switches.right<=innerWidth+2};
+ });
+ assert.ok(switchDock.parent.includes('control-assembly')&&switchDock.buttonCount===4&&
+  switchDock.rightOfCyclic&&switchDock.topAligned&&switchDock.withinViewport,
+  'R44 four working switches dock on right of cyclic, not within the gauges '+JSON.stringify(switchDock));
  const r44FocusedPortrait=await phone.evaluate(()=>{
   const box=id=>document.getElementById(id).getBoundingClientRect();
   const station=box('cockpitStation'),left=box('leftRudder'),right=box('rightRudder');
