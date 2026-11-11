@@ -252,37 +252,19 @@
  }
 }
 
-/* R44 only: the original switches move beside the cyclic. No changes to
-   cyclic size, collective size, pedal size, dashboard or overall layout. */
-#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly{
+/* R44: only relocate the ORIGINAL 90 × 58 switch rack beside the cyclic.
+   No changes to cyclic/collective/pedals, instrument sizing or viewport. */
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-panel{
  position:relative!important;
 }
-#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly>#cockpitSwitchPanel{
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-panel>#cockpitSwitchPanel{
  position:absolute!important;
- inset:auto 0 auto auto!important;
- top:16%!important;
+ top:8px!important;
+ right:5px!important;
+ bottom:auto!important;
+ left:auto!important;
+ inset:8px 5px auto auto!important;
  margin:0!important;
  transform:none!important;
  z-index:35!important;
-}
-
-/* R44 focused portrait: allocate spare viewport to the PILOT'S VIEW, not
-   unused dark space below the cyclic and pedals. Keep all existing control
-   dimensions and original switch position untouched. The instrument/control
-   deck takes its natural content height, scrolling only on short phones. */
-@media (orientation:portrait) and (max-width:740px){
- body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="r44"])>.scene-shell{
-  flex:1 1 170px!important;
-  height:auto!important;
-  min-height:135px!important;
-  max-height:none!important;
- }
- body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"]{
-  flex:0 1 auto!important;
-  height:auto!important;
-  min-height:0!important;
-  max-height:calc(100dvh - 135px)!important;
-  overflow-y:auto!important;
-  padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
- }
 }
