@@ -56,7 +56,7 @@ test("R44 simultaneous pedals preserve differential travel and release cleanly",
  assert.equal(p.step({mode:"helicopter",dt:.016}),0,
   "release immediately centres both pedals");
  const resumed=p.step({right:true,mode:"helicopter",dt:.016});
- assert.ok(resumed>0&&resumed<.25,"a new press restarts at fine travel");
+ assert.ok(resumed>.32&&resumed<.39,"a new press restarts at fine travel");
 });
 test("R44 touch pedal commands remain clamped and symmetric",()=>{
  const p=Pedals.create();

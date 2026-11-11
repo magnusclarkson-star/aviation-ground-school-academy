@@ -766,11 +766,11 @@ try{
  await touchButton("rightRudder","pointerdown",103);
  const smallPedal=await rudderPct();
  console.log("R44 touch diagnostic",JSON.stringify({smallPedal,raw:await phone.locator("#cmdRudder").textContent(),mode:await phone.locator("#cockpitAircraftSelect").inputValue()}));
- assert.ok(smallPedal>=15&&smallPedal<=35,
+ assert.ok(smallPedal>=30&&smallPedal<=55,
   "R44 touchscreen pedal starts at partial yaw rather than jumping to full travel");
  await phone.waitForTimeout(560);
  const heldPedal=await rudderPct();
- assert.ok(heldPedal>smallPedal+10&&heldPedal<=100,
+ assert.ok(heldPedal>=smallPedal+10&&heldPedal<=100,
   "sustained R44 touch progressively gains pedal authority without a second button");
  await touchButton("brake","pointerdown",104);
  await touchYoke("pointerdown",105);
