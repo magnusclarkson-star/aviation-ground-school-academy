@@ -268,3 +268,14 @@
  transform:none!important;
  z-index:35!important;
 }
+
+/* Focused landscape's old fixed-position rule must not override this one
+   relocation. Keep the switch unit beside the R44 cyclic in both rotations. */
+@media (orientation:landscape) and (max-height:620px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .control-panel>#cockpitSwitchPanel{
+  position:absolute!important;
+  inset:8px 5px auto auto!important;
+  margin:0!important;
+  transform:none!important;
+ }
+}
