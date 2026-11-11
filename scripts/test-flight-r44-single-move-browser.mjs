@@ -21,11 +21,23 @@ try {
   await page.goto(url,{waitUntil:"load"});
   await page.locator("#cockpitAircraftSelect").selectOption("r44");
   await page.locator("#cockpitFocusButton").click();
+  await page.waitForTimeout(200);
+  const startup=await page.evaluate(()=>{
+   const rack=document.getElementById("cockpitSwitchPanel");
+   return {parent:rack?.parentElement?.className,
+    airframe:document.getElementById("cockpitStation")?.dataset.airframe,
+    focused:document.body.dataset.cockpitFocus,hidden:getComputedStyle(rack).display,
+    error:document.getElementById("visualStatus")?.textContent};
+  });
+  console.log("R44 "+mode.label+" initial state: "+JSON.stringify(startup));
+  // Capture even if a layout assertion fails, so a real image exists for
+  // diagnosis rather than another unverified styling change.
+  await page.screenshot({path:"artifacts/r44-single-switch-"+mode.label+".png"});
   await page.waitForFunction(()=>{
    const rack=document.getElementById("cockpitSwitchPanel");
    return rack?.parentElement?.classList.contains("control-panel")&&
     document.body.dataset.cockpitFocus==="on";
-  },{timeout:12000});
+  },null,{timeout:5000});
   try{await page.waitForFunction(()=>document.querySelector(".scene-shell").dataset.airframeLoading!=="on",null,{timeout:17000})}catch{}
   const result=await page.evaluate(()=>{
    const r=id=>{const t=document.getElementById(id).getBoundingClientRect();
@@ -48,7 +60,6 @@ try {
     photo:document.getElementById("cockpitStation").dataset.photoCockpit
    };
   });
-  await page.screenshot({path:"artifacts/r44-single-switch-"+mode.label+".png"});
   assert.equal(result.buttons.length,4,mode.label+" R44 has exactly four original switches");
   assert.deepEqual(result.buttons,["cockpitSwitch_view","cockpitSwitch_graphics","cockpitSwitch_light","cockpitSwitch_frame"],mode.label+" switches not replaced");
   assert.match(result.parent,/control-panel/,mode.label+" switch unit is outside instrument head");
