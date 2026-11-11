@@ -559,6 +559,32 @@ try{
   'enlarged portrait forward view preserves both rudder pedal controls');
  await phone.locator('#cockpitFocusButton').tap();
 
+ // R44 portrait regression: both anti-torque pedals fit the *visible*
+ // cockpit without the user manually scrolling the panel upward.
+ await phone.locator('#cockpitFocusButton').tap();
+ await phone.locator('#cockpitAircraftSelect').selectOption('r44');
+ const r44FocusedPortrait=await phone.evaluate(()=>{
+  const box=id=>document.getElementById(id).getBoundingClientRect();
+  const station=box('cockpitStation'),left=box('leftRudder'),right=box('rightRudder');
+  const forward=document.querySelector('.scene-shell').getBoundingClientRect();
+  const cyclic=box('controlPad'),collective=box('collectivePanel');
+  return {screenHeight:innerHeight,forwardHeight:forward.height,
+   scrollTop:document.getElementById('cockpitStation').scrollTop,
+   left:{top:left.top,bottom:left.bottom},right:{top:right.top,bottom:right.bottom},
+   station:{top:station.top,bottom:station.bottom},
+   cyclic:{top:cyclic.top,bottom:cyclic.bottom},
+   collective:{top:collective.top,bottom:collective.bottom}};
+ });
+ assert.ok(r44FocusedPortrait.left.top>=0&&
+  r44FocusedPortrait.left.bottom<=r44FocusedPortrait.screenHeight-2&&
+  r44FocusedPortrait.right.top>=0&&
+  r44FocusedPortrait.right.bottom<=r44FocusedPortrait.screenHeight-2,
+  'R44 portrait pedals must be fully visible without scrolling '+JSON.stringify(r44FocusedPortrait));
+ assert.ok(r44FocusedPortrait.forwardHeight>=135&&
+  r44FocusedPortrait.collective.top<=r44FocusedPortrait.cyclic.bottom,
+  'R44 portrait retains useful forward view and side-by-side primary controls');
+ await phone.locator('#cockpitFocusButton').tap();
+
  // Re-enter glass style after checking analogue helicopter, then rotate the
  // phone and verify that glass fighter displays remain horizontally visible.
  await phone.locator('#cockpitInstrumentStyle').tap();
