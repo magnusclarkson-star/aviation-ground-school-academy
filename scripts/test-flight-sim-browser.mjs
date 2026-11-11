@@ -618,7 +618,7 @@ try{
   await phone.locator("#controlPad").evaluate((pad,{type,id})=>{
    const b=pad.getBoundingClientRect();
    const event=new PointerEvent(type,{bubbles:true,cancelable:true,
-    pointerType:"touch",pointerId:id,button:0,
+    pointerType:"pen",pointerId:id,button:0,
     clientX:b.left+b.width*.85,clientY:b.top+b.height*.5});
    pad.dispatchEvent(event);
   },{type,id});
@@ -646,6 +646,42 @@ try{
  assert.equal(await hold.getAttribute("aria-pressed"),"false",
   "lost pointer capture must not latch a long turn");
  assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
+ // Exercise Android's native TouchEvent path, not just synthetic
+ // PointerEvents. Hold one yoke finger while adding/releasing a pedal finger.
+ const nativeTouch=await phone.evaluate(()=>{
+  if(typeof Touch!=="function"||typeof TouchEvent!=="function")return null;
+  const pad=document.getElementById("controlPad"),pedal=document.getElementById("rightRudder");
+  const point=(el,id,rx,ry)=>{
+   const b=el.getBoundingClientRect();
+   return new Touch({identifier:id,target:el,clientX:b.left+b.width*rx,clientY:b.top+b.height*ry,
+    pageX:b.left+b.width*rx+scrollX,pageY:b.top+b.height*ry+scrollY,screenX:0,screenY:0});
+  };
+  const y=point(pad,151,.85,.5),r=point(pedal,152,.5,.5);
+  const send=(el,type,changed,touches,targetTouches)=>el.dispatchEvent(new TouchEvent(type,{
+   bubbles:true,cancelable:true,changedTouches:changed,touches,targetTouches
+  }));
+  send(pad,"touchstart",[y],[y],[y]);
+  const before=document.getElementById("cmdBank").textContent;
+  send(pedal,"touchstart",[r],[y,r],[r]);
+  const together={bank:document.getElementById("cmdBank").textContent,
+   rudder:document.getElementById("cmdRudder").textContent,
+   held:pedal.classList.contains("held")};
+  send(pedal,"touchend",[r],[y],[]);
+  const afterPedal={bank:document.getElementById("cmdBank").textContent,
+   rudder:document.getElementById("cmdRudder").textContent};
+  send(pad,"touchend",[y],[],[]);
+  return {before,together,afterPedal,afterYoke:document.getElementById("cmdBank").textContent};
+ });
+ assert.ok(nativeTouch,"mobile browser exposes native multi-touch events");
+ assert.ok(parseInt(nativeTouch.before)>55);
+ assert.ok(parseInt(nativeTouch.together.bank)>55&&nativeTouch.together.held,
+  "native yoke input must remain active while the pedal is held");
+ assert.ok(parseInt(nativeTouch.together.rudder)>0,
+  "second native finger must control rudder without cancelling the yoke");
+ assert.ok(parseInt(nativeTouch.afterPedal.bank)>55,
+  "releasing pedal must not cancel the independent yoke finger");
+ assert.match(nativeTouch.afterPedal.rudder,/0%/);
+ assert.match(nativeTouch.afterYoke,/0%/);
  // Real multi-touch usability check at the actual 390 px mobile viewport:
  // a short anti-torque pedal tap must be gentle, a longer hold stronger,
  // while another finger can hold brakes and fly the cyclic independently.
@@ -655,7 +691,7 @@ try{
   await phone.locator("#"+elementId).evaluate((el,{type,pointerId})=>{
    const b=el.getBoundingClientRect();
    el.dispatchEvent(new PointerEvent(type,{
-    bubbles:true,cancelable:true,pointerType:"touch",pointerId,button:0,
+    bubbles:true,cancelable:true,pointerType:"pen",pointerId,button:0,
     clientX:b.left+b.width*.5,clientY:b.top+b.height*.5
    }));
   },{type,pointerId});
