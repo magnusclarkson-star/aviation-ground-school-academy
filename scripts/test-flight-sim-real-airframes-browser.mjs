@@ -40,7 +40,7 @@ try{
  page.on("pageerror",err=>errors.push(err.message));
  await page.goto(url,{waitUntil:"load"});
  const created=await page.evaluate(()=>{
-  if(!window.AGSARealAirframes||!window.AGSAFlight3D)return false;
+  if(!window.AGSAC172Airframe||!window.AGSAFlight3D)return false;
   const canvas=document.createElement("canvas");
   canvas.width=750;canvas.height=540;canvas.style.cssText="width:750px;height:540px";
   document.body.appendChild(canvas);
@@ -52,7 +52,7 @@ try{
  await page.waitForFunction(()=>window.__c172TestRenderer?.realC172Status==="imported",null,
   {timeout:20000});
  const info=await page.evaluate(async()=>{
-  const model=await window.AGSARealAirframes.ensureC172();
+  const model=await window.AGSAC172Airframe.ensureC172();
   const s={mode:"airplane",xM:0,zM:0,altitudeM:60,
    headingDeg:0,pitchDeg:0,rollDeg:0,groundSpeedKt:0};
   const renderer=window.__c172TestRenderer,canvas=window.__c172TestCanvas;
@@ -72,12 +72,12 @@ try{
    cabin:canvas.dataset.airframeInterior,width:w,height:h};
  });
  assert.equal(info.status,"imported");
- assert.equal(info.source,"licensed-c172-glb");
- assert.equal(info.cabin,"four-seats-and-panel");
+ assert.equal(info.source,"mit-c172s-glb");
+ assert.equal(info.cabin,"source-cabin-and-panel");
  assert.ok(info.drawn);
- assert.ok(info.vertices>12000);
- assert.ok(info.triangles>13000);
- assert.ok(info.textureImages>=2);
+ assert.ok(info.vertices>35000);
+ assert.ok(info.triangles>30000);
+ assert.ok(info.textureImages>=15);
  assert.ok(info.chromaticPixels>1000,"actual WebGL screenshot has textured colours");
  fs.mkdirSync("artifacts",{recursive:true});
  await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-3d-preview.png"});
@@ -197,7 +197,7 @@ try{
  await page.locator("canvas").last().screenshot({
   path:"artifacts/real-r44-central-pod-closeup.png"});
  assert.deepEqual(errors,[]);
- console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
+ console.log("MIT C172S complete GLB Browser passed:",JSON.stringify(info));
  console.log("Real R44 textured mesh Browser passed:",JSON.stringify(rotor));
 }finally{
  if(browser)await browser.close();
