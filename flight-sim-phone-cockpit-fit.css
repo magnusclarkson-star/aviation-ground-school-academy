@@ -265,3 +265,24 @@
  transform:none!important;
  z-index:35!important;
 }
+
+/* R44 focused portrait: allocate spare viewport to the PILOT'S VIEW, not
+   unused dark space below the cyclic and pedals. Keep all existing control
+   dimensions and original switch position untouched. The instrument/control
+   deck takes its natural content height, scrolling only on short phones. */
+@media (orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="r44"])>.scene-shell{
+  flex:1 1 170px!important;
+  height:auto!important;
+  min-height:135px!important;
+  max-height:none!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"]{
+  flex:0 1 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:calc(100dvh - 135px)!important;
+  overflow-y:auto!important;
+  padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
+ }
+}
