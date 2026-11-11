@@ -978,7 +978,7 @@ function cameraPose(state,view="cockpit",orbit={}){
  if(view==="inspect"){
   const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
   const elevation=limit(orbit.elevation??28,-70,78)*RAD;
-  const distance=limit(orbit.distance??18,9,70);
+  const distance=limit(orbit.distance??18,6.8,70);
   const direction=yaw+Math.PI+azimuth;
   const horizontal=distance*Math.cos(elevation);
   return {view,eye:[craft[0]+Math.sin(direction)*horizontal,
