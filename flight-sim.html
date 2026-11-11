@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="flight-sim-cockpit.css?v=20261111-glass-phone-layout2">
 <link rel="stylesheet" href="flight-sim-gamepad.css">
 <link rel="stylesheet" href="flight-sim-environment.css">
-<link rel="stylesheet" href="flight-sim-3d.css">
+<link rel="stylesheet" href="flight-sim-3d.css?v=20261111-noflash1">
 <link rel="stylesheet" href="flight-sim-aircraft-systems.css">
 <link rel="stylesheet" href="flight-sim-aerodynamics.css">
 <link rel="stylesheet" href="flight-sim-loading.css">
@@ -124,9 +124,9 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-c172-airframe.js?v=20261111-mit-skyhawk-source-1" defer></script>
 <script src="flight-sim-real-r44.js?v=20261111-tailboom-clean-1" defer></script>
 <script src="flight-sim-r44-airframe.js?v=20261111-mit-primary-1" defer></script>
-<script src="flight-sim-3d.js?v=20261111-real-cabin-pilot1" defer></script>
+<script src="flight-sim-3d.js?v=20261111-no-old-mesh-flash1" defer></script>
 <script src="flight-sim-exterior-2d.js?v=20261110-v2closer2" defer></script>
-<script src="flight-sim-inspection.js?v=20261111-silent360-1" defer></script>
+<script src="flight-sim-inspection.js?v=20261111-no-old-mesh-flash1" defer></script>
 <script src="flight-sim-aircraft-systems.js?v=20261110-r44link1" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
@@ -150,7 +150,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-mini-pfd-zoom.js?v=20261109-pfdfix3" defer></script>
 <script src="flight-sim-bank-hold.js?v=20261109-circuit1" defer></script>
 <script src="flight-sim-touch-pedals.js?v=20261111-r44-fast-pedals1" defer></script>
-<script src="flight-sim.js?v=20261111-switch-rack-restart-brake1" defer></script>
+<script src="flight-sim.js?v=20261111-noflash1" defer></script>
 </head>
 <body>
 <header class="site-head">
@@ -177,7 +177,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
   <button id="fullFlightLaunch" type="button">START FLIGHT WITH ALL EFFECTS</button>
  </section>
  <section class="scene-panel" aria-label="Animated simulated airfield view and flight instruments">
-  <div class="scene-shell">
+  <div class="scene-shell" data-airframe-loading="on">
    <canvas id="outsideView" width="960" height="540" aria-label="Illustrated 2D outside view of a synthetic runway or helipad; always available as a fallback">A synthetic airfield scene. Flight status is provided as text below.</canvas>
    <canvas id="outsideView3D" width="960" height="540" hidden aria-label="GPU-rendered 3D synthetic airfield with geometric runway, terrain, buildings, trees and fictional aircraft chase view">This browser does not support the 3D visual mode.</canvas>
    <div id="cockpitFrame" class="cockpit-frame" data-aircraft="airplane" data-view="cockpit" aria-hidden="true">
