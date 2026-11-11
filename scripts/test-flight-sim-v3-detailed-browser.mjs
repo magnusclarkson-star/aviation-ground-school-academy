@@ -85,9 +85,17 @@ try{
    await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-exterior.png"});
    await page.locator("#cabinCamera").click();
    await page.waitForTimeout(300);
+   const cabinCam=await page.evaluate(()=>window.__AGSA_V3.getCamera());
+   assert.ok(cabinCam.target[2]>meta.cockpit.rear[2]+.25,
+    "Cabin camera must look toward source forward seats, not the tail");
    await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-cabin.png"});
    await page.locator("#pilotCamera").click();
    await page.waitForTimeout(300);
+   const pilotCam=await page.evaluate(()=>window.__AGSA_V3.getCamera());
+   assert.ok(Math.abs(pilotCam.position[2]-meta.cockpit.pilot[2])<.3,
+    "Pilot eye must be attached to real source pilot seat");
+   assert.ok(pilotCam.target[2]>pilotCam.position[2]+.25,
+    "Pilot camera must face forward toward the real source instrument panel");
    await canvas.screenshot({path:"artifacts/detailed-c172-"+v.name+"-pilot-eye.png"});
    await page.locator("#topCamera").click();
    await page.waitForTimeout(300);
