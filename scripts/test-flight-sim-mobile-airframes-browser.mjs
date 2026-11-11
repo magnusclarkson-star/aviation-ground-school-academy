@@ -59,7 +59,7 @@ try{
    },null,{timeout:25000});
    for(const aircraft of [
     {id:"c172",mode:"airplane",expected:"licensed-c172-glb"},
-    {id:"r44",mode:"helicopter",expected:"licensed-r44-ac3d"}
+    {id:"r44",mode:"helicopter",expected:"mit-r44-glb"}
    ]){
     // Two angles with the same aircraft must produce distinct GPU pixels.
     // These mechanical checks are not a substitute for reviewing the images.
@@ -72,7 +72,7 @@ try{
      const gl=canvas.getContext("webgl2");
      for(const azimuth of [30,130]){
       const drawn=renderer.draw(state,{view:"inspect",airframeId:id,
-       orbit:{azimuth,elevation:12,distance:id==="r44"?11:13},
+       orbit:{azimuth,elevation:12,distance:id==="r44"?16:13},
        animation:{mainRotor:.45,tailRotor:1.1}});
       const w=canvas.width,h=canvas.height,pixels=new Uint8Array(w*h*4);
       gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
@@ -92,7 +92,9 @@ try{
     assert.equal(evidence.status,"imported",aircraft.id+" must load authentic model");
     assert.equal(evidence.source,aircraft.expected,
      aircraft.id+" may not silently fall back to procedural model on emulated phone");
-    assert.equal(evidence.interior,"four-seats-and-panel",aircraft.id+" cabin must draw");
+    assert.equal(evidence.interior,aircraft.id==="r44"?
+     "source-cabin-and-panel":"four-seats-and-panel",
+     aircraft.id+" cabin must draw");
     assert.ok(evidence.samples.every(p=>p.drawn&&p.w>200&&p.h>100),
      aircraft.id+" canvas must render at phone size");
     assert.ok(evidence.samples.every(p=>p.different>400),
@@ -105,7 +107,7 @@ try{
       headingDeg:0,pitchDeg:0,rollDeg:0,time:2};
      window.__mobileAirframeRenderer.draw(state,{
       view:"inspect",airframeId:id,
-      orbit:{azimuth:58,elevation:8,distance:id==="r44"?10:11},
+      orbit:{azimuth:58,elevation:8,distance:id==="r44"?16:11},
       animation:{mainRotor:.5,tailRotor:1.4}});
     },aircraft);
     await page.locator("#mobileImportedAirframeEvidence").screenshot({

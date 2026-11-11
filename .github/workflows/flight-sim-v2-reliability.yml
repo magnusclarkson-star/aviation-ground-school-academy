@@ -18,6 +18,7 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim-real-airframes.js'
       - 'flight-sim-real-r44.js'
+      - 'flight-sim-r44-airframe.js'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -46,6 +47,7 @@ on:
       - 'flight-sim-3d.js'
       - 'flight-sim-real-airframes.js'
       - 'flight-sim-real-r44.js'
+      - 'flight-sim-r44-airframe.js'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -75,6 +77,7 @@ jobs:
       - run: node --check flight-sim-3d.js
       - run: node --check flight-sim-real-airframes.js
       - run: node --check flight-sim-real-r44.js
+      - run: node --check flight-sim-r44-airframe.js
       - run: node --check flight-sim-countryside.js
       - run: node --check flight-sim-exterior-2d.js
       - run: node --check flight-sim-ground-traffic.js

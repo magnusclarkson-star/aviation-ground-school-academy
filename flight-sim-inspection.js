@@ -50,7 +50,7 @@
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   // The two compact training aircraft need closer framing than large jets.
-  const fitDistance=()=>["c172","r44"].includes(selected())?12:18;
+  const fitDistance=()=>selected()==="r44"?16:selected()==="c172"?12:18;
   function updateHeading(){
    const id=selected();
    $("aircraftInspectModelSelect").value=id;

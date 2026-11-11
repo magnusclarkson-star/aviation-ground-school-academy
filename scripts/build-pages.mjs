@@ -14,7 +14,9 @@ const publicAircraftFiles=[
  "assets/aircraft/R44-GPL-2.0-COPYING.txt",
  "assets/aircraft/c172-e737-optimized.glb",
  "assets/aircraft/r44-flightgear.ac",
- "assets/aircraft/r44-flightgear-texture.png"
+ "assets/aircraft/r44-flightgear-texture.png",
+ "assets/aircraft/r44-molen-raven-ii.glb",
+ "assets/aircraft/MOLEN-LICENSE.txt"
 ];
 const publicCuratedPaths=["accreditation/readiness-register.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
@@ -46,7 +48,8 @@ await stat(path.join(output,"flight-sim-v3-preview.html"));
 for(const [asset,minBytes] of [
  ["assets/aircraft/c172-e737-optimized.glb",100000],
  ["assets/aircraft/r44-flightgear.ac",100000],
- ["assets/aircraft/r44-flightgear-texture.png",10000]
+ ["assets/aircraft/r44-flightgear-texture.png",10000],
+ ["assets/aircraft/r44-molen-raven-ii.glb",500000]
 ]){
  const details=await stat(path.join(output,asset));
  if(!details.isFile()||details.size<minBytes)throw Error("Missing imported aircraft asset: "+asset);
