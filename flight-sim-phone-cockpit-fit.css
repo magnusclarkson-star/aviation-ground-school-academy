@@ -269,12 +269,13 @@
  z-index:35!important;
 }
 
-/* Focused landscape's old fixed-position rule must not override this one
-   relocation. Keep the switch unit beside the R44 cyclic in both rotations. */
+/* Focused landscape: place the original 90px rack immediately to the
+   right of the cyclic instead of leaving it at the outer edge of the phone.
+   No other R44 component changes size or position. */
 @media (orientation:landscape) and (max-height:620px){
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .control-panel>#cockpitSwitchPanel{
   position:absolute!important;
-  inset:8px 5px auto auto!important;
+  inset:8px auto auto calc(50% + 128px)!important;
   margin:0!important;
   transform:none!important;
  }
