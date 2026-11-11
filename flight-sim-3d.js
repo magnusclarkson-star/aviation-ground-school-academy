@@ -1083,13 +1083,11 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  float alpha=uOpacity*texel.a;
- if(uR44Skin==1 && uHasTexture>.5){
-  // Original FlightGear texture is the source of the apparent "old skin":
-  // red/white checker across the rear cabin and black patches on the boom.
-  // Repaint one continuous imported fuselage/fin rather than piling an
-  // extra tail cover on top; retain 4% surface texture for subtle variation.
-  // Clear window material is a separate later pass and remains transparent.
-  albedo=mix(vec3(.93,.79,.08),albedo,.04);
+ if(uR44Skin==1){
+  // Source-identified R44 painted skin, including the entire tailboom and
+  // fin. Do not reintroduce checkerboard/old black patches from the source
+  // texture, or recolour unpainted skids, lamps and exhaust components.
+  albedo=vec3(.93,.79,.08);
  }
  if(uR44Skin==1){
   // Source opaque fuselage may cover the separate translucent window
@@ -1513,9 +1511,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       // R44 source material 4 is 70% transparent glass. Treat windows as
       // transparent after the solid body and new cabin, not before the seats.
       gl.disable(gl.BLEND);gl.depthMask(true);
-      gl.uniform1i(uni.uR44Skin,1);
-      for(const part of realModel.primitives)
-       if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      for(const part of realModel.primitives){
+       if((part.opacity??1)<.99)continue;
+       gl.uniform1i(uni.uR44Skin,part.isPainted?1:0);
+       drawPrimitive(part,1);
+      }
       gl.uniform1i(uni.uR44Skin,0);
       drawCabin();
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
