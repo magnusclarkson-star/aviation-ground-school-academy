@@ -11,6 +11,7 @@ on:
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
+      - 'tests/simulator-v2-molen-c172.test.cjs'
       - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'scripts/test-flight-sim-mobile-airframes-browser.mjs'
       - '.github/workflows/flight-sim-airframe-render.yml'
@@ -26,6 +27,7 @@ on:
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
+      - 'tests/simulator-v2-molen-c172.test.cjs'
       - 'scripts/test-flight-sim-real-airframes-browser.mjs'
       - 'scripts/test-flight-sim-mobile-airframes-browser.mjs'
       - '.github/workflows/flight-sim-airframe-render.yml'
@@ -44,6 +46,7 @@ jobs:
       - name: Validate imported-model geometry and overlay decisions
         run: |
           node --test tests/simulator-v2-real-r44.test.cjs
+          node --test tests/simulator-v2-molen-c172.test.cjs
           node --test tests/simulator-v2-real-airframes.test.cjs
       - name: Install isolated WebGL browser
         run: |
