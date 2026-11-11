@@ -346,6 +346,12 @@ function syncCockpitFrame(){
  $("sceneAircraftType").textContent=airframeLabel();
  frame.dataset.view=chase?"chase":"cockpit";
  frame.dataset.enabled=enabled?"on":"off";
+ // Two physically distinct pilot decks, never the same generic HUD skin:
+ // C172 full-width dashboard / NAV stack; R44 narrow central pedestal.
+ // Disabling FRAME or selecting an exterior view restores the normal layout.
+ const physicalDeck=enabled&&!chase&&["c172","r44"].includes(airframeId());
+ $("cockpitStation").dataset.photoCockpit=physicalDeck?"on":"off";
+ document.querySelector(".scene-panel").dataset.photoCockpit=physicalDeck?"on":"off";
  $("cockpitFrameStatus").textContent=!enabled?
   "Illustrated cockpit frame hidden; full outside scene available.":
   chase?selectedView.toUpperCase()+" CAMERA · "+airframeLabel()+" exterior visible.":
@@ -1264,13 +1270,13 @@ focusController=FO.attach({documentLike:document,windowLike:window});
 // Defer focus until a held yoke finger ends, preventing a control jump.
 const c172LandscapePhone=window.matchMedia?.(
  "(orientation:landscape) and (min-width:600px) and (max-height:510px)");
-const enterWideC172=()=>{
- if(c172LandscapePhone?.matches&&airframeId()==="c172"&&
-    state.mode==="airplane"&&$("cameraMode").value==="cockpit"&&!viewingAircraft())
+const enterWideRealCockpit=()=>{
+ if(c172LandscapePhone?.matches&&["c172","r44"].includes(airframeId())&&
+    $("cameraMode").value==="cockpit"&&!viewingAircraft())
   requestPilotDeck();
 };
-c172LandscapePhone?.addEventListener?.("change",enterWideC172);
-if(c172LandscapePhone?.matches)enterWideC172();
+c172LandscapePhone?.addEventListener?.("change",enterWideRealCockpit);
+if(c172LandscapePhone?.matches)enterWideRealCockpit();
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,
