@@ -6,6 +6,33 @@ const R44=require("../flight-sim-real-r44.js");
 const Three=require("../flight-sim-3d.js");
 const Model=require("../flight-sim-model.js");
 const source=fs.readFileSync(R44.MESH_FILE,"utf8");
+
+const Native=require("../flight-sim-r44-airframe.js");
+const nativeBinary=fs.readFileSync("assets/aircraft/r44-molen-raven-ii.glb");
+test("preferred detailed MIT R44 includes real cabin, skids and native rotor nodes",()=>{
+ const buffer=nativeBinary.buffer.slice(
+  nativeBinary.byteOffset,nativeBinary.byteOffset+nativeBinary.byteLength);
+ const model=Native.parseR44GLB(buffer);
+ assert.equal(Native.FILE,"assets/aircraft/r44-molen-raven-ii.glb");
+ assert.ok(model.vertices>15000&&model.triangles>15000);
+ assert.ok(model.images.length>=8);
+ assert.ok(model.mainParts>=2&&model.tailParts>=2,
+  "main and anti-torque rotors must be part of source GLB itself");
+ assert.ok(model.primitives.some(p=>p.partName==="mainRotor"));
+ assert.ok(model.primitives.some(p=>p.partName==="tailRotor"));
+ assert.ok(model.primitives.some(p=>(p.opacity??1)<.99),
+  "the source windows must include actual transparency");
+ assert.ok(model.primitives.every(p=>p.positions.every(Number.isFinite)&&
+  p.normals.every(Number.isFinite)));
+ assert.ok(fs.readFileSync("assets/aircraft/MOLEN-LICENSE.txt","utf8")
+  .includes("Copyright (c) 2026 Bendyline LLC"));
+ const renderer=fs.readFileSync("flight-sim-3d.js","utf8");
+ assert.match(renderer,/const isMolen=id==="r44"&&realModel\?\.kind==="molen"/,
+  "native airframe has a dedicated render path");
+ assert.match(renderer,/const animatedParts=isMolen\?\[\]:/,
+  "source-native rotor cannot be doubled by older rotor meshes");
+});
+
 const texture=fs.readFileSync(R44.TEXTURE_FILE);
 let imported;
 test("original GPL-2.0 R44 source and texture are locally bundled",()=>{
