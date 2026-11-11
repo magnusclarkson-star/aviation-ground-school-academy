@@ -422,3 +422,18 @@
 .cockpit-station .control-panel>#controlHint,
 .cockpit-station .control-panel>.shortcuts{display:none!important}
 .cockpit-station .control-panel #collectivePanel>.hint{display:none!important}
+
+
+/* C172 secondary instrument shelf: preserve the approved six-pack and
+   navigation layout; new gauges remain small until tapped to enlarge. */
+.cockpit-auxiliary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:5px;min-width:0}
+.cockpit-auxiliary .cockpit-gauge{padding:2px 1px 3px;gap:0;border-radius:7px}
+.cockpit-auxiliary .cockpit-gauge svg{width:100%;height:clamp(35px,6dvh,58px)}
+.cockpit-auxiliary .cockpit-gauge-title{font-size:clamp(6px,.65vw,8px);min-height:10px;line-height:1.1;text-align:center}
+.cockpit-auxiliary .cockpit-gauge-number{font-size:10px}
+.cockpit-auxiliary .cockpit-gauge small{font-size:7px}
+@media(max-width:560px){.cockpit-auxiliary{gap:2px;margin-top:3px}
+ .cockpit-auxiliary .cockpit-gauge{padding:1px}
+ .cockpit-auxiliary .cockpit-gauge svg{height:34px}
+ .cockpit-auxiliary .cockpit-gauge-title{font-size:6px}
+}

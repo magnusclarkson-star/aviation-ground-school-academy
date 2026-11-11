@@ -31,9 +31,17 @@ function snapshot(state,systems,input,profileId){
   vs=clamp(state?.verticalMs,-40,40)*196.8504,pitch=clamp(state?.pitchDeg,-75,75),bank=clamp(state?.rollDeg,-85,85),
   throttle=clamp(input?.throttle,0,1)*100,collective=clamp(input?.collective,0,1)*100;
  const power=profile.family==="rotor"?collective:throttle;
+ // Secondary systems are deterministic training indications, not calibrated
+ // C172 oil/electrical/fuel sensors. Runtime resets with the aircraft session.
+ const elapsed=clamp(systems?.time,0,36000);
+ const fuelUsed=elapsed*(.002+.004*throttle);
+ const fuelL=clamp(76-fuelUsed,0,100),fuelR=clamp(78-fuelUsed,0,100);
+ const oil=clamp(32+clamp(systems?.powerPct??throttle*100,0,100)*.62,0,100);
+ const electrical=clamp(68+clamp(systems?.powerPct??throttle*100,0,100)*.29,0,100);
  const rpm=clamp(systems?.powerPct??(profile.family==="rotor"?84:throttle),0,100);
  const values={speed:rnd(speed),alt:rnd(ft),vsi:rnd(vs),heading:String(hdg).padStart(3,"0"),
-  bank:rnd(bank),pitch:rnd(pitch),power:rnd(power),rpm:rnd(rpm),ground:rnd(state?.groundSpeedKt??speed)};
+  bank:rnd(bank),pitch:rnd(pitch),power:rnd(power),rpm:rnd(rpm),ground:rnd(state?.groundSpeedKt??speed),
+  fuelL:Number(fuelL.toFixed(1)),fuelR:Number(fuelR.toFixed(1)),oil:rnd(oil),electrical:rnd(electrical)};
  return Object.freeze({profile:profile.id,values:Object.freeze(values),
   pitch,bank,power,rpm,heading:hdg,
   slip:clamp((input?.rudder??0)*.72-bank/120,-1,1),
@@ -42,7 +50,9 @@ function snapshot(state,systems,input,profileId){
    alt:(ft%1000)*.36,
    vsi:clamp(vs/2000,-1,1)*125,
    heading:hdg,turn:clamp(bank/35,-1,1)*90,
-   rpm:-130+rpm*2.6,power:-130+power*2.6
+   rpm:-130+rpm*2.6,power:-130+power*2.6,
+   fuelL:-130+fuelL*2.6,fuelR:-130+fuelR*2.6,
+   oil:-130+oil*2.6,electrical:-130+electrical*2.6
   })});
 }
 const ANALOG={
@@ -61,7 +71,13 @@ const ANALOG={
  jet:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],
   ["heading","HEADING","DEG"],["vsi","VERTICAL SPEED","FT/MIN"],["power","ENGINE POWER","% · SIM"]]
 };
+const C172_AUX=Object.freeze([["fuelL","FUEL LEFT","% · SIM"],["fuelR","FUEL RIGHT","% · SIM"],
+ ["oil","OIL SYSTEM","% · SIM"],["electrical","ELECTRICAL","% · SIM"]]);
 const HELP=Object.freeze({
+ fuelL:{title:"Left fuel quantity",text:"Estimated left fuel level in this training scenario. This is a fictional percentage, not a measured Cessna fuel quantity or fuel gauge calibration."},
+ fuelR:{title:"Right fuel quantity",text:"Estimated right fuel level in this training scenario. Compare left and right quantities during an instrument scan."},
+ oil:{title:"Oil system",text:"Simulated oil-system health proxy that follows engine motion. It is not calibrated oil pressure or oil temperature."},
+ electrical:{title:"Electrical system",text:"Simulated electrical-system health proxy. It does not model the aircraft alternator, ammeter, or bus voltage."},
  speed:{title:"Airspeed",text:"Shows airspeed in knots. Compare it with the attitude and height while flying."},
  attitude:{title:"Attitude indicator",text:"Blue is sky, brown is ground. The horizon tilts with bank and moves with pitch."},
  alt:{title:"Altimeter",text:"Shows height in feet above the simulated ground. Watch height during climb and descent."},
@@ -168,7 +184,9 @@ function makeAnalogFace(doc,id,label,unit){
    speed:["0","40","80","120","160"],alt:["0","2","4","6","8"],
    vsi:["-2","-1","0","+1","+2"],turn:["L","•","0","•","R"],
    heading:["W","30","N","6","E"],rpm:["0","25","50","75","100"],
-   power:["0","25","50","75","100"]
+   power:["0","25","50","75","100"],
+   fuelL:["0","25","50","75","100"],fuelR:["0","25","50","75","100"],
+   oil:["0","25","50","75","100"],electrical:["0","25","50","75","100"]
   };
   const labels=dialLabels[id]||dialLabels.speed;
   for(let j=0;j<=20;j++){
@@ -349,6 +367,11 @@ function buildPanel(doc,profile,holder,instrumentStyle="auto"){
    addInfoDot(doc,map,"map","moving navigation map");
    avionics.insertBefore(map,avionics.querySelector(".avionics-buttons"));
    holder.appendChild(avionics);
+   const auxiliary=doc.createElement("section");
+   auxiliary.className="cockpit-auxiliary";
+   auxiliary.setAttribute("aria-label","Cessna simulated fuel, oil and electrical instruments");
+   for(const [id,name,unit] of C172_AUX)auxiliary.appendChild(makeAnalogFace(doc,id,name,unit));
+   holder.appendChild(auxiliary);
   }
 }
 function paint(holder,state,systems,input,profileId,doc,progress){

@@ -36,6 +36,21 @@ assert.equal(x.values.heading,"185");
 assert.equal(x.values.pitch,8);
 assert.equal(x.values.bank,-11);
 assert.equal(x.values.power,70);
+assert.equal(x.values.fuelL,76,"new C172 left fuel percentage begins at training scenario baseline");
+assert.equal(x.values.fuelR,78,"new C172 right fuel percentage begins at training scenario baseline");
+assert.ok(x.values.oil>=0&&x.values.oil<=100,"oil-system proxy remains bounded");
+assert.ok(x.values.electrical>=0&&x.values.electrical<=100,"electrical proxy remains bounded");
+const afterFlight=UI.snapshot(state,{powerPct:71,time:600},inputs,"c172");
+assert.ok(afterFlight.values.fuelL<x.values.fuelL,"fuel display responds to flight time");
+assert.ok(afterFlight.values.fuelR<x.values.fuelR,"both tanks respond to flight time");
+for(const id of ["fuelL","fuelR","oil","electrical"]){
+ assert.ok(Number.isFinite(afterFlight.angles[id]),id+" dial needle position is finite");
+ assert.ok(UI.HELP[id]?.title, id+" supports touch information");
+}
+const lowPower=UI.snapshot(state,{powerPct:5,time:600},inputs,"c172");
+assert.ok(lowPower.values.oil<afterFlight.values.oil,"oil proxy reacts to engine motion");
+assert.ok(lowPower.values.electrical<afterFlight.values.electrical,"electrical proxy reacts to engine motion");
+
 assert.ok(x.angles.alt>=0&&x.angles.alt<360);
 assert.ok(Math.abs(x.angles.alt-108)<.1,"altimeter long hand: 300 ft advances 108 degrees");
 assert.ok(x.slip>0&&x.slip<.2,"slip ball reflects combined rudder/bank proxy");
