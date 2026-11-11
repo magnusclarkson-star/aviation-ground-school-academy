@@ -568,7 +568,7 @@ try{
   const pad=document.getElementById('controlPad').getBoundingClientRect();
   const switches=dock.getBoundingClientRect();
   return {parent:dock.parentElement.className,buttonCount:dock.querySelectorAll('.cockpit-switch').length,
-   rightOfCyclic:switches.left>=pad.right-5,
+   rightOfCyclic:switches.left>=pad.left+pad.width*.60,
    topAligned:Math.abs(switches.top-pad.top)<45,
    withinViewport:switches.right<=innerWidth+2};
  });
