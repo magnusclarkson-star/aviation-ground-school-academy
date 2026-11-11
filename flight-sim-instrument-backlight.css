@@ -173,3 +173,18 @@
 #cockpitStation .cockpit-help-choices #cockpitBacklightDimmer:focus-visible{
  outline:2px solid #ffdea1;outline-offset:2px;
 }
+
+
+/* True two-finger Android flight controls: touch-action applies to the
+   entire hit area, not only the visible yoke or pedal button. */
+.cockpit-station .control-panel .control-pad,
+.cockpit-station .control-panel .flight-grip,
+.cockpit-station .control-panel .rudder-deck,
+.cockpit-station .control-panel .rudder-pedals,
+.cockpit-station .control-panel .rudder-pedals button,
+.cockpit-station .control-panel .rudder-pedals button *{
+ touch-action:none!important;
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-touch-callout:none;
+}
