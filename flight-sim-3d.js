@@ -828,13 +828,51 @@ function buildImportedCabin(id){
    m.box(x-.17,-.94,z-.045,.055,.24,.065,trim);
    m.box(x+.12,-.94,z-.045,.055,.24,.065,trim);
   }
-  // Forward instrument binnacle and hood, plus two identifiable cyclic grips.
-  m.box(-.51,-.47,station.panelZ,1.02,.34,.18,panel);
-  m.box(-.39,-.32,station.panelZ+.177,.30,.12,.035,screen);
-  m.box(.085,-.32,station.panelZ+.177,.30,.12,.035,screen);
-  for(const x of [-.30,.30]){
-   m.box(x-.025,-.78,station.panelZ-.27,.05,.51,.05,trim);
-   m.box(x-.095,-.31,station.panelZ-.30,.19,.07,.09,panel);
+  // An R44 has a compact forward *central* six-pack and a tapered avionics
+  // pedestal, not a full-width C172 dashboard above two isolated joysticks.
+  // The imported FlightGear hull remains the only external fuselage.
+  const podZ=station.panelZ-.12;
+  m.box(-.285,-.43,podZ,.57,.50,.12,panel);
+  m.box(-.30,.045,podZ-.025,.60,.045,.145,panel);
+  // Distinct circular round instruments on the pilot-facing (-Z) panel.
+  // Each dial has a visible lighter bezel, dark face and central hub.
+  const dial=(x,y,r)=>{
+   const z=podZ-.012,face=rgb(13,25,31),
+    bezel=rgb(148,160,166);
+   for(let k=0;k<16;k++){
+    const a=k*Math.PI/8,b=(k+1)*Math.PI/8;
+    const edge=angle=>[x+r*Math.cos(angle),y+r*Math.sin(angle),z];
+    const inner=angle=>[x+(r-.010)*Math.cos(angle),
+     y+(r-.010)*Math.sin(angle),z-.002];
+    m.quad(edge(a),edge(b),inner(b),inner(a),bezel);
+    m.tri([x,y,z-.003],inner(a),inner(b),face);
+   }
+   m.box(x-.009,y-.009,z-.012,.018,.018,.010,trim);
+  };
+  for(const x of [-.185,0,.185])for(const y of [-.09,-.275])dial(x,y,.058);
+  // Status annunciator row and vertically stacked radio/switch pedestal.
+  for(let k=0;k<7;k++)
+   m.box(-.24+k*.074,.021,podZ-.017,.040,.022,.010,
+    k===4?rgb(200,80,65):rgb(157,167,125));
+  m.box(-.19,-.96,podZ-.28,.38,.53,.25,panel);
+  for(const y of [-.47,-.66,-.84]){
+   m.box(-.158,y,podZ-.299,.316,.12,.020,screen);
+   for(const x of [-.12,.12])
+    m.box(x-.018,y+.035,podZ-.317,.036,.045,.015,trim);
+  }
+  // Robinson's distinctive centre-post/T-bar cyclic, shared by both
+  // front grips. The lower stem sits between the seats, not in the panel.
+  const cyclicZ=station.frontSeatZ+.10;
+  m.box(-.039,-.94,cyclicZ,.078,.64,.075,trim);
+  m.box(-.37,-.335,cyclicZ-.002,.74,.075,.079,trim);
+  for(const x of [-.34,.29]){
+   m.box(x,-.34,cyclicZ-.006,.066,.265,.083,panel);
+   m.box(x-.012,-.09,cyclicZ-.014,.09,.045,.100,screen);
+  }
+  // Forward anti-torque foot pedals remain ahead of the two front seats.
+  for(const x of [-.28,.28]){
+   m.box(x-.024,-.92,station.panelZ-.31,.048,.17,.25,trim);
+   m.box(x-.105,-.76,station.panelZ-.26,.210,.065,.11,panel);
   }
  }else{
   const station=IMPORTED_CABIN_LAYOUT.c172;
@@ -941,7 +979,7 @@ function cameraPose(state,view="cockpit",orbit={}){
  if(view==="inspect"){
   const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
   const elevation=limit(orbit.elevation??28,-70,78)*RAD;
-  const distance=limit(orbit.distance??18,9,70);
+  const distance=limit(orbit.distance??18,6.8,70);
   const direction=yaw+Math.PI+azimuth;
   const horizontal=distance*Math.cos(elevation);
   return {view,eye:[craft[0]+Math.sin(direction)*horizontal,
