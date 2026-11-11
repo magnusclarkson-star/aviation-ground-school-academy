@@ -217,7 +217,10 @@ try{
  const topFallback=await fallbackShot(desktop);
  await desktop.locator("#cameraMode").selectOption("side");
  const sideFallback=await fallbackShot(desktop);
- assert.notEqual(topFallback,sideFallback,"2D overhead and side silhouettes are different");
+ assert.equal(topFallback,sideFallback,
+  "Approved C172 Canvas fallback omits the old low-poly silhouette in both overhead and side views");
+ assert.equal(await desktop.locator("#outsideView3D").isVisible(),true,
+  "Approved aircraft continues to render with its detailed WebGL model when available");
  await desktop.locator("#cameraMode").selectOption("cockpit");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
  const forward=await fallbackShot(desktop);
