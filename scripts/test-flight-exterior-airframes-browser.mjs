@@ -50,6 +50,28 @@ try{
    item.id+" GPU and 2D fallback use the same position lens colours");
  }
 
+ // Startup must display only a neutral placeholder while the detailed
+ // airframe imports. The obsolete oval cockpit/low-poly mesh must not flash.
+ const startup=await desktop.evaluate(()=>{
+  const shell=document.querySelector(".scene-shell");
+  const mode=shell.dataset.airframeLoading;
+  const overlay=getComputedStyle(shell,"::after").content;
+  return {mode,overlay,source:document.querySelector("#outsideView3D").dataset.airframeSource};
+ });
+ assert.ok(["on","off"].includes(startup.mode),
+  "startup loading flag is always resolved to an explicit state");
+ if(startup.mode==="on")assert.match(startup.overlay,/Preparing aircraft view/,
+  "loading replaces the obsolete temporary cockpit image");
+ await desktop.locator("#aircraftInspectOpen").click();
+ const inspect=await desktop.evaluate(()=>{
+  const view=document.getElementById("aircraftInspectViewport");
+  return {mode:view.dataset.modelLoading,overlay:getComputedStyle(view,"::after").content};
+ });
+ assert.ok(["on","off"].includes(inspect.mode),"360 viewer provides explicit loading status");
+ if(inspect.mode==="on")assert.match(inspect.overlay,/Preparing detailed 3D aircraft/,
+  "360 viewer shields the temporary procedural mesh");
+ await desktop.locator("#aircraftInspectClose").click();
+
  assert.equal(await readModel(desktop),"c172");
  assert.equal(await desktop.locator("#sceneAircraftType").textContent(),"Cessna 172");
  await desktop.locator("#pauseFlight").click();
