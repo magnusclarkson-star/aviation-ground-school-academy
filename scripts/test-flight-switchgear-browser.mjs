@@ -122,7 +122,6 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "rotated cockpit switches don't introduce horizontal scroll");
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
- await phone.locator("#cockpitSwitch_frame").tap();
  assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"on");
  const rotor=await layout();
  checkTwoByTwo(rotor);
