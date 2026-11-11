@@ -8,8 +8,16 @@ const url=pathToFileURL(path.resolve("flight-sim.html")).href;
 const errors=[];
 async function screenshotSignature(page){
  return page.evaluate(()=>{
-  const canvas=document.querySelector("#outsideView");
-  const pixels=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data;
+  const detailed=document.querySelector("#outsideView3D");
+  let pixels;
+  if(!detailed.hidden){
+   const gl=detailed.getContext("webgl2");
+   pixels=new Uint8Array(detailed.width*detailed.height*4);
+   gl.readPixels(0,0,detailed.width,detailed.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  }else{
+   const canvas=document.querySelector("#outsideView");
+   pixels=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data;
+  }
   let hash=2166136261>>>0;
   for(let i=0;i<pixels.length;i+=317){hash=Math.imul(hash^pixels[i],16777619)>>>0;}
   return hash;
@@ -121,7 +129,7 @@ try{
  assert.match(await desktop.locator("#coachPhase").textContent(),/SHORT FINAL/);
  await desktop.waitForTimeout(1100);
  const after=await screenshotSignature(desktop);
- assert.notEqual(after,first,"active 2D world geometry must redraw as the aircraft moves");
+ assert.notEqual(after,first,"active outside aircraft view must redraw as the aircraft moves");
  await desktop.locator("#visualMode").selectOption("3d");
  await desktop.locator("#typeStick").click();
  assert.equal(await desktop.locator("#typeStick").getAttribute("aria-pressed"),"true");
