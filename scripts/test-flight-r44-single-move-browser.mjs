@@ -76,6 +76,11 @@ try {
    mode.label+" switch rack does not cover instruments or pedal buttons "+JSON.stringify(result));
   assert.ok(result.rack.right<=result.viewport.width+2&&result.rack.top>=0,
    mode.label+" switch unit wholly on the phone "+JSON.stringify(result));
+  if(mode.label==="landscape"){
+   assert.ok(result.rack.left>=result.cyclic.right-8&&
+    result.rack.left<=result.cyclic.right+70,
+    "landscape four-switch unit sits directly beside cyclic, not at far edge "+JSON.stringify(result));
+  }
   assert.ok(result.cyclic.width>=100&&result.cyclic.height>=54&&
    result.collective.width>=65&&result.instruments.width>=150,
    mode.label+" no collapsed primary controls "+JSON.stringify(result));
