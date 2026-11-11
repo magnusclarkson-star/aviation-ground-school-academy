@@ -831,12 +831,13 @@ function buildImportedCabin(id){
   // An R44 has a compact forward *central* six-pack and a tapered avionics
   // pedestal, not a full-width C172 dashboard above two isolated joysticks.
   // The imported FlightGear hull remains the only external fuselage.
-  m.box(-.33,-.26,station.panelZ,.66,.48,.14,panel);
-  m.box(-.36,.19,station.panelZ-.025,.72,.072,.18,panel);
+  const podZ=station.panelZ-.12;
+  m.box(-.285,-.43,podZ,.57,.50,.12,panel);
+  m.box(-.30,.045,podZ-.025,.60,.045,.145,panel);
   // Distinct circular round instruments on the pilot-facing (-Z) panel.
   // Each dial has a visible lighter bezel, dark face and central hub.
   const dial=(x,y,r)=>{
-   const z=station.panelZ-.012,face=rgb(13,25,31),
+   const z=podZ-.012,face=rgb(13,25,31),
     bezel=rgb(148,160,166);
    for(let k=0;k<16;k++){
     const a=k*Math.PI/8,b=(k+1)*Math.PI/8;
@@ -848,16 +849,16 @@ function buildImportedCabin(id){
    }
    m.box(x-.009,y-.009,z-.012,.018,.018,.010,trim);
   };
-  for(const x of [-.20,0,.20])for(const y of [.095,-.105])dial(x,y,.066);
+  for(const x of [-.185,0,.185])for(const y of [-.09,-.275])dial(x,y,.058);
   // Status annunciator row and vertically stacked radio/switch pedestal.
   for(let k=0;k<7;k++)
-   m.box(-.27+k*.083,.177,station.panelZ-.017,.044,.026,.010,
+   m.box(-.24+k*.074,.021,podZ-.017,.040,.022,.010,
     k===4?rgb(200,80,65):rgb(157,167,125));
-  m.box(-.20,-.96,station.panelZ-.27,.40,.70,.25,panel);
+  m.box(-.19,-.96,podZ-.28,.38,.53,.25,panel);
   for(const y of [-.47,-.66,-.84]){
-   m.box(-.158,y,station.panelZ-.279,.316,.12,.020,screen);
+   m.box(-.158,y,podZ-.299,.316,.12,.020,screen);
    for(const x of [-.12,.12])
-    m.box(x-.018,y+.035,station.panelZ-.296,.036,.045,.015,trim);
+    m.box(x-.018,y+.035,podZ-.317,.036,.045,.015,trim);
   }
   // Robinson's distinctive centre-post/T-bar cyclic, shared by both
   // front grips. The lower stem sits between the seats, not in the panel.
