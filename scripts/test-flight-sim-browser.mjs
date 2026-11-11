@@ -676,7 +676,7 @@ try{
  assert.ok(parseInt(nativeTouch.before)>55);
  assert.ok(parseInt(nativeTouch.together.bank)>55&&nativeTouch.together.held,
   "native yoke input must remain active while the pedal is held");
- assert.ok(parseInt(nativeTouch.together.rudder)>0,
+ assert.ok(Number(nativeTouch.together.rudder.match(/-?\d+/)?.[0]||0)>0,
   "second native finger must control rudder without cancelling the yoke");
  assert.ok(parseInt(nativeTouch.afterPedal.bank)>55,
   "releasing pedal must not cancel the independent yoke finger");
