@@ -16,7 +16,7 @@ controls.enableDamping=true;controls.dampingFactor=.08;
 let craft, parts=[],bounds, seats=[];
 const info={ready:false,errors:[]};
 window.__C172_REVIEW=info;
-try{
+(async()=>{try{
  const gltf=await new GLTFLoader().loadAsync("/artifacts/c172-mit-candidate.glb");
  craft=gltf.scene;
  craft.updateMatrixWorld(true);
@@ -51,7 +51,7 @@ try{
  camera.position.set(maxRadius*.85,maxRadius*.3,maxRadius*.7);
  controls.target.set(0,0,0);controls.update();
  info.ready=true;
-}catch(e){info.errors.push(String(e?.stack||e));}
+}catch(e){info.errors.push(String(e?.stack||e));}})();
 function setView(view){
  if(!info.ready)throw Error("Model not ready");
  const ext=info.bounds,span=Math.max(...ext);
