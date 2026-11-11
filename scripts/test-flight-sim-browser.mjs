@@ -618,7 +618,7 @@ try{
   await phone.locator("#controlPad").evaluate((pad,{type,id})=>{
    const b=pad.getBoundingClientRect();
    const event=new PointerEvent(type,{bubbles:true,cancelable:true,
-    pointerType:"pen",pointerId:id,button:0,
+    pointerType:"touch",pointerId:id,button:0,
     clientX:b.left+b.width*.85,clientY:b.top+b.height*.5});
    pad.dispatchEvent(event);
   },{type,id});
@@ -691,7 +691,7 @@ try{
   await phone.locator("#"+elementId).evaluate((el,{type,pointerId})=>{
    const b=el.getBoundingClientRect();
    el.dispatchEvent(new PointerEvent(type,{
-    bubbles:true,cancelable:true,pointerType:"pen",pointerId,button:0,
+    bubbles:true,cancelable:true,pointerType:"touch",pointerId,button:0,
     clientX:b.left+b.width*.5,clientY:b.top+b.height*.5
    }));
   },{type,pointerId});
