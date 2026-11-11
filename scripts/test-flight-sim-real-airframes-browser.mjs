@@ -270,10 +270,13 @@ try{
    frame=document.querySelector("#cockpitFrame"),
    station=document.querySelector("#cockpitStation"),
    switchView=document.querySelector("#cockpitSwitch_view"),
+   rack=document.querySelector("#cockpitSwitchPanel"),
+   throttle=document.querySelector("#powerPanel"),
    yoke=document.querySelector("#controlPad"),
    pedal=document.querySelector("#rightRudder");
   const box=e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,w:b.width,h:b.height}};
   return {scene:box(shell),station:box(station),switch:box(switchView),
+   rack:box(rack),throttle:box(throttle),
    yoke:box(yoke),pedal:box(pedal),source:shell.dataset.sourceC172,
    focus:document.body.dataset.cockpitFocus,
    frameHidden:getComputedStyle(frame).display==="none",
@@ -286,8 +289,11 @@ try{
   "landscape presents a wide real-pilot windscreen");
  assert.ok(wide.scene.h>wide.station.h,
   "landscape prioritizes forward view over secondary gauges");
- assert.ok(wide.switch.w>20&&wide.switch.y>=0&&wide.switch.y<100,
-  "view switch is accessible near screen edge while flying");
+ assert.ok(wide.switch.w>=38&&wide.switch.y>=0&&
+  wide.switch.y+wide.switch.h<=390&&wide.rack.x>=wide.throttle.x-5,
+  "C172 switch is reachable in the 2x2 rack beside the NAV/throttle corner");
+ assert.ok(wide.rack.y+wide.rack.h<=wide.throttle.y+6,
+  "the new 2x2 C172 switch rack sits above engine power");
  assert.ok(wide.yoke.w>60&&wide.pedal.w>20,
   "original yoke and rudder controls remain in the lower flight deck");
  assert.deepEqual(errors,[]);
