@@ -405,7 +405,7 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
    eight-gauge scan, yoke AND both rudder pedals inside the same frame. */
 @media(orientation:landscape) and (max-height:510px) and (min-width:600px){
  body[data-cockpit-focus="on"] .scene-shell{
-  flex:0 0 clamp(48px,14dvh,58px)!important;
-  height:clamp(48px,14dvh,58px)!important
+  flex:0 0 clamp(43px,12dvh,50px)!important;
+  height:clamp(43px,12dvh,50px)!important
  }
 }
