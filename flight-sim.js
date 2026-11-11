@@ -127,7 +127,8 @@ async function startFullFlight(){
  const cueStarted=radioTone.enable(true);
  radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
  const radioArmed=!viewingAircraft()&&atcRadio?.arm(true)===true;
- requestPilotDeck();
+ // Start ALL flight effects must not trap the learner away from Stop/Pause
+ // and other external settings. PILOT/Focus remains an explicit view action.
  if(state.mode==="helicopter"&&!viewingAircraft())r44Voice.arm();
  syncPhoneFeedbackUI();
  let engineStarted=false;
