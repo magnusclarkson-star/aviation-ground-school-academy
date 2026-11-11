@@ -422,3 +422,13 @@
 .cockpit-station .control-panel>#controlHint,
 .cockpit-station .control-panel>.shortcuts{display:none!important}
 .cockpit-station .control-panel #collectivePanel>.hint{display:none!important}
+
+/* Dynamic graduated glass instrument markings: overlay the live attitude,
+   never enlarge the instrument well or obstruct yoke/pedals. */
+.cockpit-mfd-attitude .cockpit-glass-markings{
+ position:absolute;inset:0;width:100%;height:100%;display:block;
+ z-index:3;pointer-events:none;overflow:hidden;
+ font-variant-numeric:tabular-nums;
+}
+.cockpit-mfd-attitude .cockpit-mfd-wings{z-index:4;}
+.cockpit-zoom-content .cockpit-glass-markings{width:100%;height:100%;}
