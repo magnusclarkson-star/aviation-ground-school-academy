@@ -315,6 +315,14 @@ function buildPanel(doc,profile,holder,instrumentStyle="auto"){
    lessonValue.dataset.r44Lesson="true";
    lessonValue.textContent="1/4 · TAKEOFF";
    lesson.appendChild(lessonValue);
+   // Reuse the existing mission strip; no additional button or panel.
+   // Telemetry is from actual heading/yaw rate or pad position, not pedal input.
+   const pilotCue=doc.createElement("output");
+   pilotCue.className="r44-pilot-cue";
+   pilotCue.dataset.r44PilotCue="true";
+   pilotCue.textContent="ALT 0m · V/S 0.0";
+   pilotCue.setAttribute("aria-label","Current helicopter movement and target");
+   lesson.appendChild(pilotCue);
    const voice=doc.createElement("button");
    voice.type="button";voice.id="r44VoiceToggle";
    voice.className="r44-voice-toggle";
@@ -358,6 +366,11 @@ function paint(holder,state,systems,input,profileId,doc,progress){
   el.textContent=mission?.short||"1/4 · TAKEOFF";
   el.setAttribute("aria-label",mission?.hint||"R44 guided lesson: takeoff");
   el.dataset.lessonStatus=mission?.status||"active";
+ }
+ for(const el of holder.querySelectorAll("[data-r44-pilot-cue]")){
+  el.textContent=mission?.pilotCue||"ALT 0m · V/S 0.0";
+  el.title=mission?.hint||"Live helicopter movement";
+  el.dataset.lessonStage=mission?.stage||"takeoff";
  }
  for(const el of holder.querySelectorAll("[data-r44-hover]")){
   const cue=FLIGHT?.rotorHoverCue?.(state)||"ON PAD";
