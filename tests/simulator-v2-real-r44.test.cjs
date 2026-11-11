@@ -88,10 +88,12 @@ test("imported R44 cabin shows compact central panel and genuine T-bar cyclic",(
    Math.abs(interior.positions[i+2]-z)<.0001)return true;
  }return false;};
  // A real round gauge is drawn on the near side of the *central* pod.
- assert.ok(near(-.20,.095,station.panelZ-.015),
+ assert.ok(near(-.185,-.09,station.panelZ-.135),
   "left gauge hub must be visible on the rear-facing central pod");
- assert.ok(near(.20,-.105,station.panelZ-.015),
+ assert.ok(near(.185,-.275,station.panelZ-.135),
   "right lower gauge must sit on the same compact pod");
+ assert.ok(near(-.30,.09,station.panelZ-.145),
+  "the R44 instrument hood must stay below the original windshield top");
  const cyclicZ=station.frontSeatZ+.10;
  assert.ok(near(-.37,-.335,cyclicZ-.002),
   "R44 centre-post T-bar must cross toward the left pilot");
