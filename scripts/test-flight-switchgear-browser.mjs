@@ -197,7 +197,7 @@ try{
   return {held,switched,released};
  });
  assert.ok(parseInt(liveMultiTouch.held.bank)>40&&
-  Math.abs(parseInt(liveMultiTouch.held.rudder))>10,
+  Math.abs(Number(liveMultiTouch.held.rudder.match(/-?\d+/)?.[0]||0))>10,
   "two fingers simultaneously operate the actual R44 cyclic and anti-torque pedal: "+JSON.stringify(liveMultiTouch));
  assert.notEqual(liveMultiTouch.switched.view,liveMultiTouch.held.view,
   "a third finger changes the R44 camera without releasing flight controls");
