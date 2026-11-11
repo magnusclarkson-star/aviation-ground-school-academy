@@ -107,7 +107,7 @@ try{
       headingDeg:0,pitchDeg:0,rollDeg:0,time:2};
      window.__mobileAirframeRenderer.draw(state,{
       view:"inspect",airframeId:id,
-      orbit:{azimuth:58,elevation:8,distance:id==="r44"?10:11},
+      orbit:{azimuth:58,elevation:8,distance:id==="r44"?16:11},
       animation:{mainRotor:.5,tailRotor:1.4}});
     },aircraft);
     await page.locator("#mobileImportedAirframeEvidence").screenshot({
