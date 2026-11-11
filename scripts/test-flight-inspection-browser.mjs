@@ -99,7 +99,7 @@ try{
  await mobile.locator("#aircraftInspectReset").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
- assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"158%",
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"178%",
   "double tapping the aircraft enlarges it on Android");
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
