@@ -32,6 +32,10 @@ on:
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
+      - 'flight-sim-sw.js'
+      - 'flight-sim-manifest.json'
+      - 'scripts/build-flight-sim-icons.mjs'
+      - 'scripts/test-flight-sim-pwa-browser.mjs'
       - 'flight-sim-real-airframes.js'
       - 'flight-sim-real-r44.js'
       - 'flight-sim-r44-airframe.js'
@@ -120,6 +124,10 @@ on:
       - 'flight-sim-haptics.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
+      - 'flight-sim-sw.js'
+      - 'flight-sim-manifest.json'
+      - 'scripts/build-flight-sim-icons.mjs'
+      - 'scripts/test-flight-sim-pwa-browser.mjs'
       - 'flight-sim-real-airframes.js'
       - 'flight-sim-real-r44.js'
       - 'flight-sim-r44-airframe.js'
@@ -204,6 +212,7 @@ jobs:
           node --check flight-sim-haptics.js
           node --check flight-sim-scenery.js
           node --check flight-sim-3d.js
+          node --check flight-sim-sw.js
           node --check flight-sim-real-airframes.js
           node --check flight-sim-real-r44.js
           node --check flight-sim-r44-airframe.js
@@ -273,6 +282,7 @@ jobs:
           node scripts/test-flight-sim-loading-browser.mjs
           node scripts/test-flight-sim-exercises-browser.mjs
           node scripts/test-flight-sim-instructor-voice-browser.mjs
+          node scripts/test-flight-sim-pwa-browser.mjs
 
       - name: Save actual imported R44 WebGL preview for visual review
         if: always()
