@@ -75,6 +75,29 @@ test("R44 repaint is restricted to original body and tail skin, with no old text
  assert.match(shader,/albedo=vec3\(\.93,\.79,\.08\)/,
   "source tail must be fully recoloured, without mixing back old source checker");
 });
+test("imported R44 cabin shows compact central panel and genuine T-bar cyclic",()=>{
+ const interior=Three.buildImportedCabin("r44");
+ const station=Three.IMPORTED_CABIN_LAYOUT.r44;
+ assert.equal(interior.seats,4);
+ assert.equal(interior.hasPanel,true);
+ assert.ok(interior.triangles>260,"six dial bezels and cyclic must produce geometry");
+ assert.ok(interior.positions.every(Number.isFinite));
+ const near=(x,y,z)=>{for(let i=0;i<interior.positions.length;i+=3){
+  if(Math.abs(interior.positions[i]-x)<.0001&&
+   Math.abs(interior.positions[i+1]-y)<.0001&&
+   Math.abs(interior.positions[i+2]-z)<.0001)return true;
+ }return false;};
+ // A real round gauge is drawn on the near side of the *central* pod.
+ assert.ok(near(-.20,.095,station.panelZ-.015),
+  "left gauge hub must be visible on the rear-facing central pod");
+ assert.ok(near(.20,-.105,station.panelZ-.015),
+  "right lower gauge must sit on the same compact pod");
+ const cyclicZ=station.frontSeatZ+.10;
+ assert.ok(near(-.37,-.335,cyclicZ-.002),
+  "R44 centre-post T-bar must cross toward the left pilot");
+ assert.ok(near(.37,-.335,cyclicZ+.077),
+  "R44 centre-post T-bar must reach the right pilot");
+});
 test("model replaces hull but preserves the Academy's animated rotor controls",()=>{
  const parts=Three.buildMovingParts("r44");
  for(const n of ["mainRotor","tailRotor","swashBank","swashPitch","collectiveLink"])
