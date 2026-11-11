@@ -70,7 +70,7 @@ try{
  });
  for(const physicsId of ["classic","aero"]){
   assert.equal(liveCoach[physicsId].tag,"RETURN CIRCUIT · CROSSWIND");
-  assert.match(liveCoach[physicsId].text,/TURN LEFT 0[56][0-9]°/);
+  assert.match(liveCoach[physicsId].text,/TURN RIGHT 12[0-9]°/);
   assert.match(liveCoach[physicsId].text,/to CROSSWIND/);
  }
 
