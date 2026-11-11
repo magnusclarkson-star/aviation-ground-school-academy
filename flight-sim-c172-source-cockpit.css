@@ -18,12 +18,12 @@
 @media(orientation:landscape) and (min-width:600px) and (max-height:510px){
  body:not([data-cockpit-focus="on"]) .scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
   width:100%!important;max-width:none!important;
-  height:clamp(165px,58dvh,280px)!important;
+  height:clamp(165px,54dvh,280px)!important;
   aspect-ratio:auto!important;min-height:0!important;
  }
  body[data-cockpit-focus="on"] .scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
-  flex:0 0 clamp(175px,57dvh,285px)!important;
-  width:100%!important;height:clamp(175px,57dvh,285px)!important;
+  flex:0 0 clamp(175px,54dvh,285px)!important;
+  width:100%!important;height:clamp(175px,54dvh,285px)!important;
   max-height:none!important;aspect-ratio:auto!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"]{
@@ -31,7 +31,21 @@
   min-height:0!important;overscroll-behavior:contain;
   padding:2px 5px 5px!important;
  }
- body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head,
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head{
+  display:flex!important;min-height:22px!important;max-height:26px!important;
+  margin:0 auto!important;gap:3px!important;padding:0 4px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head>div:first-child strong{
+  font-size:9px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head label{
+  font-size:7px!important;max-width:155px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitAircraftSelect{
+  min-height:22px!important;max-height:23px!important;
+  padding:1px 3px!important;font-size:10px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head .full-flight-launch,
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitGripLabel{
   display:none!important
  }
