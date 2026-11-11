@@ -563,6 +563,32 @@ try{
    id+' landscape glass displays remain inside cockpit above flight controls '+JSON.stringify(fit));
   assert.ok(fit.panelHeight<=185,id+' glass panel fits shallow screen');
  }
+ // Focused 844x390 Android landscape must not require dragging the
+ // cockpit station upward just to reveal the rudder pair.
+ await phone.locator('#cockpitAircraftSelect').selectOption('c172');
+ await phone.locator('#cockpitFocusButton').click();
+ for(const id of ['c172','r44']){
+  await phone.locator('#cockpitAircraftSelect').selectOption(id);
+  const fit=await phone.evaluate(()=>{
+   const rect=id=>document.getElementById(id).getBoundingClientRect();
+   const panel=rect('cockpitVisualPanel'),left=rect('leftRudder'),right=rect('rightRudder');
+   const yoke=rect('controlPad'),station=rect('cockpitStation');
+   return {
+    viewport:innerHeight,stationTop:station.top,stationBottom:station.bottom,
+    panelRight:panel.right,yokeLeft:yoke.left,
+    leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
+    rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
+    visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight-2&&right.bottom<=innerHeight-2,
+    adjacent:Math.abs(left.top-right.top)<7,
+    noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
+    instrumentBesideControl:panel.right<=yoke.left+15
+   };
+  });
+  assert.ok(fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentBesideControl,
+   id+' focused landscape: both pedals completely visible with the instrument bank beside controls '+JSON.stringify(fit));
+ }
+ await phone.locator('#cockpitFocusButton').click();
+
  assert.deepEqual(errors,[],'no JS runtime errors');
  console.log('Unified cockpit passed: 7 aircraft styles, analog T layout, rotorcraft gauges, fighter MFDs, cockpit controls and phone geometry.');
 }finally{await browser.close();}
