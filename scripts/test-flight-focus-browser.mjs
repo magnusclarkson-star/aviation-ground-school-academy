@@ -14,7 +14,8 @@ const metrics=async page=>page.evaluate(()=>{
  const station=document.querySelector("#cockpitStation");
  return {viewport:{width:innerWidth,height:innerHeight},
   scrollWidth:document.documentElement.scrollWidth,
-  focus:document.body.dataset.cockpitFocus,
+  focus:document.body.dataset.cockpitFocus,photoDeck:station.dataset.photoCockpit,
+  aircraft:station.dataset.airframe,well:rect("#cockpitInstrumentWell"),
   scenery:rect(".scene-shell"),scene:rect(".scene-panel"),
   instruments:rect("#cockpitVisualPanel"),gauges:[...document.querySelectorAll("#cockpitVisualPanel .cockpit-gauge")].map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height}}),
   switches:rect("#cockpitSwitchPanel"),control:rect("#cockpitMain .control-panel"),side:rect("#cockpitMain .side-controls"),flaps:rect("#flapPanel"),brake:rect("#brake"),yoke:rect("#controlPad"),
@@ -73,23 +74,18 @@ try{
  assert.ok(landscape.scrollWidth<=846,"no horizontal overflow in landscape");
  assert.ok(Math.abs(landscape.scene.height-390)<=2,"scene occupies one phone screen");
  console.log("Focused landscape geometry",JSON.stringify(landscape));
- assert.ok(landscape.instruments.top>=landscape.scenery.bottom-3,
-  "instruments stay below windshield");
- const panoramicC172=landscape.yoke.top<landscape.instruments.top;
- if(panoramicC172){
-  // Real 3D cockpit instruments are INSIDE the scenic windscreen. The
-  // physical controls come first beneath it; duplicate zoomable dials are
-  // below and remain scrollable, not allowed to shrink the forward view.
-  assert.ok(landscape.scenery.height>=175,
-   "source-model pilot windscreen takes the large upper landscape region");
-  assert.ok(landscape.instruments.top>=landscape.control.bottom-4,
-   "optional zoomable gauges follow the immediately usable yoke and pedals");
-  assert.ok(landscape.stationScroll>landscape.stationClient,
-   "wide layout keeps extra instruments available by scrolling the lower deck");
- }else{
-  assert.ok(landscape.yoke.top>=landscape.instruments.bottom-10,
-   "legacy landscape yoke stays beneath primary gauges");
- }
+ assert.equal(landscape.photoDeck,"on",
+  "C172 PILOT now shows the unified photograph-style aircraft dashboard");
+ assert.ok(landscape.scenery.height>=380,
+  "the runway remains the full-screen background behind the real instrument console");
+ assert.ok(landscape.instruments.top<landscape.scenery.bottom-90,
+  "live instruments occupy the cockpit overlay, not a separate page");
+ assert.ok(landscape.instruments.top>65,
+  "windscreen retains usable forward runway visibility above the glareshield");
+ assert.ok(landscape.yoke.top>=landscape.instruments.top+85,
+  "realistic physical yoke sits beneath the aircraft instrument dials");
+ assert.ok(landscape.well.width>600,
+  "C172 uses a wide aircraft dashboard rather than an R44 central pedestal");
  assert.ok(landscape.left.top>=landscape.yoke.bottom-10,
   "left pedal is beneath the centered yoke");
  assert.ok(landscape.right.top>=landscape.yoke.bottom-10,
@@ -100,11 +96,8 @@ try{
   "both rudder pedals fit in the same visible phone frame");
  assert.ok(landscape.yoke.width>=80&&landscape.yoke.height>=50,
   "functional center yoke remains touch sized");
- assert.ok(landscape.gauges.every(g=>g.width>=44&&
-  (panoramicC172?g.top>=landscape.control.bottom-5:g.bottom<=landscape.yoke.top+10)),
-  panoramicC172?
-  "zoomable gauges remain available below the visible pilot controls":
-  "legacy gauges remain visible above the yoke");
+ assert.ok(landscape.gauges.every(g=>g.width>=44&&g.top>=landscape.instruments.top-3&&g.bottom<=392),
+  "all eight C172 live analogue gauges must be visible and touch-sized in landscape");
  assert.ok(landscape.power.bottom<=392&&landscape.flaps.bottom<=392&&landscape.brake.bottom<=392,
   "power, flaps and wheel brake are visible together with gauges, yoke and pedals");
  await phone.locator("#cockpitSwitch_light").tap();
@@ -113,11 +106,19 @@ try{
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
  assert.equal(await phone.locator("#cockpitStation").getAttribute("data-family"),"rotor");
  assert.equal(await phone.locator("#cockpitVisualPanel .cockpit-gauge").count(),8);
+ const rotorDeck=await metrics(phone);
+ assert.equal(rotorDeck.photoDeck,"on","R44 has its own photographed-flightdeck structure");
+ assert.ok(rotorDeck.well.width<landscape.well.width*.78,
+  "R44 has the narrow central instrument head instead of a wide Cessna dashboard");
+ assert.ok(rotorDeck.gauges.every(g=>g.width>=44&&g.bottom<=392),
+  "R44 central console keeps all eight live instruments within landscape");
+ assert.ok(rotorDeck.left.bottom<=392&&rotorDeck.right.bottom<=392,
+  "both anti-torque pedals remain available below the T-bar cyclic");
  assert.equal(await phone.locator('[data-rotor-tbar]').isVisible(),true);
  await phone.locator("#cockpitFocusButton").tap();
  assert.equal(await phone.locator("body").getAttribute("data-cockpit-focus"),"off");
  assert.equal(await phone.locator("#cockpitFocusButton").getAttribute("aria-pressed"),"false");
  await phone.setViewportSize({width:390,height:844});
  assert.deepEqual(errors,[],"no JavaScript errors in focused view");
- console.log("Full-screen cockpit passed: gauges, centered yoke and pedals, landscape phone fit, exit, switches and instrument-only zoom.");
+ console.log("Real C172 wide dashboard and R44 central pedestal passed: integrated scenery, functional gauges, yoke/cyclic, pedals, switches and instrument-only zoom.");
 }finally{await browser.close();}
