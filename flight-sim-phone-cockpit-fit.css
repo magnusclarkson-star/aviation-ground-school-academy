@@ -251,3 +251,43 @@
   display:none!important;
  }
 }
+
+/* R44-specific switch relocation. The actual four button elements are
+   reparented into .control-assembly by syncCockpitFrame(), preserving click
+   handlers and avoiding a duplicate copy in the instrument head. */
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-panel .control-assembly{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr) 90px!important;
+ grid-template-rows:auto!important;
+ align-items:center!important;
+ column-gap:3px!important;row-gap:0!important;
+ min-width:0!important;
+}
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly>#controlPad{
+ grid-column:1!important;grid-row:1!important;
+ width:100%!important;min-width:0!important;
+ margin:0!important;
+}
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly>#cockpitSwitchPanel{
+ position:relative!important;inset:auto!important;
+ top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+ grid-column:2!important;grid-row:1!important;
+ justify-self:end!important;align-self:center!important;
+ width:90px!important;min-width:90px!important;max-width:90px!important;
+ height:58px!important;min-height:58px!important;max-height:58px!important;
+ margin:0!important;transform:none!important;z-index:5!important;
+}
+@media (orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"] #cockpitMain .control-panel{
+  grid-template-columns:minmax(0,.29fr) minmax(0,.71fr)!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"] #cockpitMain .control-panel .control-assembly{
+  grid-column:2!important;grid-row:1!important;
+  min-width:0!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly>#cockpitSwitchPanel{
+  margin:0!important;max-width:90px!important;
+ }
+}
+/* The R44 is the only changed aircraft. The switch rack is never permitted
+   to produce a separate strip below the instruments in either orientation. */
