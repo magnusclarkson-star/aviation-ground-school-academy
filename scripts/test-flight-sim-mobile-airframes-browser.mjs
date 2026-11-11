@@ -72,7 +72,7 @@ try{
      const gl=canvas.getContext("webgl2");
      for(const azimuth of [30,130]){
       const drawn=renderer.draw(state,{view:"inspect",airframeId:id,
-       orbit:{azimuth,elevation:12,distance:id==="r44"?11:13},
+       orbit:{azimuth,elevation:12,distance:id==="r44"?16:13},
        animation:{mainRotor:.45,tailRotor:1.1}});
       const w=canvas.width,h=canvas.height,pixels=new Uint8Array(w*h*4);
       gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
