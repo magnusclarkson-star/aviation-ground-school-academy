@@ -292,6 +292,7 @@ function fallbackTo2D(message){
  if(renderer3D){renderer3D.destroy();renderer3D=null}
  canvas3D.hidden=true;
  const fallbackScene=document.querySelector(".scene-shell");
+ if(fallbackScene)fallbackScene.dataset.airframeLoading="off";
  fallbackScene?.classList?.remove("three-dimensional");
  if(fallbackScene)fallbackScene.dataset.sourceC172="off";
  // Keep the runway and instruments usable without WebGL2. For approved
@@ -304,6 +305,17 @@ function fallbackTo2D(message){
 }
 // No private API, hidden service or remote rendering. When WebGL2 is not
 // available (including context loss), the original Canvas 2D keeps working.
+// The imported Skyhawk/R44 can arrive after WebGL starts. Cover only its
+// placeholder scene until the intended geometry is ready, never overlaying
+// touch controls or replacing a working WebGL-unavailable fallback.
+function syncAirframeLoading(){
+ const shell=document.querySelector(".scene-shell");
+ if(!shell)return;
+ const id=airframeId(),pending=renderer3D&&(
+  (id==="c172"&&renderer3D.realC172Status==="loading")||
+  (id==="r44"&&renderer3D.realR44Status==="loading"));
+ shell.dataset.airframeLoading=pending?"on":"off";
+}
 function chooseVisual(){
  // For the approved R44 and C172, use their detailed airframes even when
  // the learner selects the 2D outside view. The old low-poly Canvas model
@@ -318,11 +330,13 @@ function chooseVisual(){
    "3D graphics context lost. Switched safely to 2D; you may retry 3D.")});
  }
  if(!renderer3D){
+  syncAirframeLoading();
   fallbackTo2D("3D graphics unavailable on this browser/device. Automatically using 2D scenery.");
   return;
  }
  canvas3D.hidden=false;
  document.querySelector(".scene-shell").classList.add("three-dimensional");
+ syncAirframeLoading();
  $("cameraMode").disabled=false;
  try{
   if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId(),airframeId:airframeId()})){
@@ -382,6 +396,7 @@ function syncCockpitFrame(){
   " windscreen visible. Instruments and touch controls remain unobstructed.";
 }
 function drawScenery(now){
+ syncAirframeLoading();
  // Avoid unnecessary GPU/Canvas work when Android or desktop hides the tab.
  if(document.hidden)return;
  if(renderer3D){
