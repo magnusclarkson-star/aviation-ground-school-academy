@@ -408,7 +408,8 @@ function updateReadouts(){
  $("readGroundSpeed").textContent=round(n.groundSpeedKt)+" kt";
  $("readTrack").textContent=String(round(n.trackDeg??n.headingDeg)%360).padStart(3,"0")+"°";
  $("readWind").textContent=E.describeWind(n.windId||"calm");
- $("sceneSpeed").textContent=round(n.speedKt)+" KT";
+ $("sceneSpeed").textContent=n.mode==="helicopter"?
+  "GS "+round(n.groundSpeedKt)+" KT":round(n.speedKt)+" KT";
  $("sceneHeight").textContent=round(n.altitudeM)+" M AGL";
  const phase={
   roll:"RUNWAY ROLL",climb:"CLIMB",flight:"FREE FLIGHT",approach:"FINAL APPROACH",
@@ -417,7 +418,8 @@ function updateReadouts(){
   landed:n.landingGrade==="precision"?"HELIPAD LANDED · PRECISION":"HELIPAD LANDED"
  }[n.phase]||"EDUCATIONAL SIM";
  $("flightPhase").textContent=phase;
- $("scenePhase").textContent=phase;
+ $("scenePhase").textContent=n.mode==="helicopter"?
+  phase+" · PAD "+Math.round(Math.hypot(n.xM,n.zM))+"m":phase;
  $("flightMessage").textContent=n.message;
  I.paint(document,state);
  cockpit?.update();
@@ -679,8 +681,16 @@ function previewPausedControls(){
   S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),
    view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
-function movePad(event){
+// A view switch can reflow the mobile cockpit while a finger is still on
+// the cyclic/yoke. Lock its touch geometry until that exact finger releases;
+// otherwise the same finger position becomes a large unintended bank/pitch.
+let padGestureBox=null;
+function capturePadGesture(){
  const box=$("controlPad").getBoundingClientRect();
+ padGestureBox={left:box.left,top:box.top,width:box.width,height:box.height};
+}
+function movePad(event){
+ const box=padGestureBox||$("controlPad").getBoundingClientRect();
  const sensitivity=cockpit?.sensitivity()??1;
  const dx=(event.clientX-(box.left+box.width/2))/(box.width*.35)*sensitivity;
  const dy=(event.clientY-(box.top+box.height/2))/(box.height*.39)*sensitivity;
@@ -694,6 +704,7 @@ $("controlPad").addEventListener("pointerdown",e=>{
  if(nativeMultiTouch&&e.pointerType==="touch"&&e.isTrusted)return;
  if(dragPointer!==null)return;
  dragPointer=e.pointerId;
+ capturePadGesture();
  try{$("controlPad").setPointerCapture(e.pointerId)}catch{}
  // Each finger retains its own pointer ID, independent of the pedals.
  movePad(e);haptics.pulse("control");e.preventDefault();
@@ -714,7 +725,7 @@ function finishPad(id,completed){
  if(!completed)bankHold?.clear();
  else if(bankHold?.status().armed&&state.mode==="airplane")
   bankHold.release(input.bank);
- dragPointer=null;input.bank=0;input.pitch=0;
+ dragPointer=null;padGestureBox=null;input.bank=0;input.pitch=0;
  syncKeys();syncBankHoldUI();gripTransform();
  if(pendingPilotFocus)requestPilotDeck();
 }
@@ -774,7 +785,7 @@ if(nativeMultiTouch){
    if(owner==="pad"){
     if(dragPointer!==null)continue;
     dragPointer=id;touchOwners.set(touch.identifier,owner);
-    movePad(touch);haptics.pulse("control");claimed=true;
+    capturePadGesture();movePad(touch);haptics.pulse("control");claimed=true;
    }else if(pointers[owner]===null){
     pointers[owner]=id;touchOwners.set(touch.identifier,owner);
     updateHeld();haptics.pulse(owner==="brake"?"control":"rudder");
@@ -836,7 +847,7 @@ function syncKeys(){
 function releaseControls(){
  touchPedals?.reset();
  bankHold?.clear();syncBankHoldUI();
- dragPointer=null;for(const key of Object.keys(pointers))pointers[key]=null;
+ dragPointer=null;padGestureBox=null;for(const key of Object.keys(pointers))pointers[key]=null;
  keys.clear();input.bank=0;input.pitch=0;input.rudder=0;input.brake=false;
  updateHeld();gripTransform();
 }
