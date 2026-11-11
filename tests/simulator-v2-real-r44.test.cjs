@@ -40,6 +40,41 @@ test("authentic R44 FlightGear body, windows and skids have indexed textured geo
   assert.ok(p.indices.every(i=>i<p.positions.length/3));
  }
 });
+test("R44 repaint is restricted to original body and tail skin, with no old texture showing through",()=>{
+ const model=R44.parseAC3D(source,texture);
+ const painted=model.primitives.filter(p=>p.isPainted);
+ const components=model.primitives.filter(p=>!p.isPainted);
+ assert.ok(painted.length>0&&components.length>0);
+ const paintedNames=new Set(painted.flatMap(p=>p.sourceNames));
+ for(const name of ["fuselage","derive","protection",
+  "porteAD","porteAG","porteBD","porteBG","trous_1"])
+  assert.ok(paintedNames.has(name),name+" must not show old source livery");
+ const originalNames=new Set(components.flatMap(p=>p.sourceNames));
+ for(const name of ["patins","echappe","greenlight","redlight",
+  "windshield","windowFL","windowFR","windowRL","windowRR"])
+  assert.ok(originalNames.has(name),name+" retains its own material");
+ assert.ok(painted.every(p=>!p.isGlazing&&p.opacity===1),
+  "only solid original airframe skin may be recoloured");
+ assert.ok(painted.some(p=>{
+  for(let i=2;i<p.positions.length;i+=3)
+   if(p.positions[i]<-3.5)return true;
+  return false;
+ }),"source-identifiable paint must include the complete original tailboom");
+ assert.ok(components.some(p=>{
+  for(let i=0;i<p.positions.length;i+=3)
+   if(p.positions[i+1]<-1.55&&p.positions[i+2]>1.2)return true;
+  return false;
+ }),"real skid rails retain their distinct original material");
+ assert.ok(components.some(p=>p.isGlazing),
+  "source windows are not painted as opaque fuselage");
+ const shader=fs.readFileSync("flight-sim-3d.js","utf8");
+ assert.match(shader,/isPainted:primitive\.isPainted===true/,
+  "GPU upload must carry painted source flags into drawing primitives");
+ assert.match(shader,/gl\.uniform1i\(uni\.uR44Skin,part\.isPainted\?1:0\)/,
+  "GPU must apply skin paint only on designated source surface groups");
+ assert.match(shader,/albedo=vec3\(\.93,\.79,\.08\)/,
+  "source tail must be fully recoloured, without mixing back old source checker");
+});
 test("model replaces hull but preserves the Academy's animated rotor controls",()=>{
  const parts=Three.buildMovingParts("r44");
  for(const n of ["mainRotor","tailRotor","swashBank","swashPitch","collectiveLink"])
