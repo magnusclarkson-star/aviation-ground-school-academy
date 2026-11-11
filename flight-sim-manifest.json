@@ -1,0 +1,27 @@
+{
+  "id": "./flight-sim.html",
+  "name": "Aviation Ground School Academy — Flight Simulator",
+  "short_name": "AGSA Flight",
+  "description": "Touchscreen flight practice, Cessna circuit and Robinson R44 helicopter exercises.",
+  "start_url": "./flight-sim.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c233a",
+  "theme_color": "#0c233a",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./flight-sim-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./flight-sim-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
