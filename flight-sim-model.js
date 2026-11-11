@@ -212,7 +212,11 @@ function step(state,input,seconds){
    // gets a little extra damping to settle drift, never an autopilot hold.
    const lowSlow=state.altitudeM<12&&state.speedKt<6;
    const centred=Math.abs(bank)<.08&&Math.abs(pitch)<.08;
-   const horizontalResponse=lowSlow?(centred?1.72:1.52):.95;
+   // Re-centred cyclic settles residual low-hover drift sooner so switching
+   // camera while watching the helipad doesn't exaggerate momentum.
+   // Only damp actual velocity when the cyclic is centred: no teleport,
+   // pad hold/autopilot, or change to the approved pedal yaw response.
+   const horizontalResponse=lowSlow?(centred?2.6:1.52):.95;
    const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),horizontalResponse,dt);
    const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),horizontalResponse,dt);
    state.forwardMs=forward;state.lateralMs=lateral;

@@ -61,6 +61,25 @@ function r44LessonStatus(progress,state){
  const padCue=offset<2?"PAD CENTER":
   Math.abs(relativePad)<8?"PAD AHEAD":
   (relativePad>0?"PAD RIGHT ":"PAD LEFT ")+Math.round(Math.abs(relativePad))+"°";
+ // Position of the helipad relative to the current rotorcraft nose.
+ // Turning with pedals alone does not move toward the pad; this gives
+ // a concise body-relative cyclic displacement cue without steering.
+ const heading=(((Number(state?.headingDeg)||0)%360)+360)%360;
+ const rad=heading*Math.PI/180;
+ const fwd=-east*Math.sin(rad)-north*Math.cos(rad);
+ const right=-east*Math.cos(rad)+north*Math.sin(rad);
+ const dominant=Math.abs(fwd)>=Math.abs(right)?
+  {direction:fwd>=0?"FWD":"BACK",metres:Math.abs(fwd)}:
+  {direction:right>=0?"RIGHT":"LEFT",metres:Math.abs(right)};
+ const cyclicCue=offset<2?"PAD CENTER":
+  "PAD "+dominant.direction+" "+Math.max(1,Math.round(dominant.metres))+"m";
+ const yaw=Number.isFinite(state?.yawRateDegS)?state.yawRateDegS:0;
+ const pilotCue=lesson.status!=="active"?cyclicCue:
+  stage==="turn"?"HDG "+String(Math.round(heading)%360).padStart(3,"0")+"° · YAW "+
+   (yaw>=0?"+":"")+Math.round(yaw)+"°/s":
+  stage==="return"?cyclicCue:
+  stage==="hover"?"ALT "+round(state?.altitudeM)+"m · GS "+round(state?.groundSpeedKt)+"kt":
+  "ALT "+round(state?.altitudeM)+"m · V/S "+(Number(state?.verticalMs)||0).toFixed(1);
  const captions={takeoff:"TAKEOFF",hover:"HOVER",turn:"90° TURN",return:"RETURN & LAND"};
  const contact=state?.mode==="helicopter"&&lesson.status!=="active"?
   state.touchdownData:null;
@@ -78,8 +97,9 @@ function r44LessonStatus(progress,state){
   stage==="takeoff"?"Lift into a steady low hover above the helipad.":
   stage==="hover"?"Hold height and position for 8 seconds: "+Math.floor(pct)+"/8.":
   stage==="turn"?"Turn 90° with the pedals, then steady the heading: "+lesson.turnDeg+"°.":
-  "Return to the helipad centre ("+Math.round(offset)+" m · "+padCue+") and land gently.");
- return Object.freeze({stage,status:lesson.status,index:n,total:4,short,hint,
+  "Return to the helipad centre ("+Math.round(offset)+" m · "+padCue+"). "+
+  "Cyclic target: "+cyclicCue+". Land gently after stabilising the drift.");
+ return Object.freeze({stage,status:lesson.status,index:n,total:4,short,hint,pilotCue,cyclicCue,
   progress:stage==="hover"?Math.floor(pct):stage==="turn"?lesson.turnDeg:null,
   complete:lesson.status==="completed"});
 }

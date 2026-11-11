@@ -123,6 +123,8 @@ G.observe(mission,held,["hoverHeld"]);
 assert.equal(mission.r44Lesson.stage,"turn");
 assert.equal(mission.r44Lesson.turnStartHeading,355);
 assert.equal(G.r44LessonStatus(mission,held).short,"3/4 · 90° TURN");
+assert.match(G.r44LessonStatus(mission,held).pilotCue,/HDG 355° · YAW \+0°\/s/,
+ "R44 turning cue is derived from actual simulated heading and yaw speed");
 const excessive={...held,time:14,headingDeg:85,yawRateDegS:15};
 G.observe(mission,excessive,[]);
 assert.equal(mission.r44Lesson.stage,"turn","spinning fast is not a controlled turn");
@@ -136,11 +138,16 @@ assert.equal(mission.r44Lesson.stage,"return",
  "wrapped 355° to 085° heading counts as exactly 90 degrees");
 assert.equal(mission.r44Lesson.turnsCompleted,1);
 assert.equal(G.r44LessonStatus(mission,turned).short,"4/4 · RETURN & LAND");
+assert.equal(G.r44LessonStatus(mission,turned).pilotCue,"PAD RIGHT 4m",
+ "return cue resolves body-relative cyclic motion from real pad coordinates");
+assert.match(G.r44LessonStatus(mission,turned).hint,/Cyclic target: PAD RIGHT 4m/,
+ "mission help and compact cockpit use the same measured correction");
 assert.match(G.guidance(turned,cyclic,mission).text,/helipad centre/i);
 assert.match(G.guidance(turned,cyclic,mission).text,/PAD RIGHT/,
  "the R44 return cue points toward the actual helipad from its position");
 const padCentred=G.r44LessonStatus(mission,{...turned,xM:0,zM:0});
 assert.match(padCentred.hint,/PAD CENTER/);
+assert.equal(padCentred.pilotCue,"PAD CENTER");
 G.observe(mission,{...turned,onGround:true,phase:"landed",
  altitudeM:0,landingGrade:"precision",time:26},["touchdown"]);
 assert.equal(mission.r44Lesson.status,"completed");
