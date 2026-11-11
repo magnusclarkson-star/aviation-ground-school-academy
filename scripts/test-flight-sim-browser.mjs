@@ -481,7 +481,7 @@ try{
  assert.equal(await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional")),detail2D);
  assert.equal(await desktop.locator("#outsideView3D").isVisible(),detail2D);
  assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft camera remains available");
- assert.equal(await desktop.locator("#outsideView").isVisible(),!detail2D);
+ assert.ok(await desktop.locator("#outsideView").isVisible(), "2D canvas remains mounted underneath the detailed renderer");
  assert.equal(await desktop.evaluate(()=>!!document.getElementById("outsideView").getContext("2d")),true);
  await desktop.locator("#visualMode").selectOption("3d");
  if(supports){
