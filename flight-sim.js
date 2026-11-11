@@ -241,6 +241,9 @@ document.addEventListener("agsa:inspection-open",()=>{
  atcMissions?.stop();
 });
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
+// Native TouchEvents give Android independent finger identifiers for yoke
+// and rudder. Pointer Events remain for mouse, pen and non-touch browsers.
+const nativeMultiTouch=typeof window.TouchEvent==="function";
 const pointers={left:null,right:null,brake:null};
 const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
 const keys=new Set();
@@ -663,6 +666,7 @@ function movePad(event){
 }
 $("controlPad").addEventListener("pointerdown",e=>{
  if(e.pointerType==="mouse"&&e.button!==0)return;
+ if(nativeMultiTouch&&e.pointerType==="touch")return;
  if(dragPointer!==null)return;
  dragPointer=e.pointerId;
  try{$("controlPad").setPointerCapture(e.pointerId)}catch{}
@@ -672,18 +676,34 @@ $("controlPad").addEventListener("pointerdown",e=>{
 $("controlPad").addEventListener("pointermove",e=>{
  if(dragPointer===e.pointerId)movePad(e);
 });
+function finishPad(id,completed){
+ if(dragPointer!==id)return;
+ if(!completed)bankHold?.clear();
+ else if(bankHold?.status().armed&&state.mode==="airplane")
+  bankHold.release(input.bank);
+ dragPointer=null;input.bank=0;input.pitch=0;
+ syncKeys();syncBankHoldUI();gripTransform();
+}
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
- $("controlPad").addEventListener(eventType,e=>{
-  if(dragPointer!==e.pointerId)return;
-  // Only a deliberate finger lift may save the current bank for a long
-  // circuit turn. If Android cancels the gesture (scroll, interruption,
-  // capture loss), level instead of unexpectedly holding a steep turn.
-  if(eventType!=="pointerup")bankHold?.clear();
-  else if(bankHold?.status().armed&&state.mode==="airplane")
-   bankHold.release(input.bank);
-  dragPointer=null;input.bank=0;input.pitch=0;
-  syncKeys();syncBankHoldUI();gripTransform();
- });
+ $("controlPad").addEventListener(eventType,e=>finishPad(e.pointerId,eventType==="pointerup"));
+if(nativeMultiTouch){
+ const pad=$("controlPad");
+ pad.addEventListener("touchstart",e=>{
+  if(dragPointer!==null)return;
+  const t=e.changedTouches[0];if(!t)return;
+  dragPointer="touch:"+t.identifier;movePad(t);
+  haptics.pulse("control");e.preventDefault();
+ },{passive:false});
+ pad.addEventListener("touchmove",e=>{
+  const t=Array.from(e.changedTouches).find(x=>dragPointer==="touch:"+x.identifier);
+  if(!t)return;movePad(t);e.preventDefault();
+ },{passive:false});
+ for(const kind of ["touchend","touchcancel"])
+  pad.addEventListener(kind,e=>{
+   for(const t of e.changedTouches)finishPad("touch:"+t.identifier,kind==="touchend");
+   e.preventDefault();
+  },{passive:false});
+}
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
  const foot=touchPedals?.step({left,right,mode:state.mode,dt:0})??
@@ -700,6 +720,7 @@ function hold(id,key){
  const el=$(id);
  el.addEventListener("pointerdown",e=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
+  if(nativeMultiTouch&&e.pointerType==="touch")return;
   if(pointers[key]!==null)return;
   pointers[key]=e.pointerId;
   try{el.setPointerCapture(e.pointerId)}catch{}
@@ -713,6 +734,25 @@ function hold(id,key){
    if(pointers[key]!==e.pointerId)return;
    pointers[key]=null;updateHeld();
   });
+ if(nativeMultiTouch){
+  el.addEventListener("touchstart",e=>{
+   if(pointers[key]!==null)return;
+   const t=e.changedTouches[0];if(!t)return;
+   pointers[key]="touch:"+t.identifier;updateHeld();
+   haptics.pulse(key==="brake"?"control":"rudder");
+   e.preventDefault();
+  },{passive:false});
+  el.addEventListener("touchmove",e=>{
+   if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier))
+    e.preventDefault();
+  },{passive:false});
+  for(const kind of ["touchend","touchcancel"])
+   el.addEventListener(kind,e=>{
+    if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier)){
+     pointers[key]=null;updateHeld();e.preventDefault();
+    }
+   },{passive:false});
+ }
 }
 hold("leftRudder","left");hold("rightRudder","right");hold("brake","brake");
 $("bankHoldToggle")?.addEventListener("click",()=>{
