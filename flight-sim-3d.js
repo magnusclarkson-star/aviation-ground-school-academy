@@ -31,6 +31,9 @@ const RealAirframes=root?.AGSARealAirframes||
 const RealR44=root?.AGSARealR44||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-real-r44.js"):null);
+const MolenR44=root?.AGSAR44Airframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-r44-airframe.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -1268,7 +1271,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
     alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1,
     isGlazing:primitive.isGlazing===true,
-    isPainted:primitive.isPainted===true};
+    isPainted:primitive.isPainted===true,
+    partName:primitive.partName||null,
+    partAxis:primitive.partAxis||0,
+    partPivot:primitive.partPivot||[0,0,0]};
    objects.push(object);return object;
   };
   async function importC172(){
@@ -1306,12 +1312,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
   }
   async function importR44(){
-   if(!RealR44){realR44Status="unavailable";return;}
-   try{
-    const model=await RealR44.ensureR44();
+   // Prefer the integrated MIT GLB; only load the existing FlightGear AC3D
+   // if the new model or its texture decoding fails. Avoid two downloads and
+   // two texture sets on a memory-constrained Android phone.
+   async function install(model,kind){
     if(disposed||lost)return;
+    const mime=model.imageMimeTypes||model.mimeTypes||[];
     const decoded=await Promise.all(model.images.map(async(bytes,i)=>{
-     const blob=new Blob([bytes],{type:model.mimeTypes?.[i]||"image/png"});
+     const blob=new Blob([bytes],{type:mime[i]||"image/png"});
      return root.createImageBitmap(blob);
     }));
     if(disposed||lost){decoded.forEach(bitmap=>bitmap.close?.());return;}
@@ -1329,12 +1337,27 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     });
     gl.bindTexture(gl.TEXTURE_2D,null);
     realR44={primitives:model.primitives.map(uploadImported),images,
-     vertices:model.vertices,triangles:model.triangles};
+     vertices:model.vertices,triangles:model.triangles,
+     mainParts:model.mainParts||0,tailParts:model.tailParts||0,kind};
     realR44Status="imported";
-   }catch(error){
-    realR44Status="fallback";
-    if(typeof console!=="undefined")console.warn("R44 mesh fallback:",error);
    }
+   if(MolenR44){
+    try{
+     await install(await MolenR44.ensureR44(),"molen");
+     if(realR44)return;
+    }catch(error){
+     if(typeof console!=="undefined")console.warn("MIT R44 fallback:",error);
+    }
+   }
+   if(RealR44){
+    try{
+     await install(await RealR44.ensureR44(),"flightgear");
+     if(realR44)return;
+    }catch(error){
+     if(typeof console!=="undefined")console.warn("FlightGear R44 fallback:",error);
+    }
+   }
+   realR44Status="fallback";
   }
   // This is deliberately non-blocking: controls and simulated flight start
   // immediately with the legacy model, then swap to genuine C172 geometry.
@@ -1499,9 +1522,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }
     gl.uniform1f(uni.uActor,1);
     const realModel=id==="c172"?realC172:id==="r44"?realR44:null;
+    const isMolen=id==="r44"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
-     (id==="c172"?"licensed-c172-glb":"licensed-r44-ac3d"):"procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=realModel&&model.cabin?
+     (id==="c172"?"licensed-c172-glb":isMolen?"mit-r44-glb":
+      "licensed-r44-ac3d"):"procedural";
+    if(canvas.dataset)canvas.dataset.airframeInterior=isMolen?
+     "source-cabin-and-panel":realModel&&model.cabin?
      "four-seats-and-panel":"not-rendered";
     const drawCabin=()=>{
      if(!model.cabin)return;
@@ -1520,8 +1546,19 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
+      if(isMolen&&part.partAxis){
+       gl.uniform1i(uni.uPartAxis,part.partAxis);
+       gl.uniform3fv(uni.uPartPivot,part.partPivot);
+       const angle=animation?.[part.partName];
+       gl.uniform1f(uni.uPartAngle,Number.isFinite(angle)?angle:0);
+      }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
+      if(isMolen&&part.partAxis){
+       gl.uniform1i(uni.uPartAxis,0);
+       gl.uniform1f(uni.uPartAngle,0);
+       gl.uniform3fv(uni.uPartPivot,[0,0,0]);
+      }
      };
      if(id==="c172"){
       // Opaque Cessna skin does not block the interior through tinted glass;
@@ -1546,9 +1583,20 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uOpacity,.26);
       gl.bindVertexArray(model.shellGlass.vao);
       gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
+     }else if(isMolen){
+      // The MIT aircraft already contains source windows, cabin, landing
+      // gear, main and tail rotors. Draw none of the older AC3D overlays.
+      gl.disable(gl.BLEND);gl.depthMask(true);
+      gl.uniform1i(uni.uR44Skin,0);
+      for(const part of realModel.primitives)
+       if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      for(const part of realModel.primitives)
+       if((part.opacity??1)<.99)drawPrimitive(part,limit(part.opacity,0,1));
      }else{
-      // R44 source material 4 is 70% transparent glass. Treat windows as
-      // transparent after the solid body and new cabin, not before the seats.
+      // FlightGear fallback has 70% transparent windows. Preserve its skin
+      // isolation and the existing four-seat interior in that path only.
       gl.disable(gl.BLEND);gl.depthMask(true);
       for(const part of realModel.primitives){
        if((part.opacity??1)<.99)continue;
@@ -1577,9 +1625,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }
     // Motion-sweep draws before the actual two blades; never conceals them.
     const isImportedRotorcraft=id==="r44"&&realR44!==null;
-    const rotorSweep=isImportedRotorcraft?model.authenticRotorSweep:model.rotorSweep;
-    const tailRotorSweep=isImportedRotorcraft?model.authenticTailRotorSweep:model.tailRotorSweep;
-    const animatedParts=exteriorAnimatedParts(id,Boolean(realModel),model);
+    const rotorSweep=isMolen?null:isImportedRotorcraft?
+     model.authenticRotorSweep:model.rotorSweep;
+    const tailRotorSweep=isMolen?null:isImportedRotorcraft?
+     model.authenticTailRotorSweep:model.tailRotorSweep;
+    const animatedParts=isMolen?[]:
+     exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
     if(rotorSweep&&sweepOpacity>0){
