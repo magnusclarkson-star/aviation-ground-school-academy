@@ -655,6 +655,12 @@ function previewPausedControls(){
  if(!paused)return;
  A.step(systems,state,input,0);
  updateReadouts();
+ // When the detailed C172/R44 renders over the selected 2D backup, keep
+ // the Canvas snapshot current on *paused control changes* as well. This
+ // costs one paint per control interaction, not an extra animation loop.
+ if($("visualMode").value==="2d"&&renderer3D&&["c172","r44"].includes(airframeId()))
+  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),
+   view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
