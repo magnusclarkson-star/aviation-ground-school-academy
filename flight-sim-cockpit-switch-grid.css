@@ -187,3 +187,12 @@
   font-size:8px!important;
  }
 }
+
+
+/* Pedals-first correction: remove the R44 takeoff/alt lesson strip from
+   cockpit layout entirely. It otherwise consumes vertical space needed
+   for the rudder pedals, especially on small phones in landscape.
+   Mission state and analogue ALT/VSI gauges continue to update normally. */
+#cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip{
+ display:none!important;
+}
