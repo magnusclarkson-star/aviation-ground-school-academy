@@ -36,7 +36,9 @@ self.addEventListener("fetch",event=>{
   try{
    const response=await fetch(event.request);
    if(response.ok&&response.type==="basic"){
-    event.waitUntil(cache.put(event.request,response.clone()).catch(()=>{}));
+    // Extend the response promise until the cache write finishes. Calling
+    // event.waitUntil only after a network await can violate event lifetime.
+    try{await cache.put(event.request,response.clone());}catch{}
    }
    return response;
   }catch{
