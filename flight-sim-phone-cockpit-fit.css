@@ -10,9 +10,9 @@
  }
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell,
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
-  flex:0 0 clamp(52px,19dvh,88px)!important;
-  height:clamp(52px,19dvh,88px)!important;
-  min-height:0!important;max-height:88px!important;
+  flex:0 0 clamp(108px,34dvh,160px)!important;
+  height:clamp(108px,34dvh,160px)!important;
+  min-height:0!important;max-height:160px!important;
   aspect-ratio:auto!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation{
@@ -134,9 +134,9 @@
 @media (orientation:portrait) and (max-width:740px){
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell,
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
-  flex:0 0 clamp(85px,14dvh,125px)!important;
-  height:clamp(85px,14dvh,125px)!important;
-  min-height:0!important;max-height:125px!important;
+  flex:0 0 clamp(112px,18dvh,165px)!important;
+  height:clamp(112px,18dvh,165px)!important;
+  min-height:0!important;max-height:165px!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation{
   min-height:0!important;overflow-y:auto!important;
