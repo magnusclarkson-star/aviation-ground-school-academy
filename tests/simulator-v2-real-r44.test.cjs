@@ -45,6 +45,14 @@ test("R44 repaint is restricted to original body and tail skin, with no old text
  const painted=model.primitives.filter(p=>p.isPainted);
  const components=model.primitives.filter(p=>!p.isPainted);
  assert.ok(painted.length>0&&components.length>0);
+ const paintedNames=new Set(painted.flatMap(p=>p.sourceNames));
+ for(const name of ["fuselage","derive","protection",
+  "porteAD","porteAG","porteBD","porteBG","trous_1"])
+  assert.ok(paintedNames.has(name),name+" must not show old source livery");
+ const originalNames=new Set(components.flatMap(p=>p.sourceNames));
+ for(const name of ["patins","echappe","greenlight","redlight",
+  "windshield","windowFL","windowFR","windowRL","windowRR"])
+  assert.ok(originalNames.has(name),name+" retains its own material");
  assert.ok(painted.every(p=>!p.isGlazing&&p.opacity===1),
   "only solid original airframe skin may be recoloured");
  assert.ok(painted.some(p=>{
