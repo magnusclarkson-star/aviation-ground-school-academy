@@ -83,10 +83,9 @@ try {
    result.left.right<=result.viewport.width+2&&result.right.right<=result.viewport.width+2,
    mode.label+" both rudder pedals have a usable hit target "+JSON.stringify(result));
   assert.ok(result.overflow<=2,mode.label+" no horizontal overflow "+JSON.stringify(result));
-  if(mode.label==="portrait"){
-   assert.ok(result.left.bottom<=result.viewport.height-2&&result.right.bottom<=result.viewport.height-2,
-    "portrait pedals must fit without scrolling "+JSON.stringify(result));
-  }
+  assert.ok(result.left.top>=0&&result.right.top>=0&&
+   result.left.bottom<=result.viewport.height-2&&result.right.bottom<=result.viewport.height-2,
+   mode.label+" both full-size pedals visible without scrolling "+JSON.stringify(result));
   console.log("R44 "+mode.label+" geometry: "+JSON.stringify(result));
   assert.deepEqual(errors,[],"no runtime errors in "+mode.label);
   await page.close();
