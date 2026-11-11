@@ -33,3 +33,17 @@
 **Accuracy limitation:** Molen explicitly identifies its R44 as a visual prototype needing further review. It is an original, approximate polygonal interpretation, not Robinson Helicopter Company CAD or a manufacturer-approved model. Do not imply manufacturer approval or certification.
 
 **No endorsement:** Bendyline LLC and Robinson Helicopter Company have no endorsement of or affiliation with Aviation Ground School Academy.
+
+---
+
+## Cessna 172S Skyhawk — source cockpit/exterior GLB
+
+**Asset:** `assets/aircraft/c172-molen-skyhawk.glb` (1,781,260 bytes), SHA-256 `e02327dfc596a864f4fff5b24cb49dbf4b840278174f462ca3278d685e9e6fff`.
+
+**Original model/author:** © 2026 Bendyline LLC, Molen original polygonal aircraft. glTF includes 538 nodes, 121 mesh definitions, 17 images, 29 materials, source-built cabin, NAV III panel, and hinged wing controls.
+
+**Source:** [Cessna 172S source bundle](https://github.com/bendyline/molen/tree/main/content/entities/source/aircraft/cessna-172s) in [Molen assets release](https://github.com/bendyline/molen/releases/tag/assets-52148fd49fe80b1d), `entities-models-part-001.tar.gz`.
+
+**License:** MIT; preserve `MOLEN-LICENSE.txt` and this attribution in distributions.
+
+**Limits:** Original approximate 3D model, not manufacturer-issued or certified. The model depicts the C172S NAV III/G1000 panel; round gauges remain a separate training UI option. Existing lightweight C172 GLB remains a fallback on unsupported phones.

@@ -1,0 +1,73 @@
+name: Import Original MIT Cessna 172S Model
+on:
+  push:
+    branches: [feature/v2-molen-cessna172s-full-airframe-20261111]
+    paths:
+      - '.github/workflows/import-molen-c172.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import-licensed-c172:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch original C172S MIT asset from pinned Molen release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/molen-172 assets/aircraft artifacts
+          gh release download assets-52148fd49fe80b1d \
+            -R bendyline/molen -p entities-models-part-001.tar.gz \
+            -D /tmp/molen-172
+          archive=/tmp/molen-172/entities-models-part-001.tar.gz
+          entry="$(tar -tzf "$archive" | grep -Ei 'cessna[_-]172s/.*\.glb$' | head -n 1 || true)"
+          if [ -z "$entry" ]; then
+            echo "Missing Cessna 172S GLB: matching archive paths"
+            tar -tzf "$archive" | grep -Ei 'cessna[_-]172' | head -n 30 || true
+            exit 1
+          fi
+          echo "Extracting exact licensed source model: $entry"
+          tar -xOzf "$archive" "$entry" > assets/aircraft/c172-molen-skyhawk.glb
+          node -e '
+            const fs=require("node:fs"),crypto=require("node:crypto");
+            const p="assets/aircraft/c172-molen-skyhawk.glb",b=fs.readFileSync(p);
+            if(b.length<250000||b.length>10000000||b.toString("ascii",0,4)!=="glTF")
+              throw Error("Malformed or oversized C172 GLB: "+b.length);
+            const j=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString("utf8"));
+            const names=(j.nodes||[]).map(n=>n.name||"");
+            const summary={bytes:b.length,sha256:crypto.createHash("sha256").update(b).digest("hex"),
+              nodes:names.length,meshes:j.meshes?.length,
+              textures:j.textures?.length,images:j.images?.length,
+              materials:j.materials?.length,ext:j.extensionsRequired,
+              relevant:names.filter(n=>/cabin|cockpit|panel|seat|wing|flap|aileron|prop|rudder/i.test(n)).slice(0,140)};
+            fs.writeFileSync("artifacts/c172-molen-source-audit.json",JSON.stringify(summary,null,2));
+            console.log(JSON.stringify(summary,null,2));
+          '
+      - name: Attach source candidate and metadata
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c172-molen-licensed-model-audit
+          path: |
+            artifacts/c172-molen-source-audit.json
+            assets/aircraft/c172-molen-skyhawk.glb
+          retention-days: 14
+      - name: Commit actual binary to C172 development branch
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/aircraft/c172-molen-skyhawk.glb
+          if ! git diff --staged --quiet; then
+            git commit -m "asset(c172): add original MIT Skyhawk full cockpit and exterior GLB"
+            git push origin HEAD:feature/v2-molen-cessna172s-full-airframe-20261111
+          fi

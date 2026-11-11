@@ -37,6 +37,7 @@ on:
       - 'scripts/build-flight-sim-icons.mjs'
       - 'scripts/test-flight-sim-pwa-browser.mjs'
       - 'flight-sim-real-airframes.js'
+      - 'flight-sim-c172-airframe.js'
       - 'flight-sim-real-r44.js'
       - 'flight-sim-r44-airframe.js'
       - 'tests/simulator-v2-real-r44.test.cjs'
@@ -129,6 +130,7 @@ on:
       - 'scripts/build-flight-sim-icons.mjs'
       - 'scripts/test-flight-sim-pwa-browser.mjs'
       - 'flight-sim-real-airframes.js'
+      - 'flight-sim-c172-airframe.js'
       - 'flight-sim-real-r44.js'
       - 'flight-sim-r44-airframe.js'
       - 'tests/simulator-v2-real-r44.test.cjs'
@@ -215,6 +217,7 @@ jobs:
           node --check flight-sim-sw.js
           node --check flight-sim-real-airframes.js
           node --check flight-sim-real-r44.js
+          node --check flight-sim-c172-airframe.js
           node --check flight-sim-r44-airframe.js
           node --check flight-sim-airframe-geometry.js
           node --check flight-sim-exterior-2d.js
@@ -242,6 +245,7 @@ jobs:
           node scripts/test-flight-sim-3d.mjs
           node scripts/test-flight-sim-airframes.mjs
           node --test tests/simulator-v2-real-r44.test.cjs
+          node --test tests/simulator-v2-molen-c172.test.cjs
           node scripts/test-flight-inspection.mjs
           node scripts/test-flight-sim-airport-detail.mjs
           node scripts/test-flight-sim-aircraft-systems.mjs

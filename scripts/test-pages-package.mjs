@@ -21,6 +21,7 @@ for(const [asset,minBytes] of [
  ["assets/aircraft/ATTRIBUTION.md",100],
  ["assets/aircraft/R44-ATTRIBUTION.md",100],
  ["assets/aircraft/r44-molen-raven-ii.glb",500000],
+ ["assets/aircraft/c172-molen-skyhawk.glb",1000000],
  ["assets/aircraft/MOLEN-LICENSE.txt",100],
  ["assets/aircraft/R44-GPL-2.0-COPYING.txt",1000]
 ]){
