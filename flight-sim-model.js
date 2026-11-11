@@ -175,7 +175,7 @@ function step(state,input,seconds){
   // In forward flight the cyclic bank helps steer the flight path. Previous
   // 2.5 deg/s cap made a full turn take over a minute even at full bank.
   // No bank-induced yaw while hovering or while skids touch the pad.
-  const turnAssist=clamp(state.rollDeg*.23*forwardSpeed/6,-10,10);
+  const turnAssist=clamp(state.rollDeg*.42*forwardSpeed/6,-15,15);
   // Pedals need finer resolution during low, slow hover on a phone.
   // Retain the existing full-pedal rate and normal forward-flight response.
   const carefulYaw=state.altitudeM<12&&Math.hypot(
