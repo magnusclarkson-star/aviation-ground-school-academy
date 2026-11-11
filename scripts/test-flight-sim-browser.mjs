@@ -108,7 +108,7 @@ try{
   return {visible,transform,hidden: pointer.getAttribute("visibility")};
  });
  assert.equal(mapPointer.visible,"visible","active circuit waypoint arrow appears on map");
- assert.equal(mapPointer.transform,"rotate(60.95 110 82)",
+ assert.equal(mapPointer.transform,"rotate(94.09 110 82)",
   "map waypoint arrow rotates toward the real next waypoint bearing");
  assert.equal(mapPointer.hidden,"hidden","waypoint arrow hides when circuit is inactive");
  const padMap=await desktop.evaluate(()=>{

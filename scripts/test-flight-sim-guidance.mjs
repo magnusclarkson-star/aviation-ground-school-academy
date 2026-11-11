@@ -195,7 +195,7 @@ for(const physicsId of ["classic","aero"]){
  progress.circuit.stage="crosswind";
  const first=G.guidance(model,pilot,progress);
  assert.equal(first.tag,"RETURN CIRCUIT · CROSSWIND");
- assert.match(first.text,/TURN LEFT 0[56][0-9]°/);
+ assert.match(first.text,/TURN RIGHT 11[0-9]°/);
  assert.match(first.text,/to CROSSWIND/);
  model.xM=520;
  const second=G.guidance(model,pilot,progress);
@@ -237,7 +237,7 @@ cornerSession.circuit.stage="downwind";
 const farCorner=Circuit.status(cornerSession.circuit,cornerState);
 assert.equal(farCorner.turnNow,false,"far from corner: stay on downwind");
 assert.match(G.guidance(cornerState,M.makeInput(),cornerSession).text,/to DOWNWIND/);
-cornerState.zM=-1480;
+cornerState.zM=-1240;
 const nearCorner=Circuit.status(cornerSession.circuit,cornerState);
 assert.ok(nearCorner.turnLeadM>250&&nearCorner.turnLeadM<380);
 assert.equal(nearCorner.turnNow,true);

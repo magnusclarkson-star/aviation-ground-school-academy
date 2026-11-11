@@ -1,7 +1,7 @@
 /* Lightweight route cues for the fictional home-runway circuit.
  * Position and heading come only from local simulator state. The instructor
  * does NOT steer, alter flight physics, imply ATC clearance or claim real
- * flight procedures. The route is deliberately a spacious right-hand loop.
+ * flight procedures. The route follows a verified, flyable right-hand loop in the local practice area.
  */
 (function(root){"use strict";
 const RAD=180/Math.PI;
@@ -9,14 +9,14 @@ const heading=n=>((Number(n)||0)%360+360)%360;
 const signedDelta=(from,to)=>((heading(to)-heading(from)+540)%360)-180;
 const eligible=s=>s?.mode==="airplane"&&["runway","approach"].includes(s?.scenario);
 const LEGS=Object.freeze({
- departure:Object.freeze({label:"DEPARTURE",target:[0,1900],course:0,
-  hint:"Fly past the far end of the runway, then start a right turn."}),
- crosswind:Object.freeze({label:"CROSSWIND",target:[900,2250],course:90,
-  hint:"Continue the right turn towards east, then turn towards south."}),
- downwind:Object.freeze({label:"DOWNWIND",target:[900,-1750],course:180,
-  hint:"Fly south beside the runway until you are beyond its approach end."}),
- base:Object.freeze({label:"BASE",target:[0,-1900],course:270,
-  hint:"Turn right towards west, then turn north to line up with the runway."}),
+ departure:Object.freeze({label:"DEPARTURE",target:[0,1550],course:0,
+  hint:"Fly beyond the takeoff point, then start a right turn toward the crosswind waypoint."}),
+ crosswind:Object.freeze({label:"CROSSWIND",target:[700,1700],course:90,
+  hint:"Follow the eastbound leg, then turn right toward the southbound downwind waypoint."}),
+ downwind:Object.freeze({label:"DOWNWIND",target:[925,-1350],course:180,
+  hint:"Fly south beside the runway and start base early enough to leave room for final."}),
+ base:Object.freeze({label:"BASE",target:[120,-1680],course:270,
+  hint:"Turn right toward the base waypoint, then turn north and line up before descending."}),
  final:Object.freeze({label:"FINAL",target:[0,300],course:0,
   hint:"Line up with the runway, check height and descent, and aim for a gentle touchdown."}),
  landed:Object.freeze({label:"LANDED",target:[0,900],course:0,
@@ -24,7 +24,7 @@ const LEGS=Object.freeze({
  stopped:Object.freeze({label:"STOPPED",target:[0,900],course:0,
   hint:"The exercise stopped after terrain or runway contact. Restart to try again."})
 });
-const PATH=Object.freeze([[0,250],[0,1750],[900,2250],[900,-1750],[0,-1900],[0,250]]);
+const PATH=Object.freeze([[0,250],[0,1350],[700,1700],[925,-1350],[120,-1680],[0,250]]);
 // At the illustrated corners, start a right turn *before* reaching the
 // waypoint: otherwise a moving aircraft overshoots the turn by hundreds of
 // metres and can struggle to get back to the home runway on a phone.
