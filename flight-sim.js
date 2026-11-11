@@ -668,7 +668,7 @@ function movePad(event){
 }
 $("controlPad").addEventListener("pointerdown",e=>{
  if(e.pointerType==="mouse"&&e.button!==0)return;
- if(nativeMultiTouch&&e.pointerType==="touch")return;
+ if(nativeMultiTouch&&e.pointerType==="touch"&&e.isTrusted)return;
  if(dragPointer!==null)return;
  dragPointer=e.pointerId;
  try{$("controlPad").setPointerCapture(e.pointerId)}catch{}
@@ -722,7 +722,7 @@ function hold(id,key){
  const el=$(id);
  el.addEventListener("pointerdown",e=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
-  if(nativeMultiTouch&&e.pointerType==="touch")return;
+  if(nativeMultiTouch&&e.pointerType==="touch"&&e.isTrusted)return;
   if(pointers[key]!==null)return;
   pointers[key]=e.pointerId;
   try{el.setPointerCapture(e.pointerId)}catch{}
