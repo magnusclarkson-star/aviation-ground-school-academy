@@ -1492,6 +1492,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    const sourceCockpit=view==="cockpit"&&realTrainer;
    const baseCamera=cameraPose(state,view,orbit,{sourceCockpit});
    if(canvas.dataset)canvas.dataset.sourceCockpit=sourceCockpit?"on":"off";
+   const liveScene=canvas.closest?.(".scene-shell");
+   if(liveScene)liveScene.dataset.sourceC172=sourceCockpit?"on":"off";
    const targetCamera=importedCameraFraming(baseCamera,view,
     realHelicopter?.72:realTrainer?.82:1);
    const clock=root?.performance?.now?.()??Date.now();
