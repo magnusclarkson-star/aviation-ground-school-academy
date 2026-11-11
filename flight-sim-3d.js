@@ -1000,7 +1000,7 @@ function exteriorAnimatedParts(id,imported,model){
  if(id==="c172"&&imported)return []; // Imported GLB already has its own propeller.
  return model.parts||[];
 }
-function cameraPose(state,view="cockpit",orbit={}){
+function cameraPose(state,view="cockpit",orbit={},options={}){
  if(!state||!["airplane","helicopter"].includes(state.mode))throw Error("Synthetic aircraft state required");
  if(!["cockpit","chase","side","top","inspect"].includes(view))throw Error("Unknown 3D camera mode");
  const yaw=(state.headingDeg||0)*RAD;
@@ -1016,6 +1016,24 @@ function cameraPose(state,view="cockpit",orbit={}){
    craft[1]+Math.sin(elevation)*distance,
    craft[2]+Math.cos(direction)*horizontal],
    yaw:direction+Math.PI,pitch:-elevation,roll:0,craft};
+ }
+ if(view==="cockpit"&&options.sourceCockpit===true&&state.mode==="airplane"){
+  // Position in the existing imported Skyhawk cabin, not above its roof:
+  // left-front seat at z≈1.46m, central nose-facing instrument panel at
+  // z≈2.31m. Rotate the eye with the same roll→pitch→yaw as the airframe.
+  // Never use the external airframe chase coordinates as an eye station.
+  const station=IMPORTED_CABIN_LAYOUT.c172;
+  const x=-.29,y=.28,z=station.frontSeatZ-.02;
+  const bank=(state.rollDeg||0)*RAD,pitch=(state.pitchDeg||0)*RAD;
+  const cr=Math.cos(bank),sr=Math.sin(bank);
+  const rx=x*cr+y*sr,ry=-x*sr+y*cr;
+  const cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const py=ry*cp+z*sp,pz=-ry*sp+z*cp;
+  return {view,eye:[
+   craft[0]+rx*Math.cos(yaw)+pz*Math.sin(yaw),
+   craft[1]+py,
+   craft[2]-rx*Math.sin(yaw)+pz*Math.cos(yaw)
+  ],yaw,pitch:pitch-.12,roll:bank,craft,sourceCockpit:true};
  }
  if(view==="cockpit")return {view,eye:[state.xM,altitude+2.2,state.zM],
   yaw,pitch:(state.pitchDeg||0)*RAD,roll:(state.rollDeg||0)*RAD,craft};
@@ -1063,7 +1081,7 @@ layout(location=3) in vec2 aTexCoord;
 uniform vec3 uEye;
 uniform vec3 uCraft;
 uniform float uYaw,uPitch,uRoll,uCraftYaw,uCraftPitch,uCraftRoll;
-uniform float uActor,uAspect,uFocal;
+uniform float uActor,uAspect,uFocal,uCameraNear;
 uniform vec3 uPartPivot;
 uniform float uPartAngle;
 uniform int uPartAxis;
@@ -1129,7 +1147,7 @@ void main(){
  float xx=side*cr-up*sr;
  float yy=side*sr+up*cr;
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
-   1.000080003*depth-0.800032001,depth);
+   1.000080003*depth-2.000080003*uCameraNear,depth);
  vColor=aColor;vLocalPosition=aPosition;
  vTexCoord=aTexCoord;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
@@ -1261,7 +1279,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    high:gl.getUniformLocation(skyProgram,"uSkyHigh")
   };
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
-   "uCraftRoll","uActor","uAspect","uFocal",
+   "uCraftRoll","uActor","uAspect","uFocal","uCameraNear",
    "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity",
     "uHasTexture","uAlphaCutoff","uTexture","uC172Pass","uR44Skin"])
    uni[name]=gl.getUniformLocation(program,name);
@@ -1468,10 +1486,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1i(uni.uTexture,0);
    gl.uniform1i(uni.uC172Pass,0);
    gl.uniform1i(uni.uR44Skin,0);
-   const baseCamera=cameraPose(state,view,orbit);
    const realHelicopter=state.mode==="helicopter"&&realR44!==null;
    const realTrainer=state.mode==="airplane"&&realC172!==null&&
     Exterior.normalize(airframeId||state.mode)==="c172";
+   const sourceCockpit=view==="cockpit"&&realTrainer;
+   const baseCamera=cameraPose(state,view,orbit,{sourceCockpit});
+   if(canvas.dataset)canvas.dataset.sourceCockpit=sourceCockpit?"on":"off";
+   const liveScene=canvas.closest?.(".scene-shell");
+   if(liveScene)liveScene.dataset.sourceC172=sourceCockpit?"on":"off";
    const targetCamera=importedCameraFraming(baseCamera,view,
     realHelicopter?.72:realTrainer?.82:1);
    const clock=root?.performance?.now?.()??Date.now();
@@ -1490,6 +1512,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uCraftPitch,(state.pitchDeg||0)*RAD);
    gl.uniform1f(uni.uCraftRoll,(state.rollDeg||0)*RAD);
    gl.uniform1f(uni.uAspect,w/h);gl.uniform1f(uni.uFocal,1.65);
+   // A pilot's instrument panel is less than a metre from the eye. The
+   // exterior .40m clipping plane would cut it off entirely.
+   gl.uniform1f(uni.uCameraNear,sourceCockpit?.075:.4);
    const world=state.mode==="helicopter"?worldHeli:worldPlane;
    gl.uniform1f(uni.uActor,0);
    gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
@@ -1545,11 +1570,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     gl.uniform3fv(uni.uPartPivot,[0,0,0]);
     gl.uniform1f(uni.uActor,0);
    }
-   if(view!=="cockpit"){
+   // The genuine C172 cockpit must draw the original *interior* mesh in
+   // pilot view; exterior-only logic used to hide every cabin surface.
+   if(view!=="cockpit"||sourceCockpit){
     const selected=Exterior.normalize(airframeId||state.mode);
     const id=state.mode==="helicopter"?"r44":selected==="r44"?"c172":selected;
     const model=airframes[id];
-    if(!inspectionOnly&&model.shadow&&Number(state.altitudeM)<120){
+    if(!inspectionOnly&&view!=="cockpit"&&model.shadow&&Number(state.altitudeM)<120){
      const height=Math.max(0,Number(state.altitudeM)||0);
      gl.uniform1f(uni.uActor,2);
      gl.uniform1f(uni.uOpacity,.25/(1+height/24));
@@ -1745,7 +1772,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return {draw,destroy,resetCamera(){cameraRig?.reset()},
    get realC172Status(){return realC172Status},
    get realR44Status(){return realR44Status},
-   supported:true,engine:"webgl2",get lost(){return lost}};
+   supported:true,engine:"webgl2",
+   get realC172Kind(){return realC172?.kind||null},
+   get lost(){return lost}};
  }catch{
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);

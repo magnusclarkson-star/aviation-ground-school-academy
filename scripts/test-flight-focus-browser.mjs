@@ -75,8 +75,21 @@ try{
  console.log("Focused landscape geometry",JSON.stringify(landscape));
  assert.ok(landscape.instruments.top>=landscape.scenery.bottom-3,
   "instruments stay below windshield");
- assert.ok(landscape.yoke.top>=landscape.instruments.bottom-10,
-  "yoke stays below the instrument panel");
+ const panoramicC172=landscape.yoke.top<landscape.instruments.top;
+ if(panoramicC172){
+  // Real 3D cockpit instruments are INSIDE the scenic windscreen. The
+  // physical controls come first beneath it; duplicate zoomable dials are
+  // below and remain scrollable, not allowed to shrink the forward view.
+  assert.ok(landscape.scenery.height>=175,
+   "source-model pilot windscreen takes the large upper landscape region");
+  assert.ok(landscape.instruments.top>=landscape.control.bottom-4,
+   "optional zoomable gauges follow the immediately usable yoke and pedals");
+  assert.ok(landscape.stationScroll>landscape.stationClient,
+   "wide layout keeps extra instruments available by scrolling the lower deck");
+ }else{
+  assert.ok(landscape.yoke.top>=landscape.instruments.bottom-10,
+   "legacy landscape yoke stays beneath primary gauges");
+ }
  assert.ok(landscape.left.top>=landscape.yoke.bottom-10,
   "left pedal is beneath the centered yoke");
  assert.ok(landscape.right.top>=landscape.yoke.bottom-10,
@@ -87,8 +100,11 @@ try{
   "both rudder pedals fit in the same visible phone frame");
  assert.ok(landscape.yoke.width>=80&&landscape.yoke.height>=50,
   "functional center yoke remains touch sized");
- assert.ok(landscape.gauges.every(g=>g.width>=44&&g.bottom<=landscape.yoke.top+10),
-  "all gauges remain visible above the yoke");
+ assert.ok(landscape.gauges.every(g=>g.width>=44&&
+  (panoramicC172?g.top>=landscape.control.bottom-5:g.bottom<=landscape.yoke.top+10)),
+  panoramicC172?
+  "zoomable gauges remain available below the visible pilot controls":
+  "legacy gauges remain visible above the yoke");
  assert.ok(landscape.power.bottom<=392&&landscape.flaps.bottom<=392&&landscape.brake.bottom<=392,
   "power, flaps and wheel brake are visible together with gauges, yoke and pedals");
  await phone.locator("#cockpitSwitch_light").tap();

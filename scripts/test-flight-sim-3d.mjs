@@ -151,6 +151,30 @@ assert.equal(pilot.view,"cockpit");
 assert.equal(chase.view,"chase");
 assert.equal(pilot.eye[0],state.xM);
 assert.equal(pilot.eye[2],state.zM);
+assert.equal(pilot.eye[2],state.zM);
+// Real source-cabin camera: position at the left pilot seat (not the roof,
+// rear bench or outside fuselage), and rotate exactly with the aircraft.
+const sourcePilot=Three.cameraPose(state,"cockpit",{}, {sourceCockpit:true});
+assert.equal(sourcePilot.sourceCockpit,true);
+assert.ok(sourcePilot.eye[0]<state.xM-.18&&sourcePilot.eye[0]>state.xM-.4,
+ "pilot eye is in left seat, not exterior camera centre");
+assert.ok(sourcePilot.eye[2]>state.zM+1.2&&sourcePilot.eye[2]<state.zM+1.9,
+ "pilot eye between front seat and real source-model panel");
+assert.ok(sourcePilot.eye[1]<sourcePilot.craft[1]+.48,
+ "pilot eye below the cabin roof, not above it");
+assert.ok(sourcePilot.pitch<0,
+ "forward C172 view angles down slightly toward instrument panel");
+const sourceTurned=Three.cameraPose({...state,headingDeg:90},"cockpit",{},
+ {sourceCockpit:true});
+assert.ok(sourceTurned.eye[0]>state.xM+1.2,
+ "pilot seat rotates with aircraft nose through 90 degrees");
+assert.ok(sourceTurned.eye[2]>state.zM+.18&&sourceTurned.eye[2]<state.zM+.4);
+const sourceBanked=Three.cameraPose({...state,headingDeg:35,pitchDeg:9,rollDeg:17},"cockpit",{},
+ {sourceCockpit:true});
+assert.ok(sourceBanked.eye.every(Number.isFinite)&&sourceBanked.eye[1]>state.altitudeM,
+ "pilot seat follows aircraft pitch and bank without leaving cabin");
+assert.equal(Three.cameraPose(state,"cockpit").sourceCockpit,undefined,
+ "legacy non-source cockpit remains a safe fallback");
 assert.ok(chase.eye[2]<state.zM-20,"chase camera is behind the airplane");
 assert.ok(chase.eye[1]>pilot.eye[1],"chase camera is above the airplane");
 assert.equal(chase.craft[1],state.altitudeM+1.5);

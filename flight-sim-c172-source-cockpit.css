@@ -1,0 +1,99 @@
+/* Real C172 pilot seat: draw the imported, textured Cessna cabin in WebGL.
+   No duplicate synthetic dashboard should obscure the source windscreen and
+   avionics. The lower deck remains the interactive instrument/control surface.
+   A device with no imported WebGL model retains the existing fallback panel. */
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] .cockpit-frame,
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] .scene-centre,
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] .scene-top,
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] .scene-bottom,
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] #flightFeedbackVisual[data-kind="idle"]{
+ display:none!important
+}
+.scene-shell[data-source-c172="on"][data-camera-view="cockpit"] #outsideView3D{
+ width:100%;height:100%;object-fit:cover
+}
+/* Keep a wide Cessna windshield on landscape phones without requiring the
+   learner to select a different graphic mode. The fixed pilot deck below
+   remains scrollable and its original yoke/pedal elements are never cloned. */
+@media(orientation:landscape) and (min-width:600px) and (max-height:510px){
+ body:not([data-cockpit-focus="on"]) .scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
+  width:100%!important;max-width:none!important;
+  height:clamp(165px,54dvh,280px)!important;
+  aspect-ratio:auto!important;min-height:0!important;
+ }
+ body[data-cockpit-focus="on"] .scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
+  flex:0 0 clamp(175px,54dvh,285px)!important;
+  width:100%!important;height:clamp(175px,54dvh,285px)!important;
+  max-height:none!important;aspect-ratio:auto!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"]{
+  flex:1 1 auto!important;overflow-y:auto!important;
+  min-height:0!important;overscroll-behavior:contain;
+  padding:2px 5px 5px!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head{
+  display:flex!important;min-height:22px!important;max-height:26px!important;
+  margin:0 auto!important;gap:3px!important;padding:0 4px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head>div:first-child strong{
+  font-size:9px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head label{
+  font-size:7px!important;max-width:155px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitAircraftSelect{
+  min-height:22px!important;max-height:23px!important;
+  padding:1px 3px!important;font-size:10px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-station-head .full-flight-launch,
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitGripLabel{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] .cockpit-info-toolbar.cockpit-actions{
+  margin:1px auto!important;min-height:25px!important;max-height:28px!important;
+  padding:0 3px!important;gap:3px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain.cockpit-flightdeck{
+  display:flex!important;flex-direction:column!important;
+  align-items:stretch;gap:2px!important;max-width:100%!important;
+  margin:0 auto!important;padding:2px 3px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain .control-panel{
+  order:-1!important;max-width:730px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain .control-panel .control-pad{
+  height:clamp(54px,15dvh,64px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain .cockpit-instrument-well{
+  order:2!important;max-width:730px!important;width:100%!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain #cockpitSwitchPanel{
+  position:fixed!important;z-index:1015!important;
+  top:calc(env(safe-area-inset-top, 0px) + 5px)!important;
+  right:calc(env(safe-area-inset-right, 0px) + 6px)!important;
+  left:auto!important;bottom:auto!important;
+  width:max-content!important;max-width:195px!important;
+  margin:0!important;padding:2px 3px!important;
+  border:1px solid #556f7ad9!important;border-radius:6px!important;
+  background:#0d2028d9!important;box-shadow:0 3px 10px #08121b75!important;
+  touch-action:manipulation!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain #cockpitSwitchPanel .cockpit-annunciators{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain #cockpitSwitchPanel .cockpit-switch{
+  width:40px!important;min-height:24px!important;height:24px!important;
+  touch-action:manipulation!important;pointer-events:auto!important
+ }
+ body[data-cockpit-focus="on"] .scene-shell[data-airframe="c172"][data-camera-view="cockpit"] #outsideView3D{
+  width:100%!important;height:100%!important
+ }
+}
+/* Make the portrait pilot cabin view easier to see without leaving the
+   yoke and pedals beneath the interactive instrument panel. */
+@media(orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] .scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
+  flex:0 0 clamp(200px,31dvh,290px)!important;
+  height:clamp(200px,31dvh,290px)!important
+ }
+}

@@ -1,6 +1,6 @@
 // Offline-first fallback for static simulator files only. No payments,
 // credentials, personal data or remote services are cached.
-const CACHE="agsa-flight-sim-v1-20261111-c172-cockpit2";
+const CACHE="agsa-flight-sim-v1-20261111-source-seat-landscape1";
 const ROOT=new URL("./",self.location.href);
 const SHELL=[
  new URL("flight-sim.html",ROOT).href,

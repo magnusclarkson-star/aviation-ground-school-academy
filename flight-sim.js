@@ -291,7 +291,9 @@ function visualMessage(message,status){
 function fallbackTo2D(message){
  if(renderer3D){renderer3D.destroy();renderer3D=null}
  canvas3D.hidden=true;
- document.querySelector(".scene-shell")?.classList?.remove("three-dimensional");
+ const fallbackScene=document.querySelector(".scene-shell");
+ fallbackScene?.classList?.remove("three-dimensional");
+ if(fallbackScene)fallbackScene.dataset.sourceC172="off";
  // Keep the runway and instruments usable without WebGL2. For approved
  // C172/R44 models the Canvas fallback omits its obsolete low-poly aircraft;
  // the detailed exterior remains available through WebGL when supported.
@@ -747,7 +749,10 @@ $("controlPad").addEventListener("pointermove",e=>{
  if(dragPointer===e.pointerId)movePad(e);
 });
 function requestPilotDeck(){
- if(!window.matchMedia?.("(max-width:740px)")?.matches||
+ const portraitPhone=window.matchMedia?.("(max-width:740px)")?.matches;
+ const landscapePhone=window.matchMedia?.(
+  "(orientation:landscape) and (min-width:600px) and (max-height:510px)")?.matches;
+ if((!portraitPhone&&!landscapePhone)||
     $("cameraMode").value!=="cockpit"||viewingAircraft())return;
  if(dragPointer!==null){pendingPilotFocus=true;return;}
  pendingPilotFocus=false;
@@ -1254,6 +1259,18 @@ cockpit=CI.attach({
 });
 switchgear=SW.attach({documentLike:document,windowLike:window});
 focusController=FO.attach({documentLike:document,windowLike:window});
+// Rotating a phone sideways while viewing the C172 PILOT perspective opens
+// a genuine, panoramic cabin view; normal controls remain directly below.
+// Defer focus until a held yoke finger ends, preventing a control jump.
+const c172LandscapePhone=window.matchMedia?.(
+ "(orientation:landscape) and (min-width:600px) and (max-height:510px)");
+const enterWideC172=()=>{
+ if(c172LandscapePhone?.matches&&airframeId()==="c172"&&
+    state.mode==="airplane"&&$("cameraMode").value==="cockpit"&&!viewingAircraft())
+  requestPilotDeck();
+};
+c172LandscapePhone?.addEventListener?.("change",enterWideC172);
+if(c172LandscapePhone?.matches)enterWideC172();
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,
