@@ -737,7 +737,7 @@ try{
  });
  assert.ok(parseInt(independentTouches.together.bank)>50,
   "native yoke finger drives bank");
- assert.ok(Number(independentTouches.together.rudder.match(/-?\\d+/)?.[0]||0)>0,
+ assert.ok(Number(independentTouches.together.rudder.match(/-?\d+/)?.[0]||0)>0,
   "native second pedal finger drives yaw during yoke hold");
  assert.notEqual(independentTouches.during.view,independentTouches.before,
   "native third finger changes view while yoke and pedal stay held");
