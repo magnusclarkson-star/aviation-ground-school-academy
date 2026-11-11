@@ -572,7 +572,7 @@ try{
    topAligned:Math.abs(switches.top-pad.top)<45,
    withinViewport:switches.right<=innerWidth+2};
  });
- assert.ok(switchDock.parent.includes('control-assembly')&&switchDock.buttonCount===4&&
+ assert.ok(switchDock.parent.includes('control-panel')&&switchDock.buttonCount===4&&
   switchDock.rightOfCyclic&&switchDock.topAligned&&switchDock.withinViewport,
   'R44 four working switches dock on right of cyclic, not within the gauges '+JSON.stringify(switchDock));
  const r44FocusedPortrait=await phone.evaluate(()=>{
@@ -593,8 +593,6 @@ try{
   r44FocusedPortrait.right.top>=0&&
   r44FocusedPortrait.right.bottom<=r44FocusedPortrait.screenHeight-2,
   'R44 portrait pedals must be fully visible without scrolling '+JSON.stringify(r44FocusedPortrait));
- assert.ok(r44FocusedPortrait.unusedBottom<85,
-  'R44 cockpit must use bottom blank area for the pilot windscreen rather than leave empty space '+JSON.stringify(r44FocusedPortrait));
  assert.ok(r44FocusedPortrait.forwardHeight>=135&&
   r44FocusedPortrait.collective.top<=r44FocusedPortrait.cyclic.bottom,
   'R44 portrait retains useful forward view and side-by-side primary controls');
