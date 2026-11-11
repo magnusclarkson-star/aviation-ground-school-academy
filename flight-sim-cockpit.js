@@ -213,6 +213,63 @@ function makeAnalogFace(doc,id,label,unit){
  addInfoDot(doc,face,id,label);
  return face;
 }
+
+function paintGlassScale(svg,s){
+ const v=s.values,hdg=((Number(s.heading)||0)%360+360)%360;
+ const pitch=Number(s.pitch)||0,bank=Number(s.bank)||0;
+ let p=[];
+ const ln=(x,y,X,Y,c="#f4f5f8",w=1)=>p.push('<line x1="'+x+'" y1="'+y+'" x2="'+X+'" y2="'+Y+'" stroke="'+c+'" stroke-width="'+w+'"/>');
+ const tx=(x,y,t,size=8,anchor="middle")=>p.push('<text x="'+x+'" y="'+y+'" fill="white" font-family="system-ui,sans-serif" font-size="'+size+'" font-weight="700" text-anchor="'+anchor+'">'+t+'</text>');
+ p.push('<g transform="rotate('+(-bank).toFixed(1)+' 150 75)">');
+ for(let angle=-60;angle<=60;angle+=5){
+  let y=75+(pitch-angle)*1.6;if(y<18||y>126)continue;
+  let major=angle%10===0,len=angle===0?66:major?34:16;
+  ln(150-len/2,y,150+len/2,y,"#ffffff",angle===0?2:1);
+  if(major&&angle!==0){tx(150-len/2-7,y+3,Math.abs(angle),7,"end");tx(150+len/2+7,y+3,Math.abs(angle),7,"start");}
+ }
+ p.push('</g>');
+ for(const d of [-60,-45,-30,-20,-10,0,10,20,30,45,60]){
+  const a=d*Math.PI/180;
+  ln((150+Math.sin(a)*53).toFixed(1),(75-Math.cos(a)*53).toFixed(1),(150+Math.sin(a)*48).toFixed(1),(75-Math.cos(a)*48).toFixed(1));
+ }
+ p.push('<path d="M145 15 L155 15 L150 23 Z" fill="#ffda6c"/>');
+ p.push('<rect x="0" y="16" width="49" height="110" rx="3" fill="#071421" fill-opacity=".9" stroke="#9cb7c5"/>');
+ p.push('<rect x="251" y="16" width="49" height="110" rx="3" fill="#071421" fill-opacity=".9" stroke="#9cb7c5"/>');
+ const tape=(val,step,scale,left)=>{
+  const base=Math.floor(val/step)*step;
+  for(let i=-6;i<=7;i++){
+   const n=base+i*step;if(n<0)continue;
+   let y=75+(val-n)*scale;if(y<22||y>119)continue;
+   ln(left?43:257,y,left?48:252,y);
+   tx(left?22:277,y-2,n,7);
+  }
+ };
+ tape(Number(v.speed)||0,10,1.3,true);
+ tape(Number(v.alt)||0,100,.11,false);
+ p.push('<rect x="1" y="65" width="48" height="20" fill="#091726" stroke="#f7db82" stroke-width="1.5"/>');
+ p.push('<rect x="251" y="65" width="48" height="20" fill="#091726" stroke="#f7db82" stroke-width="1.5"/>');
+ tx(25,79,Math.round(Number(v.speed)||0),11);
+ tx(275,79,Math.round(Number(v.alt)||0),10);
+ tx(25,12,"IAS KT",8);tx(275,12,"ALT FT",8);
+ p.push('<rect x="86" y="128" width="128" height="22" rx="2" fill="#071421" fill-opacity=".93" stroke="#9cb7c5"/>');
+ const base=Math.floor(hdg/10)*10;
+ for(let i=-6;i<=7;i++){
+  const angle=base+i*10;
+  const diff=((angle-hdg+540)%360)-180,x=150+diff;
+  if(x<91||x>209)continue;
+  ln(x,130,x,135);
+  if(angle%30===0)tx(x,145,String((angle%360+360)%360).padStart(3,"0"),7);
+ }
+ p.push('<path d="M145 128 L155 128 L150 135 Z" fill="#ffda6c"/>');
+ p.push('<rect x="216" y="30" width="31" height="88" rx="2" fill="#071421" fill-opacity=".83"/>');
+ for(const n of [-2,-1,0,1,2]){
+  const y=74-n*19;ln(240,y,245,y);tx(236,y+2,Math.abs(n),7,"end");
+ }
+ const vs=Math.max(-2000,Math.min(2000,Number(v.vsi)||0));
+ ln(245,74,245,74-vs/2000*38,"#7bf0ac",2.2);tx(232,27,"V/S",7);
+ svg.innerHTML=p.join("");
+}
+
 function digitalScreen(doc,kind,index){
  const screen=doc.createElement("div");screen.className="cockpit-mfd cockpit-mfd-"+kind;
  const header=doc.createElement("div");header.className="cockpit-mfd-head";header.textContent=
@@ -227,6 +284,13 @@ function digitalScreen(doc,kind,index){
   const horizon=doc.createElement("div");horizon.className="cockpit-mfd-horizon";horizon.dataset.mfdHorizon="true";
   const wings=doc.createElement("div");wings.className="cockpit-mfd-wings";
   sky.append(horizon,wings);
+  const markings=doc.createElementNS("http://www.w3.org/2000/svg","svg");
+  markings.classList.add("cockpit-glass-markings");
+  markings.setAttribute("viewBox","0 0 300 150");
+  markings.setAttribute("preserveAspectRatio","none");
+  markings.dataset.mfdMarkings="true";
+  markings.setAttribute("aria-hidden","true");
+  sky.appendChild(markings);
   const labels=doc.createElement("div");labels.className="cockpit-mfd-readouts";
   for(const [k,n] of [["speed","IAS KT"],["alt","HEIGHT FT"],["heading","HDG"]]){
    const c=doc.createElement("span");c.textContent=n+" ";
@@ -418,6 +482,7 @@ function paint(holder,state,systems,input,profileId,doc,progress){
  for(const el of holder.querySelectorAll("[data-mfd-value]")){
   el.textContent=String(s.values[el.dataset.mfdValue]??0);
  }
+ for(const el of holder.querySelectorAll("[data-mfd-markings]"))paintGlassScale(el,s);
  for(const el of holder.querySelectorAll("[data-mfd-horizon]")){
   el.style.transform="translateY("+(s.pitch*1.1).toFixed(2)+"px) rotate("+(-s.bank).toFixed(2)+"deg)";
  }
