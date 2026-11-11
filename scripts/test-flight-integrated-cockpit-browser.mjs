@@ -579,19 +579,22 @@ try{
   const box=id=>document.getElementById(id).getBoundingClientRect();
   const station=box('cockpitStation'),left=box('leftRudder'),right=box('rightRudder');
   const forward=document.querySelector('.scene-shell').getBoundingClientRect();
-  const cyclic=box('controlPad'),collective=box('collectivePanel');
+  const cyclic=box('controlPad'),collective=box('collectivePanel'),restart=box('restartFlight');
   return {screenHeight:innerHeight,forwardHeight:forward.height,
    scrollTop:document.getElementById('cockpitStation').scrollTop,
    left:{top:left.top,bottom:left.bottom},right:{top:right.top,bottom:right.bottom},
    station:{top:station.top,bottom:station.bottom},
    cyclic:{top:cyclic.top,bottom:cyclic.bottom},
-   collective:{top:collective.top,bottom:collective.bottom}};
+   collective:{top:collective.top,bottom:collective.bottom},
+   unusedBottom:station.bottom-Math.max(left.bottom,right.bottom,collective.bottom,restart.bottom)};
  });
  assert.ok(r44FocusedPortrait.left.top>=0&&
   r44FocusedPortrait.left.bottom<=r44FocusedPortrait.screenHeight-2&&
   r44FocusedPortrait.right.top>=0&&
   r44FocusedPortrait.right.bottom<=r44FocusedPortrait.screenHeight-2,
   'R44 portrait pedals must be fully visible without scrolling '+JSON.stringify(r44FocusedPortrait));
+ assert.ok(r44FocusedPortrait.unusedBottom<85,
+  'R44 cockpit must use bottom blank area for the pilot windscreen rather than leave empty space '+JSON.stringify(r44FocusedPortrait));
  assert.ok(r44FocusedPortrait.forwardHeight>=135&&
   r44FocusedPortrait.collective.top<=r44FocusedPortrait.cyclic.bottom,
   'R44 portrait retains useful forward view and side-by-side primary controls');
