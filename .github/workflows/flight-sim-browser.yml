@@ -245,6 +245,7 @@ jobs:
           node scripts/test-flight-sim-3d.mjs
           node scripts/test-flight-sim-airframes.mjs
           node --test tests/simulator-v2-real-r44.test.cjs
+          node --test tests/simulator-v2-molen-c172.test.cjs
           node scripts/test-flight-inspection.mjs
           node scripts/test-flight-sim-airport-detail.mjs
           node scripts/test-flight-sim-aircraft-systems.mjs
