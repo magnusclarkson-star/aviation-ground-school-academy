@@ -267,7 +267,15 @@ function paintGlassScale(svg,s){
  }
  const vs=Math.max(-2000,Math.min(2000,Number(v.vsi)||0));
  ln(245,74,245,74-vs/2000*38,"#7bf0ac",2.2);tx(232,27,"V/S",7);
- svg.innerHTML=p.join("");
+ // Avoid rewriting the SVG tree every render tick when the displayed
+ // flight values have not changed; this matters on lower-power phones.
+ const signature=[Math.round(Number(v.speed)||0),Math.round(Number(v.alt)||0),
+  Math.round(hdg*2)/2,Math.round(pitch*2)/2,Math.round(bank*2)/2,
+  Math.round(Number(v.vsi)||0)].join("|");
+ if(svg.dataset.glassSignature!==signature){
+  svg.innerHTML=p.join("");
+  svg.dataset.glassSignature=signature;
+ }
 }
 
 function digitalScreen(doc,kind,index){
