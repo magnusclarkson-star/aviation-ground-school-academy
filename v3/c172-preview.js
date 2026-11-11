@@ -385,7 +385,19 @@ byId("resetCamera")?.addEventListener("click",()=>{
 });
 byId("cabinCamera")?.addEventListener("click",()=>{
  controls.minDistance=.3;camera.fov=49;camera.updateProjectionMatrix();
- camera.position.set(2.5,.75,4.2);controls.target.set(0,-.15,1.14);controls.update();
+ if(detailedHolder.visible&&detailedParts){
+  // Never aim the FlightGear cabin camera at procedural V3 coordinates.
+  // Seats and panel stay attached to the source aircraft scene graph.
+  const {back,rightPilot,panel}=detailedParts.cameraStations;
+  const center=back.clone().lerp(rightPilot,.5);
+  camera.position.copy(center).add(new THREE.Vector3(1.35,.85,-.75));
+  controls.target.copy(panel).lerp(rightPilot,.34);
+  status("Source C172 cabin: rear seat, front seats and panel in one scene graph.");
+ }else{
+  camera.position.set(2.5,.75,4.2);
+  controls.target.set(0,-.15,1.14);
+ }
+ controls.update();
 });
 byId("pilotCamera")?.addEventListener("click",()=>{
  if(!detailedParts||!detailedHolder.visible){
@@ -393,10 +405,15 @@ byId("pilotCamera")?.addEventListener("click",()=>{
   return;
  }
  const {pilot,panel}=detailedParts.cameraStations;
- // OrbitControls accepts very short camera-target distances for an in-cabin
- // view, unlike the exterior 5.8m minimum. Perspective tracks source nodes.
+ // Aim toward the source panel while remaining behind it inside the cabin.
+ // The source nose is +Z after importing; the seat offset is not a V2 guess.
  controls.minDistance=.15;
  camera.position.copy(pilot).add(new THREE.Vector3(0,.56,-.12));
+ const forward=panel.clone().sub(pilot);
+ if(forward.z<=.25){
+  status("Detailed source pilot/panel orientation invalid; camera not moved.");
+  return;
+ }
  controls.target.copy(panel).add(new THREE.Vector3(0,.18,0));
  camera.fov=58;camera.updateProjectionMatrix();controls.update();
  status("C172 pilot-seat view. Panel and cockpit are the original source mesh.");
