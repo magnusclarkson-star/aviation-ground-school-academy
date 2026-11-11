@@ -468,6 +468,7 @@ window.__AGSA_V3={
   rudder:model.tail.rudder.rotation.y
  }),
  getMode:()=>detailedHolder.visible?"detailed":referenceHolder.visible?"reference":"v3",
+ getCamera:()=>({position:camera.position.toArray(),target:controls.target.toArray()}),
  getReferenceLoaded:()=>referenceLoaded,
  getDetailedLoaded:()=>detailedLoaded,
  getDetailedMeta:()=>detailedParts?({
