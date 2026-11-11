@@ -22,13 +22,19 @@ function parseAC3D(text,textureBytes){
   materials.push({rgb:rgb.slice(1,4).map(Number),opacity:1-Number(alpha?.[1]||0)});
  }
  if(!materials.length)throw Error("No R44 materials");
+ // Repaint only original FlightGear body panels, never the steel skids,
+ // exhaust, lamp fittings, guard, transparent windows or rotor hardware.
+ const paintedParts=new Set(["fuselage","derive","porteAD","porteAG",
+  "porteBD","porteBG","trous_1"]);
  const groups=new Map();
  let i=0,triangles=0;
  const finite=n=>Number.isFinite(n);
- const groupFor=materialId=>{
-  if(!groups.has(materialId))groups.set(materialId,
-   {materialId,positions:[],normals:[],uvs:[],indices:[]});
-  return groups.get(materialId);
+ const groupFor=(materialId,name)=>{
+  const isPainted=paintedParts.has(name)&&materialId===0;
+  const key=materialId+":"+(isPainted?"paint":"original");
+  if(!groups.has(key))groups.set(key,
+   {materialId,isPainted,positions:[],normals:[],uvs:[],indices:[]});
+  return groups.get(key);
  };
  const pushTri=(group,a,b,c)=>{
   const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
@@ -92,7 +98,7 @@ function parseAC3D(text,textureBytes){
      }
      // Fully invisible material objects should not conceal cockpit detail.
      if(materials[materialId].opacity<.01)continue;
-     const group=groupFor(materialId);
+     const group=groupFor(materialId,name);
      for(let k=1;k+1<refs.length;k++){
       pushTri(group,refs[0],refs[k],refs[k+1]);
       triangles++;
@@ -132,6 +138,7 @@ function parseAC3D(text,textureBytes){
    // this distinction so its visibility can be tuned without changing
    // coloured navigation lights or solid yellow fuselage materials.
    isGlazing:group.materialId===4,
+   isPainted:group.isPainted,
    alphaMask:false,alphaCutoff:0
   });
  }
