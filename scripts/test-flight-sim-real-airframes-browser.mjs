@@ -92,7 +92,7 @@ try{
  await page.waitForFunction(()=>window.__c172TestRenderer?.realR44Status==="imported",null,
   {timeout:20000});
  const rotor=await page.evaluate(async()=>{
-  const model=await window.AGSARealR44.ensureR44();
+  const model=await window.AGSAR44Airframe.ensureR44();
   const s={mode:"helicopter",xM:0,zM:0,altitudeM:60,
    headingDeg:30,pitchDeg:4,rollDeg:2,groundSpeedKt:18};
   const renderer=window.__c172TestRenderer,canvas=window.__c172TestCanvas;
@@ -108,26 +108,29 @@ try{
    let yellow=0,hash=2166136261>>>0;
    for(let i=0;i<pixels.length;i+=4){
     const r=pixels[i],g=pixels[i+1],b=pixels[i+2];
-    // The bright textured yellow R44 hull must occupy nontrivial screen
+    // The detailed cream-and-blue R44 must occupy nontrivial screen
     // area; the blue sky alone must not satisfy the realism smoke test.
-    if(r>110&&g>100&&b<Math.min(r,g)*.75)yellow++;
+    if(r>90&&g>70&&r<240&&b<r*.95)yellow++;
     if(i%28===0)hash=Math.imul(hash^r^g^b,16777619)>>>0;
    }
    details.push({view,drawn,yellow,hash});
   }
   return {status:renderer.realR44Status,source:canvas.dataset.airframeSource,
    vertices:model.vertices,triangles:model.triangles,
-   imageCount:model.images.length,details};
+   imageCount:model.images.length,mainParts:model.mainParts,
+   tailParts:model.tailParts,details};
  });
  assert.equal(rotor.status,"imported");
- assert.equal(rotor.source,"licensed-r44-ac3d");
+ assert.equal(rotor.source,"mit-r44-glb");
  assert.equal(await page.evaluate(()=>window.__c172TestCanvas.dataset.airframeInterior),
-  "four-seats-and-panel");
- assert.ok(rotor.vertices>22000);
- assert.ok(rotor.triangles>7500);
- assert.equal(rotor.imageCount,1);
+  "source-cabin-and-panel");
+ assert.ok(rotor.vertices>15000);
+ assert.ok(rotor.triangles>15000);
+ assert.ok(rotor.imageCount>=8);
+ assert.ok(rotor.mainParts>=2&&rotor.tailParts>=2,
+  "native GLB main and tail rotors must both exist");
  assert.ok(rotor.details.every(v=>v.drawn&&v.yellow>100),
-  "actual textured R44 body must be visible, not only the sky");
+  "actual MIT R44 body must be visible, not only sky pixels");
  assert.equal(new Set(rotor.details.map(v=>v.hash)).size,4,
   "R44 exterior camera angles must display distinct images");
  // Verify the actual GPU pixels change when the student's rotor controls
