@@ -1,0 +1,73 @@
+/* C172 pilot-facing six-pack inside the forward windscreen.
+ * This is a visual instrument repeater, driven by the SAME flight model as
+ * the interactive, touch-enlargeable cockpit directly below the windscreen.
+ * It deliberately cannot intercept a finger holding yoke, pedals or VIEW.
+ */
+.cockpit-frame .c172-scene-panel{display:none}
+.cockpit-frame[data-airframe="c172"][data-view="cockpit"][data-enabled="on"] .c172-scene-panel{
+ display:grid;grid-template-columns:minmax(0,7fr) minmax(0,2.4fr);
+ position:absolute;bottom:-1px;left:7%;width:86%;height:clamp(55px,34%,146px);
+ box-sizing:border-box;padding:5px clamp(5px,1.2vw,12px) 3px;gap:clamp(4px,1vw,10px);
+ background:linear-gradient(#3a454c 0,#17252c 9%,#17212b 87%,#0b141b);
+ border:2px solid #84939a;border-bottom:0;
+ border-radius:24% 24% 0 0/19% 19% 0 0;
+ box-shadow:0 -6px 16px #06121bd1,inset 0 3px 2px #778d956b;
+ pointer-events:none;overflow:hidden;z-index:2;
+}
+.scene-shell[data-c172-panel="on"] .scene-bottom{display:none!important}
+.cockpit-frame[data-airframe="c172"][data-view="cockpit"][data-enabled="on"] .cockpit-dashboard{display:none}
+.c172-scene-dials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));align-items:center;justify-items:center;gap:2px;min-width:0;min-height:0}
+.c172-scene-dial{
+ position:relative;width:min(100%,65px);max-height:100%;aspect-ratio:1;
+ border:2px solid #8f9da2;border-radius:50%;
+ background:radial-gradient(circle at 46% 34%,#1d3443 0,#081119 60%,#03080c 84%);
+ box-shadow:inset 0 0 0 2px #30424b,0 1px 2px #000b;
+ color:#e5ebda;text-align:center;overflow:hidden;
+ font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums
+}
+.c172-scene-dial::before{
+ content:"";position:absolute;inset:12%;border-radius:50%;
+ background:repeating-conic-gradient(from -128deg,#abb6bc 0deg 1.8deg,transparent 1.8deg 23deg);
+ -webkit-mask:radial-gradient(farthest-side,transparent 76%,#000 79% 90%,transparent 92%);
+ mask:radial-gradient(farthest-side,transparent 76%,#000 79% 90%,transparent 92%);
+}
+.c172-scene-dial>span{position:absolute;top:13%;left:0;right:0;font:800 clamp(4px,.53vw,7px)/1 ui-sans-serif,system-ui;letter-spacing:.05em;color:#d5e2da}
+.c172-scene-dial>b{position:absolute;bottom:17%;left:0;right:0;font:850 clamp(7px,.85vw,11px)/1 ui-monospace,monospace;text-shadow:0 1px #000}
+.c172-scene-dial>i{
+ position:absolute;left:calc(50% - 1px);top:18%;height:32%;width:2px;
+ background:#eeeee3;box-shadow:0 0 2px #000;transform-origin:50% 100%;
+ transform:rotate(var(--c172-angle,0deg));
+}
+.c172-scene-dial>i::after{content:"";position:absolute;bottom:-3px;left:-2px;width:6px;height:6px;background:#b9cdd2;border-radius:50%}
+.c172-scene-dial.c172-attitude{background:linear-gradient(#286088 48%,#b38e60 49% 55%,#745c49 56%)}
+.c172-scene-avionics{
+ display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+ border:2px solid #73848a;border-radius:5px;background:#081820;
+ box-shadow:inset 0 0 0 2px #263a45;color:#a9ecdd;
+ font:700 clamp(6px,.68vw,9px)/1.2 ui-monospace,monospace
+}
+.c172-scene-nav-title{color:#d7d5a4;font-size:clamp(5px,.58vw,8px)}
+.c172-scene-avionics strong{color:#b5eedb;font-size:clamp(10px,1.12vw,18px)}
+.c172-scene-avionics small{color:#c2d4d8;font-size:clamp(6px,.7vw,10px)}
+.c172-scene-avionics .c172-scene-radio{
+ display:block;width:90%;padding:2px 0;border-top:1px solid #43565d;
+ text-align:center;color:#e3c78c;font-size:clamp(5px,.6vw,9px)
+}
+@media(max-width:740px){
+ .cockpit-frame[data-airframe="c172"][data-view="cockpit"][data-enabled="on"] .c172-scene-panel{
+  left:3%;width:94%;padding:3px 4px 1px;gap:3px;height:clamp(51px,34%,93px)
+ }
+ .c172-scene-dial{border-width:1px;box-shadow:inset 0 0 0 1px #40515b}
+ .c172-scene-dial>span{font-size:5px}
+ .c172-scene-dial>b{font-size:8px}
+ .c172-scene-dial>i{height:28%;width:1px}
+ .c172-scene-avionics{border-width:1px;gap:1px}
+ .c172-scene-nav-title,.c172-scene-avionics .c172-scene-radio{font-size:5px}
+ .c172-scene-avionics strong{font-size:10px}
+ .c172-scene-avionics small{font-size:6px}
+}
+@media(orientation:landscape) and (max-height:510px){
+ body[data-cockpit-focus="on"] .cockpit-frame .c172-scene-panel{display:none!important}
+ body[data-cockpit-focus="on"] .scene-shell[data-c172-panel="on"] .scene-bottom{display:flex!important}
+ body[data-cockpit-focus="on"] .cockpit-frame .cockpit-dashboard{display:block}
+}
