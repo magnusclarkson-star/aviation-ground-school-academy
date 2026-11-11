@@ -453,9 +453,15 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  // outside this canvas, and the stationary white reference cue stays legible.
  if(palette.overlay){ctx.fillStyle=palette.overlay;ctx.fillRect(0,0,w,h);}
  if(view!=="cockpit"){
-  const Chase=root?.AGSAExteriorChase2D||
-   (typeof module!=="undefined"&&module.exports?require("./flight-sim-exterior-2d.js"):null);
-  Chase?.paint(ctx,state,{id:airframeId||(state.mode==="helicopter"?"r44":"c172"),width:w,height:h,view,animation});
+  const selected=airframeId||(state.mode==="helicopter"?"r44":"c172");
+  // The approved C172 and R44 models are complete WebGL aircraft, not the
+  // obsolete low-poly Canvas airframes. When WebGL is unavailable, keep the
+  // moving ground and sky rather than displaying a misleading old model.
+  if(!["c172","r44"].includes(selected)){
+   const Chase=root?.AGSAExteriorChase2D||
+    (typeof module!=="undefined"&&module.exports?require("./flight-sim-exterior-2d.js"):null);
+   Chase?.paint(ctx,state,{id:selected,width:w,height:h,view,animation});
+  }
  }
  if(view==="cockpit"){
  // Fixed airframe reference cue and non-certified horizon tick marks.
