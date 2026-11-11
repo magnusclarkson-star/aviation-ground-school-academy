@@ -182,6 +182,17 @@ try{
    orbit:{azimuth:65,elevation:3,distance:9}});
  });
  await page.locator("canvas").last().screenshot({path:"artifacts/real-r44-cabin-closeup.png"});
+ // Near-front 360° view validates that the new central pod can be inspected
+ // from the phone, not merely constructed as invisible geometry in JavaScript.
+ await page.evaluate(()=>{
+  const state={mode:"helicopter",xM:0,zM:0,altitudeM:60,
+   headingDeg:0,pitchDeg:0,rollDeg:0};
+  window.__c172TestRenderer.draw(state,{view:"inspect",airframeId:"r44",
+   animation:{mainRotor:.45,tailRotor:.6},
+   orbit:{azimuth:155,elevation:1,distance:6.8}});
+ });
+ await page.locator("canvas").last().screenshot({
+  path:"artifacts/real-r44-central-pod-closeup.png"});
  assert.deepEqual(errors,[]);
  console.log("Real C172 GLB Browser passed:",JSON.stringify(info));
  console.log("Real R44 textured mesh Browser passed:",JSON.stringify(rotor));
