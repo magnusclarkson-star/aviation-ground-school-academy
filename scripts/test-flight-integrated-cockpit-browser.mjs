@@ -115,6 +115,18 @@ try{
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'trainer glass cockpit has live flight, map and systems displays');
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),0,'round dials replaced by glass displays');
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-nav').count(),1,'glass navigation map remains available');
+
+ const glass=desktop.locator('#cockpitVisualPanel .cockpit-mfd-pfd .cockpit-glass-markings');
+ assert.equal(await glass.count(),1,'glass PFD includes graduated live SVG markings');
+ const graduations=await glass.evaluate(el=>({
+  labels:el.querySelectorAll('text').length,
+  ticks:el.querySelectorAll('line').length,
+  signature:el.dataset.glassSignature
+ }));
+ assert.ok(graduations.labels>=9&&graduations.ticks>=18,
+  'glass PFD contains numeric tape labels, bank/pitch and heading ticks '+JSON.stringify(graduations));
+ assert.ok(graduations.signature,'glass scale has been populated from flight state');
+
  assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-mfd-head').first().evaluate(
   el=>getComputedStyle(el).color),'rgb(198, 255, 225)',
   'glass displays inherit the green lighting without losing navigation');
@@ -378,6 +390,23 @@ try{
  await phone.locator('#cockpitInstrumentStyle').tap();
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-mfd').count(),3,'phone helicopter glass switch works');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-mfd-horizon]').count(),1,'glass attitude tracks flight motion');
+
+ const glassPhone=await phone.evaluate(()=>{
+  const panel=document.querySelector('#cockpitVisualPanel');
+  const pfd=panel.querySelector('.cockpit-mfd-pfd').getBoundingClientRect();
+  const nav=panel.querySelector('.cockpit-mfd-nav').getBoundingClientRect();
+  const systems=panel.querySelector('.cockpit-mfd-engine').getBoundingClientRect();
+  const visual=panel.getBoundingClientRect();
+  return {
+   fullWidth:pfd.width>nav.width*1.5,
+   secondRow:nav.top>=pfd.bottom-3&&Math.abs(nav.top-systems.top)<7,
+   contained:pfd.left>=visual.left-4&&pfd.right<=visual.right+4,
+   svg:!!panel.querySelector('.cockpit-mfd-pfd .cockpit-glass-markings text')
+  };
+ });
+ assert.ok(glassPhone.fullWidth&&glassPhone.secondRow&&glassPhone.contained&&glassPhone.svg,
+  'phone R44 glass PFD is readable above compact map and systems '+JSON.stringify(glassPhone));
+
  await phone.locator('#cockpitInstrumentStyle').tap();
  assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8,'phone helicopter round switch works');
  assert.equal(await phone.locator('#cockpitVisualPanel [data-r44-hover]').textContent(),'ON PAD',
