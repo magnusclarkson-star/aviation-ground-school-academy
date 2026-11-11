@@ -349,3 +349,53 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
 #cockpitMain #cockpitSwitchPanel .cockpit-switch{
  pointer-events:auto;touch-action:manipulation;user-select:none
 }
+
+
+/* Taller forward windscreen with a smaller secondary action strip.
+   The moving scenery stays visible while flying the full instrument scan. */
+@media(max-width:740px) and (orientation:portrait){
+ body[data-cockpit-focus="on"] .scene-shell{
+  flex:0 0 clamp(145px,24dvh,220px)!important;
+  height:clamp(145px,24dvh,220px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  min-height:24px;max-height:none;flex-wrap:nowrap;gap:3px!important;
+  padding:0!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions #restartFlight{
+  flex:0 0 auto!important;width:auto!important;min-width:52px!important;
+  min-height:27px!important;padding:3px 5px!important;font-size:9px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions .cockpit-focus-button{
+  min-width:73px!important;min-height:27px!important;
+  font-size:9px!important;padding:3px 4px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions .aircraft-photo-button{
+  max-width:88px;min-height:29px;padding:1px 3px;flex:0 0 auto
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions .cockpit-info-button{
+  min-height:27px!important;padding:3px 4px!important;font-size:9px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-station-head{gap:3px}
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-station-head p{display:none}
+ body[data-cockpit-focus="on"] #cockpitMain #cockpitSwitchPanel .cockpit-switch{
+  width:40px!important;min-height:24px!important;height:24px!important
+ }
+}
+/* In landscape, leave a useful forward view without hiding the compact
+   four-by-two instrument arrangement or helicopter flight controls. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] .scene-shell{
+  flex:0 0 clamp(62px,18dvh,95px)!important;
+  height:clamp(62px,18dvh,95px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-info-toolbar.cockpit-actions{
+  min-height:24px!important;max-height:26px!important;gap:3px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-actions #restartFlight{
+  min-width:62px!important;min-height:24px!important;font-size:9px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation .cockpit-focus-button{
+  min-width:76px!important;min-height:24px!important;font-size:9px!important
+ }
+}
