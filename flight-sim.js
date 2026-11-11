@@ -126,8 +126,8 @@ async function startFullFlight(){
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  const cueStarted=radioTone.enable(true);
  radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
- const radioArmed=atcRadio?.arm(true)===true;
- if(state.mode==="helicopter")r44Voice.arm();
+ const radioArmed=document.body.dataset.aircraftInspect!=="on"&&atcRadio?.arm(true)===true;
+ if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
  syncPhoneFeedbackUI();
  let engineStarted=false;
  try{engineStarted=await engineStart;}catch{engineStarted=false;}
@@ -243,7 +243,10 @@ document.addEventListener("agsa:inspection-open",()=>{
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 // Native TouchEvents give Android independent finger identifiers for yoke
 // and rudder. Pointer Events remain for mouse, pen and non-touch browsers.
-const nativeMultiTouch=typeof window.TouchEvent==="function";
+// Modern mobile browsers offer independent captured PointerEvents per finger.
+// Use them as the sole owner of each contact to avoid duplicate/lost touch IDs;
+// older devices retain the separate TouchEvent fallback below.
+const nativeMultiTouch=typeof window.PointerEvent!=="function"&&typeof window.TouchEvent==="function";
 const pointers={left:null,right:null,brake:null};
 const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
 const keys=new Set();
@@ -276,8 +279,9 @@ function fallbackTo2D(message){
  if(renderer3D){renderer3D.destroy();renderer3D=null}
  canvas3D.hidden=true;
  document.querySelector(".scene-shell")?.classList?.remove("three-dimensional");
- // Preserve chase choice: even on phones without WebGL2 the 2D renderer
- // shows the selected outside aircraft instead of a blank or pilot-only view.
+ // Keep the runway and instruments usable without WebGL2. For approved
+ // C172/R44 models the Canvas fallback omits its obsolete low-poly aircraft;
+ // the detailed exterior remains available through WebGL when supported.
  $("cameraMode").disabled=false;
  visualMessage(message,"fallback");
  prev2D=0;
@@ -618,7 +622,7 @@ function setMode(next){
  releaseControls();
  hardware?.resetPower();
  setValues();gripTransform();updateReadouts();
- if(newMode==="helicopter")r44Voice.arm();
+ if(newMode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
  else r44Voice.disarm();
  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
@@ -877,7 +881,7 @@ for(const [id,typeValue] of [["typeYoke","yoke"],["typeStick","stick"],["typeCyc
 function resetFromUserGesture(scenario){
  reset(scenario);
  if(fullFlightWanted)void startFullFlight();
- else if(state.mode==="helicopter")r44Voice.arm();
+ else if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
 }
 $("startRunway").addEventListener("click",()=>resetFromUserGesture("runway"));
 $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")resetFromUserGesture("approach")});
@@ -893,7 +897,7 @@ $("pauseFlight").addEventListener("click",()=>{
   atcRadio?.disarm("Simulation paused: phase-linked radio and speech stopped.");
   radioTone.stop();radioFx.disable();syncRadioFxUI("Simulation paused: radio effects stopped.");syncRadioToneUI("Simulation paused: radio cue tone stopped.");
  }else if(fullFlightWanted){void startFullFlight();}
- else if(state.mode==="helicopter")r44Voice.arm();
+ else if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
  syncPhoneFeedbackUI();
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
