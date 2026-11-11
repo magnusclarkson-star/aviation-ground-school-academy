@@ -172,14 +172,19 @@ function step(state,input,seconds){
   // Small numerical/turbulence drift near hover must not create a
   // forward-flight coordinated turn. Pedals alone control hover yaw.
   const forwardSpeed=Math.max(0,(state.forwardMs||0)-1.5);
-  const turnAssist=clamp(state.rollDeg*.055*forwardSpeed/8,-2.5,2.5);
+  // In forward flight the cyclic bank helps steer the flight path. Previous
+  // 2.5 deg/s cap made a full turn take over a minute even at full bank.
+  // No bank-induced yaw while hovering or while skids touch the pad.
+  const turnAssist=clamp(state.rollDeg*.23*forwardSpeed/6,-10,10);
   // Pedals need finer resolution during low, slow hover on a phone.
   // Retain the existing full-pedal rate and normal forward-flight response.
   const carefulYaw=state.altitudeM<12&&Math.hypot(
    state.forwardMs||0,state.lateralMs||0)<4;
   const pedal=carefulYaw?shapeRotorCyclic(rudder):rudder;
-  const commandedYaw=clamp(pedal*18+turnAssist,-19,19);
-  const yawResponse=carefulYaw&&Math.abs(rudder)<.04?3.1:2.4;
+  // A fully held anti-torque pedal should make a useful 180-degree
+  // simulated turn in seconds, while a brief small input stays precise.
+  const commandedYaw=clamp(pedal*28+turnAssist,-35,35);
+  const yawResponse=carefulYaw&&Math.abs(rudder)<.04?4.5:4;
   state.yawRateDegS=smooth(state.yawRateDegS||0,commandedYaw,yawResponse,dt);
   const hoverCollective=shapeRotorCollective(collective,state.altitudeM,state.onGround);
   const targetVS=clamp((hoverCollective-.48)*8.2-.12+state.turbulence*.5,-4.5,4);
