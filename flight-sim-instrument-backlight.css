@@ -173,3 +173,31 @@
 #cockpitStation .cockpit-help-choices #cockpitBacklightDimmer:focus-visible{
  outline:2px solid #ffdea1;outline-offset:2px;
 }
+
+
+/* True two-finger Android flight controls: touch-action applies to the
+   entire hit area, not only the visible yoke or pedal button. */
+.cockpit-station .control-panel .control-pad,
+.cockpit-station .control-panel .flight-grip,
+.cockpit-station .control-panel .rudder-deck,
+.cockpit-station .control-panel .rudder-pedals,
+.cockpit-station .control-panel .rudder-pedals button,
+.cockpit-station .control-panel .rudder-pedals button *{
+ touch-action:none!important;
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-touch-callout:none;
+}
+
+
+/* The older C172 compact stylesheet forces three columns with !important.
+   Override only focused landscape so eight instruments occupy two rows,
+   leaving room for the yoke AND both physical touch-pedal targets. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"] #cockpitMain .cockpit-sixpack{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain .cockpit-sixpack [data-gauge="rpm"]{order:7}
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"] #cockpitMain .cockpit-sixpack [data-gauge="power"]{order:8}
+}

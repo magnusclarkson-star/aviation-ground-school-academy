@@ -232,7 +232,18 @@ document.addEventListener("agsa:r44-voice-toggle",()=>{
 });
 document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
+// A 360-degree aircraft inspection is not an instruction to play ATC.
+// Silence already queued speech, and do not automatically rearm it on close.
+document.addEventListener("agsa:inspection-open",()=>{
+ atcRadio?.disarm("360° aircraft inspection: radio paused until explicitly started.");
+ r44Voice.disarm();
+ atcPractice?.stop();
+ atcMissions?.stop();
+});
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
+// Native TouchEvents give Android independent finger identifiers for yoke
+// and rudder. Pointer Events remain for mouse, pen and non-touch browsers.
+const nativeMultiTouch=typeof window.TouchEvent==="function";
 const pointers={left:null,right:null,brake:null};
 const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
 const keys=new Set();
@@ -275,8 +286,12 @@ function fallbackTo2D(message){
 // No private API, hidden service or remote rendering. When WebGL2 is not
 // available (including context loss), the original Canvas 2D keeps working.
 function chooseVisual(){
- if($("visualMode").value==="2d"){
-  fallbackTo2D("Lightweight 2D selected. The original runway view remains fully functional.");
+ // For the approved R44 and C172, use their detailed airframes even when
+ // the learner selects the 2D outside view. The old low-poly Canvas model
+ // remains an emergency fallback only when WebGL is genuinely unavailable.
+ const detailed2D=$("visualMode").value==="2d"&&["r44","c172"].includes(airframeId());
+ if($("visualMode").value==="2d"&&!detailed2D){
+  fallbackTo2D("Lightweight 2D scenery selected.");
   return;
  }
  if(!renderer3D){
@@ -292,7 +307,7 @@ function chooseVisual(){
  $("cameraMode").disabled=false;
  try{
   if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId(),airframeId:airframeId()})){
-   visualMessage("3D WebGL2 airfield active: real geometric terrain, runway, buildings, trees and optional chase aircraft. Fictional scenery, not a surveyed airport.","active");
+   visualMessage(detailed2D?"Detailed aircraft exterior active in the 2D view. The approved R44/C172 model is preserved.":"3D WebGL2 airfield active: geometric terrain and selected aircraft exterior.","active");
    prev3D=0;return;
   }
  }catch{}
@@ -337,7 +352,9 @@ function drawScenery(now){
 $("lightingMode").addEventListener("change",()=>{
  prev2D=0;prev3D=0;
  $("lightingStatus").textContent=lightingChoice().label+" selected. Fictional outside light only; instruments and flight dynamics unchanged.";
- if(!renderer3D)S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
+ // Keep the Canvas fallback palette current while detailed WebGL aircraft
+ // are visible under the 2D selection (and for browser lighting tests).
+ if(!renderer3D||$("visualMode").value==="2d")S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 });
 function setValues(){
  $("power").value=String(round(input.throttle*100));
@@ -638,6 +655,12 @@ function previewPausedControls(){
  if(!paused)return;
  A.step(systems,state,input,0);
  updateReadouts();
+ // When the detailed C172/R44 renders over the selected 2D backup, keep
+ // the Canvas snapshot current on *paused control changes* as well. This
+ // costs one paint per control interaction, not an extra animation loop.
+ if($("visualMode").value==="2d"&&renderer3D&&["c172","r44"].includes(airframeId()))
+  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),
+   view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
 function movePad(event){
  const box=$("controlPad").getBoundingClientRect();
@@ -651,26 +674,44 @@ function movePad(event){
 }
 $("controlPad").addEventListener("pointerdown",e=>{
  if(e.pointerType==="mouse"&&e.button!==0)return;
+ if(nativeMultiTouch&&e.pointerType==="touch"&&e.isTrusted)return;
  if(dragPointer!==null)return;
  dragPointer=e.pointerId;
  try{$("controlPad").setPointerCapture(e.pointerId)}catch{}
+ // Each finger retains its own pointer ID, independent of the pedals.
  movePad(e);haptics.pulse("control");e.preventDefault();
 });
 $("controlPad").addEventListener("pointermove",e=>{
  if(dragPointer===e.pointerId)movePad(e);
 });
+function finishPad(id,completed){
+ if(dragPointer!==id)return;
+ if(!completed)bankHold?.clear();
+ else if(bankHold?.status().armed&&state.mode==="airplane")
+  bankHold.release(input.bank);
+ dragPointer=null;input.bank=0;input.pitch=0;
+ syncKeys();syncBankHoldUI();gripTransform();
+}
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
- $("controlPad").addEventListener(eventType,e=>{
-  if(dragPointer!==e.pointerId)return;
-  // Only a deliberate finger lift may save the current bank for a long
-  // circuit turn. If Android cancels the gesture (scroll, interruption,
-  // capture loss), level instead of unexpectedly holding a steep turn.
-  if(eventType!=="pointerup")bankHold?.clear();
-  else if(bankHold?.status().armed&&state.mode==="airplane")
-   bankHold.release(input.bank);
-  dragPointer=null;input.bank=0;input.pitch=0;
-  syncKeys();syncBankHoldUI();gripTransform();
- });
+ $("controlPad").addEventListener(eventType,e=>finishPad(e.pointerId,eventType==="pointerup"));
+if(nativeMultiTouch){
+ const pad=$("controlPad");
+ pad.addEventListener("touchstart",e=>{
+  if(dragPointer!==null)return;
+  const t=e.changedTouches[0];if(!t)return;
+  dragPointer="touch:"+t.identifier;movePad(t);
+  haptics.pulse("control");e.preventDefault();
+ },{passive:false});
+ pad.addEventListener("touchmove",e=>{
+  const t=Array.from(e.changedTouches).find(x=>dragPointer==="touch:"+x.identifier);
+  if(!t)return;movePad(t);e.preventDefault();
+ },{passive:false});
+ for(const kind of ["touchend","touchcancel"])
+  pad.addEventListener(kind,e=>{
+   for(const t of e.changedTouches)finishPad("touch:"+t.identifier,kind==="touchend");
+   e.preventDefault();
+  },{passive:false});
+}
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
  const foot=touchPedals?.step({left,right,mode:state.mode,dt:0})??
@@ -687,9 +728,11 @@ function hold(id,key){
  const el=$(id);
  el.addEventListener("pointerdown",e=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
+  if(nativeMultiTouch&&e.pointerType==="touch"&&e.isTrusted)return;
   if(pointers[key]!==null)return;
   pointers[key]=e.pointerId;
   try{el.setPointerCapture(e.pointerId)}catch{}
+  // Never clear or steal the simultaneously held yoke pointer here.
   updateHeld();
   haptics.pulse(key==="brake"?"control":"rudder");
   e.preventDefault();
@@ -699,6 +742,25 @@ function hold(id,key){
    if(pointers[key]!==e.pointerId)return;
    pointers[key]=null;updateHeld();
   });
+ if(nativeMultiTouch){
+  el.addEventListener("touchstart",e=>{
+   if(pointers[key]!==null)return;
+   const t=e.changedTouches[0];if(!t)return;
+   pointers[key]="touch:"+t.identifier;updateHeld();
+   haptics.pulse(key==="brake"?"control":"rudder");
+   e.preventDefault();
+  },{passive:false});
+  el.addEventListener("touchmove",e=>{
+   if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier))
+    e.preventDefault();
+  },{passive:false});
+  for(const kind of ["touchend","touchcancel"])
+   el.addEventListener(kind,e=>{
+    if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier)){
+     pointers[key]=null;updateHeld();e.preventDefault();
+    }
+   },{passive:false});
+ }
 }
 hold("leftRudder","left");hold("rightRudder","right");hold("brake","brake");
 $("bankHoldToggle")?.addEventListener("click",()=>{

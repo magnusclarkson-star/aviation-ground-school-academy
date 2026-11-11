@@ -475,10 +475,13 @@ try{
   console.log("WebGL2 unavailable on this runner; asserted normal 2D auto fallback.");
  }
  await desktop.locator("#visualMode").selectOption("2d");
- assert.equal(await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional")),false);
- assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
- assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft chase works in 2D fallback");
- assert.ok(await desktop.locator("#outsideView").isVisible());
+ // Supported devices deliberately retain the detailed approved C172/R44 mesh
+ // under the 2D view selection instead of restoring the old low-poly aircraft.
+ const detail2D=supports;
+ assert.equal(await desktop.locator(".scene-shell").evaluate(el=>el.classList.contains("three-dimensional")),detail2D);
+ assert.equal(await desktop.locator("#outsideView3D").isVisible(),detail2D);
+ assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,"outside aircraft camera remains available");
+ assert.ok(await desktop.locator("#outsideView").isVisible(), "2D canvas remains mounted underneath the detailed renderer");
  assert.equal(await desktop.evaluate(()=>!!document.getElementById("outsideView").getContext("2d")),true);
  await desktop.locator("#visualMode").selectOption("3d");
  if(supports){
@@ -540,7 +543,7 @@ try{
  });
  assert.notEqual(pixels,0,"2D fallback must actually paint canvas pixels");
  await fallback.locator("#visualMode").selectOption("2d");
- assert.match(await fallback.locator("#visualStatus").textContent(),/Lightweight 2D selected/);
+ assert.match(await fallback.locator("#visualStatus").textContent(),/2D/i);
  await fallback.locator("#visualMode").selectOption("3d");
  assert.equal(await fallback.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
  assert.match(await fallback.locator("#visualStatus").textContent(),/Automatically using 2D/);
@@ -573,7 +576,8 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
- assert.ok(await phone.locator("#outsideView").isVisible());
+ assert.ok(await phone.locator("#outsideView3D").isVisible()||await phone.locator("#outsideView").isVisible(),
+  "2D selection retains either detailed C172/R44 geometry or safe Canvas fallback");
 
  // Protect the user's most-used Android touch gesture: tapping the live
  // mini PFD must enlarge this very instrument, without duplicate SVGs.
@@ -642,6 +646,42 @@ try{
  assert.equal(await hold.getAttribute("aria-pressed"),"false",
   "lost pointer capture must not latch a long turn");
  assert.match(await phone.locator("#cmdBank").textContent(),/^\+?0%$/);
+ // Exercise Android's native TouchEvent path, not just synthetic
+ // PointerEvents. Hold one yoke finger while adding/releasing a pedal finger.
+ const nativeTouch=await phone.evaluate(()=>{
+  if(typeof Touch!=="function"||typeof TouchEvent!=="function")return null;
+  const pad=document.getElementById("controlPad"),pedal=document.getElementById("rightRudder");
+  const point=(el,id,rx,ry)=>{
+   const b=el.getBoundingClientRect();
+   return new Touch({identifier:id,target:el,clientX:b.left+b.width*rx,clientY:b.top+b.height*ry,
+    pageX:b.left+b.width*rx+scrollX,pageY:b.top+b.height*ry+scrollY,screenX:0,screenY:0});
+  };
+  const y=point(pad,151,.85,.5),r=point(pedal,152,.5,.5);
+  const send=(el,type,changed,touches,targetTouches)=>el.dispatchEvent(new TouchEvent(type,{
+   bubbles:true,cancelable:true,changedTouches:changed,touches,targetTouches
+  }));
+  send(pad,"touchstart",[y],[y],[y]);
+  const before=document.getElementById("cmdBank").textContent;
+  send(pedal,"touchstart",[r],[y,r],[r]);
+  const together={bank:document.getElementById("cmdBank").textContent,
+   rudder:document.getElementById("cmdRudder").textContent,
+   held:pedal.classList.contains("held")};
+  send(pedal,"touchend",[r],[y],[]);
+  const afterPedal={bank:document.getElementById("cmdBank").textContent,
+   rudder:document.getElementById("cmdRudder").textContent};
+  send(pad,"touchend",[y],[],[]);
+  return {before,together,afterPedal,afterYoke:document.getElementById("cmdBank").textContent};
+ });
+ assert.ok(nativeTouch,"mobile browser exposes native multi-touch events");
+ assert.ok(parseInt(nativeTouch.before)>55);
+ assert.ok(parseInt(nativeTouch.together.bank)>55&&nativeTouch.together.held,
+  "native yoke input must remain active while the pedal is held");
+ assert.ok(Number(nativeTouch.together.rudder.match(/-?\d+/)?.[0]||0)>0,
+  "second native finger must control rudder without cancelling the yoke");
+ assert.ok(parseInt(nativeTouch.afterPedal.bank)>55,
+  "releasing pedal must not cancel the independent yoke finger");
+ assert.match(nativeTouch.afterPedal.rudder,/0%/);
+ assert.match(nativeTouch.afterYoke,/0%/);
  // Real multi-touch usability check at the actual 390 px mobile viewport:
  // a short anti-torque pedal tap must be gentle, a longer hold stronger,
  // while another finger can hold brakes and fly the cyclic independently.
@@ -659,6 +699,7 @@ try{
  const rudderPct=async()=>Number((await phone.locator("#cmdRudder").textContent()).match(/-?\d+/)?.[0]||0);
  await touchButton("rightRudder","pointerdown",103);
  const smallPedal=await rudderPct();
+ console.log("R44 touch diagnostic",JSON.stringify({smallPedal,raw:await phone.locator("#cmdRudder").textContent(),mode:await phone.locator("#cockpitAircraftSelect").inputValue()}));
  assert.ok(smallPedal>=15&&smallPedal<=22,
   "R44 touchscreen pedal starts at gentle yaw rather than jumping to full travel");
  await phone.waitForTimeout(560);

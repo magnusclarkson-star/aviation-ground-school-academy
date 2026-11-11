@@ -8,6 +8,14 @@ const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const errors=[];
 const readModel=async(page)=>page.locator(".scene-shell").getAttribute("data-airframe");
 const shot=async(page,canvasId)=>page.locator(canvasId).evaluate(c=>c.toDataURL("image/png"));
+const fallbackShot=async(page)=>page.evaluate(()=>{
+ const canvas=document.getElementById("outsideView"),id=document.getElementById("cockpitAircraftSelect").value;
+ const view=document.getElementById("cameraMode").value;
+ window.AGSAFlightScenery.draw(canvas,{mode:id==="r44"?"helicopter":"airplane",
+  headingDeg:0,pitchDeg:0,rollDeg:0,xM:0,zM:0,altitudeM:25,speedKt:0,groundSpeedKt:0},
+  {view,airframeId:id});
+ return canvas.toDataURL("image/png");
+});
 try{
  const desktop=await browser.newPage({viewport:{width:1200,height:900}});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
@@ -76,7 +84,8 @@ try{
   await desktop.locator("#cameraMode").selectOption("chase");
  }
  await desktop.locator("#visualMode").selectOption("2d");
- assert.equal(await desktop.locator("#outsideView3D").isVisible(),false);
+ assert.equal(await desktop.locator("#outsideView3D").isVisible(),threeD,
+   "approved R44 remains detailed in selected 2D camera on GPU-capable devices");
  assert.equal(await desktop.locator("#cameraMode").isEnabled(),true,
   "2D fallback still offers outside aircraft chase view");
  assert.equal(await desktop.locator("#cameraMode").inputValue(),"chase");
@@ -85,7 +94,10 @@ try{
   await desktop.locator("#cockpitAircraftSelect").selectOption(id);
   await desktop.waitForTimeout(120);
   assert.equal(await readModel(desktop),id);
-  signatures2D.set(id,await shot(desktop,"#outsideView"));
+  signatures2D.set(id,await fallbackShot(desktop));
+   if(threeD&&["c172","r44"].includes(id))
+    assert.equal(await desktop.locator("#outsideView3D").isVisible(),true,
+     "approved aircraft remains visible instead of old Canvas model");
  }
  assert.equal(new Set(signatures2D.values()).size,7,
   "all seven 2D exterior silhouettes must differ without WebGL");
@@ -202,15 +214,15 @@ try{
 
  await desktop.locator("#cameraMode").selectOption("top");
  assert.equal(await desktop.locator(".scene-shell").getAttribute("data-camera-view"),"top");
- const topFallback=await shot(desktop,"#outsideView");
+ const topFallback=await fallbackShot(desktop);
  await desktop.locator("#cameraMode").selectOption("side");
- const sideFallback=await shot(desktop,"#outsideView");
+ const sideFallback=await fallbackShot(desktop);
  assert.notEqual(topFallback,sideFallback,"2D overhead and side silhouettes are different");
  await desktop.locator("#cameraMode").selectOption("cockpit");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
- const forward=await shot(desktop,"#outsideView");
+ const forward=await fallbackShot(desktop);
  await desktop.locator("#cameraMode").selectOption("chase");
- const outside=await shot(desktop,"#outsideView");
+ const outside=await fallbackShot(desktop);
  assert.notEqual(forward,outside,"2D pilot and chase cameras must differ");
 
  // Gallery and cockpit selector must both be authoritative.
@@ -232,10 +244,10 @@ try{
  await phone.locator("#visualMode").selectOption("2d");
  assert.equal(await phone.locator("#cameraMode").isEnabled(),true);
  assert.equal(await phone.locator("#cameraMode").inputValue(),"chase");
- const rot=await shot(phone,"#outsideView");
+ const rot=await fallbackShot(phone);
  await phone.locator("#cockpitAircraftSelect").selectOption("typhoon");
  assert.equal(await readModel(phone),"typhoon");
- const jet=await shot(phone,"#outsideView");
+ const jet=await fallbackShot(phone);
  assert.notEqual(rot,jet,"phone 2D chase switches helicopter to Typhoon profile");
  assert.equal(await phone.locator("#cockpitAircraftSelect").inputValue(),"typhoon");
  // On Android-sized screens, the visible aircraft also controls the

@@ -106,6 +106,9 @@
    if(!modal.hidden)return;
    orbit={azimuth:0,elevation:26,distance:fitDistance()};autoRotate=false;last=0;lastFrameTime=0;
    modal.hidden=false;doc.body.dataset.aircraftInspect="on";
+   // Inspection is visual only: entering it must not trigger a tower or
+   // lesson voice, even when a full-flight audio session was armed.
+   doc.dispatchEvent(new Event("agsa:inspection-open"));
    trigger.setAttribute("aria-expanded","true");
    canvas2D.hidden=false;canvas3D.hidden=true;
    if(!renderer){

@@ -8,8 +8,16 @@ const url=pathToFileURL(path.resolve("flight-sim.html")).href;
 const errors=[];
 async function screenshotSignature(page){
  return page.evaluate(()=>{
-  const canvas=document.querySelector("#outsideView");
-  const pixels=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data;
+  const detailed=document.querySelector("#outsideView3D");
+  let pixels;
+  if(!detailed.hidden){
+   const gl=detailed.getContext("webgl2");
+   pixels=new Uint8Array(detailed.width*detailed.height*4);
+   gl.readPixels(0,0,detailed.width,detailed.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  }else{
+   const canvas=document.querySelector("#outsideView");
+   pixels=canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data;
+  }
   let hash=2166136261>>>0;
   for(let i=0;i<pixels.length;i+=317){hash=Math.imul(hash^pixels[i],16777619)>>>0;}
   return hash;
@@ -72,10 +80,18 @@ try{
  if(sceneRenderBudget.gpuInitially&&sceneRenderBudget.gpuRemainedActive)
   assert.equal(sceneRenderBudget.hiddenCanvasDraws,0,
    "WebGL active: never waste CPU repainting a hidden full-resolution 2D canvas");
- assert.equal(sceneRenderBudget.manuallySelected2d,true,
-  "learner can still choose the original 2D fallback");
- assert.ok(sceneRenderBudget.active2dDraws>=2,
-  "2D fallback immediately renders current flight state and continues animating");
+ // C172/R44 retain their approved detailed mesh under the outside 2D
+ // selection when WebGL is available. Unsupported devices keep Canvas.
+ if(sceneRenderBudget.gpuInitially){
+  assert.equal(sceneRenderBudget.manuallySelected2d,false,
+   "approved C172/R44 exterior replaces old Canvas model in 2D selection");
+  assert.equal(sceneRenderBudget.active2dDraws,0,
+   "detailed aircraft mode does not repaint unseen Canvas");
+ }else{
+  assert.equal(sceneRenderBudget.manuallySelected2d,true);
+  assert.ok(sceneRenderBudget.active2dDraws>=2,
+   "unsupported GPU continues rendering Canvas fallback");
+ }
  if(sceneRenderBudget.gpuRestored)assert.equal(sceneRenderBudget.restored2dDraws,0,
   "switching back to 3D must again stop redundant Canvas rendering");
  else assert.ok(sceneRenderBudget.restored2dDraws>=1,
@@ -113,7 +129,7 @@ try{
  assert.match(await desktop.locator("#coachPhase").textContent(),/SHORT FINAL/);
  await desktop.waitForTimeout(1100);
  const after=await screenshotSignature(desktop);
- assert.notEqual(after,first,"active 2D world geometry must redraw as the aircraft moves");
+ assert.notEqual(after,first,"active outside aircraft view must redraw as the aircraft moves");
  await desktop.locator("#visualMode").selectOption("3d");
  await desktop.locator("#typeStick").click();
  assert.equal(await desktop.locator("#typeStick").getAttribute("aria-pressed"),"true");

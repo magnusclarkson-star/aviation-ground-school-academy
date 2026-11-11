@@ -106,9 +106,9 @@ try{
  assert.match(await desktop.locator('#cockpitInfoText').textContent(),/Listen to the controller/);
  await desktop.keyboard.press('Escape');
  assert.equal(await desktop.locator('#cockpitInfoPanel').isVisible(),false);
- assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6);
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
  assert.deepEqual((await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents()).slice(0,3),['AIRSPEED','ATTITUDE','ALTIMETER']);
- assert.deepEqual((await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents()).slice(3),['TURN COORD.','HEADING','VERTICAL SPEED']);
+ assert.deepEqual((await desktop.locator('#cockpitVisualPanel .cockpit-gauge-title').allTextContents()).slice(3),['TURN COORD.','HEADING','VERTICAL SPEED','ENGINE IND.','THROTTLE']);
  // Change displays in-place; the same simulated flight state remains active.
  await desktop.locator('#cockpitInstrumentStyle').click();
  assert.equal(await desktop.locator('#cockpitStation').getAttribute('data-instruments'),'glass');
@@ -119,7 +119,7 @@ try{
   el=>getComputedStyle(el).color),'rgb(198, 255, 225)',
   'glass displays inherit the green lighting without losing navigation');
  await desktop.locator('#cockpitInstrumentStyle').click();
- assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),6,'trainer round gauges restored');
+ assert.equal(await desktop.locator('#cockpitVisualPanel .cockpit-gauge').count(),8,'trainer round gauges restored');
 
  assert.equal(await desktop.locator('#controlPad').evaluate(el=>el.closest('#cockpitStation')!==null),true,'active yoke is INSIDE the cockpit, never duplicated');
  assert.equal(await desktop.locator('#leftRudder').evaluate(el=>el.closest('#cockpitStation')!==null),true,'rudder pedals are in the cockpit');
@@ -248,7 +248,7 @@ try{
   return box('#axisReadouts').left>=box('.rudder-pedals').right-3;
  }), 'phone Cessna bank/pitch are right of pedals, not under yoke');
  assert.ok(await phone.locator('#cockpitVisualPanel .cockpit-gauge').first().isVisible());
- assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),6);
+ assert.equal(await phone.locator('#cockpitVisualPanel .cockpit-gauge').count(),8);
  const cessnaPhone=await phone.evaluate(()=>{
   const box=sel=>document.querySelector(sel).getBoundingClientRect();
   const panel=box('#cockpitVisualPanel'),cluster=box('#cockpitVisualPanel .cockpit-sixpack');

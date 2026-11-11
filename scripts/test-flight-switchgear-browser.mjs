@@ -43,7 +43,7 @@ try{
   await desktop.locator("#flaps").inputValue()+"°");
  assert.equal(await desktop.locator("#cockpitIndicatorPower").textContent(),
   await desktop.locator("#power").inputValue()+"%");
- assert.equal(await desktop.locator("#cockpitVisualPanel .cockpit-gauge").count(),6,
+ assert.equal(await desktop.locator("#cockpitVisualPanel .cockpit-gauge").count(),8,
   "new switches keep realistic analog panel");
  assert.equal(await desktop.locator("#controlPad").evaluate(e=>e.closest("#cockpitMain")!==null),true);
  await desktop.locator("#cockpitAircraftSelect").selectOption("r44");
