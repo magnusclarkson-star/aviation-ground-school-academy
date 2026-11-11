@@ -279,3 +279,23 @@
   transform:none!important;
  }
 }
+
+
+/* Use measured portrait viewport space for the R44 forward view.
+   390px-wide phone screenshots show ~425px of cockpit controls plus a
+   150-260px unused dark region. Keep every existing control dimension:
+   reserve 450px below for the original instrument/collective/cyclic/pedals
+   and give the remainder to the outside horizon. */
+@media (orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="r44"])>.scene-shell{
+  flex:0 0 max(150px, calc(100dvh - 450px))!important;
+  height:max(150px, calc(100dvh - 450px))!important;
+  max-height:none!important;
+  min-height:0!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"]{
+  flex:1 1 0!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+ }
+}
