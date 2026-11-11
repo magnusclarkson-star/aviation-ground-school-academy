@@ -1322,6 +1322,15 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     partPivot:primitive.partPivot||[0,0,0]};
    objects.push(object);return object;
   };
+  // A stalled asset request must not leave the cockpit or 360 viewer
+  // behind the loading veil indefinitely. An unsuccessful import resolves
+  // to the existing local procedural fallback without blocking controls.
+  function boundedModelLoad(promise,timeoutMs=14000){
+   let timer;
+   return Promise.race([promise,new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(new Error("Aircraft model load timed out")),timeoutMs);
+   })]).finally(()=>clearTimeout(timer));
+  }
   async function importC172(){
    // Prefer the full Skyhawk body and source-built cabin. Preserve the
    // current light GLB when the device cannot load its textures.
@@ -1353,7 +1362,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
    if(MolenC172){
     try{
-     await install(await MolenC172.ensureC172(),"molen");
+     await install(await boundedModelLoad(MolenC172.ensureC172()),"molen");
      if(realC172)return;
     }catch(error){
      if(typeof console!=="undefined")console.warn("Skyhawk GLB fallback:",error);
@@ -1361,7 +1370,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
    if(RealAirframes){
     try{
-     await install(await RealAirframes.ensureC172(),"legacy");
+     await install(await boundedModelLoad(RealAirframes.ensureC172()),"legacy");
      if(realC172)return;
     }catch(error){
      if(typeof console!=="undefined")console.warn("C172 fallback:",error);
@@ -1401,7 +1410,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
    if(MolenR44){
     try{
-     await install(await MolenR44.ensureR44(),"molen");
+     await install(await boundedModelLoad(MolenR44.ensureR44()),"molen");
      if(realR44)return;
     }catch(error){
      if(typeof console!=="undefined")console.warn("MIT R44 fallback:",error);
@@ -1409,7 +1418,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
    if(RealR44){
     try{
-     await install(await RealR44.ensureR44(),"flightgear");
+     await install(await boundedModelLoad(RealR44.ensureR44()),"flightgear");
      if(realR44)return;
     }catch(error){
      if(typeof console!=="undefined")console.warn("FlightGear R44 fallback:",error);
