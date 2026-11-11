@@ -1229,7 +1229,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.UNSIGNED_SHORT:gl.UNSIGNED_INT,
     imageId:primitive.imageId,alphaMask:primitive.alphaMask,
     alphaCutoff:primitive.alphaCutoff,opacity:primitive.opacity??1,
-    isGlazing:primitive.isGlazing===true};
+    isGlazing:primitive.isGlazing===true,
+    isPainted:primitive.isPainted===true};
    objects.push(object);return object;
   };
   async function importC172(){
