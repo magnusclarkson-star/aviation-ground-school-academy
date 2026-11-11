@@ -352,7 +352,9 @@ function drawScenery(now){
 $("lightingMode").addEventListener("change",()=>{
  prev2D=0;prev3D=0;
  $("lightingStatus").textContent=lightingChoice().label+" selected. Fictional outside light only; instruments and flight dynamics unchanged.";
- if(!renderer3D)S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
+ // Keep the Canvas fallback palette current while detailed WebGL aircraft
+ // are visible under the 2D selection (and for browser lighting tests).
+ if(!renderer3D||$("visualMode").value==="2d")S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 });
 function setValues(){
  $("power").value=String(round(input.throttle*100));
