@@ -47,7 +47,12 @@ function snapshot(state,systems,input,profileId){
 }
 const ANALOG={
  trainer:[["speed","AIRSPEED","KT"],["attitude","ATTITUDE","PITCH / BANK"],["alt","ALTIMETER","FT AGL"],
-  ["turn","TURN COORD.","BANK · SIM"],["heading","HEADING","DEG"],["vsi","VERTICAL SPEED","FT/MIN"]],
+  ["turn","TURN COORD.","BANK · SIM"],["heading","HEADING","DEG"],["vsi","VERTICAL SPEED","FT/MIN"],
+  // Secondary engine scan uses the model’s available percentages. These are
+  // explicitly simulated proxies, not invented C172 engine RPM or pressure.
+  ["rpm","ENGINE IND.","% · SIM"],["power","THROTTLE","% · SIM"]],
+ // The C172 retains its primary six instruments plus a compact engine and throttle scan.
+// Tap-to-zoom is shared by every gauge; the new system indicators remain labelled SIM.
  // The R44-style panel retains a visible compass/heading and vertical speed
  // as well as dual tach, airspeed, altitude and manifold proxy. Eight compact
  // dials fit in two rows so the controls remain visible below on phones.
@@ -63,8 +68,8 @@ const HELP=Object.freeze({
  turn:{title:"Turn coordinator",text:"This exercise displays a simplified bank indication. Use the heading to see the turn develop."},
  heading:{title:"Heading indicator",text:"Shows which compass direction the nose is pointing. A steady heading means a steady course in calm wind."},
  vsi:{title:"Vertical speed",text:"Positive values indicate a climb; negative values indicate descent. Read in feet per minute."},
- rpm:{title:"Dual tachometer",text:"Compares illustrated engine and rotor speed. Keep a close scan during helicopter practice."},
- power:{title:"Power indication",text:"Watch the helicopter's simulated collective-power indication when changing lift."},
+ rpm:{title:"Engine / rotor indication",text:"On the Cessna this is an engine-system percentage proxy, not an actual RPM reading. On the R44 it illustrates the engine and rotor tachometer scan; the two speeds are not independently modelled."},
+ power:{title:"Power indication",text:"On the Cessna this follows simulated throttle percentage. On the R44 it follows simulated collective-power percentage, not actual manifold pressure."},
  "mfd-pfd":{title:"Flight display",text:"Shows the artificial horizon, airspeed, height and heading together."},
  "mfd-att":{title:"Attitude display",text:"Follow the horizon to see pitch and bank. The centre mark represents your reference."},
  "mfd-nav":{title:"Navigation display",text:"Shows aircraft position, heading and track on a moving local airfield map. Tap it to enlarge."},
