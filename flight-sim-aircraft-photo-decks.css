@@ -1,0 +1,427 @@
+/* Immersive aircraft-specific cockpit replacement.
+ * The real, already-wired gauge/map and touch-control nodes are re-laid out,
+ * never cloned or replaced with a static screenshot. Flight scenery continues
+ * animating behind the flightdeck as in the supplied real-cockpit references.
+ * This stylesheet intentionally loads LAST so no legacy mock-up overrides it.
+ */
+
+/* In every orientation the Cessna is a wide glareshield/dashboard,
+ * rather than a little detached cluster of six floating dials. */
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain{
+ border-radius:70px 70px 9px 9px/28px 28px 9px 9px!important;
+ border:3px solid #11161b!important;
+ border-top:11px solid #101317!important;
+ background:linear-gradient(180deg,#303b48 0,#1c2c3c 12%,#202d3c 78%,#101923 100%)!important;
+ box-shadow:0 -9px 19px #0a151bcc,inset 0 3px 4px #a2adb31e,
+  inset 0 -9px 22px #071018cc!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-visual-panel{
+ border:0!important;border-radius:18px 18px 4px 4px!important;
+ background:
+  radial-gradient(circle at 2% 9%,#828b9377 0 2px,transparent 3px),
+  radial-gradient(circle at 98% 9%,#828b9377 0 2px,transparent 3px),
+  radial-gradient(circle at 2% 88%,#828b9377 0 2px,transparent 3px),
+  radial-gradient(circle at 98% 88%,#828b9377 0 2px,transparent 3px),
+  linear-gradient(135deg,#3b4b5d,#243346 50%,#1a2838)!important;
+ box-shadow:inset 0 3px 12px #07131ba6!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge{
+ border-radius:50%!important;
+ border:3px solid #748590!important;
+ background:radial-gradient(circle at center,#0a131c 0,#0b1118 65%,#30404e 90%)!important;
+ box-shadow:0 2px 4px #000b,inset 0 0 0 2px #0b1118,inset 0 0 0 4px #4f5964!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-avionics{
+ background:linear-gradient(160deg,#15202b,#060d14)!important;
+ border:3px ridge #687481!important;border-radius:7px!important;
+ box-shadow:0 0 0 1px #060b0e,inset 0 0 6px #000!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-nav-screen{
+ background:#07101b!important;
+ border-color:#3b6979!important;
+}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="speed"]{order:1}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="attitude"]{order:2}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="alt"]{order:3}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="heading"]{order:4}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="turn"]{order:5}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="vsi"]{order:6}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="rpm"]{order:7}
+#cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="power"]{order:8}
+
+/* The R44 is NOT a wide Cessna dashboard. It has a compact raised top
+ * instrument head and a tapering, central avionics/switch pedestal. */
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain{
+ position:relative!important;
+ border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain::before{
+ content:"";position:absolute;top:3px;bottom:0;left:34%;width:32%;
+ background:linear-gradient(100deg,#10191f,#3a4650 19%,#27343f 49%,#4b555d 81%,#111820);
+ border:3px solid #131c22;border-radius:28px 28px 5px 5px;
+ clip-path:polygon(10% 0,90% 0,100% 100%,0 100%);
+ box-shadow:0 5px 14px #000c;pointer-events:none;z-index:0;
+}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-instrument-well{
+ position:relative;z-index:1;
+ background:linear-gradient(135deg,#292e35,#111921 70%)!important;
+ border:5px solid #101419;border-top:9px solid #0b0e13;
+ border-radius:26% 26% 9px 9px/24% 24% 9px 9px;
+ box-shadow:0 4px 15px #000e,inset 0 0 0 2px #4d565c;
+}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-visual-panel{
+ border:0!important;box-shadow:none!important;
+ background:transparent!important;align-content:start;
+}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="alt"]{order:1}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="attitude"]{order:2}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="speed"]{order:3}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="rpm"]{order:4}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="vsi"]{order:5}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="heading"]{order:6}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="turn"]{order:7}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack [data-gauge="power"]{order:8}
+#cockpitStation[data-airframe="r44"][data-instruments="round"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge{
+ border-radius:50%!important;border:3px solid #7a8289!important;
+ background:#0a1119!important;
+ box-shadow:0 2px 5px #000d,inset 0 0 0 2px #0a1016!important;
+}
+
+/* A photo-like cockpit is an immersive single view: landscape sky/runway
+ * behind an instrument console, NOT two stacked full-width pages. */
+@media(orientation:landscape) and (min-width:600px) and (max-height:510px){
+ body[data-cockpit-focus="on"] .scene-panel[data-photo-cockpit="on"]{
+  display:block!important;position:fixed!important;inset:0!important;
+  isolation:isolate;background:#9bbbd0!important
+ }
+ body[data-cockpit-focus="on"] .scene-panel[data-photo-cockpit="on"] >.scene-shell{
+  position:absolute!important;inset:0!important;
+  top:0!important;left:0!important;
+  width:100%!important;height:100%!important;
+  flex:none!important;max-width:none!important;max-height:none!important;
+  border:0!important;aspect-ratio:auto!important;z-index:0!important;
+ }
+ body[data-cockpit-focus="on"] .scene-panel[data-photo-cockpit="on"] .scene-top,
+ body[data-cockpit-focus="on"] .scene-panel[data-photo-cockpit="on"] .scene-bottom,
+ body[data-cockpit-focus="on"] .scene-panel[data-photo-cockpit="on"] .scene-centre{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"]{
+  position:absolute!important;left:0!important;right:0!important;
+  bottom:0!important;top:auto!important;z-index:4!important;
+  box-sizing:border-box!important;width:100%!important;
+  height:clamp(228px,64dvh,295px)!important;
+  min-height:0!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;
+  border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] .cockpit-station-head{
+  position:fixed!important;top:33px!important;left:7px!important;
+  right:auto!important;width:159px!important;z-index:1060!important;
+  display:flex!important;min-height:0!important;max-height:35px!important;
+  margin:0!important;padding:0!important;border:0!important;
+  background:none!important;box-shadow:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] .cockpit-station-head>div:first-child,
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] .cockpit-station-head .full-flight-launch{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] .cockpit-station-head label{
+  display:block!important;flex:0 0 154px!important;min-width:0!important;
+  max-width:154px!important;font-size:0!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitAircraftSelect{
+  width:154px!important;height:26px!important;min-height:26px!important;
+  padding:2px 5px!important;font-size:10px!important;border-radius:5px!important;
+  background:#132532d9!important;color:#f8f8ef!important;
+  border:1px solid #8c9ba7!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] .cockpit-actions{
+  position:absolute!important;left:0!important;top:0!important;
+  width:0!important;height:0!important;min-height:0!important;
+  max-height:0!important;margin:0!important;padding:0!important;
+  border:0!important;overflow:visible!important;background:transparent!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitFocusButton{
+  display:inline-flex!important;position:fixed!important;
+  top:3px!important;left:7px!important;right:auto!important;bottom:auto!important;
+  z-index:1080!important;width:97px!important;min-width:97px!important;
+  max-width:97px!important;height:26px!important;min-height:26px!important;
+  padding:2px 4px!important;border:1px solid #9da9b0!important;
+  background:#192b35e8!important;border-radius:5px!important;
+  color:#e9f5fa!important;font-size:10px!important;line-height:1.1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain.cockpit-flightdeck{
+  position:relative!important;display:block!important;
+  width:min(100%,1100px)!important;max-width:none!important;
+  box-sizing:border-box!important;
+  height:100%!important;max-height:none!important;
+  margin:0 auto!important;padding:6px 7px 0!important;
+  overflow:visible!important;z-index:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .cockpit-instrument-well{
+  display:block!important;width:100%;height:auto!important;
+  min-height:0!important;max-width:none!important;margin:0 auto!important;
+  padding:0!important;gap:0!important;overflow:visible!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain #cockpitSwitchPanel{
+  position:fixed!important;z-index:1060!important;
+  top:calc(env(safe-area-inset-top,0px) + 4px)!important;
+  right:calc(env(safe-area-inset-right,0px) + 5px)!important;
+  left:auto!important;bottom:auto!important;
+  margin:0!important;padding:1px 3px!important;
+  width:max-content!important;max-width:190px!important;
+  min-height:0!important;border:1px solid #7c8a91!important;
+  border-radius:6px!important;background:#101f29d9!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain #cockpitSwitchPanel .cockpit-annunciators{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain #cockpitSwitchPanel .cockpit-switch{
+  width:40px!important;min-width:40px!important;height:25px!important;
+  min-height:25px!important;max-height:25px!important;
+  padding:1px 2px!important;touch-action:manipulation!important;
+  pointer-events:auto!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel{
+  position:absolute!important;left:2%!important;right:2%!important;
+  bottom:0!important;top:auto!important;z-index:3!important;
+  box-sizing:border-box!important;width:96%!important;height:102px!important;
+  max-height:102px!important;margin:0 auto!important;padding:0!important;
+  display:grid!important;grid-template-columns:1fr 2.5fr 1fr!important;
+  grid-template-rows:67px 32px!important;
+  column-gap:3px!important;row-gap:1px!important;
+  background:none!important;border:0!important;box-shadow:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel .control-assembly{
+  grid-column:2!important;grid-row:1!important;
+  justify-self:center!important;align-self:start!important;
+  width:100%!important;max-width:240px!important;margin:0!important;z-index:5!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel .control-pad{
+  width:100%!important;height:65px!important;min-height:65px!important;
+  max-height:65px!important;margin:0!important;touch-action:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel .flight-grip{
+  width:100%!important;max-width:240px!important;height:100%!important;
+  min-height:0!important;filter:drop-shadow(0 3px 3px #000d)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel>.rudder-deck{
+  grid-column:2!important;grid-row:2!important;
+  align-self:start!important;justify-self:center!important;
+  width:min(100%,280px)!important;max-width:280px!important;
+  margin:0!important;padding:0!important;z-index:6!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .rudder-pedals{
+  width:100%!important;gap:6px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .rudder-pedals button{
+  box-sizing:border-box!important;height:29px!important;min-height:29px!important;
+  max-height:29px!important;touch-action:none!important;
+  font-size:8px!important;padding:1px 3px!important;border-width:2px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel .side-controls{
+  display:flex!important;grid-column:3!important;grid-row:1/span 2!important;
+  width:100%!important;min-width:0!important;max-width:140px!important;
+  justify-self:end!important;align-self:end!important;
+  margin:0!important;padding:0!important;gap:2px!important;
+  position:relative!important;z-index:7!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .lever-panel{
+  box-sizing:border-box!important;padding:2px 3px!important;
+  border-width:1px!important;border-radius:4px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .lever-panel label{
+  display:flex!important;gap:4px!important;justify-content:center!important;
+  font-size:7px!important;line-height:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .lever-panel output{
+  font-size:8px!important;margin:0!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .lever-track{
+  margin:0!important;padding:1px 3px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .lever-panel input[type="range"]{
+  min-height:28px!important;touch-action:pan-x!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain #flapPanel select{
+  min-height:25px!important;max-height:25px!important;padding:1px 3px!important;
+  font-size:8px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitMain .control-panel #brake{
+  grid-column:1!important;grid-row:2!important;justify-self:center!important;
+  align-self:center!important;width:min(100%,118px)!important;
+  height:28px!important;min-height:28px!important;font-size:8px!important;
+  padding:2px 4px!important;touch-action:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-photo-cockpit="on"] #cockpitZoomPanel:not([hidden]){
+  display:flex!important;position:fixed!important;z-index:1200!important;
+  top:12%!important;bottom:12%!important;left:16%!important;right:16%!important;
+  width:auto!important;height:auto!important;max-height:76dvh!important;
+  overflow:auto!important;padding:8px!important;
+  background:#141e27f5!important;border:2px solid #a2abb4!important;
+  box-shadow:0 9px 35px #000e!important
+ }
+
+ /* Cessna: broad black glareshield, 4×2 analogue dials and right NAV stack.
+    It is a continuous dash, never an extra mini picture or separate HUD. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]{
+  height:clamp(236px,64dvh,295px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain{
+  border-radius:70px 70px 5px 5px/25px 25px 5px 5px!important;
+  border-top-width:12px!important;padding:3px 7px 0!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-visual-panel{
+  display:grid!important;grid-template-columns:minmax(0,3.55fr) minmax(130px,1.22fr)!important;
+  height:clamp(126px,37dvh,162px)!important;
+  box-sizing:border-box!important;max-width:none!important;
+  margin:0 auto!important;padding:3px 7px!important;gap:7px!important;
+  align-items:stretch!important;overflow:hidden!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  width:100%!important;height:100%!important;max-width:570px!important;
+  gap:2px 4px!important;margin:0 auto!important;
+  align-items:center!important;justify-items:center!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge{
+  box-sizing:border-box!important;
+  width:clamp(46px,16dvh,67px)!important;
+  height:clamp(46px,16dvh,67px)!important;
+  min-height:0!important;max-height:none!important;
+  aspect-ratio:1!important;padding:0!important;border-width:2px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge-title{
+  top:9%!important;font-size:6px!important;line-height:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge-number{
+  font-size:10px!important;bottom:14%!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge small{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-avionics{
+  box-sizing:border-box!important;display:flex!important;
+  height:100%!important;max-height:none!important;min-height:0!important;
+  padding:3px!important;gap:2px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-topline{
+  font-size:7px!important;min-height:0!important;line-height:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-radio{
+  min-height:0!important;padding:2px!important;gap:1px!important;border-width:1px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-radio small{
+  font-size:6px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-radio span{
+  font-size:8px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-screen.cockpit-nav-screen{
+  min-height:55px!important;max-height:none!important;flex:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .avionics-buttons{
+  display:none!important
+ }
+
+ /* R44: truly narrower central instrument pod, tapered lower console,
+    lateral T-bar cyclic and collective left, scenery visible either side. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"]{
+  height:clamp(240px,70dvh,330px)!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain{
+  height:100%!important;padding:2px 0 0!important;overflow:visible!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-instrument-well{
+  box-sizing:border-box!important;width:min(59vw,495px)!important;
+  max-width:495px!important;padding:7px 9px 2px!important;
+  border-radius:27% 27% 10px 10px/24% 24% 10px 10px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-visual-panel{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  box-sizing:border-box!important;height:clamp(131px,37dvh,170px)!important;
+  min-height:0!important;padding:2px!important;gap:2px!important;
+  overflow:visible!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-sixpack{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+  height:100%!important;width:100%!important;max-width:none!important;
+  gap:2px 4px!important;align-items:center!important;justify-items:center!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge{
+  box-sizing:border-box!important;width:clamp(45px,15dvh,66px)!important;
+  height:clamp(45px,15dvh,66px)!important;max-height:none!important;
+  aspect-ratio:1!important;padding:0!important;border-width:2px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge-title{
+  font-size:6px!important;top:9%!important;line-height:1!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge-number{
+  font-size:9px!important;bottom:14%!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge small{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .r44-quick-scan{
+  display:none!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .r44-lesson-strip{
+  display:flex!important;align-items:center!important;gap:4px!important;
+  height:20px!important;max-height:20px!important;
+  width:100%!important;margin:2px auto 0!important;padding:1px 3px!important;
+  font-size:8px!important;white-space:nowrap!important;overflow:hidden!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .r44-lesson-strip .r44-pilot-cue{
+  max-width:46%!important;font-size:7px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .control-panel{
+  bottom:0!important;height:102px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .control-assembly{
+  max-width:235px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .side-controls{
+  grid-column:1!important;justify-self:start!important;
+  align-self:end!important;max-width:133px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .r44-collective-mechanism{
+  height:28px!important;margin:0!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain #collectivePanel{
+  padding:2px!important;border-width:1px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain #collective{
+  min-height:30px!important;height:30px!important
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain #flapPanel{
+  display:none!important
+ }
+}
+
+/* Portrait retains the original accessible vertical flow, but the aircraft
+ * now have distinct physical panel bodies instead of the generic mock-up.
+ * No hidden duplicated gauges and no changed control event owners. */
+@media(orientation:portrait) and (max-width:740px){
+ #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain{
+  border-radius:32px 32px 9px 9px/16px 16px 9px 9px!important;
+  border-top-width:8px!important
+ }
+ #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .cockpit-gauge{
+  border-radius:50%!important
+ }
+ #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain{
+  padding:2px 1px 6px!important
+ }
+ #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-instrument-well{
+  width:96%!important;margin:0 auto!important;padding:5px 3px!important
+ }
+ #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .cockpit-visual-panel{
+  border-radius:18px 18px 4px 4px!important
+ }
+}
