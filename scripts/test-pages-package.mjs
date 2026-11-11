@@ -20,6 +20,8 @@ for(const [asset,minBytes] of [
  ["assets/aircraft/r44-flightgear-texture.png",10000],
  ["assets/aircraft/ATTRIBUTION.md",100],
  ["assets/aircraft/R44-ATTRIBUTION.md",100],
+ ["assets/aircraft/r44-molen-raven-ii.glb",500000],
+ ["assets/aircraft/MOLEN-LICENSE.txt",100],
  ["assets/aircraft/R44-GPL-2.0-COPYING.txt",1000]
 ]){
  const details=await stat(path.join(output,asset));
