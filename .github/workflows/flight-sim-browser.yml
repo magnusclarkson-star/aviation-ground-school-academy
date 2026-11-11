@@ -265,6 +265,8 @@ jobs:
         run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
       - name: Install Chromium
         run: npx playwright install chromium
+      - name: Verify R44 original controls and four-switch location in three phone sizes
+        run: node scripts/test-flight-r44-single-move-browser.mjs
       - name: Test desktop and simultaneous touch controls
         run: |
           node scripts/test-flight-sim-browser.mjs
@@ -287,6 +289,15 @@ jobs:
           node scripts/test-flight-sim-exercises-browser.mjs
           node scripts/test-flight-sim-instructor-voice-browser.mjs
           node scripts/test-flight-sim-pwa-browser.mjs
+
+      - name: Save R44 whole-cockpit screenshots for visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r44-single-move-portrait-landscape
+          path: artifacts/r44-single-switch-*.png
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Save actual imported R44 WebGL preview for visual review
         if: always()

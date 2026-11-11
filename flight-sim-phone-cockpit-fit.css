@@ -252,37 +252,62 @@
  }
 }
 
-/* R44 only: the original switches move beside the cyclic. No changes to
-   cyclic size, collective size, pedal size, dashboard or overall layout. */
-#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly{
+/* R44: only relocate the ORIGINAL 90 × 58 switch rack beside the cyclic.
+   No changes to cyclic/collective/pedals, instrument sizing or viewport. */
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-panel{
  position:relative!important;
 }
-#cockpitStation[data-airframe="r44"] #cockpitMain .control-assembly>#cockpitSwitchPanel{
+#cockpitStation[data-airframe="r44"] #cockpitMain .control-panel>#cockpitSwitchPanel{
  position:absolute!important;
- inset:auto 0 auto auto!important;
- top:16%!important;
+ top:8px!important;
+ right:5px!important;
+ bottom:auto!important;
+ left:auto!important;
+ inset:8px 5px auto auto!important;
  margin:0!important;
  transform:none!important;
  z-index:35!important;
 }
 
-/* R44 focused portrait: allocate spare viewport to the PILOT'S VIEW, not
-   unused dark space below the cyclic and pedals. Keep all existing control
-   dimensions and original switch position untouched. The instrument/control
-   deck takes its natural content height, scrolling only on short phones. */
+/* Focused landscape: place the original 90px rack immediately to the
+   right of the cyclic instead of leaving it at the outer edge of the phone.
+   No other R44 component changes size or position. */
+@media (orientation:landscape) and (max-height:620px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"] #cockpitMain .control-panel>#cockpitSwitchPanel{
+  position:absolute!important;
+  inset:8px auto auto calc(50% + 128px)!important;
+  margin:0!important;
+  transform:none!important;
+ }
+}
+
+
+/* Use measured portrait viewport space for the R44 forward view.
+   390px-wide phone screenshots show ~425px of cockpit controls plus a
+   150-260px unused dark region. Keep every existing control dimension:
+   reserve 450px below for the original instrument/collective/cyclic/pedals
+   and give the remainder to the outside horizon. */
 @media (orientation:portrait) and (max-width:740px){
  body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="r44"])>.scene-shell{
-  flex:1 1 170px!important;
-  height:auto!important;
-  min-height:135px!important;
+  flex:0 0 max(150px, calc(100dvh - 450px))!important;
+  height:max(150px, calc(100dvh - 450px))!important;
   max-height:none!important;
+  min-height:0!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"]{
-  flex:0 1 auto!important;
-  height:auto!important;
+  flex:1 1 0!important;
   min-height:0!important;
-  max-height:calc(100dvh - 135px)!important;
   overflow-y:auto!important;
-  padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
+ }
+}
+
+
+/* Landscape-only positioning correction from a real 844x390 screenshot:
+   the unchanged R44 rudder buttons end 26px below the viewport because the
+   old photo overlay anchors its whole console flush to the bottom.
+   Lift the complete console by 30px, without changing ANY control sizes. */
+@media (orientation:landscape) and (min-width:600px) and (max-height:510px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"][data-photo-cockpit="on"]{
+  bottom:30px!important;
  }
 }
