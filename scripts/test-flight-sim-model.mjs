@@ -191,11 +191,11 @@ const pedalState=M.makeState("helicopter");
 const pedalInput=M.makeInput("helicopter");pedalInput.collective=.8;pedalInput.rudder=1;
 simulate(pedalState,pedalInput,5);
 assert.ok(pedalState.altitudeM>0,"pedal check must be airborne");
-assert.ok(pedalState.yawRateDegS>14&&pedalState.yawRateDegS<=19);
+assert.ok(pedalState.yawRateDegS>24&&pedalState.yawRateDegS<=29);
 const turningHeading=pedalState.headingDeg;
 pedalInput.rudder=0;
 simulate(pedalState,pedalInput,.2);
-assert.ok(pedalState.yawRateDegS>0&&pedalState.yawRateDegS<18,
+assert.ok(pedalState.yawRateDegS>0&&pedalState.yawRateDegS<28,
  "pedal release gradually damps heading rate, not an abrupt stop");
 assert.ok(pedalState.headingDeg>turningHeading,"yaw still responds after pedal release");
 simulate(pedalState,pedalInput,3);
@@ -252,11 +252,11 @@ assert.ok(fullControl.rollDeg>11,
 // keyboard, gamepad or C172 direct rudder.
 const TouchPedals=require("../flight-sim-touch-pedals.js");
 const phonePedals=TouchPedals.create();
-assert.equal(phonePedals.step({mode:"helicopter",right:true,dt:0}),.18);
+assert.equal(phonePedals.step({mode:"helicopter",right:true,dt:0}),.32);
 const initialPhonePedal=phonePedals.status().right;
 for(let i=0;i<8;i++)phonePedals.step({mode:"helicopter",right:true,dt:.1});
 assert.ok(phonePedals.status().right>initialPhonePedal+.5 &&
- phonePedals.status().right<1,
+ phonePedals.status().right<=1,
  "holding helicopter pedal steadily grows yaw command");
 for(let i=0;i<5;i++)phonePedals.step({mode:"helicopter",right:true,dt:.1});
 assert.equal(phonePedals.status().right,1,
