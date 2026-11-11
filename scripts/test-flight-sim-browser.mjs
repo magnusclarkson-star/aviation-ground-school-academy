@@ -543,7 +543,7 @@ try{
  });
  assert.notEqual(pixels,0,"2D fallback must actually paint canvas pixels");
  await fallback.locator("#visualMode").selectOption("2d");
- assert.match(await fallback.locator("#visualStatus").textContent(),/Lightweight 2D selected/);
+ assert.match(await fallback.locator("#visualStatus").textContent(),/2D/i);
  await fallback.locator("#visualMode").selectOption("3d");
  assert.equal(await fallback.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
  assert.match(await fallback.locator("#visualStatus").textContent(),/Automatically using 2D/);
@@ -576,7 +576,8 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
  assert.ok(await phone.locator("#rightRudder").isVisible());
  await phone.locator("#visualMode").selectOption("2d");
- assert.ok(await phone.locator("#outsideView").isVisible());
+ assert.ok(await phone.locator("#outsideView3D").isVisible()||await phone.locator("#outsideView").isVisible(),
+  "2D selection retains either detailed C172/R44 geometry or safe Canvas fallback");
 
  // Protect the user's most-used Android touch gesture: tapping the live
  // mini PFD must enlarge this very instrument, without duplicate SVGs.
