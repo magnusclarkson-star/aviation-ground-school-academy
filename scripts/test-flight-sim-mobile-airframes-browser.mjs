@@ -58,7 +58,7 @@ try{
     return r?.realC172Status==="imported"&&r?.realR44Status==="imported";
    },null,{timeout:25000});
    for(const aircraft of [
-    {id:"c172",mode:"airplane",expected:"licensed-c172-glb"},
+    {id:"c172",mode:"airplane",expected:"mit-c172s-glb"},
     {id:"r44",mode:"helicopter",expected:"mit-r44-glb"}
    ]){
     // Two angles with the same aircraft must produce distinct GPU pixels.
@@ -92,8 +92,7 @@ try{
     assert.equal(evidence.status,"imported",aircraft.id+" must load authentic model");
     assert.equal(evidence.source,aircraft.expected,
      aircraft.id+" may not silently fall back to procedural model on emulated phone");
-    assert.equal(evidence.interior,aircraft.id==="r44"?
-     "source-cabin-and-panel":"four-seats-and-panel",
+    assert.equal(evidence.interior,"source-cabin-and-panel",
      aircraft.id+" cabin must draw");
     assert.ok(evidence.samples.every(p=>p.drawn&&p.w>200&&p.h>100),
      aircraft.id+" canvas must render at phone size");
