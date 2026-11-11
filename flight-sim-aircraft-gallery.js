@@ -118,11 +118,16 @@ function attach({documentLike}={}){
  }
  function close(){
   if(overlay.hidden)return;
-  overlay.hidden=true;button.setAttribute("aria-expanded","false");
+  overlay.hidden=true;delete doc.body.dataset.aircraftGallery;
+  button.setAttribute("aria-expanded","false");
   button.focus({preventScroll:true});
  }
  function open(){
   update(select.value);
+  doc.body.dataset.aircraftGallery="on";
+  // A model picture is not an audio or flight-start command. Any queued R44
+  // lesson speech/ATC is silenced before the gallery opens.
+  doc.dispatchEvent(new Event("agsa:gallery-open"));
   overlay.hidden=false;button.setAttribute("aria-expanded","true");
   closeButton.focus({preventScroll:true});
  }

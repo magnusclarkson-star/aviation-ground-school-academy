@@ -34,12 +34,28 @@ function attach({documentLike,windowLike}={}){
   }
  }
  for(const {def,select,button} of items){
-  button.addEventListener("click",()=>{
+  let recentTouch=0;
+  const activate=()=>{
    if(button.disabled)return;
    select.value=nextValue(def,select.value);
    select.dispatchEvent(new win.Event("change",{bubbles:true}));
+   if(def.id==="view"&&select.value==="cockpit")
+    doc.dispatchEvent(new win.Event("agsa:pilot-deck-request"));
    sync();
    if(status)status.textContent=def.label+" "+button.querySelector(".cockpit-switch-value")?.textContent;
+  };
+  // Android can suppress the second finger's synthesized click while
+  // a first finger holds the yoke. Act on touchstart directly, without
+  // releasing or reassigning the independent yoke/pedal contact.
+  button.addEventListener("touchstart",event=>{
+   if(!event.changedTouches?.length||button.disabled)return;
+   recentTouch=Date.now();
+   activate();
+   if(event.cancelable)event.preventDefault();
+  },{passive:false});
+  button.addEventListener("click",()=>{
+   if(Date.now()-recentTouch<900)return; // do not double-toggle on touch click
+   activate();
   });
   select.addEventListener("change",sync);
  }

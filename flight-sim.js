@@ -126,8 +126,10 @@ async function startFullFlight(){
  engineAudio.setTexture($("engineAudioTexture").value,audioPower());
  const cueStarted=radioTone.enable(true);
  radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
- const radioArmed=document.body.dataset.aircraftInspect!=="on"&&atcRadio?.arm(true)===true;
- if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
+ const radioArmed=!viewingAircraft()&&atcRadio?.arm(true)===true;
+ // Start ALL flight effects must not trap the learner away from Stop/Pause
+ // and other external settings. PILOT/Focus remains an explicit view action.
+ if(state.mode==="helicopter"&&!viewingAircraft())r44Voice.arm();
  syncPhoneFeedbackUI();
  let engineStarted=false;
  try{engineStarted=await engineStart;}catch{engineStarted=false;}
@@ -234,6 +236,11 @@ document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
 // A 360-degree aircraft inspection is not an instruction to play ATC.
 // Silence already queued speech, and do not automatically rearm it on close.
+document.addEventListener("agsa:gallery-open",()=>{
+ atcRadio?.disarm("Aircraft gallery: radio stopped until flight resumes.");
+ r44Voice.disarm();
+ atcPractice?.stop();atcMissions?.stop();
+});
 document.addEventListener("agsa:inspection-open",()=>{
  atcRadio?.disarm("360° aircraft inspection: radio paused until explicitly started.");
  r44Voice.disarm();
@@ -246,7 +253,13 @@ let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 // Modern mobile browsers offer independent captured PointerEvents per finger.
 // Use them as the sole owner of each contact to avoid duplicate/lost touch IDs;
 // older devices retain the separate TouchEvent fallback below.
-const nativeMultiTouch=typeof window.PointerEvent!=="function"&&typeof window.TouchEvent==="function";
+// Actual mobile touches must use their individual Touch.identifier and
+// original targets. Pointer Events are still used for mouse, pen and
+// synthetic regression input; native touches never compete for ownership.
+const nativeMultiTouch=typeof window.TouchEvent==="function";
+let focusController=null,pendingPilotFocus=false;
+const viewingAircraft=()=>document.body.dataset.aircraftInspect==="on"||
+ document.body.dataset.aircraftGallery==="on";
 const pointers={left:null,right:null,brake:null};
 const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
 const keys=new Set();
@@ -622,7 +635,7 @@ function setMode(next){
  releaseControls();
  hardware?.resetPower();
  setValues();gripTransform();updateReadouts();
- if(newMode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
+ if(newMode==="helicopter"&&!viewingAircraft())r44Voice.arm();
  else r44Voice.disarm();
  S.draw(canvas,state,{reducedMotion:prefersLessMotion,lighting:lightingId(),view:$("cameraMode").value,airframeId:airframeId(),animation:systems.parts});
 }
@@ -688,6 +701,14 @@ $("controlPad").addEventListener("pointerdown",e=>{
 $("controlPad").addEventListener("pointermove",e=>{
  if(dragPointer===e.pointerId)movePad(e);
 });
+function requestPilotDeck(){
+ if(!window.matchMedia?.("(max-width:740px)")?.matches||
+    $("cameraMode").value!=="cockpit"||viewingAircraft())return;
+ if(dragPointer!==null){pendingPilotFocus=true;return;}
+ pendingPilotFocus=false;
+ focusController?.setFocus(true);
+}
+document.addEventListener("agsa:pilot-deck-request",requestPilotDeck);
 function finishPad(id,completed){
  if(dragPointer!==id)return;
  if(!completed)bankHold?.clear();
@@ -695,27 +716,10 @@ function finishPad(id,completed){
   bankHold.release(input.bank);
  dragPointer=null;input.bank=0;input.pitch=0;
  syncKeys();syncBankHoldUI();gripTransform();
+ if(pendingPilotFocus)requestPilotDeck();
 }
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  $("controlPad").addEventListener(eventType,e=>finishPad(e.pointerId,eventType==="pointerup"));
-if(nativeMultiTouch){
- const pad=$("controlPad");
- pad.addEventListener("touchstart",e=>{
-  if(dragPointer!==null)return;
-  const t=e.changedTouches[0];if(!t)return;
-  dragPointer="touch:"+t.identifier;movePad(t);
-  haptics.pulse("control");e.preventDefault();
- },{passive:false});
- pad.addEventListener("touchmove",e=>{
-  const t=Array.from(e.changedTouches).find(x=>dragPointer==="touch:"+x.identifier);
-  if(!t)return;movePad(t);e.preventDefault();
- },{passive:false});
- for(const kind of ["touchend","touchcancel"])
-  pad.addEventListener(kind,e=>{
-   for(const t of e.changedTouches)finishPad("touch:"+t.identifier,kind==="touchend");
-   e.preventDefault();
-  },{passive:false});
-}
 function updateHeld(){
  const left=pointers.left!==null,right=pointers.right!==null;
  const foot=touchPedals?.step({left,right,mode:state.mode,dt:0})??
@@ -746,27 +750,71 @@ function hold(id,key){
    if(pointers[key]!==e.pointerId)return;
    pointers[key]=null;updateHeld();
   });
- if(nativeMultiTouch){
-  el.addEventListener("touchstart",e=>{
-   if(pointers[key]!==null)return;
-   const t=e.changedTouches[0];if(!t)return;
-   pointers[key]="touch:"+t.identifier;updateHeld();
-   haptics.pulse(key==="brake"?"control":"rudder");
-   e.preventDefault();
-  },{passive:false});
-  el.addEventListener("touchmove",e=>{
-   if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier))
-    e.preventDefault();
-  },{passive:false});
-  for(const kind of ["touchend","touchcancel"])
-   el.addEventListener(kind,e=>{
-    if(Array.from(e.changedTouches).some(t=>pointers[key]==="touch:"+t.identifier)){
-     pointers[key]=null;updateHeld();e.preventDefault();
-    }
-   },{passive:false});
- }
+
 }
 hold("leftRudder","left");hold("rightRudder","right");hold("brake","brake");
+
+// Capture original mobile touch targets once; keep all fingers independent.
+// Browser zoom/scroll gestures must never cancel a yoke while a rudder pedal,
+// brake, or a cockpit-view switch is operated with another finger.
+if(nativeMultiTouch){
+ const touchOwners=new Map();
+ const classify=target=>{
+  if(target?.closest?.("#controlPad"))return "pad";
+  if(target?.closest?.("#leftRudder"))return "left";
+  if(target?.closest?.("#rightRudder"))return "right";
+  if(target?.closest?.("#brake"))return "brake";
+  return null;
+ };
+ document.addEventListener("touchstart",event=>{
+  let claimed=false;
+  for(const touch of event.changedTouches){
+   const owner=classify(touch.target),id="touch:"+touch.identifier;
+   if(!owner)continue;
+   if(owner==="pad"){
+    if(dragPointer!==null)continue;
+    dragPointer=id;touchOwners.set(touch.identifier,owner);
+    movePad(touch);haptics.pulse("control");claimed=true;
+   }else if(pointers[owner]===null){
+    pointers[owner]=id;touchOwners.set(touch.identifier,owner);
+    updateHeld();haptics.pulse(owner==="brake"?"control":"rudder");
+    claimed=true;
+   }
+  }
+  if(claimed&&event.cancelable)event.preventDefault();
+ },{capture:true,passive:false});
+ document.addEventListener("touchmove",event=>{
+  let claimed=false;
+  for(const touch of event.changedTouches){
+   const owner=touchOwners.get(touch.identifier);
+   if(!owner)continue;
+   claimed=true;
+   if(owner==="pad"&&dragPointer==="touch:"+touch.identifier)
+    movePad(touch);
+  }
+  if(claimed&&event.cancelable)event.preventDefault();
+ },{capture:true,passive:false});
+ const finishTouches=(event,completed)=>{
+  let handled=false;
+  for(const touch of event.changedTouches){
+   const owner=touchOwners.get(touch.identifier);
+   if(!owner)continue;
+   handled=true;touchOwners.delete(touch.identifier);
+   const id="touch:"+touch.identifier;
+   if(owner==="pad")finishPad(id,completed);
+   else if(pointers[owner]===id){pointers[owner]=null;updateHeld();}
+  }
+  if(handled&&event.cancelable)event.preventDefault();
+ };
+ document.addEventListener("touchend",event=>finishTouches(event,true),
+  {capture:true,passive:false});
+ document.addEventListener("touchcancel",event=>finishTouches(event,false),
+  {capture:true,passive:false});
+ document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){touchOwners.clear();releaseControls();}
+ });
+}
+
 $("bankHoldToggle")?.addEventListener("click",()=>{
  if(!bankHold||state.mode!=="airplane")return;
  const activate=!bankHold.status().armed;
@@ -881,7 +929,7 @@ for(const [id,typeValue] of [["typeYoke","yoke"],["typeStick","stick"],["typeCyc
 function resetFromUserGesture(scenario){
  reset(scenario);
  if(fullFlightWanted)void startFullFlight();
- else if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
+ else if(state.mode==="helicopter"&&!viewingAircraft())r44Voice.arm();
 }
 $("startRunway").addEventListener("click",()=>resetFromUserGesture("runway"));
 $("startApproach").addEventListener("click",()=>{if(state.mode==="airplane")resetFromUserGesture("approach")});
@@ -897,7 +945,7 @@ $("pauseFlight").addEventListener("click",()=>{
   atcRadio?.disarm("Simulation paused: phase-linked radio and speech stopped.");
   radioTone.stop();radioFx.disable();syncRadioFxUI("Simulation paused: radio effects stopped.");syncRadioToneUI("Simulation paused: radio cue tone stopped.");
  }else if(fullFlightWanted){void startFullFlight();}
- else if(state.mode==="helicopter"&&document.body.dataset.aircraftInspect!=="on")r44Voice.arm();
+ else if(state.mode==="helicopter"&&!viewingAircraft())r44Voice.arm();
  syncPhoneFeedbackUI();
  $("pauseFlight").setAttribute("aria-pressed",String(paused));
  $("pauseFlight").textContent=paused?"Resume simulation":"Pause simulation";
@@ -1160,7 +1208,7 @@ cockpit=CI.attach({
  onSelect:(control)=>setMode(control)
 });
 switchgear=SW.attach({documentLike:document,windowLike:window});
-FO.attach({documentLike:document,windowLike:window});
+focusController=FO.attach({documentLike:document,windowLike:window});
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,

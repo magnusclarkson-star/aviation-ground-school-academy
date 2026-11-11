@@ -702,6 +702,52 @@ try{
   "releasing pedal must not cancel the independent yoke finger");
  assert.match(nativeTouch.afterPedal.rudder,/0%/);
  assert.match(nativeTouch.afterYoke,/0%/);
+
+ // Simulate real native Android touch identifiers, not only synthesized
+ // PointerEvents. A third finger changes VIEW while yoke and rudder remain held.
+ const independentTouches=await phone.evaluate(()=>{
+  const yoke=document.querySelector("#controlPad");
+  const pedal=document.querySelector("#rightRudder");
+  const view=document.querySelector("#cockpitSwitch_view");
+  const touch=(el,id,rx=.5)=>{
+   const b=el.getBoundingClientRect(),x=b.left+b.width*rx,y=b.top+b.height*.5;
+   return new Touch({identifier:id,target:el,clientX:x,clientY:y,
+    pageX:x+scrollX,pageY:y+scrollY,screenX:x,screenY:y});
+  };
+  const y=touch(yoke,501,.86),p=touch(pedal,502),v=touch(view,503);
+  const send=(el,type,changed,all)=>el.dispatchEvent(new TouchEvent(type,{
+   bubbles:true,cancelable:true,changedTouches:changed,
+   touches:all,targetTouches:all.filter(t=>t.target===el)
+  }));
+  send(yoke,"touchstart",[y],[y]);
+  send(pedal,"touchstart",[p],[y,p]);
+  const together={bank:document.querySelector("#cmdBank").textContent,
+   rudder:document.querySelector("#cmdRudder").textContent};
+  const before=document.querySelector("#cameraMode").value;
+  send(view,"touchstart",[v],[y,p,v]);
+  const during={bank:document.querySelector("#cmdBank").textContent,
+   rudder:document.querySelector("#cmdRudder").textContent,
+   view:document.querySelector("#cameraMode").value};
+  send(view,"touchend",[v],[y,p]);
+  send(pedal,"touchend",[p],[y]);
+  const afterPedal=document.querySelector("#cmdBank").textContent;
+  send(yoke,"touchend",[y],[]);
+  return {before,together,during,afterPedal,
+   afterYoke:document.querySelector("#cmdBank").textContent};
+ });
+ assert.ok(parseInt(independentTouches.together.bank)>50,
+  "native yoke finger drives bank");
+ assert.ok(Number(independentTouches.together.rudder.match(/-?\d+/)?.[0]||0)>0,
+  "native second pedal finger drives yaw during yoke hold");
+ assert.notEqual(independentTouches.during.view,independentTouches.before,
+  "native third finger changes view while yoke and pedal stay held");
+ assert.ok(parseInt(independentTouches.during.bank)>50,
+  "view change must not release yoke");
+ assert.ok(parseInt(independentTouches.afterPedal)>50,
+  "releasing pedal must not release yoke");
+ assert.match(independentTouches.afterYoke,/0%/,
+  "last yoke finger release clears bank");
+
  // Real multi-touch usability check at the actual 390 px mobile viewport:
  // a short anti-torque pedal tap must be gentle, a longer hold stronger,
  // while another finger can hold brakes and fly the cyclic independently.
