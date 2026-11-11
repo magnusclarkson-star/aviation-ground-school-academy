@@ -102,8 +102,22 @@ try{
  assert.equal(await desktop.locator("#cockpitFrameToggle").inputValue(),"on");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-aircraft"),"airplane");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-view"),"cockpit");
- await desktop.locator("#cockpitFrameToggle").selectOption("off");
+ assert.equal(await desktop.locator("#c172ScenePanel").isVisible(),true,
+  "the C172 forward pilot view includes its own physical-looking instrument panel");
+ assert.equal(await desktop.locator('[data-c172-scene-value="heading"]').textContent(),"000");
+ assert.equal(await desktop.locator("#c172ScenePanel").evaluate(e=>getComputedStyle(e).pointerEvents),"none",
+  "pilot-panel repeater must not block controls or the camera switch");
+ assert.equal(await desktop.locator(".scene-bottom").isVisible(),false,
+  "scene footer must not overlap the in-windscreen C172 gauges");
+ await desktop.locator("#cameraMode").selectOption("chase");
+ assert.equal(await desktop.locator("#c172ScenePanel").isVisible(),false,
+  "outside chase camera does not accidentally show the C172 cockpit panel");
+ await desktop.locator("#cameraMode").selectOption("cockpit");
+ assert.equal(await desktop.locator("#c172ScenePanel").isVisible(),true);
+  await desktop.locator("#cockpitFrameToggle").selectOption("off");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-enabled"),"off");
+ assert.equal(await desktop.locator("#c172ScenePanel").isVisible(),false,
+  "FRAME off provides unobstructed forward scenery");
  await desktop.locator("#cockpitFrameToggle").selectOption("on");
  assert.equal(await desktop.locator("#cockpitFrame").getAttribute("data-enabled"),"on");
  assert.equal(await desktop.locator("#cockpitFrame").evaluate(e=>getComputedStyle(e).pointerEvents),"none");
@@ -124,6 +138,11 @@ try{
  assert.ok(first>0);
  await desktop.locator("#startApproach").click();
  assert.match(await desktop.locator("#flightPhase").textContent(),/FINAL APPROACH/);
+ assert.ok(parseInt(await desktop.locator('[data-c172-scene-value="alt"]').textContent())>250,
+  "C172 miniature altimeter tracks the actual approach altitude in feet");
+ assert.equal((await desktop.locator('[data-c172-scene-value="heading"]').textContent()).trim(),
+  (await desktop.locator("#pfdHeading").textContent()).replace("°",""),
+  "C172 mini heading agrees with the main flight instrument");
  assert.ok(Number(await desktop.locator("#readAlt").textContent())>75);
  assert.equal(await desktop.locator("#pfdAltitude").textContent(),await desktop.locator("#readAlt").textContent());
  assert.match(await desktop.locator("#coachPhase").textContent(),/SHORT FINAL/);

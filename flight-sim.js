@@ -336,6 +336,8 @@ function syncCockpitFrame(){
  const chase=selectedView!=="cockpit";
  document.querySelector(".scene-shell").dataset.exteriorView=chase?"on":"off";
  document.querySelector(".scene-shell").dataset.cameraView=selectedView;
+ document.querySelector(".scene-shell").dataset.c172Panel=
+  enabled&&!chase&&state.mode==="airplane"&&airframeId()==="c172"?"on":"off";
  frame.dataset.aircraft=state.mode==="helicopter"?"helicopter":"airplane";
  frame.dataset.airframe=airframeId();
  document.querySelector(".scene-shell").dataset.airframe=airframeId();
@@ -397,8 +399,40 @@ function gripTransform(){
  $("cmdBank").textContent=(input.bank>=0?"+":"")+round(input.bank*100)+"%";
  $("cmdPitch").textContent=(input.pitch<=0?"+":"")+round(-input.pitch*100)+"%";
 }
+// Instrument repeaters are part of the C172 *pilot perspective* and update
+// from the exact same physics snapshot as the main round/zoomable dials.
+// They are visual only; all real touch targets remain in the deck below.
+function updateC172ScenePanel(){
+ const host=$("c172ScenePanel");
+ if(!host||state.mode!=="airplane"||airframeId()!=="c172")return;
+ const snap=CI.snapshot(state,systems,input,"c172");
+ const readings={
+  speed:[snap.values.speed+" KT",snap.angles.speed],
+  attitude:[snap.values.pitch+"°",snap.bank],
+  alt:[snap.values.alt+" FT",snap.angles.alt],
+  turn:[snap.values.bank+"°",snap.angles.turn],
+  heading:[snap.values.heading,snap.angles.heading],
+  vsi:[snap.values.vsi,snap.angles.vsi]
+ };
+ for(const dial of host.querySelectorAll("[data-c172-scene-dial]")){
+  const id=dial.dataset.c172SceneDial,reading=readings[id];
+  if(!reading)continue;
+  const face=dial.querySelector("b"),needle=dial.querySelector("i");
+  if(face)face.textContent=reading[0];
+  if(needle)needle.style.setProperty("--c172-angle",reading[1].toFixed(1)+"deg");
+ }
+ const nav={
+  heading:snap.values.heading+"°",
+  ground:"GS "+Math.round(state.groundSpeedKt)+" KT",
+  power:"THR "+Math.round(input.throttle*100)+"%"
+ };
+ for(const el of host.querySelectorAll("[data-c172-scene-nav]")){
+  el.textContent=nav[el.dataset.c172SceneNav]||"";
+ }
+}
 function updateReadouts(){
  const n=state;
+ updateC172ScenePanel();
  $("readSpeed").textContent=round(n.speedKt);
  $("readAlt").textContent=round(n.altitudeM);
  $("readVS").textContent=n.verticalMs.toFixed(1);

@@ -893,9 +893,33 @@ function buildImportedCabin(id){
    m.box(x-.17,-.82,z+.05,.065,.14,.075,trim);
    m.box(x+.11,-.82,z+.05,.065,.14,.075,trim);
   }
+  // The original C172 imported cabin had two floating blue rectangles
+  // where a traditional aircraft instrument panel should be. Replace them
+  // with six actual circular inset analogue faces and a narrow right-hand
+  // NAV/COM stack, on the rear-facing surface of the 3D dash.
   m.box(-.56,-.35,station.panelZ,1.12,.47,.19,panel);
+  const pilotFaceZ=station.panelZ-.018;
+  const dial=(cx,cy,r)=>{
+   const inner=rgb(13,23,31),ring=rgb(166,180,184);
+   const point=(radius,a,z)=>[cx+radius*Math.cos(a),cy+radius*Math.sin(a),z];
+   for(let k=0;k<24;k++){
+    const a=k*Math.PI/12,b=(k+1)*Math.PI/12;
+    m.quad(point(r,a,pilotFaceZ),point(r,b,pilotFaceZ),
+     point(r-.010,b,pilotFaceZ-.003),point(r-.010,a,pilotFaceZ-.003),ring);
+    m.tri([cx,cy,pilotFaceZ-.004],
+     point(r-.012,a,pilotFaceZ-.004),point(r-.012,b,pilotFaceZ-.004),inner);
+   }
+   m.box(cx-.008,cy-.008,pilotFaceZ-.014,.016,.016,.010,trim);
+  };
+  for(const y of [-.015,-.224])for(const x of [-.365,-.160,.045])dial(x,y,.082);
+  m.box(.18,-.29,pilotFaceZ-.020,.32,.365,.018,panel);
+  for(const y of [-.23,-.11,.01]){
+   m.box(.206,y,pilotFaceZ-.047,.27,.085,.012,screen);
+   m.box(.217,y+.031,pilotFaceZ-.051,.06,.008,.005,trim);
+   m.box(.39,y+.031,pilotFaceZ-.051,.065,.008,.005,trim);
+  }
+  // Preserve the yokes and pedals in the correct forward cockpit section.
   for(const x of [-.32,.32]){
-   m.box(x-.19,-.18,station.panelZ+.197,.38,.16,.035,screen);
    m.box(x-.025,-.62,station.panelZ-.23,.05,.40,.07,trim);
    m.box(x-.20,-.29,station.panelZ-.24,.40,.055,.075,panel);
   }
