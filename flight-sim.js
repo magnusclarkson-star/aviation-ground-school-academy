@@ -350,6 +350,29 @@ function syncCockpitFrame(){
  // C172 full-width dashboard / NAV stack; R44 narrow central pedestal.
  // Disabling FRAME or selecting an exterior view restores the normal layout.
  const physicalDeck=enabled&&!chase&&["c172","r44"].includes(airframeId());
+ // Keep every original switch and restart button (and its event handlers).
+ // C172: compact visual-switch rack immediately above engine throttle,
+ // between the real NAV stack and power controls. Restart sits directly
+ // ABOVE the wheel brake. R44: visual switches beside the lesson/pedestal,
+ // restart stays beside the collective. Other aircraft retain old docks.
+ const instrumentWell=$("cockpitInstrumentWell"),switchPanel=$("cockpitSwitchPanel"),
+  switchSide=$("powerPanel")?.parentElement,
+  restartDock=$("cockpitRestartDock"),brake=$("brake"),
+  controls=brake?.closest(".control-panel");
+ if(instrumentWell&&switchPanel&&switchSide){
+  const target=airframeId()==="c172"?switchSide:instrumentWell;
+  if(switchPanel.parentElement!==target){
+   if(target===switchSide)target.insertBefore(switchPanel,$("powerPanel"));
+   else target.appendChild(switchPanel);
+  }
+ }
+ if(controls&&restartDock&&switchSide){
+  const c172=airframeId()==="c172";
+  if(c172&&restartDock.parentElement!==controls)
+   controls.insertBefore(restartDock,brake);
+  else if(!c172&&restartDock.parentElement!==switchSide)
+   switchSide.insertBefore(restartDock,$("flapPanel"));
+ }
  $("cockpitStation").dataset.photoCockpit=physicalDeck?"on":"off";
  document.querySelector(".scene-panel").dataset.photoCockpit=physicalDeck?"on":"off";
  $("cockpitFrameStatus").textContent=!enabled?

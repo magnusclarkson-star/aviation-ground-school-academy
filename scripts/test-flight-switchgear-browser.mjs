@@ -65,23 +65,76 @@ try{
  assert.equal(await phone.locator("#lightingMode").inputValue(),"golden");
  const after=await phone.locator("#controlPad").boundingBox();
  assert.equal(after.height,before.height,"cockpit switch does not enlarge touch flight controls");
- const mobile=await phone.evaluate(()=>{
-  const sw=document.querySelector("#cockpitSwitchPanel").getBoundingClientRect();
-  const gauges=document.querySelector("#cockpitVisualPanel").getBoundingClientRect();
-  const yoke=document.querySelector("#controlPad").getBoundingClientRect();
-  const pedal=document.querySelector("#leftRudder").getBoundingClientRect();
-  return {noOverflow:document.documentElement.scrollWidth<=innerWidth+2,
-   switchesUnderInstruments:sw.top>=gauges.bottom-4,
-   yokeUnderSwitches:yoke.top>=sw.bottom-6,
-   pedalsUnderYoke:pedal.top>=yoke.bottom-12};
+ const layout=()=>phone.evaluate(()=>{
+  const $=s=>document.querySelector(s);
+  const rect=s=>{const r=$(s).getBoundingClientRect();
+   return {x:r.x,y:r.y,w:r.width,h:r.height,left:r.left,right:r.right,
+    top:r.top,bottom:r.bottom};};
+  const buttons=["view","graphics","light","frame"].map(id=>rect("#cockpitSwitch_"+id));
+  return {airframe:$("#cockpitStation").dataset.airframe,
+   photo:$("#cockpitStation").dataset.photoCockpit,
+   switchParent:$("#cockpitSwitchPanel").parentElement.className,
+   restartParent:$("#cockpitRestartDock").parentElement.className,
+   rack:rect("#cockpitSwitchPanel"),buttons,
+   throttle:rect("#powerPanel"),brake:rect("#brake"),
+   restart:rect("#restartFlight"),yoke:rect("#controlPad"),
+   rudder:rect("#leftRudder"),well:rect("#cockpitInstrumentWell"),
+   lesson:$("#cockpitVisualPanel .r44-lesson-strip")?
+    rect("#cockpitVisualPanel .r44-lesson-strip"):null,
+   noOverflow:document.documentElement.scrollWidth<=innerWidth+2,
+   grid:getComputedStyle($("#cockpitSwitchPanel .cockpit-switch-bank")).gridTemplateColumns};
  });
- assert.deepEqual(mobile,{noOverflow:true,switchesUnderInstruments:true,
-  yokeUnderSwitches:true,pedalsUnderYoke:true});
+ const checkTwoByTwo=info=>{
+  const [view,scene,light,frame]=info.buttons;
+  assert.ok(Math.abs(view.top-scene.top)<5&&Math.abs(light.top-frame.top)<5,
+   "VIEW/SCENE share the first row, LIGHT/FRAME the second");
+  assert.ok(light.top>=view.bottom-3&&frame.top>=scene.bottom-3,
+   "second row starts immediately beneath first row");
+  assert.ok(scene.left>=view.right-3&&frame.left>=light.right-3,
+   "two switch columns, not a single horizontal bar");
+  assert.ok(info.rack.w<=99&&info.rack.h<=65,
+   "compact 2 by 2 switches take little dashboard space");
+ };
+ const mobile=await layout();
+ checkTwoByTwo(mobile);
+ assert.equal(mobile.switchParent,"side-controls",
+  "C172 switches live between NAV instruments and throttle, not below gauges");
+ assert.ok(mobile.rack.bottom<=mobile.throttle.top+5,
+  "C172 switch rack is directly above throttle");
+ assert.ok(mobile.restart.bottom<=mobile.brake.top+8,
+  "C172 restart is directly above wheel brake");
+ assert.ok(mobile.rudder.top>=mobile.yoke.bottom-12);
+ assert.ok(mobile.noOverflow,"C172 portrait cockpit must not overflow horizontally");
  await phone.setViewportSize({width:844,height:390});
  await phone.waitForTimeout(120);
+ const wide=await layout();
+ checkTwoByTwo(wide);
+ assert.equal(wide.switchParent,"side-controls");
+ assert.ok(wide.rack.left>=wide.well.left+wide.well.w*.65,
+  "C172 rack is to the right of the analogue dials and below NAV");
+ assert.ok(wide.rack.bottom<=wide.throttle.top+5,
+  "C172 rack stays above throttle in wide pilot mode");
+ assert.ok(wide.restart.bottom<=wide.brake.top+8,
+  "Restart stays directly above the brake after rotating phone");
+ assert.ok(wide.rack.right<=844&&wide.restart.bottom<=390,
+  "all four switches and Restart remain on-screen");
  assert.equal(await phone.locator("#cockpitStation").getAttribute("data-orientation"),"landscape");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "rotated cockpit switches don't introduce horizontal scroll");
+ await phone.locator("#cockpitAircraftSelect").selectOption("r44");
+ assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"on");
+ const rotor=await layout();
+ checkTwoByTwo(rotor);
+ assert.equal(rotor.switchParent,"cockpit-instrument-well");
+ assert.ok(rotor.rack.left>=rotor.well.right-4,
+  "R44 2x2 switches sit beside the right edge of the central panel");
+ assert.ok(rotor.rack.right<=844,
+  "R44 switch rack remains completely visible in landscape");
+ assert.ok(rotor.lesson&&Math.abs(rotor.rack.bottom-rotor.lesson.bottom)<65,
+  "R44 switch rack aligns with the 1/4 TAKEOFF lesson and altitude gauges");
+ assert.equal(rotor.restartParent,"side-controls",
+  "R44 Restart stays beside collective");
+ await phone.locator("#cockpitAircraftSelect").selectOption("c172");
  await phone.locator("#cockpitSwitch_frame").tap();
  assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"off");
  await phone.locator("#cockpitVisualPanel .cockpit-gauge").first().tap({position:{x:38,y:42}});

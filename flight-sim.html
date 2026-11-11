@@ -36,6 +36,7 @@
 <link rel="stylesheet" href="flight-sim-all-aircraft-fit.css?v=20261109-sunav4">
 <link rel="stylesheet" href="flight-sim-instrument-backlight.css?v=20261111-multitouch-landscape2">
 <link rel="stylesheet" href="flight-sim-aircraft-photo-decks.css?v=20261111-c172-r44-real-panel1">
+<link rel="stylesheet" href="flight-sim-cockpit-switch-grid.css?v=20261111-rack-and-yoke1">
 <style id="agsa-micro-switch-inline" data-version="micro2">
 /* 2026-11-09 micro pass: make the entire switch module genuinely tiny,
    rather than merely shrinking the four buttons inside a full-width box. */
@@ -149,7 +150,7 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-mini-pfd-zoom.js?v=20261109-pfdfix3" defer></script>
 <script src="flight-sim-bank-hold.js?v=20261109-circuit1" defer></script>
 <script src="flight-sim-touch-pedals.js?v=20261111-r44-fast-pedals1" defer></script>
-<script src="flight-sim.js?v=20261111-c172-r44-physical-decks1" defer></script>
+<script src="flight-sim.js?v=20261111-switch-rack-restart-brake1" defer></script>
 </head>
 <body>
 <header class="site-head">
@@ -714,16 +715,38 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
       <span class="control-guides" aria-hidden="true"></span>
       <button id="flightGrip" type="button" class="flight-grip" aria-label="Drag the simulated yoke left and right to bank, or up and down to change pitch; use arrow keys on desktop">
        <svg class="hardware-art hardware-yoke" viewBox="0 0 270 190" aria-hidden="true">
-        <defs><linearGradient id="wheelMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9fb7c6"/><stop offset=".48" stop-color="#263746"/><stop offset="1" stop-color="#101d29"/></linearGradient></defs>
-        <path d="M135 174 V102" stroke="#a8c9dc" stroke-width="21" stroke-linecap="round"/>
-        <path d="M135 110 C95 107 67 83 31 64 L20 89 C50 111 73 132 110 138 L160 138 C196 132 220 111 250 89 L239 64 C204 83 175 107 135 110Z" fill="url(#wheelMetal)" stroke="#d5e1e9" stroke-width="6"/>
-        <path d="M28 60 L9 54 Q0 57 7 75 L25 123 Q31 137 45 127 L57 119 L43 83Z" fill="#111a23" stroke="#93a9bb" stroke-width="5"/>
-        <path d="M242 60 L261 54 Q270 57 263 75 L245 123 Q239 137 225 127 L213 119 L227 83Z" fill="#111a23" stroke="#93a9bb" stroke-width="5"/>
-        <rect x="112" y="100" width="46" height="48" rx="13" fill="#142c3e" stroke="#cbd8dc" stroke-width="4"/>
-        <circle cx="135" cy="124" r="15" fill="#42677f" stroke="#e7c78f" stroke-width="3"/>
-        <path d="M119 124 H151 M135 108 V140" stroke="#d6effb" stroke-width="2"/>
-        <circle cx="36" cy="79" r="5" fill="#b3d5e4"/><circle cx="234" cy="79" r="5" fill="#b3d5e4"/>
-        <text x="135" y="185" text-anchor="middle" fill="#b6d0da" font-size="13" font-weight="800">TRAINER YOKE</text>
+        <defs>
+         <linearGradient id="wheelMetal" x1="0" y1="0" x2=".25" y2="1"><stop stop-color="#bbc8cc"/><stop offset=".22" stop-color="#61727c"/><stop offset=".55" stop-color="#303d47"/><stop offset="1" stop-color="#a4b3b9"/></linearGradient>
+         <linearGradient id="yokeLeather" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5c6570"/><stop offset=".24" stop-color="#2e343d"/><stop offset=".63" stop-color="#0c1219"/><stop offset="1" stop-color="#36434d"/></linearGradient>
+         <linearGradient id="yokeCrossbar" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8796a0"/><stop offset=".27" stop-color="#4c5a64"/><stop offset=".6" stop-color="#1e2933"/><stop offset="1" stop-color="#82909a"/></linearGradient>
+         <radialGradient id="yokeHub" cx=".4" cy=".28" r=".85"><stop stop-color="#637f90"/><stop offset=".49" stop-color="#243b4b"/><stop offset="1" stop-color="#111f2a"/></radialGradient>
+        </defs>
+        <ellipse cx="135" cy="178" rx="47" ry="7" fill="#02070e" opacity=".45"/>
+        <path d="M135 177 V116" stroke="#1a252d" stroke-width="27" stroke-linecap="round"/>
+        <path d="M135 176 V116" stroke="url(#wheelMetal)" stroke-width="20" stroke-linecap="round"/>
+        <path d="M129 170 V115" stroke="#e6eef1" stroke-opacity=".28" stroke-width="3" stroke-linecap="round"/>
+        <path d="M135 115 Q104 112 79 98 Q66 90 55 77 L44 83 Q56 115 86 129 Q106 139 126 140 H144 Q164 139 184 129 Q214 115 226 83 L215 77 Q204 90 191 98 Q166 112 135 115Z"
+         fill="url(#yokeCrossbar)" stroke="#1b2833" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M88 112 Q105 122 121 124 H149 Q165 122 182 112" fill="none" stroke="#d8e1e6" stroke-opacity=".4" stroke-width="2"/>
+        <path d="M50 47 C37 45 25 55 25 71 Q27 91 35 111 Q40 128 53 126 Q65 124 70 113 Q74 104 67 90 L59 64 Q57 53 50 47Z"
+         fill="url(#yokeLeather)" stroke="#788c9b" stroke-width="4"/>
+        <path d="M220 47 C233 45 245 55 245 71 Q243 91 235 111 Q230 128 217 126 Q205 124 200 113 Q196 104 203 90 L211 64 Q213 53 220 47Z"
+         fill="url(#yokeLeather)" stroke="#788c9b" stroke-width="4"/>
+        <path d="M35 60 Q33 71 42 98 M235 60 Q237 71 228 98"
+         fill="none" stroke="#b4c2ca" stroke-opacity=".46" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M45 79 L55 104 M225 79 L215 104"
+         stroke="#050b10" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+        <path d="M55 115 Q69 121 84 121 M215 115 Q201 121 186 121"
+         fill="none" stroke="#111923" stroke-width="5" opacity=".75"/>
+        <path d="M123 111 Q135 105 147 111 L153 139 Q145 146 135 146 Q125 146 117 139Z"
+         fill="url(#yokeHub)" stroke="#9aabb5" stroke-width="3.5"/>
+        <rect x="122" y="113" width="26" height="25" rx="6" fill="#162732" stroke="#577080" stroke-width="1"/>
+        <path d="M126 128 H144 M135 118 V134" stroke="#c9d4ce" stroke-width="2" opacity=".83"/>
+        <circle cx="135" cy="125" r="3.2" fill="#d4b674"/>
+        <rect x="34" y="73" width="13" height="9" rx="2" fill="#2b3841" stroke="#8a9ba4" stroke-width="1"/>
+        <circle cx="40.5" cy="77.5" r="3.2" fill="#b26d56"/>
+        <circle cx="231" cy="78" r="3.6" fill="#788e9b" stroke="#b5c8d2" stroke-width="1"/>
+        <path d="M119 148 H151" stroke="#c5d4d8" stroke-width="2" opacity=".45"/>
        </svg>
        <svg class="hardware-art hardware-stick" viewBox="0 0 270 190" aria-hidden="true">
         <ellipse cx="135" cy="171" rx="76" ry="16" fill="#0c1824" stroke="#b8cdd6" stroke-width="3"/>
