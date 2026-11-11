@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="flight-sim-pfd-zoom.css?v=20261109-axisnav1">
 <link rel="stylesheet" href="flight-sim-return-circuit.css?v=20261109-circuit2">
 <link rel="stylesheet" href="flight-sim-c172-compact.css?v=20261109-c172navright3">
+<link rel="stylesheet" href="flight-sim-c172-scene-panel.css?v=20261111-live-panel1">
 <link rel="stylesheet" href="flight-sim-mini-switches.css?v=20261109-micro2">
 <link rel="stylesheet" href="flight-sim-axis-placement.css?v=20261109-axis1">
 <link rel="stylesheet" href="flight-sim-all-aircraft-fit.css?v=20261109-sunav4">
@@ -178,7 +179,25 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
    <canvas id="outsideView3D" width="960" height="540" hidden aria-label="GPU-rendered 3D synthetic airfield with geometric runway, terrain, buildings, trees and fictional aircraft chase view">This browser does not support the 3D visual mode.</canvas>
    <div id="cockpitFrame" class="cockpit-frame" data-aircraft="airplane" data-view="cockpit" aria-hidden="true">
     <span class="cockpit-left-post"></span><span class="cockpit-right-post"></span>
-    <span class="cockpit-dashboard"></span><span class="cockpit-propeller"></span>
+    <span class="cockpit-dashboard"></span>
+    <div id="c172ScenePanel" class="c172-scene-panel" aria-hidden="true">
+     <div class="c172-scene-dials">
+      <div class="c172-scene-dial" data-c172-scene-dial="speed"><span>IAS</span><i></i><b data-c172-scene-value="speed">0</b></div>
+      <div class="c172-scene-dial c172-attitude" data-c172-scene-dial="attitude"><span>ATT</span><i></i><b data-c172-scene-value="attitude">0°</b></div>
+      <div class="c172-scene-dial" data-c172-scene-dial="alt"><span>ALT</span><i></i><b data-c172-scene-value="alt">0</b></div>
+      <div class="c172-scene-dial" data-c172-scene-dial="turn"><span>TURN</span><i></i><b data-c172-scene-value="turn">0°</b></div>
+      <div class="c172-scene-dial" data-c172-scene-dial="heading"><span>HDG</span><i></i><b data-c172-scene-value="heading">000</b></div>
+      <div class="c172-scene-dial" data-c172-scene-dial="vsi"><span>V/S</span><i></i><b data-c172-scene-value="vsi">0</b></div>
+     </div>
+     <div class="c172-scene-avionics">
+      <span class="c172-scene-nav-title">NAV / COM</span>
+      <strong data-c172-scene-nav="heading">000°</strong>
+      <small data-c172-scene-nav="ground">GS 0 KT</small>
+      <span class="c172-scene-radio">COM 118.000</span>
+      <small data-c172-scene-nav="power">THR 0%</small>
+     </div>
+    </div>
+    <span class="cockpit-propeller"></span>
    </div>
    <div class="scene-top" aria-hidden="true"><span class="screen-chip">AGSA · SYNTHETIC OUTSIDE VIEW</span><span id="sceneMode">FIXED-WING TRAINER</span><span id="sceneAircraftType">Cessna 172</span></div>
    <div id="flightFeedbackVisual" class="flight-feedback-visual" data-kind="idle" aria-label="Visual-only simulated flight feedback" aria-live="off">VISUAL CUE · READY</div>
