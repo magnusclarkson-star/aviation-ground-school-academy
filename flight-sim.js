@@ -127,6 +127,7 @@ async function startFullFlight(){
  const cueStarted=radioTone.enable(true);
  radioFx.enable($("radioFxChoice").value==="on");syncRadioFxUI();
  const radioArmed=!viewingAircraft()&&atcRadio?.arm(true)===true;
+ requestPilotDeck();
  if(state.mode==="helicopter"&&!viewingAircraft())r44Voice.arm();
  syncPhoneFeedbackUI();
  let engineStarted=false;
@@ -255,6 +256,7 @@ let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 // original targets. Pointer Events are still used for mouse, pen and
 // synthetic regression input; native touches never compete for ownership.
 const nativeMultiTouch=typeof window.TouchEvent==="function";
+let focusController=null,pendingPilotFocus=false;
 const viewingAircraft=()=>document.body.dataset.aircraftInspect==="on"||
  document.body.dataset.aircraftGallery==="on";
 const pointers={left:null,right:null,brake:null};
@@ -698,6 +700,14 @@ $("controlPad").addEventListener("pointerdown",e=>{
 $("controlPad").addEventListener("pointermove",e=>{
  if(dragPointer===e.pointerId)movePad(e);
 });
+function requestPilotDeck(){
+ if(!window.matchMedia?.("(max-width:740px)")?.matches||
+    $("cameraMode").value!=="cockpit"||viewingAircraft())return;
+ if(dragPointer!==null){pendingPilotFocus=true;return;}
+ pendingPilotFocus=false;
+ focusController?.setFocus(true);
+}
+document.addEventListener("agsa:pilot-deck-request",requestPilotDeck);
 function finishPad(id,completed){
  if(dragPointer!==id)return;
  if(!completed)bankHold?.clear();
@@ -705,6 +715,7 @@ function finishPad(id,completed){
   bankHold.release(input.bank);
  dragPointer=null;input.bank=0;input.pitch=0;
  syncKeys();syncBankHoldUI();gripTransform();
+ if(pendingPilotFocus)requestPilotDeck();
 }
 for(const eventType of ["pointerup","pointercancel","lostpointercapture"])
  $("controlPad").addEventListener(eventType,e=>finishPad(e.pointerId,eventType==="pointerup"));
@@ -1196,7 +1207,7 @@ cockpit=CI.attach({
  onSelect:(control)=>setMode(control)
 });
 switchgear=SW.attach({documentLike:document,windowLike:window});
-FO.attach({documentLike:document,windowLike:window});
+focusController=FO.attach({documentLike:document,windowLike:window});
 input.turbulence=.14;
 instructorVoice=V.attach({
  documentLike:document,windowLike:window,exercises:X,
