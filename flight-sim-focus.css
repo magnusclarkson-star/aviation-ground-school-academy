@@ -399,3 +399,13 @@ body[data-cockpit-focus="on"] .sim-about{display:none}
   min-width:76px!important;min-height:24px!important;font-size:9px!important
  }
 }
+
+
+/* Fit 844×390 Android landscape: ~55px windscreen leaves the full
+   eight-gauge scan, yoke AND both rudder pedals inside the same frame. */
+@media(orientation:landscape) and (max-height:510px) and (min-width:600px){
+ body[data-cockpit-focus="on"] .scene-shell{
+  flex:0 0 clamp(48px,14dvh,58px)!important;
+  height:clamp(48px,14dvh,58px)!important
+ }
+}
