@@ -39,6 +39,8 @@ function attach({documentLike,windowLike}={}){
    if(button.disabled)return;
    select.value=nextValue(def,select.value);
    select.dispatchEvent(new win.Event("change",{bubbles:true}));
+   if(def.id==="view"&&select.value==="cockpit")
+    doc.dispatchEvent(new win.Event("agsa:pilot-deck-request"));
    sync();
    if(status)status.textContent=def.label+" "+button.querySelector(".cockpit-switch-value")?.textContent;
   };
