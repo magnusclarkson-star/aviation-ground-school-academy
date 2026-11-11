@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#071725">
+<link rel="manifest" href="flight-sim-manifest.json">
+<link rel="apple-touch-icon" href="flight-sim-icon-192.png">
 <meta name="description" content="Immersive fictional airfield flight simulator with scrolling runway scenery, yoke, joystick, helicopter cyclic, optional haptics, takeoff and landing practice. Not a certified simulator.">
 <title>Immersive Airfield Flight Simulator | Aviation Ground School Academy</title>
 <link rel="stylesheet" href="flight-sim.css?v=20261110-v2touchbrake1">
@@ -879,5 +881,12 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
  </div>
  <footer>Aviation Ground School Academy · Educational technology demonstrator · No pilot licence, actual flight credit, real airfield/GPS, or safety-critical guidance.</footer>
 </main>
+<script>
+if("serviceWorker" in navigator && location.protocol==="https:"){
+ window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("./flight-sim-sw.js",{scope:"./"}).catch(()=>{});
+ },{once:true});
+}
+</script>
 </body>
 </html>
