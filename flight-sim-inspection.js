@@ -1,7 +1,7 @@
 /* Touch-friendly, aircraft-specific orbit viewer. The inspection canvas never
  * receives or changes flight control input; it only renders the current type. */
 (function(root){"use strict";
- const limits=Object.freeze({minDistance:9,maxDistance:70,minElevation:-65,maxElevation:78});
+ const limits=Object.freeze({minDistance:6.8,maxDistance:70,minElevation:-65,maxElevation:78});
  const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(v)?v:min));
  const wrap=degrees=>((degrees%360)+360)%360;
  function orbitStep(orbit,deltaX,deltaY){
@@ -24,7 +24,7 @@
  // Double-tap toggles a useful close view while preserving the exact
  // aircraft bearing and elevation. Fitted size returns to 100% on second use.
  function doubleTapZoom(orbit,far=18){
-  const close=far<=12?9:11;
+  const close=far<=12?7.6:9;
   return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
  }
  function separation(points){
