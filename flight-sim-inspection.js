@@ -65,12 +65,23 @@
    usingGPU=false;
    if(renderer){renderer.destroy();renderer=null}
    canvas3D.hidden=true;canvas2D.hidden=false;
+   viewport.dataset.modelLoading="off";
    $("aircraftInspectRenderMode").textContent="2D view";
   }
   function render(now){
    if(modal.hidden)return;
    const id=selected();
    updateHeading();
+   // Wait for the chosen imported airframe instead of showing its old mesh.
+   const loading=Boolean(usingGPU&&renderer&&(
+    (id==="c172"&&renderer.realC172Status==="loading")||
+    (id==="r44"&&renderer.realR44Status==="loading")));
+   viewport.dataset.modelLoading=loading?"on":"off";
+   if(loading){
+    last=now;
+    raf=win.requestAnimationFrame(frame);
+    return;
+   }
    if(autoRotate&&last)orbit={...orbit,azimuth:wrap(orbit.azimuth+
     Math.min(.08,(now-last)/1000)*17)};
    last=now;
@@ -115,6 +126,9 @@
     try{renderer=engine.createRenderer(canvas3D,{inspectionOnly:true,onLost:fallback})}catch{renderer=null}
    }
    usingGPU=Boolean(renderer);
+   viewport.dataset.modelLoading=usingGPU&&(
+    (selected()==="c172"&&renderer.realC172Status==="loading")||
+    (selected()==="r44"&&renderer.realR44Status==="loading"))?"on":"off";
    canvas3D.hidden=!usingGPU;canvas2D.hidden=usingGPU;
    $("aircraftInspectRenderMode").textContent=usingGPU?"3D view":"2D view";
    updateHeading();
@@ -124,6 +138,7 @@
   function close(){
    if(modal.hidden)return;
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
+   viewport.dataset.modelLoading="off";
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;
    drag=null;pointers.clear();tapStarts.clear();pinchSpan=0;lastTap=null;
