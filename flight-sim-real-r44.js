@@ -25,7 +25,7 @@ function parseAC3D(text,textureBytes){
  // Repaint only original FlightGear body panels, never the steel skids,
  // exhaust, lamp fittings, guard, transparent windows or rotor hardware.
  const paintedParts=new Set(["fuselage","derive","porteAD","porteAG",
-  "porteBD","porteBG","trous_1"]);
+  "porteBD","porteBG","trous_1","protection"]);
  const groups=new Map();
  let i=0,triangles=0;
  const finite=n=>Number.isFinite(n);
@@ -33,8 +33,11 @@ function parseAC3D(text,textureBytes){
   const isPainted=paintedParts.has(name)&&materialId===0;
   const key=materialId+":"+(isPainted?"paint":"original");
   if(!groups.has(key))groups.set(key,
-   {materialId,isPainted,positions:[],normals:[],uvs:[],indices:[]});
-  return groups.get(key);
+   {materialId,isPainted,sourceNames:new Set(),
+    positions:[],normals:[],uvs:[],indices:[]});
+  const group=groups.get(key);
+  group.sourceNames.add(name);
+  return group;
  };
  const pushTri=(group,a,b,c)=>{
   const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
@@ -139,6 +142,7 @@ function parseAC3D(text,textureBytes){
    // coloured navigation lights or solid yellow fuselage materials.
    isGlazing:group.materialId===4,
    isPainted:group.isPainted,
+   sourceNames:[...group.sourceNames],
    alphaMask:false,alphaCutoff:0
   });
  }
