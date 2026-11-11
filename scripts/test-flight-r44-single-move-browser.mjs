@@ -48,11 +48,18 @@ try {
     photo:document.getElementById("cockpitStation").dataset.photoCockpit
    };
   });
+  await page.screenshot({path:"artifacts/r44-single-switch-"+mode.label+".png"});
   assert.equal(result.buttons.length,4,mode.label+" R44 has exactly four original switches");
   assert.deepEqual(result.buttons,["cockpitSwitch_view","cockpitSwitch_graphics","cockpitSwitch_light","cockpitSwitch_frame"],mode.label+" switches not replaced");
   assert.match(result.parent,/control-panel/,mode.label+" switch unit is outside instrument head");
-  assert.ok(result.rack.left>=result.cyclic.right-8,
-   mode.label+" switch unit immediately right of unchanged cyclic "+JSON.stringify(result));
+  // On a 390px phone the cyclic's transparent drag surface spans the
+  // entire centre column. The switch rack must sit at the *visual* right of
+  // the cyclic without reducing the original touch-surface dimensions.
+  assert.ok(result.rack.left>=result.cyclic.left+result.cyclic.width*.60,
+   mode.label+" switch unit sits to the right of the visible cyclic centre "+JSON.stringify(result));
+  assert.ok(result.rack.top>=result.instruments.bottom-3&&
+   result.rack.bottom<=result.left.top+6,
+   mode.label+" switch rack does not cover instruments or pedal buttons "+JSON.stringify(result));
   assert.ok(result.rack.right<=result.viewport.width+2&&result.rack.top>=0,
    mode.label+" switch unit wholly on the phone "+JSON.stringify(result));
   assert.ok(result.cyclic.width>=100&&result.cyclic.height>=54&&
@@ -66,7 +73,6 @@ try {
    assert.ok(result.left.bottom<=result.viewport.height-2&&result.right.bottom<=result.viewport.height-2,
     "portrait pedals must fit without scrolling "+JSON.stringify(result));
   }
-  await page.screenshot({path:"artifacts/r44-single-switch-"+mode.label+".png"});
   console.log("R44 "+mode.label+" geometry: "+JSON.stringify(result));
   assert.deepEqual(errors,[],"no runtime errors in "+mode.label);
   await page.close();
