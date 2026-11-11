@@ -115,12 +115,35 @@ try{
   "real C172 propeller and hinged flight-control surfaces must animate visibly");
  // Capture actual viewpoint from inside the source aircraft; evaluate visual
  // credibility separately before claiming the flight cockpit is complete.
- await page.evaluate(()=>{
+ const pilotView=await page.evaluate(()=>{
   const state={mode:"airplane",xM:0,zM:0,altitudeM:60,
    headingDeg:0,pitchDeg:0,rollDeg:0,groundSpeedKt:0};
-  window.__c172TestRenderer.draw(state,{view:"cockpit",airframeId:"c172",
+  const renderer=window.__c172TestRenderer,canvas=window.__c172TestCanvas,
+   gl=canvas.getContext("webgl2");
+  const hash=()=>{
+   const out=new Uint8Array(canvas.width*canvas.height*4);
+   gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,out);
+   let h=2166136261>>>0,colour=0;
+   for(let i=0;i<out.length;i+=84){
+    h=Math.imul(h^out[i]^out[i+1]^out[i+2],16777619)>>>0;
+    if(out[i]>out[i+2]*1.25||out[i+1]<out[i]*.65)colour++;
+   }
+   return {hash:h,colour};
+  };
+  renderer.draw(state,{view:"cockpit",airframeId:"c172",
    animation:{propeller:.22,leftFlap:.1,rightFlap:.1}});
+  const cockpit=hash(),source=canvas.dataset.sourceCockpit;
+  renderer.draw(state,{view:"chase",airframeId:"c172"});
+  const chase=hash();
+  renderer.draw(state,{view:"cockpit",airframeId:"c172"});
+  return {source,cockpit,chase};
  });
+ assert.equal(pilotView.source,"on",
+  "PILOT mode must now render the actual C172 model cabin, not empty sky");
+ assert.notEqual(pilotView.cockpit.hash,pilotView.chase.hash,
+  "inside-the-cabin pixels must visibly differ from outside aircraft view");
+ assert.ok(pilotView.cockpit.colour>100,
+  "pilot view contains coloured cockpit geometry rather than blank sky");
  await page.locator("canvas").last().screenshot({
   path:"artifacts/real-c172-internal-3d-view.png"});
  // The imported Robinson R44 must actually replace the procedural hull
@@ -232,7 +255,40 @@ try{
  });
  await page.locator("canvas").last().screenshot({
   path:"artifacts/real-r44-central-pod-closeup.png"});
+ // Turning the phone sideways makes the C172's genuine forward cabin
+ // panoramic. The switches and original steering controls remain available.
+ await page.setViewportSize({width:844,height:390});
+ await page.waitForFunction(()=>document.body.dataset.cockpitFocus==="on",
+  null,{timeout:8000});
+ await page.waitForFunction(()=>document.querySelector(".scene-shell")?.dataset.sourceC172==="on",
+  null,{timeout:12000});
+ const wide=await page.evaluate(()=>{
+  const shell=document.querySelector(".scene-shell"),
+   frame=document.querySelector("#cockpitFrame"),
+   station=document.querySelector("#cockpitStation"),
+   switchView=document.querySelector("#cockpitSwitch_view"),
+   yoke=document.querySelector("#controlPad"),
+   pedal=document.querySelector("#rightRudder");
+  const box=e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,w:b.width,h:b.height}};
+  return {scene:box(shell),station:box(station),switch:box(switchView),
+   yoke:box(yoke),pedal:box(pedal),source:shell.dataset.sourceC172,
+   focus:document.body.dataset.cockpitFocus,
+   frameHidden:getComputedStyle(frame).display==="none",
+   scrollable:station.scrollHeight>station.clientHeight};
+ });
+ assert.equal(wide.focus,"on");
+ assert.equal(wide.source,"on");
+ assert.equal(wide.frameHidden,true,"no fake gauges overlay real 3D interior");
+ assert.ok(wide.scene.w>=800&&wide.scene.h>=175,
+  "landscape presents a wide real-pilot windscreen");
+ assert.ok(wide.scene.h>wide.station.h,
+  "landscape prioritizes forward view over secondary gauges");
+ assert.ok(wide.switch.w>20&&wide.switch.y>=0&&wide.switch.y<100,
+  "view switch is accessible near screen edge while flying");
+ assert.ok(wide.yoke.w>60&&wide.pedal.w>20,
+  "original yoke and rudder controls remain in the lower flight deck");
  assert.deepEqual(errors,[]);
+ console.log("C172 source pilot-seat and 844×390 landscape passed",JSON.stringify(wide));
  console.log("MIT C172S complete GLB Browser passed:",JSON.stringify(info));
  console.log("Real R44 textured mesh Browser passed:",JSON.stringify(rotor));
 }finally{
