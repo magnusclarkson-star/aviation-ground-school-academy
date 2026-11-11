@@ -317,8 +317,16 @@ async function loadDetailedCandidate(){
   const rightPilot=found.get("pilotseat_right").getWorldPosition(new THREE.Vector3());
   const panel=found.get("panel_1_gauges").getWorldPosition(new THREE.Vector3());
   const back=found.get("backseat_left").getWorldPosition(new THREE.Vector3());
+  // The source node origins do not describe the occupied seat volume.
+  // Use actual source mesh bounds for a camera inside the cabin, never a
+  // large guessed offset that puts the viewer outside the doors or roof.
+  const cameraBounds={
+   pilotSeat:new THREE.Box3().setFromObject(found.get("pilotseat_left")),
+   rightSeat:new THREE.Box3().setFromObject(found.get("pilotseat_right")),
+   rearSeat:new THREE.Box3().setFromObject(found.get("backseat_left"))
+  };
   detailedParts={airframe,found,rotations,meshes,materials,size:size.toArray(),
-   cameraStations:{pilot,panel,back,rightPilot}};
+   cameraStations:{pilot,panel,back,rightPilot},cameraBounds};
   detailedLoaded=true;
   const pilotButton=byId("pilotCamera");if(pilotButton)pilotButton.hidden=false;
   applyDetailedControls(getInputs());
@@ -384,8 +392,22 @@ byId("resetCamera")?.addEventListener("click",()=>{
  camera.position.set(10,5.1,9.7);controls.target.set(0,-.15,.1);controls.update();
 });
 byId("cabinCamera")?.addEventListener("click",()=>{
- controls.minDistance=.3;camera.fov=49;camera.updateProjectionMatrix();
- camera.position.set(2.5,.75,4.2);controls.target.set(0,-.15,1.14);controls.update();
+ controls.minDistance=.15;camera.fov=69;camera.updateProjectionMatrix();
+ if(detailedHolder.visible&&detailedParts){
+  // Put the viewer immediately aft of the *actual rear bench*, looking down
+  // the aisle toward the original front seats and gauges. Both the old
+  // +1.35 m sideways and +.85 m upward guesses put the camera on the roof.
+  const {pilot,rightPilot,panel}=detailedParts.cameraStations;
+  const {rearSeat}=detailedParts.cameraBounds;
+  const aisleX=(pilot.x+rightPilot.x)*.5;
+  camera.position.set(aisleX,rearSeat.max.y+.19,rearSeat.min.z-.12);
+  controls.target.set(aisleX,panel.y+.04,panel.z);
+  status("Source C172 interior: rear bench, front seats and genuine panel.");
+ }else{
+  camera.position.set(2.5,.75,4.2);
+  controls.target.set(0,-.15,1.14);
+ }
+ controls.update();
 });
 byId("pilotCamera")?.addEventListener("click",()=>{
  if(!detailedParts||!detailedHolder.visible){
@@ -393,12 +415,18 @@ byId("pilotCamera")?.addEventListener("click",()=>{
   return;
  }
  const {pilot,panel}=detailedParts.cameraStations;
- // OrbitControls accepts very short camera-target distances for an in-cabin
- // view, unlike the exterior 5.8m minimum. Perspective tracks source nodes.
+ const {pilotSeat}=detailedParts.cameraBounds;
+ // Pilot's eye is just above the actual seat headrest, not above the cabin
+ // ceiling. Preserve the source's +Z-forward panel and left-seat position.
+ const forward=panel.clone().sub(pilot);
+ if(forward.z<=.25){
+  status("Detailed source pilot/panel orientation invalid; camera not moved.");
+  return;
+ }
  controls.minDistance=.15;
- camera.position.copy(pilot).add(new THREE.Vector3(0,.56,-.12));
- controls.target.copy(panel).add(new THREE.Vector3(0,.18,0));
- camera.fov=58;camera.updateProjectionMatrix();controls.update();
+ camera.position.set(pilot.x,pilotSeat.max.y+.04,pilot.z+.06);
+ controls.target.copy(panel).add(new THREE.Vector3(0,.045,0));
+ camera.fov=66;camera.updateProjectionMatrix();controls.update();
  status("C172 pilot-seat view. Panel and cockpit are the original source mesh.");
 });
 byId("topCamera")?.addEventListener("click",()=>{
@@ -451,6 +479,7 @@ window.__AGSA_V3={
   rudder:model.tail.rudder.rotation.y
  }),
  getMode:()=>detailedHolder.visible?"detailed":referenceHolder.visible?"reference":"v3",
+ getCamera:()=>({position:camera.position.toArray(),target:controls.target.toArray()}),
  getReferenceLoaded:()=>referenceLoaded,
  getDetailedLoaded:()=>detailedLoaded,
  getDetailedMeta:()=>detailedParts?({
@@ -460,7 +489,12 @@ window.__AGSA_V3={
   cockpit:{
    pilot:detailedParts.cameraStations.pilot.toArray(),
    panel:detailedParts.cameraStations.panel.toArray(),
-   rear:detailedParts.cameraStations.back.toArray()
+   rear:detailedParts.cameraStations.back.toArray(),
+   seatBounds:{
+    pilotTop:detailedParts.cameraBounds.pilotSeat.max.y,
+    rearTop:detailedParts.cameraBounds.rearSeat.max.y,
+    rearAft:detailedParts.cameraBounds.rearSeat.min.z
+   }
   },
   seating:EXPECTED_DETAILED_NAMES.filter(x=>x.includes("seat")),
   mode:detailedHolder.visible?"detailed":"other"
