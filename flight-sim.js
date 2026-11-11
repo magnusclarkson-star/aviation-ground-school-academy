@@ -367,14 +367,18 @@ function syncCockpitFrame(){
  // Keep every original switch and restart button (and its event handlers).
  // C172: compact visual-switch rack immediately above engine throttle,
  // between the real NAV stack and power controls. Restart sits directly
- // ABOVE the wheel brake. R44: visual switches beside the lesson/pedestal,
+ // ABOVE the wheel brake. R44: visual switches right of the cyclic,
  // restart stays beside the collective. Other aircraft retain old docks.
  const instrumentWell=$("cockpitInstrumentWell"),switchPanel=$("cockpitSwitchPanel"),
   switchSide=$("powerPanel")?.parentElement,
+  cyclicDock=$("controlPad")?.closest(".control-assembly"),
   restartDock=$("cockpitRestartDock"),brake=$("brake"),
   controls=brake?.closest(".control-panel");
  if(instrumentWell&&switchPanel&&switchSide){
-  const target=airframeId()==="c172"?switchSide:instrumentWell;
+  // R44: original switch rack lives alongside the cyclic, never under gauges.
+  // C172 retains its throttle-side switch location.
+  const target=airframeId()==="c172"?switchSide:
+   airframeId()==="r44"&&cyclicDock?cyclicDock:instrumentWell;
   if(switchPanel.parentElement!==target){
    if(target===switchSide)target.insertBefore(switchPanel,$("powerPanel"));
    else target.appendChild(switchPanel);
