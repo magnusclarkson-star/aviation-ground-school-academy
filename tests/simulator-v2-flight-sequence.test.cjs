@@ -59,3 +59,30 @@ test("R44 pad contact starts grounded with no phantom yaw",()=>{
  assert.equal(state.yawRateDegS,0);
  assert.equal(state.altitudeM,0);
 });
+
+test("C172 departs, climbs and turns through 180 degrees within the local scenery",()=>{
+ const state=M.makeState("airplane","runway",{airframeId:"c172",windId:"calm"});
+ const depart={...M.makeInput("airplane"),throttle:1,pitch:-.5,turbulence:0};
+ let sawLiftoff=false;
+ for(let i=0;i<650&&state.phase!=="flight";i++){
+  if(advance(state,depart).includes("liftoff"))sawLiftoff=true;
+ }
+ assert.ok(sawLiftoff,"the exercise must lift off from its own runway");
+ assert.equal(state.phase,"flight","the aircraft must climb to circuit height");
+ const startX=state.xM,startZ=state.zM,startTime=state.time;
+ const turn={...depart,bank:1,pitch:0,throttle:.72};
+ let reachedSouth=false;
+ for(let i=0;i<750;i++){
+  advance(state,turn);
+  if(state.headingDeg>=165&&state.headingDeg<=195){
+   reachedSouth=true;
+   break;
+  }
+  assert.notEqual(state.phase,"halted","turn should not trigger an unintended crash");
+ }
+ assert.ok(reachedSouth,"full right yoke must turn the C172 back toward south");
+ assert.ok(state.time-startTime<75,"return turn should fit in a short practice flight");
+ assert.ok(Math.hypot(state.xM-startX,state.zM-startZ)<3500,
+  "turn must remain inside the illustrated local practice area");
+ assert.ok(state.altitudeM>0,"aircraft must remain airborne while turning");
+});
