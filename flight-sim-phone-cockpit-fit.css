@@ -129,14 +129,15 @@
   height:clamp(60px,20dvh,84px)!important;
  }
 }
-/* Portrait phones should show the pedal pair on entry, with the outside
-   view kept compact rather than occupying a third of the viewport. */
+/* Portrait cockpit: reclaim unused lower space for the actual forward
+   windscreen. On a typical ~844px phone this grows the pilot view from
+   roughly 152px to 219px, without moving or cloning touch controls. */
 @media (orientation:portrait) and (max-width:740px){
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell,
  body[data-cockpit-focus="on"] .scene-panel>.scene-shell[data-airframe="c172"][data-camera-view="cockpit"]{
-  flex:0 0 clamp(112px,18dvh,165px)!important;
-  height:clamp(112px,18dvh,165px)!important;
-  min-height:0!important;max-height:165px!important;
+  flex:0 0 clamp(158px,26dvh,245px)!important;
+  height:clamp(158px,26dvh,245px)!important;
+  min-height:0!important;max-height:245px!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation{
   min-height:0!important;overflow-y:auto!important;
