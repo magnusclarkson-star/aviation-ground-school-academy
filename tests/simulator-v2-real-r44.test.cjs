@@ -68,6 +68,8 @@ test("R44 repaint is restricted to original body and tail skin, with no old text
  assert.ok(components.some(p=>p.isGlazing),
   "source windows are not painted as opaque fuselage");
  const shader=fs.readFileSync("flight-sim-3d.js","utf8");
+ assert.match(shader,/isPainted:primitive\.isPainted===true/,
+  "GPU upload must carry painted source flags into drawing primitives");
  assert.match(shader,/gl\.uniform1i\(uni\.uR44Skin,part\.isPainted\?1:0\)/,
   "GPU must apply skin paint only on designated source surface groups");
  assert.match(shader,/albedo=vec3\(\.93,\.79,\.08\)/,
