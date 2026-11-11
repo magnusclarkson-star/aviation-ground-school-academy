@@ -87,6 +87,42 @@ try{
    orbit:{azimuth:58,elevation:5,distance:10}});
  });
  await page.locator("canvas").last().screenshot({path:"artifacts/real-c172-cabin-closeup.png"});
+ // Compare real GPU pixels from original GLB's propeller and wing hinges.
+ // This must validate actual moving mesh geometry, not only JS keys.
+ const c172Controls=await page.evaluate(()=>{
+  const canvas=window.__c172TestCanvas,renderer=window.__c172TestRenderer;
+  const gl=canvas.getContext("webgl2"),state={
+   mode:"airplane",xM:0,zM:0,altitudeM:60,headingDeg:0,
+   pitchDeg:0,rollDeg:0,groundSpeedKt:80};
+  function sample(phase,deflection){
+   renderer.draw(state,{view:"top",airframeId:"c172",
+    animation:{propeller:phase,leftFlap:deflection,
+     rightFlap:deflection,leftAileron:-deflection,
+     rightAileron:deflection,elevatorLeft:deflection,
+     elevatorRight:deflection,rudder:deflection}});
+   const out=new Uint8Array(canvas.width*canvas.height*4);
+   gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,out);
+   return out;
+  }
+  const a=sample(.16,.04),b=sample(1.37,.41);
+  let changed=0;
+  for(let i=0;i<a.length;i+=4)
+   if(Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+
+      Math.abs(a[i+2]-b[i+2])>40)changed++;
+  return {changed,pixels:canvas.width*canvas.height};
+ });
+ assert.ok(c172Controls.changed>75,
+  "real C172 propeller and hinged flight-control surfaces must animate visibly");
+ // Capture actual viewpoint from inside the source aircraft; evaluate visual
+ // credibility separately before claiming the flight cockpit is complete.
+ await page.evaluate(()=>{
+  const state={mode:"airplane",xM:0,zM:0,altitudeM:60,
+   headingDeg:0,pitchDeg:0,rollDeg:0,groundSpeedKt:0};
+  window.__c172TestRenderer.draw(state,{view:"cockpit",airframeId:"c172",
+   animation:{propeller:.22,leftFlap:.1,rightFlap:.1}});
+ });
+ await page.locator("canvas").last().screenshot({
+  path:"artifacts/real-c172-internal-3d-view.png"});
  // The imported Robinson R44 must actually replace the procedural hull
  // while retaining the existing simulator's animated main/tail rotors.
  await page.waitForFunction(()=>window.__c172TestRenderer?.realR44Status==="imported",null,
