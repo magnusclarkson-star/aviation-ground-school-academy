@@ -540,6 +540,25 @@ try{
  assert.ok(Number.parseFloat(leverUp)<Number.parseFloat(leverDown),
   'collective handle physically moves as the flight lift command changes');
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ // Portrait cockpit must allocate meaningful space to the pilot's horizon,
+ // while preserving reachable rudder pedals in its own scrollable control deck.
+ await phone.locator('#cockpitAircraftSelect').selectOption('c172');
+ await phone.locator('#cockpitFocusButton').tap();
+ const portraitFocus=await phone.evaluate(()=>{
+  const scene=document.querySelector('.scene-shell').getBoundingClientRect();
+  const station=document.getElementById('cockpitStation').getBoundingClientRect();
+  const left=document.getElementById('leftRudder').getBoundingClientRect();
+  const right=document.getElementById('rightRudder').getBoundingClientRect();
+  return {sceneHeight:scene.height,stationHeight:station.height,
+   pedalWidths:[left.width,right.width],viewport:innerHeight,
+   canScroll:getComputedStyle(document.getElementById('cockpitStation')).overflowY};
+ });
+ assert.ok(portraitFocus.sceneHeight>=158&&portraitFocus.sceneHeight<=246,
+  'portrait pilot windscreen must be large enough to see the horizon '+JSON.stringify(portraitFocus));
+ assert.ok(portraitFocus.stationHeight>0&&portraitFocus.pedalWidths.every(w=>w>35),
+  'enlarged portrait forward view preserves both rudder pedal controls');
+ await phone.locator('#cockpitFocusButton').tap();
+
  // Re-enter glass style after checking analogue helicopter, then rotate the
  // phone and verify that glass fighter displays remain horizontally visible.
  await phone.locator('#cockpitInstrumentStyle').tap();
