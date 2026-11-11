@@ -441,7 +441,7 @@ try{
    .sort((a,b)=>Number(getComputedStyle(a).order)-Number(getComputedStyle(b).order))
    .map(el=>el.dataset.gauge));
  assert.deepEqual(visibleGauges,
-  ['speed','attitude','alt','rpm','heading','vsi','power','turn'],
+  ['alt','attitude','speed','rpm','vsi','heading','turn','power'],
   'all eight R44 instruments must be visible together without a hidden/expand action');
  const panelLayout=await phone.evaluate(()=>{
   const panel=document.querySelector('#cockpitVisualPanel');
@@ -455,12 +455,13 @@ try{
    top:box.top,bottom:box.bottom,
    widths:faces.map(g=>g.width),lefts:faces.map(g=>g.left),
    rights:faces.map(g=>g.right),tops:faces.map(g=>g.top),
-   deckRadius:parseFloat(getComputedStyle(deck).borderTopLeftRadius)};
+   deckRadius:parseFloat(getComputedStyle(deck).borderTopLeftRadius),
+   podRadius:parseFloat(getComputedStyle(document.querySelector('#cockpitInstrumentWell')).borderTopLeftRadius)};
  });
- assert.ok(panelLayout.borderRadius<=8&&panelLayout.deckRadius<=8,
-  'the unnecessary oval dashboard frame is flat on the R44');
+ assert.ok(panelLayout.borderRadius>=10&&panelLayout.deckRadius<=8&&panelLayout.podRadius>=12,
+  'R44 uses a raised, narrow instrument head instead of the old full-width oval');
  assert.equal(panelLayout.background,'none',
-  'oversized oval background decoration has been removed from instrument panel');
+  'round instruments share a unified pedestal with no floating generic oval');
  assert.ok(Math.min(...panelLayout.widths)>=65,
   'eight individual phone gauges remain finger-readable, not tiny thumbnails');
  assert.ok(panelLayout.rights.every(x=>x<=panelLayout.screen+1)&&
