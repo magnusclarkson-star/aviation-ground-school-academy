@@ -23,3 +23,22 @@
 }
 @media(max-width:350px){.visual-options{grid-template-columns:1fr}.visual-options .hint,
  .visual-options .visual-status{grid-column:1}}
+
+/* Suppress temporary legacy/procedural scene while the selected high-detail
+   C172/R44 is importing. This overlay never captures any flight controls. */
+.scene-shell[data-airframe-loading="on"]::after{
+ content:"Preparing aircraft view…";
+ position:absolute;inset:0;z-index:60;
+ display:grid;place-items:center;
+ background:linear-gradient(160deg,#1a3345,#0a1826);
+ color:#d5e9ef;font:700 12px/1.4 system-ui,sans-serif;
+ pointer-events:none;
+}
+.aircraft-inspect-viewport[data-model-loading="on"]::after{
+ content:"Preparing detailed 3D aircraft…";
+ position:absolute;inset:0;z-index:20;
+ display:grid;place-items:center;
+ background:linear-gradient(160deg,#1b3546,#091722);
+ color:#d5e9ef;font:700 12px/1.4 system-ui,sans-serif;
+ pointer-events:none;
+}
