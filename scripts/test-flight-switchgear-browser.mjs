@@ -140,6 +140,73 @@ try{
  await phone.locator("#cockpitVisualPanel .cockpit-gauge").first().tap({position:{x:38,y:42}});
  assert.equal(await phone.locator("#cockpitZoomPanel").isVisible(),true,
   "only instruments continue to enlarge");
+ await phone.locator("#cockpitZoomClose").tap();
+ // Both aircraft must retain a single functional Restart button after
+ // physical relocation. The button actually resets the selected aircraft,
+ // not just a decorative icon in the flight console.
+ assert.equal(await phone.locator("#restartFlight").count(),1);
+ await phone.locator("#restartFlight").tap();
+ assert.match(await phone.locator("#cockpitRestartStatus").textContent(),/Flight restarted/,
+  "moving Restart above the wheel brake preserves its original action");
+ assert.equal(await phone.locator("#cockpitAircraftSelect").inputValue(),"c172",
+  "restarting a C172 does not change the selected airframe");
+ // Rotate back to portrait and change to R44: switches must relocate
+ // within its narrow pedestal without spilling off the handset.
+ await phone.setViewportSize({width:390,height:844});
+ await phone.locator("#cockpitFrameToggle").selectOption("on");
+ await phone.locator("#cockpitAircraftSelect").selectOption("r44");
+ const rotorPortrait=await layout();
+ checkTwoByTwo(rotorPortrait);
+ assert.equal(rotorPortrait.airframe,"r44");
+ assert.equal(rotorPortrait.restartParent,"side-controls");
+ assert.ok(rotorPortrait.noOverflow&&rotorPortrait.rack.left>=0&&
+  rotorPortrait.rack.right<=390&&rotorPortrait.rack.top>=rotorPortrait.well.top,
+  "R44 portrait view retains the adjacent 2×2 switches entirely on-screen");
+ assert.ok(rotorPortrait.restart.w>40&&rotorPortrait.yoke.w>70&&rotorPortrait.rudder.w>20,
+  "R44 collective-side Restart, cyclic and pedals remain genuine touch targets");
+ const rotorBefore=await phone.locator("#lightingMode").inputValue();
+ await phone.locator("#cockpitSwitch_light").tap();
+ assert.notEqual(await phone.locator("#lightingMode").inputValue(),rotorBefore,
+  "R44 portrait LIGHT rack is interactive, not an inert ornament");
+ const liveMultiTouch=await phone.evaluate(()=>{
+  const cyclic=document.querySelector("#controlPad"),
+   pedal=document.querySelector("#rightRudder"),
+   view=document.querySelector("#cockpitSwitch_view"),
+   cam=document.querySelector("#cameraMode");
+  const create=(target,id,fraction)=>{
+   const b=target.getBoundingClientRect(),x=b.left+b.width*fraction,y=b.top+b.height*.5;
+   return new Touch({identifier:id,target,clientX:x,clientY:y,
+    pageX:x+scrollX,pageY:y+scrollY,screenX:x,screenY:y});
+  };
+  const a=create(cyclic,801,.85),b=create(pedal,802,.5),c=create(view,803,.5);
+  const send=(target,type,changed,all)=>target.dispatchEvent(new TouchEvent(type,{
+   bubbles:true,cancelable:true,changedTouches:changed,
+   touches:all,targetTouches:all.filter(x=>x.target===target)
+  }));
+  send(cyclic,"touchstart",[a],[a]);
+  send(pedal,"touchstart",[b],[a,b]);
+  const held={bank:document.querySelector("#cmdBank").textContent,
+   rudder:document.querySelector("#cmdRudder").textContent,view:cam.value};
+  send(view,"touchstart",[c],[a,b,c]);
+  const switched={bank:document.querySelector("#cmdBank").textContent,
+   rudder:document.querySelector("#cmdRudder").textContent,view:cam.value};
+  send(view,"touchend",[c],[a,b]);send(pedal,"touchend",[b],[a]);
+  send(cyclic,"touchend",[a],[]);
+  const released=document.querySelector("#cmdBank").textContent;
+  cam.value="cockpit";cam.dispatchEvent(new Event("change",{bubbles:true}));
+  return {held,switched,released};
+ });
+ assert.ok(parseInt(liveMultiTouch.held.bank)>40&&
+  Math.abs(Number(liveMultiTouch.held.rudder.match(/-?\d+/)?.[0]||0))>10,
+  "two fingers simultaneously operate the actual R44 cyclic and anti-torque pedal: "+JSON.stringify(liveMultiTouch));
+ assert.notEqual(liveMultiTouch.switched.view,liveMultiTouch.held.view,
+  "a third finger changes the R44 camera without releasing flight controls");
+ assert.equal(liveMultiTouch.switched.bank,liveMultiTouch.held.bank,
+  "VIEW interaction must not jerk the held R44 cyclic");
+ assert.match(liveMultiTouch.released,/0%/);
+ await phone.locator("#restartFlight").tap();
+ assert.match(await phone.locator("#cockpitRestartStatus").textContent(),/Flight restarted/,
+  "R44 Restart remains operational beside the collective");
  assert.deepEqual(errors,[]);
  console.log("Physical cockpit switchgear passed on desktop, phone portrait and landscape.");
 }finally{await browser.close();}
