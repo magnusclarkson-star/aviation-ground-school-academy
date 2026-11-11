@@ -232,6 +232,14 @@ document.addEventListener("agsa:r44-voice-toggle",()=>{
 });
 document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
+// A 360-degree aircraft inspection is not an instruction to play ATC.
+// Silence already queued speech, and do not automatically rearm it on close.
+document.addEventListener("agsa:inspection-open",()=>{
+ atcRadio?.disarm("360° aircraft inspection: radio paused until explicitly started.");
+ r44Voice.disarm();
+ atcPractice?.stop();
+ atcMissions?.stop();
+});
 let paused=false,lastFrame=0,prevView=0,prevViewTrace=0,dragPointer=null;
 const pointers={left:null,right:null,brake:null};
 const touchPedals=window.AGSAFlightTouchPedals?.create?.()||null;
@@ -275,8 +283,12 @@ function fallbackTo2D(message){
 // No private API, hidden service or remote rendering. When WebGL2 is not
 // available (including context loss), the original Canvas 2D keeps working.
 function chooseVisual(){
- if($("visualMode").value==="2d"){
-  fallbackTo2D("Lightweight 2D selected. The original runway view remains fully functional.");
+ // For the approved R44 and C172, use their detailed airframes even when
+ // the learner selects the 2D outside view. The old low-poly Canvas model
+ // remains an emergency fallback only when WebGL is genuinely unavailable.
+ const detailed2D=$("visualMode").value==="2d"&&["r44","c172"].includes(airframeId());
+ if($("visualMode").value==="2d"&&!detailed2D){
+  fallbackTo2D("Lightweight 2D scenery selected.");
   return;
  }
  if(!renderer3D){
@@ -292,7 +304,7 @@ function chooseVisual(){
  $("cameraMode").disabled=false;
  try{
   if(renderer3D.draw(state,{view:$("cameraMode").value,animation:systems.parts,lighting:lightingId(),airframeId:airframeId()})){
-   visualMessage("3D WebGL2 airfield active: real geometric terrain, runway, buildings, trees and optional chase aircraft. Fictional scenery, not a surveyed airport.","active");
+   visualMessage(detailed2D?"Detailed aircraft exterior active in the 2D view. The approved R44/C172 model is preserved.":"3D WebGL2 airfield active: geometric terrain and selected aircraft exterior.","active");
    prev3D=0;return;
   }
  }catch{}
@@ -654,6 +666,7 @@ $("controlPad").addEventListener("pointerdown",e=>{
  if(dragPointer!==null)return;
  dragPointer=e.pointerId;
  try{$("controlPad").setPointerCapture(e.pointerId)}catch{}
+ // Each finger retains its own pointer ID, independent of the pedals.
  movePad(e);haptics.pulse("control");e.preventDefault();
 });
 $("controlPad").addEventListener("pointermove",e=>{
@@ -690,6 +703,7 @@ function hold(id,key){
   if(pointers[key]!==null)return;
   pointers[key]=e.pointerId;
   try{el.setPointerCapture(e.pointerId)}catch{}
+  // Never clear or steal the simultaneously held yoke pointer here.
   updateHeld();
   haptics.pulse(key==="brake"?"control":"rudder");
   e.preventDefault();
