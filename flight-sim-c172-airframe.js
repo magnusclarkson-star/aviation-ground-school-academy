@@ -102,12 +102,12 @@ function parseC172GLB(file){
    const name=family==="flap"?(left?"leftFlap":"rightFlap"):
     family==="aileron"?(left?"leftAileron":"rightAileron"):
     (left?"elevatorLeft":"elevatorRight");
-   role={name,axis:1,pivot:[m[12],m[13],m[14]]};
+   role={name,axis:1,pivot:[m[12],m[13]-1.5,m[14]]};
   }
   if(nodeName==="Skyhawk-rudder")
-   role={name:"rudder",axis:2,pivot:[m[12],m[13],m[14]]};
+   role={name:"rudder",axis:2,pivot:[m[12],m[13]-1.5,m[14]]};
   if(nodeName==="Skyhawk-propeller")
-   role={name:"propeller",axis:3,pivot:[m[12],m[13],m[14]]};
+   role={name:"propeller",axis:3,pivot:[m[12],m[13]-1.5,m[14]]};
   if(node.mesh!==undefined){
    const mesh=gltf.meshes?.[node.mesh];if(!mesh)throw Error("C172 mesh missing");
    for(const src of mesh.primitives||[]){
@@ -122,7 +122,10 @@ function parseC172GLB(file){
     for(let i=0;i<positions.length;i+=3){
      const x=pos.data[i],y=pos.data[i+1],z=pos.data[i+2];
      const px=m[0]*x+m[4]*y+m[8]*z+m[12],
-      py=m[1]*x+m[5]*y+m[9]*z+m[13],
+      // The flight renderer places aircraft at altitude + 1.5 m. The
+      // Molen Skyhawk glTF has a ground-contact origin, so shift every
+      // source part down by exactly that amount, including its hinge.
+      py=m[1]*x+m[5]*y+m[9]*z+m[13]-1.5,
       pz=m[2]*x+m[6]*y+m[10]*z+m[14];
      positions.set([px,py,pz],i);
      for(const [axis,v] of [[0,px],[1,py],[2,pz]]){
