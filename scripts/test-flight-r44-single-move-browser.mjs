@@ -20,7 +20,10 @@ try {
   page.on("pageerror",e=>errors.push(e.message));
   await page.goto(url,{waitUntil:"load"});
   await page.locator("#cockpitAircraftSelect").selectOption("r44");
-  await page.locator("#cockpitFocusButton").click();
+  // The simulator may already enter immersive pilot mode on landscape
+  // launch. Do not click Exit cockpit and accidentally leave that mode.
+  if(await page.evaluate(()=>document.body.dataset.cockpitFocus!=="on"))
+   await page.locator("#cockpitFocusButton").click();
   await page.waitForTimeout(200);
   const startup=await page.evaluate(()=>{
    const rack=document.getElementById("cockpitSwitchPanel");
