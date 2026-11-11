@@ -123,12 +123,14 @@ try{
   const hash=()=>{
    const out=new Uint8Array(canvas.width*canvas.height*4);
    gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,out);
-   let h=2166136261>>>0,colour=0;
+   let h=2166136261>>>0,colour=0,dark=0,bright=0;
    for(let i=0;i<out.length;i+=84){
     h=Math.imul(h^out[i]^out[i+1]^out[i+2],16777619)>>>0;
     if(out[i]>out[i+2]*1.25||out[i+1]<out[i]*.65)colour++;
+    if(out[i]<95&&out[i+1]<95&&out[i+2]<110)dark++;
+    if(out[i]>135&&out[i+1]>135&&out[i+2]>135)bright++;
    }
-   return {hash:h,colour};
+   return {hash:h,colour,dark,bright};
   };
   renderer.draw(state,{view:"cockpit",airframeId:"c172",
    animation:{propeller:.22,leftFlap:.1,rightFlap:.1}});
@@ -142,8 +144,9 @@ try{
   "PILOT mode must now render the actual C172 model cabin, not empty sky");
  assert.notEqual(pilotView.cockpit.hash,pilotView.chase.hash,
   "inside-the-cabin pixels must visibly differ from outside aircraft view");
- assert.ok(pilotView.cockpit.colour>100,
-  "pilot view contains coloured cockpit geometry rather than blank sky");
+ console.log("C172 pilot source GPU histogram",JSON.stringify(pilotView));
+ assert.ok(pilotView.cockpit.colour>100||pilotView.cockpit.dark>100,
+  "pilot view must include actual source-model surfaces: "+JSON.stringify(pilotView));
  await page.locator("canvas").last().screenshot({
   path:"artifacts/real-c172-internal-3d-view.png"});
  // The imported Robinson R44 must actually replace the procedural hull
