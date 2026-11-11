@@ -34,6 +34,9 @@ const RealR44=root?.AGSARealR44||
 const MolenR44=root?.AGSAR44Airframe||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-r44-airframe.js"):null);
+const MolenC172=root?.AGSAC172Airframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-c172-airframe.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -1278,15 +1281,16 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    objects.push(object);return object;
   };
   async function importC172(){
-   if(!RealAirframes){realC172Status="unavailable";return;}
-   try{
-    const model=await RealAirframes.ensureC172();
+   // Prefer the full Skyhawk body and source-built cabin. Preserve the
+   // current light GLB when the device cannot load its textures.
+   async function install(model,kind){
     if(disposed||lost)return;
-    const decoded=await Promise.all(model.images.map(async bytes=>{
-     const blob=new Blob([bytes],{type:"image/webp"});
+    const mime=model.imageMimeTypes||model.mimeTypes||[];
+    const decoded=await Promise.all(model.images.map(async(bytes,i)=>{
+     const blob=new Blob([bytes],{type:mime[i]||"image/webp"});
      return root.createImageBitmap(blob);
     }));
-    if(disposed||lost){decoded.forEach(image=>image.close?.());return;}
+    if(disposed||lost){decoded.forEach(bitmap=>bitmap.close?.());return;}
     const images=decoded.map(bitmap=>{
      const texture=gl.createTexture();textures.push(texture);
      gl.bindTexture(gl.TEXTURE_2D,texture);
@@ -1297,19 +1301,31 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
      gl.generateMipmap(gl.TEXTURE_2D);
-     bitmap.close?.();
-     return texture;
+     bitmap.close?.();return texture;
     });
     gl.bindTexture(gl.TEXTURE_2D,null);
-    const primitives=model.primitives.map(uploadImported);
-    realC172={primitives,images,vertices:model.vertices,
-     triangles:model.triangles};
+    realC172={primitives:model.primitives.map(uploadImported),images,
+     vertices:model.vertices,triangles:model.triangles,kind,
+     controls:model.controls||[],propParts:model.propParts||0};
     realC172Status="imported";
-   }catch(error){
-    realC172Status="fallback";
-    // A broken or unsupported asset must never stop flight training.
-    if(typeof console!=="undefined")console.warn("C172 mesh fallback:",error);
    }
+   if(MolenC172){
+    try{
+     await install(await MolenC172.ensureC172(),"molen");
+     if(realC172)return;
+    }catch(error){
+     if(typeof console!=="undefined")console.warn("Skyhawk GLB fallback:",error);
+    }
+   }
+   if(RealAirframes){
+    try{
+     await install(await RealAirframes.ensureC172(),"legacy");
+     if(realC172)return;
+    }catch(error){
+     if(typeof console!=="undefined")console.warn("C172 fallback:",error);
+    }
+   }
+   realC172Status="fallback";
   }
   async function importR44(){
    // Prefer the integrated MIT GLB; only load the existing FlightGear AC3D
@@ -1523,10 +1539,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     gl.uniform1f(uni.uActor,1);
     const realModel=id==="c172"?realC172:id==="r44"?realR44:null;
     const isMolen=id==="r44"&&realModel?.kind==="molen";
+    const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
-     (id==="c172"?"licensed-c172-glb":isMolen?"mit-r44-glb":
-      "licensed-r44-ac3d"):"procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=isMolen?
+     (isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
+      isMolen?"mit-r44-glb":"licensed-r44-ac3d"):"procedural";
+    if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
      "source-cabin-and-panel":realModel&&model.cabin?
      "four-seats-and-panel":"not-rendered";
     const drawCabin=()=>{
@@ -1546,7 +1563,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
-      if(isMolen&&part.partAxis){
+      if((isMolen||isMolenC172)&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
        const angle=animation?.[part.partName];
@@ -1554,13 +1571,24 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if(isMolen&&part.partAxis){
+      if((isMolen||isMolenC172)&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,0);
        gl.uniform1f(uni.uPartAngle,0);
        gl.uniform3fv(uni.uPartPivot,[0,0,0]);
       }
      };
-     if(id==="c172"){
+     if(isMolenC172){
+      // This complete source Skyhawk has its own four seats, NAV III panel,
+      // glazing and hinged surfaces. Never layer old hull/cabin on top.
+      gl.disable(gl.BLEND);gl.depthMask(true);
+      gl.uniform1i(uni.uR44Skin,0);gl.uniform1i(uni.uC172Pass,0);
+      for(const part of realModel.primitives)
+       if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      for(const part of realModel.primitives)
+       if((part.opacity??1)<.99)drawPrimitive(part,limit(part.opacity,0,1));
+     }else if(id==="c172"){
       // Opaque Cessna skin does not block the interior through tinted glass;
       // glazing is drawn only after the seats with depth writes disabled.
       gl.disable(gl.BLEND);gl.depthMask(true);
