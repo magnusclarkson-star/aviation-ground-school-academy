@@ -103,7 +103,8 @@ test('full settings are ready at maximum before browser gesture, and complete ac
  assert.ok(html.includes('<option value="noticeable" selected>'));
  assert.ok(js.includes('const engineStart=engineAudio.start(audioMode(),audioPower(),audioAirspeed())'), 'full flight engine starts with the selected airframe voice');
  assert.ok(js.includes('const cueStarted=radioTone.enable(true)'));
- assert.ok(js.includes('const radioArmed=atcRadio?.arm(true)===true'));
+ assert.ok(js.includes('const radioArmed=document.body.dataset.aircraftInspect!=="on"&&atcRadio?.arm(true)===true'),
+  'ATC activates only outside 360 inspection');
  assert.ok(js.includes('haptics.setEnabled(true)'));
  assert.ok(js.includes('for(const id of ["fullFlightLaunch","phoneFeedbackStart"])'));
  assert.ok(js.includes('if(fullFlightWanted)void startFullFlight()'),'reset must preserve chosen effects');
