@@ -17,6 +17,8 @@ test("full source MIT Skyhawk binary has original cabin and 17 textures",()=>{
   "C172 wingspan must retain full 11m width");
  assert.ok(model.bounds[5]-model.bounds[4]>7.2,
   "C172 must retain complete nose-to-tail geometry");
+ assert.ok(model.bounds[2]>-1.85&&model.bounds[2]<-1.20,
+  "Molen ground-contact origin must align main wheels with the 1.5m renderer actor offset");
  assert.ok(model.primitives.some(p=>(p.opacity??1)<.20),
   "source model must have real semitransparent cockpit glazing");
  assert.ok(fs.readFileSync("assets/aircraft/MOLEN-LICENSE.txt","utf8")
