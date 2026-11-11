@@ -1,0 +1,40 @@
+name: Evaluate License-Declared MIT C172 Source
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/evaluate-c172-mit.yml'
+      - 'scripts/audit-c172-mit-candidate.mjs'
+      - 'scripts/c172-candidate-viewer.mjs'
+      - 'scripts/test-c172-mit-browser.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  model-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit original source and pin hash
+        run: node scripts/audit-c172-mit-candidate.mjs
+      - name: Install isolated browser and model renderer
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit three@0.180.0 esbuild@0.25.12 playwright@1.56.1
+          npx playwright install chromium
+          npx esbuild scripts/c172-candidate-viewer.mjs --bundle --format=iife --platform=browser --target=chrome110 --outfile=artifacts/c172-review.bundle.js
+      - name: Capture actual mobile candidate screenshots
+        run: node scripts/test-c172-mit-browser.mjs
+      - name: Preserve audited model and screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c172-mit-unshipped-source-review
+          path: |
+            artifacts/c172-mit-audit.json
+            artifacts/c172-mit-candidate.glb
+            artifacts/c172-mit-*.png
+          retention-days: 10
+          if-no-files-found: ignore
