@@ -11,22 +11,22 @@ assert.deepEqual(O.orbitStep(initial,180,0),{azimuth:99,elevation:26,distance:18
 assert.ok(Math.abs(O.orbitStep(initial,720,0).azimuth-36)<1e-8,"orbit wrapping tolerates floating-point arithmetic");
 assert.equal(O.orbitStep(initial,0,1000).elevation,78);
 assert.equal(O.orbitStep(initial,0,-1000).elevation,-65);
-assert.equal(O.zoomStep(initial,.1).distance,9);
+assert.equal(O.zoomStep(initial,.1).distance,6.8);
 assert.equal(O.zoomStep(initial,100).distance,70);
 assert.equal(O.zoomStep(initial,.8).distance,14.4);
 assert.equal(O.zoomStep(initial,1.22).azimuth,0);
 assert.equal(O.pinchStep(initial,100,125).distance,14.4,"fingers apart zoom into airframe");
 assert.equal(O.pinchStep(initial,100,80).distance,22.5,"fingers together zoom out");
-assert.equal(O.pinchStep(initial,30,300).distance,9,"pinch-in stays inside close limit");
+assert.equal(O.pinchStep(initial,30,300).distance,6.8,"pinch-in stays inside close limit");
 assert.equal(O.pinchStep(initial,300,30).distance,70,"pinch-out stays inside far limit");
 assert.deepEqual(O.pinchStep(initial,0,90),initial,"zero span cannot break camera");
 assert.deepEqual(O.pinchStep(initial,NaN,90),initial,"non-finite span is ignored");
 assert.deepEqual(O.doubleTapZoom(initial),
- {azimuth:0,elevation:26,distance:11},
+ {azimuth:0,elevation:26,distance:9},
  "double tap brings aircraft closer without losing its orientation");
 const trainerFit={azimuth:42,elevation:21,distance:12};
 assert.deepEqual(O.doubleTapZoom(trainerFit,12),
- {azimuth:42,elevation:21,distance:9},
+ {azimuth:42,elevation:21,distance:7.6},
  "C172/R44 double-tap gives a visibly closer real-aircraft view");
 assert.deepEqual(O.doubleTapZoom(O.doubleTapZoom(trainerFit,12),12),trainerFit,
  "trainer double-tap restores genuine fitted 100% view");
@@ -49,6 +49,8 @@ assert.ok(overhead.eye[1]>20,"high elevation provides upper rotor visibility");
 assert.ok(Math.abs(back.pitch)<.01);
 assert.ok(overhead.pitch<-.9);
 assert.equal(A.cameraPose(state,"inspect",{distance:1}).eye[2] < 0,true);
+assert.ok(Math.abs(A.cameraPose(state,"inspect",{distance:1}).eye[2]+6.8)<.001,
+ "WebGL inspector must support new closer orbit without clipping to old 9m limit");
 assert.equal(X.IDS.length,7);
 
 const calls={count:0,save(){},restore(){},translate(){},beginPath(){},
