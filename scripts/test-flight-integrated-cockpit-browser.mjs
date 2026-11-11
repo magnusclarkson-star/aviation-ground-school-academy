@@ -572,9 +572,10 @@ try{
   const fit=await phone.evaluate(()=>{
    const rect=id=>document.getElementById(id).getBoundingClientRect();
    const panel=rect('cockpitVisualPanel'),left=rect('leftRudder'),right=rect('rightRudder');
+   const forward= document.querySelector('.scene-shell').getBoundingClientRect();
    const yoke=rect('controlPad'),station=rect('cockpitStation');
    return {
-    viewport:innerHeight,stationTop:station.top,stationBottom:station.bottom,
+    viewport:innerHeight,forwardHeight:forward.height,stationTop:station.top,stationBottom:station.bottom,
     panelRight:panel.right,yokeLeft:yoke.left,
     leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
     rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
@@ -584,6 +585,8 @@ try{
     instrumentBesideControl:panel.right<=yoke.left+15
    };
   });
+  assert.ok(fit.forwardHeight>=108&&fit.forwardHeight<=161,
+   id+' forward horizon view must be useful rather than a narrow strip '+JSON.stringify(fit));
   assert.ok(fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentBesideControl,
    id+' focused landscape: both pedals completely visible with the instrument bank beside controls '+JSON.stringify(fit));
  }
