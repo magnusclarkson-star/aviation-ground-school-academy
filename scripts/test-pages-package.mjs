@@ -39,6 +39,29 @@ for(const forbidden of ["services/training-api/src/http.mjs","services/training-
  try{await stat(path.join(output,forbidden));found=true;}catch(e){if(e.code!=="ENOENT")throw e;}
  assert.equal(found,false,"Forbidden deployment path: "+forbidden);
 }
+
+// An actual installable flight-practice PWA must ship both raster icons,
+// a same-origin manifest and its runtime offline cache worker.
+const manifestFile=path.join(output,"flight-sim-manifest.json");
+const install=JSON.parse(await readFile(manifestFile,"utf8"));
+assert.equal(install.display,"standalone");
+assert.equal(install.start_url,"./flight-sim.html");
+assert.equal(install.scope,"./");
+assert.equal(install.icons.length,2);
+for(const size of [192,512]){
+ const bytes=await readFile(path.join(output,"flight-sim-icon-"+size+".png"));
+ assert.ok(bytes.length>500&&bytes.subarray(0,8).equals(
+  Buffer.from([137,80,78,71,13,10,26,10])),"valid PNG icon "+size);
+ assert.equal(bytes.readUInt32BE(16),size,"icon width "+size);
+ assert.equal(bytes.readUInt32BE(20),size,"icon height "+size);
+}
+const shell=await readFile(path.join(output,"flight-sim.html"),"utf8");
+assert.match(shell,/rel="manifest" href="flight-sim-manifest.json"/);
+assert.match(shell,/serviceWorker.register\("\.\/flight-sim-sw.js"/);
+const worker=await readFile(path.join(output,"flight-sim-sw.js"),"utf8");
+assert.match(worker,/request.method!=="GET"/);
+assert.match(worker,/url.origin!==ROOT.origin/);
+
 const homepage=await readFile(path.join(output,"index.html"),"utf8");
 assert.match(homepage,/Aviation Ground School Academy/i);
 console.log("GitHub Pages packaging passed: public lessons retained, entire private training API and implementation sources excluded.");

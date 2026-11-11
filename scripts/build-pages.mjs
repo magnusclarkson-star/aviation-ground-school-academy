@@ -1,5 +1,6 @@
 import {readdir,copyFile,mkdir,rm,stat} from "node:fs/promises";
 import path from "node:path";
+import {createFlightSimIcons} from "./build-flight-sim-icons.mjs";
 import {fileURLToPath} from "node:url";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
@@ -18,7 +19,8 @@ const publicAircraftFiles=[
  "assets/aircraft/r44-molen-raven-ii.glb",
  "assets/aircraft/MOLEN-LICENSE.txt"
 ];
-const publicCuratedPaths=["accreditation/readiness-register.json",...publicAircraftFiles];
+const publicCuratedPaths=["accreditation/readiness-register.json",
+ "flight-sim-manifest.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
 let count=0;
@@ -37,6 +39,10 @@ for(const item of publicCuratedPaths){
  await copyFile(source,target);
  count++;
 }
+// Generate valid 192/512px opaque raster icons as part of the allowlisted
+// static website build, without introducing remote images or dependencies.
+await createFlightSimIcons(output);
+count+=2;
 // The V3 experimental page must never be deployed with a missing engine.
 // Its static bundle is produced by pinned tooling in the Pages workflow.
 const v3Bundle=await stat(path.join(output,"flight-sim-v3.bundle.js"));
