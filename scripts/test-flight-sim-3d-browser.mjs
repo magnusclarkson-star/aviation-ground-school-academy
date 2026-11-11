@@ -72,10 +72,18 @@ try{
  if(sceneRenderBudget.gpuInitially&&sceneRenderBudget.gpuRemainedActive)
   assert.equal(sceneRenderBudget.hiddenCanvasDraws,0,
    "WebGL active: never waste CPU repainting a hidden full-resolution 2D canvas");
- assert.equal(sceneRenderBudget.manuallySelected2d,true,
-  "learner can still choose the original 2D fallback");
- assert.ok(sceneRenderBudget.active2dDraws>=2,
-  "2D fallback immediately renders current flight state and continues animating");
+ // C172/R44 retain their approved detailed mesh under the outside 2D
+ // selection when WebGL is available. Unsupported devices keep Canvas.
+ if(sceneRenderBudget.gpuInitially){
+  assert.equal(sceneRenderBudget.manuallySelected2d,false,
+   "approved C172/R44 exterior replaces old Canvas model in 2D selection");
+  assert.equal(sceneRenderBudget.active2dDraws,0,
+   "detailed aircraft mode does not repaint unseen Canvas");
+ }else{
+  assert.equal(sceneRenderBudget.manuallySelected2d,true);
+  assert.ok(sceneRenderBudget.active2dDraws>=2,
+   "unsupported GPU continues rendering Canvas fallback");
+ }
  if(sceneRenderBudget.gpuRestored)assert.equal(sceneRenderBudget.restored2dDraws,0,
   "switching back to 3D must again stop redundant Canvas rendering");
  else assert.ok(sceneRenderBudget.restored2dDraws>=1,
