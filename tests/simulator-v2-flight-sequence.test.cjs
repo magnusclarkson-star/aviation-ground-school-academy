@@ -86,3 +86,37 @@ test("C172 departs, climbs and turns through 180 degrees within the local scener
   "turn must remain inside the illustrated local practice area");
  assert.ok(state.altitudeM>0,"aircraft must remain airborne while turning");
 });
+
+
+test("R44 airborne full pedal turns through 180 degrees and reverses cleanly",()=>{
+ const s=M.makeState("helicopter","helipad",{windId:"calm"});
+ const u={...M.makeInput("helicopter"),collective:.8,turbulence:0};
+ advance(s,u,35);
+ assert.equal(s.onGround,false,"pilot must raise skids before turning");
+ u.collective=.495;u.rudder=1;
+ let crossed=false;
+ for(let i=0;i<125;i++){
+  advance(s,u,1);
+  if(s.headingDeg>=175&&s.headingDeg<=195){crossed=true;break}
+ }
+ assert.ok(crossed,"full right pedal must turn heading around within 12.5 seconds");
+ assert.ok(s.yawRateDegS>=20&&s.yawRateDegS<=35,
+  "pedal visibly changes yaw rate; not merely the control readout");
+ u.rudder=-1;
+ advance(s,u,16);
+ assert.ok(s.yawRateDegS<0,"opposite pedal must reverse actual yaw motion");
+ assert.ok(s.altitudeM>0,"turn manoeuvre remains airborne");
+});
+test("R44 forward-flight cyclic banking makes a useful turn with pedals centred",()=>{
+ const s=M.makeState("helicopter","helipad",{windId:"calm"});
+ const u={...M.makeInput("helicopter"),collective:.8,pitch:-.75,turbulence:0};
+ advance(s,u,55);
+ assert.ok(s.forwardMs>3,"aircraft must have forward movement for bank-assisted turning");
+ const start=s.headingDeg;
+ u.collective=.495;u.bank=.85;u.rudder=0;
+ advance(s,u,160);
+ const delta=(s.headingDeg-start+360)%360;
+ assert.ok(delta>45&&delta<240,
+  "sustained cyclic bank should turn the flying helicopter noticeably");
+ assert.equal(s.onGround,false);
+});
