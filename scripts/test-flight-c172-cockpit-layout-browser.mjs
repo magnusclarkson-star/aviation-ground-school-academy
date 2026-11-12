@@ -122,9 +122,23 @@ try{
    await page.touchscreen.tap(hit.x,hit.y);
    assert.ok(await page.locator("#cockpitZoomPanel").isVisible(),
     "touching vertical NAV/COM opens the larger live navigation display");
-   await page.locator("#cockpitZoomClose").tap();
+   await page.screenshot({path:"artifacts/c172-nav-expanded-landscape.png"});
+   const closeHit=await page.evaluate(()=>{
+    const close=document.getElementById("cockpitZoomClose");
+    const zoom=document.getElementById("cockpitZoomPanel");
+    const b=close.getBoundingClientRect(),z=zoom.getBoundingClientRect();
+    return {x:b.left+b.width/2,y:b.top+b.height/2,
+      button:{x:b.x,y:b.y,w:b.width,h:b.height},
+      panel:{x:z.x,y:z.y,w:z.width,h:z.height},
+      withinViewport:b.left>=0&&b.top>=0&&b.right<=innerWidth&&b.bottom<=innerHeight,
+      topmost:document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)?.id};
+   });
+   console.log("C172 expanded NAV close control: "+JSON.stringify(closeHit));
+   assert.ok(closeHit.withinViewport,
+    "expanded navigation close button must remain on the phone screen");
+   await page.touchscreen.tap(closeHit.x,closeHit.y);
    assert.ok(!(await page.locator("#cockpitZoomPanel").isVisible()),
-    "the enlarged navigation display can be closed");
+    "the enlarged navigation display can be closed by touch");
   }
   assert.deepEqual(errors,[],"no JavaScript runtime errors");
   await page.close();
