@@ -110,6 +110,10 @@ function step(system,state,input,seconds){
   r.rightFlap=-system.flapDeg*RAD;
   r.elevatorLeft=pitch===0?0:-pitch*16*RAD;
   r.elevatorRight=pitch===0?0:-pitch*16*RAD;
+  // Su-37 forward foreplanes move with the pitch command, while its
+  // conventional aft elevators remain active. No separate fixed copies.
+  r.canardLeft=state.airframeId==="su37"?r.elevatorLeft:0;
+  r.canardRight=state.airframeId==="su37"?r.elevatorRight:0;
   r.rudder=rudder*24*RAD;
   r.rudderLeft=r.rudder;
   r.rudderRight=r.rudder;

@@ -363,7 +363,7 @@ function addR44(m){
 function genericJet(m,id){
  const c=id==="f22"?palette.stealth:id==="f35"?palette.lightning:
   id==="typhoon"?palette.typhoon:id==="su37"?palette.su:palette.jet;
- const isTwin=id!=="f35",isCanard=id==="typhoon"||id==="su37";
+ const isTwin=id!=="f35";
  const rx=id==="su37"?1.72:id==="f35"?1.15:1.53;
  const nose=id==="typhoon"?9.5:id==="f22"?8.8:8.2;
  const zTail=id==="su37"?-9.4:-7.8;
@@ -437,11 +437,8 @@ function genericJet(m,id){
  }else if(id==="f35"){
   mirrored(m,[[.71,.35,-5.35],[2.25,.35,-6.05],[1.85,.35,-7.2],[.7,.35,-7.1]],c,.11);
  }
- if(isCanard){
-  const z=id==="su37"?3.05:3.5;
-  mirrored(m,[[.65,.70,z+1.0],[3.25,.70,z+.22],[2.55,.70,z-1.0],
-   [.65,.70,z-.78]],tint(c,1.04),.12);
- }
+ // Typhoon and Su-37 canards are animated separately below. Do not also
+ // bake fixed copies into the hull; that creates overlapping surfaces.
  canopy(m,.95,4.8,id==="fa18"?.68:.56,.49,.70,palette.window);
  // Canopy hood framing and a slim dorsal spine.
  sheet(m,[[-.10,1.22,1.10],[-.10,1.34,3.62],
@@ -572,6 +569,15 @@ function buildJetParts(Mesh,id){
      [sign*2.48,.77,2.61],[sign*.70,.77,2.76]],tint(wing,1.04),.10);
    });
   }else{
+   if(variant==="su37"){
+    // The Su-37 retains aft elevators AND independently moving foreplanes.
+    // Use the original forward-canard planform in one animated mesh only.
+    add("canard"+side,[sign*1.25,.70,3.45],1,m=>{
+     sheet(m,[[sign*.65,.70,4.05],[sign*3.25,.70,3.27],
+      [sign*2.55,.70,2.05],[sign*.65,.70,2.27]],
+      tint(palette.su,1.04),.12);
+    });
+   }
    const tail=-6.8;
    add("elevator"+side,[sign*1.55,.40,tail],1,m=>{
     sheet(m,[[sign*.6,.45,tail+.8],[sign*2.8,.45,tail+.1],

@@ -145,6 +145,19 @@ assert.ok(Math.abs(rotor.powerPct-rotorPowerBefore)<5,
  "conceptual collective movement must not imply a large change in rotor RPM");
 assert.ok(rotor.parts.rotorPitch<0);
 
+// Su-37 pitch controls both forward canards and aft elevators. The same
+// simulated input must not animate non-Su-37 canard overlays.
+const su37Flight=M.makeState("airplane","runway",{airframeId:"su37"});
+const su37Input=M.makeInput("airplane"),su37Motion=A.create("airplane");
+su37Input.pitch=.55;
+A.step(su37Motion,su37Flight,su37Input,.05);
+assert.ok(Math.abs(su37Motion.parts.canardLeft)>.01,
+ "Su-37 foreplanes must move in response to pitch");
+assert.equal(su37Motion.parts.canardLeft,su37Motion.parts.elevatorLeft);
+assert.equal(su37Motion.parts.canardRight,su37Motion.parts.elevatorRight);
+assert.equal(sys.parts.canardLeft,0,
+ "C172 cockpit remains free of Su-37 foreplane animation");
+
 // Five fighter profiles have wheel/strut assemblies that retract after
 // departure and extend again during the approach. The trainer has fixed gear.
 const jetState=M.makeState("airplane","runway",{airframeId:"f35"});

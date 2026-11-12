@@ -86,6 +86,26 @@ assert.ok(hasSu37(-3.08,.71,3.31),
 assert.ok(su37.vertices<30000,
  "Su-37 airframe must remain within the mobile vertex budget");
 
+// Both canard fighters must have exactly one visible pair of all-moving
+// foreplanes; static duplicates in the hull used to overlap moving controls.
+const typhoonForeplanes=Three.buildMovingParts("typhoon");
+const su37Foreplanes=Three.buildMovingParts("su37");
+for(const side of ["Left","Right"]){
+ const typhoonCanard=typhoonForeplanes.find(x=>x.name==="elevator"+side);
+ const su37Canard=su37Foreplanes.find(x=>x.name==="canard"+side);
+ const su37Aft=su37Foreplanes.find(x=>x.name==="elevator"+side);
+ assert.ok(typhoonCanard?.mesh.vertices>0,
+  "Typhoon "+side+" foreplane must be hinged geometry");
+ assert.ok(su37Canard?.mesh.vertices>0,
+  "Su-37 "+side+" foreplane must be hinged geometry");
+ assert.ok(su37Aft?.mesh.vertices>0,
+  "Su-37 retains its conventional "+side+" aft elevator");
+}
+assert.equal(typhoonForeplanes.filter(x=>x.name.startsWith("canard")).length,0);
+const sourceHull=readFileSync(new URL("../flight-sim-airframe-geometry.js",import.meta.url),"utf8");
+assert.doesNotMatch(sourceHull,/if\(isCanard\)\s*\{/,
+ "fighter hull must not bake fixed overlapping canards");
+
 const empty=new Three.Mesh();
 assert.equal(empty.finish().triangles,0);
 empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
