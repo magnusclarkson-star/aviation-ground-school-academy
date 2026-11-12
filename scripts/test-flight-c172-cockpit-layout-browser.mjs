@@ -37,7 +37,13 @@ try{
     scene:box(".scene-shell"),station:box("#cockpitStation"),
     cockpit:box("#cockpitMain"),instruments:box("#cockpitInstrumentWell"),
     visual:box("#cockpitVisualPanel"),map:box("#cockpitVisualPanel .cockpit-nav-screen"),
-    yoke:box("#controlPad"),leftPedal:box("#leftRudder"),rightPedal:box("#rightRudder"),
+    yoke:box("#controlPad"),grip:box("#flightGrip"),
+    yokeArtwork:box("#flightGrip .hardware-yoke"),
+    gripStyle:{
+      transform:getComputedStyle(document.getElementById("flightGrip")).transform,
+      position:getComputedStyle(document.getElementById("flightGrip")).position,
+      top:getComputedStyle(document.getElementById("flightGrip")).top
+    },leftPedal:box("#leftRudder"),rightPedal:box("#rightRudder"),
     throttle:box("#powerPanel"),flaps:box("#flapPanel"),brake:box("#brake"),
     restart:box("#restartFlight"),switches:box("#cockpitSwitchPanel"),
     scrollTop:station.scrollTop,
@@ -72,8 +78,8 @@ try{
     "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
    assert.ok(info.switches.right<=info.throttle.x+4,
     "switch rack does not cover engine throttle "+JSON.stringify(info));
-   assert.ok(Math.abs(info.yoke.height-65)<=3,
-    "landscape C172 yoke retains its original height "+JSON.stringify(info));
+   assert.ok(info.yoke.height>=52&&info.yoke.height<=58,
+    "landscape C172 yoke keeps an accessible touch area without covering pedals "+JSON.stringify(info));
   }
   for(const key of ["leftPedal","rightPedal","brake","restart","throttle","flaps"]){
    assert.ok(info[key]?.bottom<=view.height-2,
