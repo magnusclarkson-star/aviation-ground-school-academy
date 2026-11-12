@@ -62,8 +62,8 @@ try{
    assert.ok(info.scene.height>=160,
     "short portrait retains usable forward visibility "+JSON.stringify(info));
   }else{
-   assert.ok(info.scene.height>=view.height-2,
-    "landscape WebGL forward scene fills the windscreen behind the dashboard "+JSON.stringify(info));
+   assert.ok(info.scene.height>=108&&info.scene.height<=161,
+    "landscape retains the original runway/horizon projection without stretching to full screen "+JSON.stringify(info));
    assert.ok(Math.abs(info.yoke.height-65)<=3,
     "landscape C172 yoke retains its original height "+JSON.stringify(info));
   }
