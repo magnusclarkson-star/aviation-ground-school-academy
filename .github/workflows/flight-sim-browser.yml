@@ -237,6 +237,7 @@ jobs:
       - name: Test deterministic flight model
         run: |
           node scripts/test-flight-sim-model.mjs
+          node scripts/test-flight-c172-full-circuit.mjs
           node scripts/test-flight-sim-aerodynamics.mjs
           node scripts/test-flight-sim-loading.mjs
           node scripts/test-flight-sim-exercises.mjs
