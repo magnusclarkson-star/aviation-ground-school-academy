@@ -1799,6 +1799,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const selected=Exterior.normalize(airframeId||state.mode);
     const id=state.mode==="helicopter"?"r44":selected==="r44"?"c172":selected;
     const model=airframes[id];
+    // The 360 viewer must distinguish a freshly drawn Typhoon from the
+    // previous F/A-18 even though both report source="procedural".
+    if(canvas.dataset)canvas.dataset.airframeId=id;
     if(!inspectionOnly&&view!=="cockpit"&&model.shadow&&Number(state.altitudeM)<120){
      const height=Math.max(0,Number(state.altitudeM)||0);
      gl.uniform1f(uni.uActor,2);

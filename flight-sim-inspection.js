@@ -31,6 +31,14 @@
   const [a,b]=Array.from(points.values());
   return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;
  }
+ // The five fighters differ substantially in wingspan/length. One fixed
+ // 18-metre camera radius made the smaller Typhoon and F-35B look like tiny
+ // thumbnails on phones. Keep the approved C172/R44 framing unchanged.
+ function fitDistanceFor(id){
+  const fitted={c172:12,r44:16,fa18:15,f22:16,f35:15,
+   typhoon:14,su37:17};
+  return fitted[id]??18;
+ }
  function attach({documentLike,windowLike}={}){
   const doc=documentLike||root?.document,win=windowLike||root;
   const $=id=>doc.getElementById(id);
@@ -41,6 +49,7 @@
    throw Error("360° inspector requires its cockpit controls and canvases");
   let orbit={azimuth:0,elevation:26,distance:18};
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
+  let lastRenderedId=null;
   // Pointer IDs are tracked independently so a second touch changes zoom,
   // rather than making the model unexpectedly spin or the flight yoke move.
   const pointers=new Map(),tapStarts=new Map();
@@ -50,7 +59,7 @@
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   // The two compact training aircraft need closer framing than large jets.
-  const fitDistance=()=>selected()==="r44"?16:selected()==="c172"?12:18;
+  const fitDistance=()=>fitDistanceFor(selected());
   function updateHeading(){
    const id=selected();
    $("aircraftInspectModelSelect").value=id;
@@ -83,16 +92,28 @@
    const loading=Boolean(usingGPU&&(phase==="loading"||phase==="idle"));
    const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35")&&
     phase==="fallback");
-   viewport.dataset.modelLoading=loading?"on":unavailable?"unavailable":"off";
-   canvas3D.hidden=!usingGPU||loading||unavailable;
-   canvas2D.hidden=usingGPU||loading||unavailable;
+   // A previously rendered frame remains on the same canvas until draw()
+   // completes. Hide it immediately when ANY of the seven models changes.
+   // The next available frame is drawn while hidden, then revealed.
+   const stale=lastRenderedId!==id,pending=loading||(stale&&usingGPU);
+   // On Canvas 2D-only phones, keep the already approved 2D controls and
+   // canvas visible, but immediately erase the prior aircraft silhouette.
+   if(stale&&!usingGPU){
+    ctx.fillStyle="#162a37";
+    ctx.fillRect(0,0,canvas2D.width,canvas2D.height);
+   }
+   viewport.dataset.modelLoading=unavailable?"unavailable":pending?"on":"off";
+   canvas3D.hidden=!usingGPU||pending||unavailable;
+   canvas2D.hidden=usingGPU||unavailable;
    const statusText=loading?"Loading "+types.LABELS[id]+" 3D model…":
-    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":"";
+    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":
+    pending?"Rendering "+types.LABELS[id]+"…":"";
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
    $("aircraftInspectRenderMode").textContent=unavailable?"3D unavailable":
-    loading?"Loading 3D":usingGPU?"3D view":"2D view";
+    pending?"Loading 3D":usingGPU?"3D view":"2D view";
+   // A stale frame must not prevent the new one from ever being drawn.
    return loading||unavailable;
   }
   function render(now){
@@ -129,6 +150,10 @@
     ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
     exterior.paint(ctx,state,{id,width:w,height:h,view:"inspect",orbit,animation});
    }
+   // Only reveal the canvas after the newly selected airframe was
+   // actually painted. Never show an old C172/R44/fighter frame on change.
+   lastRenderedId=id;
+   syncModelVisibility();
    // 24 fps is sufficient for inspection and protects mobile battery.
    raf=win.requestAnimationFrame(frame);
   }
@@ -138,6 +163,7 @@
   function open(){
    if(!modal.hidden)return;
    orbit={azimuth:0,elevation:26,distance:fitDistance()};autoRotate=false;last=0;lastFrameTime=0;
+   lastRenderedId=null;
    modal.hidden=false;doc.body.dataset.aircraftInspect="on";
    // Inspection is visual only: entering it must not trigger a tower or
    // lesson voice, even when a full-flight audio session was armed.
@@ -158,7 +184,7 @@
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
    viewport.dataset.modelLoading="off";
    trigger.setAttribute("aria-expanded","false");
-   win.cancelAnimationFrame(raf);raf=0;last=0;
+   win.cancelAnimationFrame(raf);raf=0;last=0;lastRenderedId=null;
    drag=null;pointers.clear();tapStarts.clear();pinchSpan=0;lastTap=null;
    // On narrow phones the inspector launch button lives inside the collapsed
    // More menu. Returning keyboard focus there leaves it invisible; restore
@@ -299,7 +325,7 @@
    root.document.addEventListener("DOMContentLoaded",()=>attach({documentLike:root.document,windowLike:root}),{once:true});
   else attach({documentLike:root.document,windowLike:root});
  }
- const api=Object.freeze({orbitStep,zoomStep,pinchStep,doubleTapZoom,attach});
+ const api=Object.freeze({orbitStep,zoomStep,pinchStep,doubleTapZoom,fitDistanceFor,attach});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root){root.AGSAInspection=api;start();}
 })(typeof window!=="undefined"?window:null);
