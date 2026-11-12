@@ -157,7 +157,11 @@ function exteriorLightStations(id,primitives=null){
    (x,y,z)=>x<-.35&&y> -1.1&&y<.35&&z>2.0&&z<4.1),
   sourceFixturePoint(primitives,[.70,-.60,2.93],
    (x,y,z)=>x>.35&&y> -1.1&&y<.35&&z>2.0&&z<4.1),
-  sourceExtreme(primitives,2,-1)
+  // The source tail's lowest/aft-most vertex was a LOWER FIN tip, so the
+  // previous aft light hung visibly below the helicopter in 360 view.
+  // Attach to a raised side/fin vertex near the actual tail rotor instead.
+  sourceFixturePoint(primitives,[0,.58,-5.3],
+   (x,y,z)=>Math.abs(x)<.90&&y>-.12&&y<1.35&&z< -2.6)
  ].map((p,i)=>p||[[-.71,-.04,3.52],[.71,-.04,3.52],[0,.87,-3.58]][i]);
 }
 function exteriorStrobeStation(id,primitives=null){
