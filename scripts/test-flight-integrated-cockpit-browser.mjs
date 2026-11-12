@@ -620,7 +620,11 @@ try{
     instrumentsAboveControls:panel.bottom<=controls.top+15,
     allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
     heights:screens.map(v=>Math.round(v.height)),
-    panelHeight:panel.height
+    panelHeight:panel.height,
+    panelBox:{top:panel.top,bottom:panel.bottom},
+    controlBox:{top:controls.top,bottom:controls.bottom},
+    photo:document.getElementById('cockpitStation').dataset.photoCockpit,
+    focus:document.body.dataset.cockpitFocus
    };
   });
   assert.ok(fit.horizontal&&fit.instrumentsAboveControls&&fit.allInside,
