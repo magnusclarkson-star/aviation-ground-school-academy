@@ -68,16 +68,38 @@
    viewport.dataset.modelLoading="off";
    $("aircraftInspectRenderMode").textContent="2D view";
   }
+  // The genuine F-22/F-35B meshes load on demand. Hide BOTH canvases
+  // while loading, so switching from another jet never exposes a stale frame
+  // or the old procedural aircraft. This does not affect the pilot controls.
+  function syncModelVisibility(){
+   const id=selected();
+   let phase="ready";
+   if(renderer&&usingGPU){
+    if(id==="c172")phase=renderer.realC172Status;
+    else if(id==="r44")phase=renderer.realR44Status;
+    else if(id==="f22"||id==="f35")
+     phase=renderer.prepareAirframe?.(id)??"fallback";
+   }
+   const loading=Boolean(usingGPU&&(phase==="loading"||phase==="idle"));
+   const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35")&&
+    phase==="fallback");
+   viewport.dataset.modelLoading=loading?"on":unavailable?"unavailable":"off";
+   canvas3D.hidden=!usingGPU||loading||unavailable;
+   canvas2D.hidden=usingGPU||loading||unavailable;
+   const statusText=loading?"Loading "+types.LABELS[id]+" 3D model…":
+    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":"";
+   const statusLabel=$("aircraftInspectLoading");
+   if(statusLabel&&statusLabel.textContent!==statusText)
+    statusLabel.textContent=statusText;
+   $("aircraftInspectRenderMode").textContent=unavailable?"3D unavailable":
+    loading?"Loading 3D":usingGPU?"3D view":"2D view";
+   return loading||unavailable;
+  }
   function render(now){
    if(modal.hidden)return;
    const id=selected();
    updateHeading();
-   // Wait for the chosen imported airframe instead of showing its old mesh.
-   const loading=Boolean(usingGPU&&renderer&&(
-    (id==="c172"&&renderer.realC172Status==="loading")||
-    (id==="r44"&&renderer.realR44Status==="loading")));
-   viewport.dataset.modelLoading=loading?"on":"off";
-   if(loading){
+   if(syncModelVisibility()){
     last=now;
     raf=win.requestAnimationFrame(frame);
     return;
@@ -126,11 +148,7 @@
     try{renderer=engine.createRenderer(canvas3D,{inspectionOnly:true,onLost:fallback})}catch{renderer=null}
    }
    usingGPU=Boolean(renderer);
-   viewport.dataset.modelLoading=usingGPU&&(
-    (selected()==="c172"&&renderer.realC172Status==="loading")||
-    (selected()==="r44"&&renderer.realR44Status==="loading"))?"on":"off";
-   canvas3D.hidden=!usingGPU;canvas2D.hidden=usingGPU;
-   $("aircraftInspectRenderMode").textContent=usingGPU?"3D view":"2D view";
+   syncModelVisibility();
    updateHeading();
    $("aircraftInspectClose").focus({preventScroll:true});
    raf=win.requestAnimationFrame(frame);
@@ -162,6 +180,7 @@
    }
    orbit={...orbit,distance:fitDistance()};
    updateHeading();
+   if(!modal.hidden)syncModelVisibility();
   });
   trigger.addEventListener("click",open);
   const closeButton=$("aircraftInspectClose");
@@ -264,7 +283,14 @@
     else if(!event.shiftKey&&doc.activeElement===last){event.preventDefault();first.focus()}
    }
   },true);
-  doc.addEventListener("agsa:aircraft-changed",()=>{if(!modal.hidden)updateHeading()});
+  // Update immediately when either aircraft dropdown changes; do not leave
+  // the previous 3D frame onscreen until the next animation tick.
+  select.addEventListener("change",()=>{
+   if(!modal.hidden){updateHeading();syncModelVisibility()}
+  });
+  doc.addEventListener("agsa:aircraft-changed",()=>{
+   if(!modal.hidden){updateHeading();syncModelVisibility()}
+  });
   return Object.freeze({open,close,reset,getOrbit:()=>({...orbit}),isOpen:()=>!modal.hidden});
  }
  function start(){

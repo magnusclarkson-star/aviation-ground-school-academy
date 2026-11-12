@@ -50,6 +50,7 @@ on:
       - 'flight-sim-inspection.css'
       - 'scripts/test-flight-inspection.mjs'
       - 'scripts/test-flight-inspection-browser.mjs'
+      - 'scripts/test-flight-inspection-fighter-loading-browser.mjs'
       - 'scripts/test-flight-sim-airframes.mjs'
       - 'scripts/test-flight-exterior-airframes-browser.mjs'
       - 'flight-sim-airport-detail.js'
@@ -144,6 +145,7 @@ on:
       - 'flight-sim-inspection.css'
       - 'scripts/test-flight-inspection.mjs'
       - 'scripts/test-flight-inspection-browser.mjs'
+      - 'scripts/test-flight-inspection-fighter-loading-browser.mjs'
       - 'scripts/test-flight-sim-airframes.mjs'
       - 'scripts/test-flight-exterior-airframes-browser.mjs'
       - 'flight-sim-airport-detail.js'
@@ -293,6 +295,7 @@ jobs:
           node scripts/test-flight-sim-real-airframes-browser.mjs
           node scripts/test-flight-exterior-airframes-browser.mjs
           node scripts/test-flight-inspection-browser.mjs
+          node scripts/test-flight-inspection-fighter-loading-browser.mjs
           node scripts/test-flight-sim-airport-detail-browser.mjs
           node scripts/test-flight-sim-aircraft-systems-browser.mjs
           node scripts/test-flight-sim-aerodynamics-browser.mjs
