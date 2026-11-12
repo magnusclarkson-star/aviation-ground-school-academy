@@ -3,13 +3,13 @@ import {readFileSync} from "node:fs";
 import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const F35=require("../flight-sim-f35-airframe.js");
-const asset=readFileSync(new URL("../assets/aircraft/f35-fguk-exterior.json",import.meta.url),"utf8");
+const asset=readFileSync(new URL("../assets/aircraft/f35b-fg-exterior.json",import.meta.url),"utf8");
 assert.ok(asset.length>=350000&&asset.length<600000,
  "source-derived exterior must stay within the mobile download budget");
 const model=F35.parseF35(asset);
-assert.equal(F35.FILE,"assets/aircraft/f35-fguk-exterior.json");
+assert.equal(F35.FILE,"assets/aircraft/f35b-fg-exterior.json");
 assert.equal(model.licence,"GPL-3.0");
-assert.equal(model.kind,"f35-fguk");
+assert.equal(model.kind,"f35b-fg");
 assert.ok(model.primitives.length>=38);
 assert.ok(model.triangles>20000&&model.triangles<30000);
 assert.ok(model.vertices>10000&&model.vertices<20000);
