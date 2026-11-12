@@ -683,14 +683,21 @@ function buildJetParts(Mesh,id){
 // differently scaled procedural jet dimensions. Keep these separate from
 // the licensed model itself so its wing/tail/control geometry is unchanged.
 function buildImportedGearDoors(Mesh,id){
- if(id!=="f22"&&id!=="f35")return null;
- const f35=id==="f35";
- const paint=f35?[.51,.57,.61]:[.62,.69,.73];
+ // Source Typhoon already has four original doors: never duplicate them.
+ if(id!=="f22"&&id!=="f35"&&id!=="su37")return null;
+ const f35=id==="f35",su37=id==="su37";
+ const paint=f35?[.51,.57,.61]:su37?[.56,.60,.64]:[.62,.69,.73];
  const lip=[.28,.34,.38],wellDark=[.075,.095,.115];
  // Source fuselage underside was inspected at all three gear stations:
  // F-35B nose minY=-1.40, main minY=-1.54; F-22 nose/main minY=-1.70.
  // Panels sit just beneath those surfaces rather than on the dorsal skin.
- const slots=f35?[
+ const slots=su37?[
+  // Su-37 genuine source skin: nose bay underside approximately -.08m,
+  // left/right main bay undersides approximately -.91m.
+  {name:"noseGear",x:0,y:-.14,z:2.50,w:.62,len:.94},
+  {name:"mainGearLeft",x:-1.66,y:-.96,z:-3.20,w:.77,len:1.08},
+  {name:"mainGearRight",x:1.66,y:-.96,z:-3.20,w:.77,len:1.08}
+ ]:f35?[
   {name:"noseGear",x:0,y:-1.45,z:3.75,w:.84,len:1.06},
   {name:"mainGearLeft",x:-1.75,y:-1.58,z:-1.72,w:.88,len:1.10},
   {name:"mainGearRight",x:1.75,y:-1.58,z:-1.72,w:.88,len:1.10}

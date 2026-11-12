@@ -97,7 +97,9 @@ assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"c172"),null,
  "source fighter doors must not alter the approved Cessna layout");
 assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"r44"),null,
  "source fighter doors must not alter the approved R44 layout");
-for(const id of ["f22","f35"]){
+assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"typhoon"),null,
+ "Typhoon uses its own GPL aircraft gear doors, never duplicated rectangles");
+for(const id of ["f22","f35","su37"]){
  const plan=Exterior.buildImportedGearDoors(Three.Mesh,id);
  assert.ok(plan&&plan.wells.triangles>=36,
   id+" needs three dark underside recesses");
@@ -108,6 +110,12 @@ for(const id of ["f22","f35"]){
  for(const slot of plan.slots){
   const panels=plan.doors.filter(p=>p.gearName===slot.name);
   assert.deepEqual(panels.map(p=>p.side),[-1,1]);
+  if(id==="su37"){
+   assert.ok(slot.y<-.10,"Su-37 bay liner remains under source skin");
+   assert.equal(Math.sign(slot.x),
+    slot.name==="mainGearLeft"?-1:slot.name==="mainGearRight"?1:0,
+    "Su-37 source gear doors must match real left/right labels");
+  }
   const closed=panels.map(p=>Exterior.importedGearDoorAngle(1.53,p.side));
   const open=panels.map(p=>Exterior.importedGearDoorAngle(0,p.side));
   assert.ok(closed.every(a=>Math.abs(a)<1e-8));

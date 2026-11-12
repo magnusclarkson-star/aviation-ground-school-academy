@@ -1463,7 +1463,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     isPainted:primitive.isPainted===true,
     partName:primitive.partName||null,
     partAxis:primitive.partAxis||0,
-    partPivot:primitive.partPivot||[0,0,0]};
+    partPivot:primitive.partPivot||[0,0,0],
+    gearDoorSide:primitive.gearDoorSide||0};
    objects.push(object);return object;
   };
   // A stalled asset request must not leave the cockpit or 360 viewer
@@ -1662,7 +1663,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    const shell=id==="c172"?buildImportedC172Shell():null;
    // Generate just six tiny hinged panels for each imported fighter.
    // They are omitted from both the procedural fallback and C172/R44.
-   const gearPlan=(id==="f22"||id==="f35")?
+   const gearPlan=(id==="f22"||id==="f35"||id==="su37")?
     Exterior.buildImportedGearDoors(Mesh,id):null;
    airframes[id]={
     importedGear:gearPlan?{
@@ -1906,7 +1907,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
-       const angle=animation?.[part.partName];
+       const angle=part.gearDoorSide?
+        Exterior.importedGearDoorAngle(animation?.[part.partName],part.gearDoorSide):
+        animation?.[part.partName];
        gl.uniform1f(uni.uPartAngle,Number.isFinite(angle)?angle:0);
       }
       gl.bindVertexArray(part.vao);

@@ -42,6 +42,29 @@ assert.deepEqual([...new Set(gear.map(p=>p.partName))].sort(),
  ["noseGear","mainGearLeft","mainGearRight"].sort());
 assert.ok(gear.every(p=>p.positions.every((v,i)=>i%3!==1||v<=-.449)),
  "imported Typhoon landing struts must never cross the upper fuselage plane");
+// These are genuine IAHM Typhoon source panels, not extra procedural doors.
+for(const suffix of ["1.L","2.L","1.R","2.R"]){
+ const name="geardoor"+suffix,doors=byName(name);
+ assert.ok(doors.length>0,"genuine Typhoon source door missing: "+name);
+ for(const door of doors){
+  const positive=suffix.endsWith(".L");
+  assert.equal(door.partName,positive?"mainGearLeft":"mainGearRight");
+  assert.equal(door.partAxis,3);
+  assert.equal(door.gearDoorSide,positive?1:-1);
+  const angle=(positive?1:-1)*1.10;
+  let before=0,after=0;
+  const v=door.positions;
+  for(let i=0;i<v.length;i+=3){
+   before+=v[i+1];
+   const dx=v[i]-door.partPivot[0],dy=v[i+1]-door.partPivot[1];
+   after+=door.partPivot[1]+dx*Math.sin(angle)+dy*Math.cos(angle);
+  }
+  const minimumDrop=name.startsWith("geardoor2")?.08:.12;
+  assert.ok((before-after)/(v.length/3)>minimumDrop,
+   name+" opens downward around the actual panel outer edge");
+ }
+}
+
 assert.throws(()=>T.parseTyphoon(asset.slice(0,100)),/source mesh size/);
 const tampered=JSON.parse(asset);tampered.parts[0].g[0][1][0]=999999;
 assert.throws(()=>T.parseTyphoon(JSON.stringify(tampered)),/source index invalid/);

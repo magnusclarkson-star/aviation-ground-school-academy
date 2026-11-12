@@ -45,6 +45,32 @@ assert.deepEqual([...new Set(gear.map(p=>p.partName))].sort(),
  ["noseGear","mainGearLeft","mainGearRight"].sort());
 assert.ok(gear.every(p=>p.positions.every((v,i)=>i%3!==1||v<=-.449)),
  "Su-37 landing gear must stay below its upper fuselage surface");
+// Original Su-37 LEFT is negative X, unlike the Typhoon source. Reversed
+// pivots previously folded the real undercarriage across the top fuselage.
+for(const [name,expectedSign] of [["mainGearLeft",-1],["mainGearRight",1]]){
+ const wheels=byName(name);
+ assert.ok(wheels.length>0);
+ for(const part of wheels){
+  const px=part.partPivot[0],py=part.partPivot[1];
+  assert.equal(Math.sign(px),expectedSign,
+   name+" inboard gear pivot must follow source geometry sign");
+  let beforeY=0,afterY=0,beforeX=0,afterX=0;
+  const ang=-Math.sign(px)*1.53,cs=Math.cos(ang),sn=Math.sin(ang);
+  const v=part.positions;
+  for(let i=0;i<v.length;i+=3){
+   const x=v[i],y=v[i+1],dx=x-px,dy=y-py;
+   const nx=px+dx*cs-dy*sn,ny=py+dx*sn+dy*cs;
+   beforeY+=y;afterY+=ny;beforeX+=Math.abs(x);afterX+=Math.abs(nx);
+   assert.ok(ny<.15,"retracted Su-37 bogie must not cross dorsal skin");
+  }
+  const count=v.length/3;
+  assert.ok((afterY-beforeY)/count>.30,
+   name+" retracts upward, not through aircraft fuselage");
+  assert.ok((beforeX-afterX)/count>.50,
+   name+" moves toward the centreline");
+ }
+}
+
 assert.throws(()=>S.parseSu37(asset.slice(0,100)),/source mesh length/);
 const tampered=JSON.parse(asset);tampered.parts[0].g[0][1][0]=999999;
 assert.throws(()=>S.parseSu37(JSON.stringify(tampered)),/triangle index invalid/);
