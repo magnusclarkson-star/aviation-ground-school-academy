@@ -7,6 +7,7 @@ const M=require("../flight-sim-model.js");
 const PadDetail=require("../flight-sim-helipad-detail.js");
 const Scenery=require("../flight-sim-scenery.js");
 const Countryside=require("../flight-sim-countryside.js");
+const Clouds=require("../flight-sim-clouds.js");
 
 // Regression guard: the GPU lighting must follow aircraft attitude and hinge
 // rotation, not illuminate the fixed untransformed original mesh normals.
@@ -45,10 +46,60 @@ for(const mesh of [runway,pad]){
  assert.equal(mesh.vertices,mesh.triangles*3);
  assert.ok(mesh.positions.some(v=>v>4500),"terrain has far depth");
  assert.ok(mesh.positions.some(v=>v< -1300),"terrain spreads to both sides");
- assert.ok(mesh.positions.some(v=>v>700),"mountain and cloud elevations");
+ assert.ok(mesh.positions.some(v=>v>170),"distant 3D terrain rises above the landing field");
  assert.equal(mesh.colors.length,mesh.positions.length);
  assert.equal(mesh.normals.length,mesh.positions.length);
 }
+
+// Sky geometry stays separate from static runways/helipad, and it is
+// translated by one GPU uniform as simulated weather changes: no allocations
+// or world-mesh regeneration per render frame.
+assert.equal(Clouds.clouds.length,35);
+assert.equal(new Set(Clouds.clouds.map(c=>c.id)).size,35);
+assert.ok(Object.isFrozen(Clouds.clouds));
+const cloudLayer=Three.buildCloudLayer();
+assert.ok(cloudLayer.triangles>=450&&cloudLayer.triangles<=800,
+ "small distinct sky mesh respects Android GPU triangle budget");
+assert.ok(cloudLayer.positions.some(v=>v>700),
+ "cloud height resides in the sky, not embedded in runway terrain");
+assert.ok(cloudLayer.positions.every(Number.isFinite));
+assert.equal(cloudLayer.colors.length,cloudLayer.positions.length);
+assert.deepEqual(Clouds.drift(10,0,0),{x:11,z:4.2},
+ "calm simulated air still moves background cloud weather gently");
+const crosswindCloud=Clouds.drift(10,4,-3);
+assert.ok(Math.abs(crosswindCloud.x-39.8)<1e-10&&
+ Math.abs(crosswindCloud.z+17.4)<1e-10,
+ "wind controls the world-anchored direction of sky motion");
+assert.deepEqual(Clouds.drift(1000,4,-3,true),{x:0,z:0},
+ "reduced motion freezes synthetic cloud animation without stopping flight");
+assert.deepEqual(Clouds.drift(NaN,Infinity,-Infinity),{x:0,z:0});
+for(const id of ["c172","r44"]){
+ const nav=Three.buildExteriorPositionLights(id);
+ const beacon=Three.buildExteriorStrobe(id);
+ assert.equal(nav.triangles,72,
+  id+" has left red, right green, and tail white exterior light housings");
+ assert.equal(beacon.triangles,12,
+  id+" has one low-poly white external beacon");
+ assert.ok(nav.positions.every(Number.isFinite)&&beacon.positions.every(Number.isFinite));
+ const xs=Array.from(nav.positions).filter((_,i)=>i%3===0);
+ assert.ok(Math.min(...xs)<0&&Math.max(...xs)>0,
+  id+" side marker lights belong on opposite sides of its own fuselage");
+ const colors=Array.from(nav.colors);
+ let red=false,green=false,white=false;
+ for(let i=0;i<colors.length;i+=3){
+  const [r,g,b]=colors.slice(i,i+3);
+  if(r>.8&&g<.40&&b<.40)red=true;
+  if(g>.80&&r<.45&&b<.65)green=true;
+  if(r>.8&&g>.8&&b>.7)white=true;
+ }
+ assert.ok(red&&green&&white,id+" nav light colours match port, starboard and rear");
+}
+assert.throws(()=>Three.buildExteriorPositionLights("f22"),/require a trainer or R44/);
+assert.equal(Three.exteriorStrobePulse(0),1);
+assert.equal(Three.exteriorStrobePulse(.12),0);
+assert.equal(Three.exteriorStrobePulse(.20),1);
+assert.equal(Three.exteriorStrobePulse(.70),0);
+assert.equal(Three.exteriorStrobePulse(120,true),.38);
 
 assert.deepEqual(PadDetail.rings,[9,21],"the 3D and fallback 2D reference rings share the same radii");
 assert.equal(PadDetail.pylons.length,6);

@@ -30,6 +30,7 @@ on:
       - 'scripts/test-flight-sim-environment.mjs'
       - 'scripts/test-flight-sim-environment-browser.mjs'
       - 'flight-sim-haptics.js'
+      - 'flight-sim-clouds.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
       - 'flight-sim-sw.js'
@@ -123,6 +124,7 @@ on:
       - 'scripts/test-flight-sim-environment.mjs'
       - 'scripts/test-flight-sim-environment-browser.mjs'
       - 'flight-sim-haptics.js'
+      - 'flight-sim-clouds.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-3d.js'
       - 'flight-sim-sw.js'
@@ -212,6 +214,7 @@ jobs:
           node --check flight-sim-instructor-voice.js
           node --check flight-sim-environment.js
           node --check flight-sim-haptics.js
+          node --check flight-sim-clouds.js
           node --check flight-sim-scenery.js
           node --check flight-sim-3d.js
           node --check flight-sim-sw.js
