@@ -132,8 +132,9 @@ for(const [id,source] of Object.entries(sourceModels)){
  assert.ok(Three.buildExteriorPositionLights(id,source.primitives).triangles===72);
  assert.ok(Three.buildExteriorStrobe(id,source.primitives).triangles===12);
 }
-assert.ok(Three.exteriorLightStations("r44",sourceModels.r44.primitives)[2][2]>-5,
- "R44 rear nav light must not use old -8.19 m tailboom when imported model ends much sooner");
+const r44Rear=Three.exteriorLightStations("r44",sourceModels.r44.primitives)[2];
+assert.ok(Number.isFinite(r44Rear[2])&&r44Rear[2]>=sourceModels.r44.bounds[4],
+ "R44 rear marker must be on the actual loaded tail geometry, not past its bounds");
 
 assert.equal(Three.exteriorStrobePulse(0),1);
 assert.equal(Three.exteriorStrobePulse(.12),0);
