@@ -429,7 +429,8 @@ function step(state,input,seconds){
  return {state,events};
 }
 const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,
- shapeRotorCyclic,shapeRotorCollective,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+ shapeRotorCyclic,shapeRotorCollective,rotorHorizontalResponse,
+ flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
