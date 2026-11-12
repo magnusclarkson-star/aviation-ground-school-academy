@@ -6,6 +6,7 @@
  const wrap=degrees=>((degrees%360)+360)%360;
  function orbitStep(orbit,deltaX,deltaY){
   return Object.freeze({
+   ...orbit,
    azimuth:wrap((orbit?.azimuth??0)+deltaX*.55),
    elevation:clamp((orbit?.elevation??28)+deltaY*.38,limits.minElevation,limits.maxElevation),
    distance:clamp(orbit?.distance??30,limits.minDistance,limits.maxDistance)
@@ -24,8 +25,10 @@
  // Double-tap toggles a useful close view while preserving the exact
  // aircraft bearing and elevation. Fitted size returns to 100% on second use.
  function doubleTapZoom(orbit,far=18){
-  const close=far<=12?7.6:9;
-  return Object.freeze({...orbit,distance:orbit.distance<far*.86?far:close});
+  const fitted=orbit.interior?3:far;
+  const close=orbit.interior?1.8:far<=12?7.6:9;
+  return Object.freeze({...orbit,
+   distance:orbit.distance<fitted*.86?fitted:close});
  }
  function separation(points){
   const [a,b]=Array.from(points.values());
