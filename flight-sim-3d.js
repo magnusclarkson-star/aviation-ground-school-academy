@@ -43,6 +43,9 @@ const F22Airframe=root?.AGSAF22Airframe||
 const F35Airframe=root?.AGSAF35Airframe||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-f35-airframe.js"):null);
+const Su37Airframe=root?.AGSASu37Airframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-su37-airframe.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -1403,6 +1406,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let realR44=null,realR44Status="loading";
  let realF22=null,realF22Status="idle";
  let realF35=null,realF35Status="idle";
+ let realSu37=null,realSu37Status="idle";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -1598,6 +1602,22 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(typeof console!=="undefined")console.warn("F-35B geometry fallback:",error);
    });
   }
+  // Only load the larger, authentic Su-37 mesh when a Su-37 exterior or
+  // inspection view is selected; leave approved C172/R44 startup unchanged.
+  function importSu37(){
+   if(realSu37Status!=="idle")return;
+   if(!Su37Airframe){realSu37Status="fallback";return;}
+   realSu37Status="loading";
+   void boundedModelLoad(Su37Airframe.ensureSu37()).then(model=>{
+    if(disposed||lost)return;
+    realSu37={primitives:model.primitives.map(uploadImported),images:[],
+     vertices:model.vertices,triangles:model.triangles,kind:"fguk-su37"};
+    realSu37Status="imported";
+   }).catch(error=>{
+    realSu37Status="fallback";
+    if(typeof console!=="undefined")console.warn("Su-37 geometry fallback:",error);
+   });
+  }
   // This is deliberately non-blocking: controls and simulated flight start
   // immediately with the legacy model, then swap to genuine C172 geometry.
   void importC172();
@@ -1778,14 +1798,16 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const selectedJet=Exterior.normalize(airframeId||state.mode);
     if(selectedJet==="f22")importF22();
     if(selectedJet==="f35")importF35();
+    if(selectedJet==="su37")importSu37();
    }
    // A direct inspector draw must never flash the obsolete procedurally
    // illustrated F-22/F-35B while source meshes are still being fetched.
    // The UI also hides both canvases behind its loading indicator.
    if(inspectionOnly&&view==="inspect"){
     const choice=Exterior.normalize(airframeId||state.mode);
-    if(choice==="f22"||choice==="f35"){
-     const status=choice==="f22"?realF22Status:realF35Status;
+    if(choice==="f22"||choice==="f35"||choice==="su37"){
+     const status=choice==="f22"?realF22Status:
+      choice==="f35"?realF35Status:realSu37Status;
      if(status!=="imported"){
       if(canvas.dataset)canvas.dataset.airframeSource=
        status==="fallback"?"unavailable":"loading";
@@ -1816,11 +1838,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     gl.uniform1f(uni.uActor,1);
     const realModel=id==="f35"?realF35:
      (id==="c172"?realC172:id==="r44"?realR44:
-     id==="f22"?realF22:null);
+     id==="f22"?realF22:id==="su37"?realSu37:null);
     const isMolen=id==="r44"&&realModel?.kind==="molen";
     const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
      (id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":
+      id==="su37"?"gpl-su37-fguk":
       isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):"procedural";
     if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
@@ -1843,7 +1866,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
        const angle=animation?.[part.partName];
@@ -1851,7 +1874,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,0);
        gl.uniform1f(uni.uPartAngle,0);
        gl.uniform3fv(uni.uPartPivot,[0,0,0]);
@@ -1891,7 +1914,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uOpacity,.26);
       gl.bindVertexArray(model.shellGlass.vao);
       gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
-     }else if(id==="f22"||id==="f35"){
+     }else if(id==="f22"||id==="f35"||id==="su37"){
       // The genuine FlightGear airframe keeps its opaque skin and correctly
       // hinged surfaces. Render full-size gear with depth writes while
       // deployed and rotating; conceal it only at the very end of the fold
@@ -1986,6 +2009,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const animatedParts=isMolen?[]:
      id==="f22"&&realModel?[]:
      id==="f35"&&realModel?[]:
+     id==="su37"&&realModel?[]:
      exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
@@ -2081,12 +2105,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    prepareAirframe(id){
     if(id==="f22"){importF22();return realF22Status}
     if(id==="f35"){importF35();return realF35Status}
+    if(id==="su37"){importSu37();return realSu37Status}
     return null;
    },
    get realC172Status(){return realC172Status},
    get realR44Status(){return realR44Status},
    get realF22Status(){return realF22Status},
    get realF35Status(){return realF35Status},
+   get realSu37Status(){return realSu37Status},
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};
