@@ -176,13 +176,18 @@ function exteriorStrobeStation(id,primitives=null){
 }
 function buildExteriorPositionLights(id,primitives=null){
  const mesh=new Mesh();
- const dark=rgb(49,57,60),red=rgb(249,65,58),
-  green=rgb(81,246,120),whiteLight=rgb(249,248,222);
+ const red=rgb(249,65,58),green=rgb(81,246,120),
+  whiteLight=rgb(249,248,222);
  const stations=exteriorLightStations(id,primitives);
+ // A large opaque black fixture looked like a floating crate in the 360°
+ // helicopter screenshot even when anchored to the source tail surface.
+ // Keep the actual coloured lamp lens small, bright and half sunk into
+ // the original aircraft skin; no second, oversized decorative housing.
+ const radius=id==="r44"?.06:.085;
  for(let i=0;i<stations.length;i++){
   const [x,y,z]=stations[i],color=[red,green,whiteLight][i];
-  mesh.box(x-.12,y-.095,z-.13,.24,.19,.26,dark);
-  mesh.box(x-.090,y-.062,z-.14,.18,.13,.28,color,tint(color,1.08));
+  mesh.box(x-radius,y-radius,z-radius,2*radius,2*radius,2*radius,
+   color,tint(color,1.12));
  }
  return mesh.finish();
 }
