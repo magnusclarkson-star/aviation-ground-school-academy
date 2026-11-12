@@ -78,8 +78,8 @@ assert.deepEqual(Clouds.drift(NaN,Infinity,-Infinity),{x:0,z:0});
 for(const id of ["c172","r44"]){
  const nav=Three.buildExteriorPositionLights(id);
  const beacon=Three.buildExteriorStrobe(id);
- assert.equal(nav.triangles,72,
-  id+" has left red, right green, and tail white exterior light housings");
+ assert.equal(nav.triangles,36,
+  id+" has three compact red, green, and white exterior light lenses");
  assert.equal(beacon.triangles,12,
   id+" has one low-poly white external beacon");
  assert.ok(nav.positions.every(Number.isFinite)&&beacon.positions.every(Number.isFinite));
@@ -129,7 +129,8 @@ for(const [id,source] of Object.entries(sourceModels)){
  assert.ok(attached(strobe),id+" beacon must be attached to imported cabin, not floating above it");
  assert.ok(stations[2][2]>=source.bounds[4]-.001&&stations[2][2]<=source.bounds[5]+.001,
   id+" rear marker must remain inside real aft fuselage bounds");
- assert.ok(Three.buildExteriorPositionLights(id,source.primitives).triangles===72);
+ assert.equal(Three.buildExteriorPositionLights(id,source.primitives).triangles,36,
+  id+" imported surface uses one compact 12-triangle lens at each of three stations");
  assert.ok(Three.buildExteriorStrobe(id,source.primitives).triangles===12);
 }
 const r44Rear=Three.exteriorLightStations("r44",sourceModels.r44.primitives)[2];
