@@ -2024,7 +2024,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     for(const part of animatedParts){
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
-     const angle=animation?.[part.name];
+     // Procedural jet wheel doors follow the exact same retractable gear
+     // channel as the associated struts. Their opposite hinges swing down
+     // while extended and close at stow. Imported F-22/F-35B keep their
+     // own dedicated source-mesh door path above, never double-drawn.
+     const angle=part.gearName?
+      Exterior.importedGearDoorAngle(animation?.[part.gearName],
+       part.doorSide):animation?.[part.name];
      gl.uniform1f(uni.uPartAngle,Number.isFinite(angle)?angle:0);
      gl.bindVertexArray(part.gpu.vao);
      gl.drawArrays(gl.TRIANGLES,0,part.gpu.count);
