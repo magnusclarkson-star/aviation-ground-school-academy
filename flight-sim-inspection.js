@@ -86,12 +86,12 @@
    if(renderer&&usingGPU){
     if(id==="c172")phase=renderer.realC172Status;
     else if(id==="r44")phase=renderer.realR44Status;
-    else if(id==="f22"||id==="f35")
+    else if(id==="f22"||id==="f35"||id==="su37")
      phase=renderer.prepareAirframe?.(id)??"fallback";
    }
    const loading=Boolean(usingGPU&&(phase==="loading"||phase==="idle"));
-   const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35")&&
-    phase==="fallback");
+   const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35"||
+    id==="su37")&&phase==="fallback");
    // A previously rendered frame remains on the same canvas until draw()
    // completes. Hide it immediately when ANY of the seven models changes.
    // The next available frame is drawn while hidden, then revealed.

@@ -57,7 +57,7 @@ assert.ok(readFileSync(new URL("../assets/aircraft/F22-ATTRIBUTION.md",import.me
 assert.ok(readFileSync(new URL("../assets/aircraft/R44-GPL-2.0-COPYING.txt",import.meta.url),"utf8")
  .includes("GNU GENERAL PUBLIC LICENSE"));
 const renderer=readFileSync(new URL("../flight-sim-3d.js",import.meta.url),"utf8");
-assert.match(renderer,/id==="f22"\?realF22:null/);
+assert.match(renderer,/id==="f22"\?realF22:/);
 assert.match(renderer,/id==="f22"&&realModel\?\[\]/,
  "do not layer incorrect procedural fighter parts over source geometry");
 assert.match(renderer,/id==="f22"\?"gpl-f22-fguk"/);

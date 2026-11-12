@@ -69,6 +69,8 @@ jobs:
       - run: node scripts/test-flight-sim-3d.mjs
       - run: node scripts/test-flight-sim-f22.mjs
       - run: node scripts/test-flight-sim-f35.mjs
+      - run: node scripts/test-flight-sim-su37.mjs
+      - run: node --check flight-sim-su37-airframe.js
       - run: node scripts/test-flight-sim-fighter-gear-rig.mjs
       - run: node --check flight-sim-aircraft-systems.js
       - run: node scripts/test-flight-sim-aircraft-systems.mjs

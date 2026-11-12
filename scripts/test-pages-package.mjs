@@ -28,6 +28,8 @@ for(const [asset,minBytes] of [
  ["assets/aircraft/f35b-fg-exterior.json",350000],
  ["assets/aircraft/F35-ATTRIBUTION.md",500],
  ["assets/aircraft/F35-GPL-3.0.txt",30000],
+ ["assets/aircraft/su37-fguk-exterior.json",350000],
+ ["assets/aircraft/SU37-ATTRIBUTION.md",300],
  ["assets/aircraft/R44-GPL-2.0-COPYING.txt",1000]
 ]){
  const details=await stat(path.join(output,asset));

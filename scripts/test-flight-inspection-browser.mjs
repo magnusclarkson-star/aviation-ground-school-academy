@@ -78,9 +78,9 @@ try{
    (await desktop.evaluate(id=>window.AGSAExteriorAirframes.LABELS[id],id)));
   await desktop.waitForFunction(()=>document.getElementById(
    "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
-  if(id==="f22"||id==="f35")assert.equal(await desktop.evaluate(()=>
+  if(id==="f22"||id==="f35"||id==="su37")assert.equal(await desktop.evaluate(()=>
    document.querySelector("#aircraftInspectCanvas3D").dataset.airframeSource),
-   id==="f22"?"gpl-f22-fguk":"gpl-f35b-flightgear",
+   id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":"gpl-su37-fguk",
    "the 360 inspector must display authentic imported "+id+" geometry");
   await wait(desktop);
   const png=await shot(desktop);
@@ -139,6 +139,7 @@ try{
      return false;
     if(target==="f22")return canvas.dataset.airframeSource==="gpl-f22-fguk";
     if(target==="f35")return canvas.dataset.airframeSource==="gpl-f35b-flightgear";
+    if(target==="su37")return canvas.dataset.airframeSource==="gpl-su37-fguk";
     if(target==="c172"||target==="r44")
      return canvas.dataset.airframeSource!=="procedural";
     return canvas.dataset.airframeSource==="procedural";
