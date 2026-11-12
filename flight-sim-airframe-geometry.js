@@ -634,7 +634,56 @@ function buildJetParts(Mesh,id){
  }
  return props;
 }
-const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts});
+// Lightweight wheel-well liners and hinged gear-door panels for the genuine
+// imported FlightGear fighters. Coordinates are source-mesh metres, NOT the
+// differently scaled procedural jet dimensions. Keep these separate from
+// the licensed model itself so its wing/tail/control geometry is unchanged.
+function buildImportedGearDoors(Mesh,id){
+ if(id!=="f22"&&id!=="f35")return null;
+ const f35=id==="f35";
+ const paint=f35?[.51,.57,.61]:[.62,.69,.73];
+ const lip=[.28,.34,.38],wellDark=[.075,.095,.115];
+ // Source fuselage underside was inspected at all three gear stations:
+ // F-35B nose minY=-1.40, main minY=-1.54; F-22 nose/main minY=-1.70.
+ // Panels sit just beneath those surfaces rather than on the dorsal skin.
+ const slots=f35?[
+  {name:"noseGear",x:0,y:-1.45,z:3.75,w:.84,len:1.06},
+  {name:"mainGearLeft",x:-1.75,y:-1.58,z:-1.72,w:.88,len:1.10},
+  {name:"mainGearRight",x:1.75,y:-1.58,z:-1.72,w:.88,len:1.10}
+ ]:[
+  {name:"noseGear",x:0,y:-1.75,z:3.65,w:.78,len:.84},
+  {name:"mainGearLeft",x:1.43,y:-1.75,z:-2.41,w:.77,len:.96},
+  {name:"mainGearRight",x:-1.43,y:-1.75,z:-2.41,w:.77,len:.96}
+ ];
+ const wells=new Mesh(),doors=[];
+ for(const slot of slots){
+  const z0=slot.z-slot.len/2;
+  // Recess remains exposed while the two doors hang open. A slim rim shows
+  // the outline but does not intersect the original source wheels.
+  wells.box(slot.x-slot.w/2,slot.y+.012,z0,slot.w,.012,slot.len,wellDark);
+  for(const side of [-1,1]){
+   const outerX=slot.x+side*slot.w/2;
+   const width=slot.w/2-.015;
+   const x0=side>0?slot.x+.009:outerX+.006;
+   const m=new Mesh();
+   m.box(x0,slot.y-.030,z0+.035,width,.026,slot.len-.070,paint);
+   // The darker trailing strip remains part of the same rigid panel.
+   m.box(x0,slot.y-.032,z0+slot.len-.092,width,.029,.040,lip);
+   doors.push({gearName:slot.name,side,pivot:[outerX,slot.y,slot.z],
+    mesh:m.finish()});
+  }
+ }
+ return {wells:wells.finish(),doors,slots};
+}
+function importedGearDoorAngle(gearAngle,side){
+ // Doors remain open while the wheels descend, then close in the final
+ // portion of retraction. Smoothstep prevents a visible last-frame snap.
+ const progress=Math.max(0,Math.min(1,(Number(gearAngle)||0)/1.53));
+ const t=Math.max(0,Math.min(1,(progress-.48)/.48));
+ const closed=t*t*(3-2*t);
+ return Math.sign(side)*1.10*(1-closed);
+}
+const api=Object.freeze({IDS,LABELS,SCALE,normalize,populate,buildJetParts,buildImportedGearDoors,importedGearDoorAngle});
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAExteriorAirframes=api;
 })(typeof window!=="undefined"?window:null);
