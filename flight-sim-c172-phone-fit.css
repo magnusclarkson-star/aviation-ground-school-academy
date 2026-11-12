@@ -130,6 +130,16 @@
   width:100%!important;max-width:215px!important;
   height:100%!important;min-height:0!important;
  }
+ /* Inline SVG kept its original 270×190 aspect ratio at a CSS width of
+    215px, rendering 151px high OUTSIDE a 55px touch area and disappearing
+    behind the pedals. Scale only its drawing into the allocated space;
+    the existing full-size drag target and other controls are unchanged. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain #flightGrip .hardware-yoke{
+  display:block!important;
+  transform-origin:top center!important;
+  transform:translateY(-4px) scale(.75,.36)!important;
+  pointer-events:none!important;
+ }
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .control-panel>.rudder-deck{
   grid-column:2!important;grid-row:2!important;
   justify-self:center!important;align-self:end!important;
