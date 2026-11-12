@@ -1887,7 +1887,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      model.authenticRotorSweep:model.rotorSweep;
     const tailRotorSweep=isMolen?null:isImportedRotorcraft?
      model.authenticTailRotorSweep:model.tailRotorSweep;
-    const animatedParts=isMolen||id==="f22"&&realModel?[]:
+    const animatedParts=isMolen?[]:
+     id==="f22"&&realModel?[]:
      exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
