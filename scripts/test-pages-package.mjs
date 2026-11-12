@@ -23,6 +23,8 @@ for(const [asset,minBytes] of [
  ["assets/aircraft/r44-molen-raven-ii.glb",500000],
  ["assets/aircraft/c172-molen-skyhawk.glb",1000000],
  ["assets/aircraft/MOLEN-LICENSE.txt",100],
+ ["assets/aircraft/f22-fguk-exterior.json",500000],
+ ["assets/aircraft/F22-ATTRIBUTION.md",300],
  ["assets/aircraft/R44-GPL-2.0-COPYING.txt",1000]
 ]){
  const details=await stat(path.join(output,asset));
