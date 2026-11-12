@@ -665,7 +665,7 @@ try{
   });
   const horizonGood=id==='c172'?
    fit.forwardHeight>=180&&fit.forwardHeight<=235:
-   fit.forwardHeight>=85&&fit.forwardHeight<=innerHeight+2;
+   fit.forwardHeight>=85&&fit.forwardHeight<=fit.viewport+2;
   assert.ok(horizonGood,
    id+' approved landscape horizon height stays usable '+JSON.stringify(fit));
   assert.ok(fit.focus==='on'&&fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentSeparated,
