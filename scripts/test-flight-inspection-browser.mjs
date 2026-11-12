@@ -77,9 +77,6 @@ try{
    (await desktop.evaluate(id=>window.AGSAExteriorAirframes.LABELS[id],id)));
   await desktop.waitForFunction(()=>document.getElementById(
    "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
-  if(id==="f22"||id==="f35")assert.equal(
-   await desktop.locator("#aircraftInspectCanvas3D").getAttribute("data-airframe-source"),
-   null,"canvas source must be checked through dataset, not a DOM attribute");
   if(id==="f22"||id==="f35")assert.equal(await desktop.evaluate(()=>
    document.querySelector("#aircraftInspectCanvas3D").dataset.airframeSource),
    id==="f22"?"gpl-f22-fguk":"gpl-f35b-flightgear",
