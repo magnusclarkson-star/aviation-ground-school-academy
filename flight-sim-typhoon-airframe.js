@@ -82,6 +82,11 @@ function parseTyphoon(text){
   }
   const motion=partMotion(part.name);
   for(const group of part.g){
+   // Three 1m helper cubes from the upstream "details" AC3D material
+   // are centred outside both wingtips and above the vertical tail.
+   // They are modelling markers, not airframe surfaces; suppress only
+   // these exact material groups so legitimate panel details survive.
+   if(part.name==="details"&&[31,32,33].includes(group[0]))continue;
    if(!Array.isArray(group)||group.length!==2||
       !Number.isInteger(group[0])||!data.materials[group[0]]||
       !Array.isArray(group[1])||group[1].length%3||

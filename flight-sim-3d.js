@@ -2186,7 +2186,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      model.authenticRotorSweep:model.rotorSweep;
     const tailRotorSweep=isMolen?null:isImportedRotorcraft?
      model.authenticTailRotorSweep:model.tailRotorSweep;
-    const animatedParts=isMolen||pendingSourceJet?[]:
+    const interiorOnly=view==="inspect"&&orbit.interior===true;
+    const animatedParts=interiorOnly||isMolen||pendingSourceJet?[]:
      id==="f22"&&realModel?[]:
      id==="f35"&&realModel?[]:
      id==="su37"&&realModel?[]:
@@ -2194,7 +2195,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
-    if(rotorSweep&&sweepOpacity>0){
+    if(!interiorOnly&&rotorSweep&&sweepOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,sweepOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -2206,7 +2207,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }
     const tailOpacity=Number.isFinite(animation?.tailBlurOpacity)?
      limit(animation.tailBlurOpacity,0,.20):0;
-    if(tailRotorSweep&&tailOpacity>0){
+    if(!interiorOnly&&tailRotorSweep&&tailOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,tailOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -2220,7 +2221,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // actual blades remain distinct at startup and low power.
     const propOpacity=Number.isFinite(animation?.propBlurOpacity)?
      limit(animation.propBlurOpacity,0,.16):0;
-    if(model.propSweep&&!realModel&&!pendingSourceJet&&propOpacity>0){
+    if(!interiorOnly&&model.propSweep&&!realModel&&!pendingSourceJet&&propOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,propOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -2247,7 +2248,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // Imported assets use fixtures mounted to their ACTUAL parsed surface
     // vertices; fallback models retain their own procedural light stations.
     const lightingModel=realModel?.positionLights?realModel:model;
-    if(view!=="cockpit"&&!pendingSourceJet&&lightingModel.positionLights){
+    if(!interiorOnly&&view!=="cockpit"&&!pendingSourceJet&&lightingModel.positionLights){
      // Three fixed, correctly sided colour references follow the exact
      // aircraft transform through chase, side, top and 360-degree inspection.
      // They are never drawn into the approved pilot-facing cockpit controls.
