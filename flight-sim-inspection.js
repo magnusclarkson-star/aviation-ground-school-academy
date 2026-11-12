@@ -95,13 +95,19 @@
    // A previously rendered frame remains on the same canvas until draw()
    // completes. Hide it immediately when ANY of the seven models changes.
    // The next available frame is drawn while hidden, then revealed.
-   const stale=lastRenderedId!==id,pending=loading||stale;
+   const stale=lastRenderedId!==id,pending=loading||(stale&&usingGPU);
+   // On Canvas 2D-only phones, keep the already approved 2D controls and
+   // canvas visible, but immediately erase the prior aircraft silhouette.
+   if(stale&&!usingGPU){
+    ctx.fillStyle="#162a37";
+    ctx.fillRect(0,0,canvas2D.width,canvas2D.height);
+   }
    viewport.dataset.modelLoading=unavailable?"unavailable":pending?"on":"off";
    canvas3D.hidden=!usingGPU||pending||unavailable;
-   canvas2D.hidden=usingGPU||pending||unavailable;
+   canvas2D.hidden=usingGPU||unavailable;
    const statusText=loading?"Loading "+types.LABELS[id]+" 3D model…":
     unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":
-    stale?"Rendering "+types.LABELS[id]+"…":"";
+    pending?"Rendering "+types.LABELS[id]+"…":"";
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
