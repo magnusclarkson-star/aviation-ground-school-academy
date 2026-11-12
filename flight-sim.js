@@ -232,6 +232,11 @@ const r44Voice=RV.create({
 document.addEventListener("agsa:r44-voice-toggle",()=>{
  if(state.mode==="helicopter")r44Voice.toggle();
 });
+// No extra R44 cockpit button: the existing More menu contains a reachable
+// instructor toggle even though the bulky lesson strip stays hidden.
+$("r44VoiceMoreToggle")?.addEventListener("click",()=>{
+ document.dispatchEvent(new CustomEvent("agsa:r44-voice-toggle"));
+});
 document.addEventListener("agsa:aircraft-changed",()=>r44Voice.syncUI());
 document.addEventListener("agsa:aircraft-changed",()=>syncAxisReadoutsLocation());
 // A 360-degree aircraft inspection is not an instruction to play ATC.
