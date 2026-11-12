@@ -67,7 +67,7 @@ function run(windId){
   else if(leg==="crosswind"&&state.xM>=555)leg="downwind";
   else if(leg==="downwind"&&state.zM<=-1300)leg="base";
   // Trigger the same advance turn indicated by the live instructor.
-  else if(leg==="base"&&Circuit.status(circuit,state)?.turnNow)leg="final";
+  else if(leg==="base"&&circuit.stage==="base"&&Circuit.status(circuit,state)?.turnNow)leg="final";
   if(leg!==lastLeg){points[leg]={x:Math.round(state.xM),z:Math.round(state.zM),
    alt:Math.round(state.altitudeM),heading:Math.round(state.headingDeg),
    time:Math.round(state.time)};lastLeg=leg;}
