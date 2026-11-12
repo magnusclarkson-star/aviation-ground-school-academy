@@ -132,3 +132,21 @@ body[data-aircraft-inspect="on"]{overflow:hidden}
  display:flex;inset:auto 4px 4px;min-height:34px;padding:5px 9px;
  background:#233e50;color:#fff;border-radius:6px;font-size:11px
 }
+
+/* Authored CC-BY model viewer replaces the procedural F/A-18 only in
+   exterior inspection. Other aircraft retain the existing 3D renderer. */
+.aircraft-inspect-superhornet[hidden]{display:none!important}
+.aircraft-inspect-superhornet{
+ position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;
+ background:#101f2c;touch-action:auto;cursor:auto
+}
+.aircraft-inspect-superhornet iframe{
+ flex:1 1 auto;display:block;width:100%;min-height:0;
+ border:0;background:#203344;touch-action:auto
+}
+.aircraft-inspect-superhornet-credit{
+ flex:0 0 auto;padding:4px 8px;min-height:24px;text-align:center;
+ background:#0a1721;color:#e0ebee;font:600 10px/1.4 system-ui,sans-serif
+}
+.aircraft-inspect-superhornet-credit a{color:#bce7ff;text-decoration:underline}
+.aircraft-inspect-controls button:disabled{opacity:.42;cursor:not-allowed}
