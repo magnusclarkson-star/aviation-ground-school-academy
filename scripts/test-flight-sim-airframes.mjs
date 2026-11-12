@@ -171,8 +171,10 @@ assert.ok(railEnds.length>=6,"both R44 landing skids curl upward at their forwar
 for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const parts=T.buildMovingParts(id);
  assert.deepEqual(parts.map(x=>x.name),[
-  "leftAileron","leftFlap","elevatorLeft","rightAileron",
-  "rightFlap","elevatorRight",...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"]),
+  "leftAileron","leftFlap",...(id==="su37"?["canardLeft"]:[]),
+  "elevatorLeft","rightAileron","rightFlap",
+  ...(id==="su37"?["canardRight"]:[]),"elevatorRight",
+  ...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"]),
   "noseGear","mainGearLeft","mainGearRight"
  ],id+" has animated control surfaces and three retractable gear assemblies");
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
