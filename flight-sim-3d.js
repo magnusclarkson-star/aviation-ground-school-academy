@@ -1777,8 +1777,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const realModel=id==="c172"?realC172:id==="r44"?realR44:
-     id==="f22"?realF22:id==="f35"?realF35:null;
+    const realModel=id==="f35"?realF35:
+     (id==="c172"?realC172:id==="r44"?realR44:
+     id==="f22"?realF22:null);
     const isMolen=id==="r44"&&realModel?.kind==="molen";
     const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
@@ -1911,7 +1912,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     const tailRotorSweep=isMolen?null:isImportedRotorcraft?
      model.authenticTailRotorSweep:model.tailRotorSweep;
     const animatedParts=isMolen?[]:
-     (id==="f22"||id==="f35")&&realModel?[]:
+     id==="f22"&&realModel?[]:
+     id==="f35"&&realModel?[]:
      exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
