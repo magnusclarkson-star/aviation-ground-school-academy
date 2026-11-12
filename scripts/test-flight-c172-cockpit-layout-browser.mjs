@@ -62,8 +62,16 @@ try{
    assert.ok(info.scene.height>=160,
     "short portrait retains usable forward visibility "+JSON.stringify(info));
   }else{
-   assert.ok(info.scene.height>=108&&info.scene.height<=161,
-    "landscape retains the original runway/horizon projection without stretching to full screen "+JSON.stringify(info));
+   assert.ok(info.scene.height>=180&&info.scene.height<=235,
+    "landscape C172 has a real runway/horizon windscreen occupying the upper half "+JSON.stringify(info));
+   assert.ok(info.instruments.y>=info.scene.height-30,
+    "dashboard does not cover most of the forward view "+JSON.stringify(info));
+   assert.ok(info.yoke.bottom<=info.leftPedal.y+5,
+    "C172 yoke remains unobstructed above both pedals "+JSON.stringify(info));
+   assert.ok(info.switches.y>=info.map.bottom-5,
+    "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
+   assert.ok(info.switches.right<=info.throttle.x+4,
+    "switch rack does not cover engine throttle "+JSON.stringify(info));
    assert.ok(Math.abs(info.yoke.height-65)<=3,
     "landscape C172 yoke retains its original height "+JSON.stringify(info));
   }
