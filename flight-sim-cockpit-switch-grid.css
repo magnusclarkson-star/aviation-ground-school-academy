@@ -196,3 +196,11 @@
 #cockpitStation[data-airframe="r44"] #cockpitMain .r44-lesson-strip{
  display:none!important;
 }
+
+
+/* R44-only instructor toggle lives in the EXISTING More popover.
+   The original R44 lesson strip stays hidden to preserve full pedal area. */
+#cockpitHelpChoices #r44VoiceMoreToggle{display:none!important}
+#cockpitStation[data-airframe="r44"] #cockpitHelpChoices #r44VoiceMoreToggle{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+}
