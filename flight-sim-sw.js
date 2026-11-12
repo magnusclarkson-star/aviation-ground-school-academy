@@ -13,6 +13,7 @@ const IMPORTED_AIRCRAFT=[
  "assets/aircraft/c172-molen-skyhawk.glb",
  "assets/aircraft/r44-molen-raven-ii.glb",
  "assets/aircraft/c172-e737-optimized.glb",
+ "assets/aircraft/f22-fguk-exterior.json",
  "assets/aircraft/r44-flightgear.ac",
  "assets/aircraft/r44-flightgear-texture.png"
 ];
