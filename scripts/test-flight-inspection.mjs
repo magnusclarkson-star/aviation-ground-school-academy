@@ -6,6 +6,19 @@ const A=require("../flight-sim-3d.js");
 const X=require("../flight-sim-airframe-geometry.js");
 const C=require("../flight-sim-exterior-2d.js");
 
+// All aircraft fit in the actual phone 360 viewer; the previously approved
+// trainer/rotorcraft radii are unchanged while each fighter fills more pixels.
+assert.equal(O.fitDistanceFor("c172"),12);
+assert.equal(O.fitDistanceFor("r44"),16);
+for(const [id,range] of [["fa18",[14.5,15.5]],["f22",[15.5,16.5]],
+ ["f35",[14.5,15.5]],["typhoon",[13.5,14.5]],
+ ["su37",[16.5,17.5]]]){
+ const distance=O.fitDistanceFor(id);
+ assert.ok(distance>=range[0]&&distance<=range[1],
+  id+" must fit fully without becoming a tiny 360 inspection thumbnail");
+ assert.ok(distance<18,id+" gives a closer camera than the old generic jet");
+}
+
 const initial={azimuth:0,elevation:26,distance:18};
 assert.deepEqual(O.orbitStep(initial,180,0),{azimuth:99,elevation:26,distance:18});
 assert.ok(Math.abs(O.orbitStep(initial,720,0).azimuth-36)<1e-8,"orbit wrapping tolerates floating-point arithmetic");
