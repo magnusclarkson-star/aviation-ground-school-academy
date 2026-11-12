@@ -275,6 +275,20 @@
   font-size:8px!important;line-height:1.1!important;
   overflow:hidden!important;
  }
+ /* The shared photo-cockpit popover was inheriting translate(-50%,-50%)
+    from the old centred desktop zoom, while its landscape rules positioned
+    it from top/left percentages. That left its Close control OFF SCREEN.
+    Reset only this C172 landscape instrument zoom so touch-to-enlarge is safe. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitZoomPanel:not([hidden]){
+  display:flex!important;position:fixed!important;
+  inset:8% 12% 8% 12%!important;
+  top:8%!important;right:12%!important;bottom:8%!important;left:12%!important;
+  width:auto!important;height:auto!important;max-height:84dvh!important;
+  margin:0!important;padding:6px!important;
+  transform:none!important;z-index:1200!important;
+  overflow:auto!important;
+ }
  /* The long runway text remains available when users enlarge the map,
     but it must not take half the height of the small live map. */
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
