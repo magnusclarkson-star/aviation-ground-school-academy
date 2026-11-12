@@ -31,6 +31,14 @@
   const [a,b]=Array.from(points.values());
   return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;
  }
+ // The five fighters differ substantially in wingspan/length. One fixed
+ // 18-metre camera radius made the smaller Typhoon and F-35B look like tiny
+ // thumbnails on phones. Keep the approved C172/R44 framing unchanged.
+ function fitDistanceFor(id){
+  const fitted={c172:12,r44:16,fa18:15,f22:16,f35:15,
+   typhoon:14,su37:17};
+  return fitted[id]??18;
+ }
  function attach({documentLike,windowLike}={}){
   const doc=documentLike||root?.document,win=windowLike||root;
   const $=id=>doc.getElementById(id);
@@ -50,7 +58,7 @@
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   // The two compact training aircraft need closer framing than large jets.
-  const fitDistance=()=>selected()==="r44"?16:selected()==="c172"?12:18;
+  const fitDistance=()=>fitDistanceFor(selected());
   function updateHeading(){
    const id=selected();
    $("aircraftInspectModelSelect").value=id;
@@ -299,7 +307,7 @@
    root.document.addEventListener("DOMContentLoaded",()=>attach({documentLike:root.document,windowLike:root}),{once:true});
   else attach({documentLike:root.document,windowLike:root});
  }
- const api=Object.freeze({orbitStep,zoomStep,pinchStep,doubleTapZoom,attach});
+ const api=Object.freeze({orbitStep,zoomStep,pinchStep,doubleTapZoom,fitDistanceFor,attach});
  if(typeof module!=="undefined"&&module.exports)module.exports=api;
  if(root){root.AGSAInspection=api;start();}
 })(typeof window!=="undefined"?window:null);
