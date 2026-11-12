@@ -26,6 +26,21 @@ for(const x of ["leftFlap","rightFlap","leftAileron","rightAileron",
  "elevatorLeft","rudder"])
  assert.ok(animated.has(x),"real source must have animated surface "+x);
 assert.ok([...animated.values()].every(x=>x.partPivot.every(Number.isFinite)));
+// Genuine imported wheels and struts follow the same flight-system gear
+// command as the other three fighters; no procedural overlay is required.
+const gearParts=model.primitives.filter(p=>
+ p.partName==="noseGear"||p.partName==="mainGearLeft"||
+ p.partName==="mainGearRight");
+assert.ok(gearParts.length>=14,
+ "all original F35 gear assemblies must be independently animated");
+for(const name of ["noseGear","mainGearLeft","mainGearRight"]){
+ assert.ok(gearParts.some(p=>p.partName===name),
+  name+" must use authentic F35 mesh");
+}
+assert.ok(gearParts.every(p=>p.partAxis===4&&
+ p.partPivot.every(Number.isFinite)),
+ "imported gear must use folding hinge mode and finite lower-belly pivots");
+
 assert.ok(model.primitives.some(x=>x.sourceName==="canopy"&&x.opacity<.6),
  "source canopy must be translucent, not a solid opaque block");
 // Imported Gear.ac struts must never break through the F-35B upper skin.

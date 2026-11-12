@@ -1245,7 +1245,14 @@ void main(){
  }else if(uActor>.5){
   // Rotate illustrated flap/aileron/elevator surfaces around their hinges,
   // or propeller/rotor parts around their hub. Static body/world have axis 0.
-  if(uPartAxis>0){
+  if(uPartAxis==4){
+   // Original imported fighter undercarriage, fully present while deployed,
+   // folds into its belly hinge as the system's gear angle approaches 1.53.
+   // The shrinking fold avoids crossing the dorsal skin or adding fake wheels.
+   float retraction=clamp(uPartAngle/1.53,0.,1.);
+   p=uPartPivot+rotatePart(p-uPartPivot,1,uPartAngle*.88)*(1.-retraction);
+   normal=rotatePart(normal,1,uPartAngle*.88);
+  }else if(uPartAxis>0){
    p=rotatePart(p-uPartPivot,uPartAxis,uPartAngle)+uPartPivot;
    normal=rotatePart(normal,uPartAxis,uPartAngle);
   }

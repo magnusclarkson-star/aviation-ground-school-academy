@@ -10,6 +10,16 @@ const MAX_BYTES=1600000,MAX_TRIANGLES=42000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
 function partMotion(name,coords){
+ // Authentic F-22 wheels and hydraulic links use source mesh sections. They
+ // now follow the simulated gear cycle, without illustrated gear overlays.
+ const nose=/^nose[_-]?wheel/i.test(name);
+ const left=/^left[_-]main[_-]/i.test(name);
+ const right=/^right[_-]main[_-]/i.test(name);
+ if(nose||left||right){
+  const key=nose?"noseGear":left?"mainGearLeft":"mainGearRight";
+  return {partAxis:4,partName:key,
+   partPivot:nose?[0,-1.14,3.35]:[left?1.45:-1.45,-1.10,-2.90]};
+ }
  const match=name.match(/^(left|right)-(flap|aileron|slat|elevator|rudder)/i);
  if(!match)return {partAxis:0,partName:null,partPivot:[0,0,0]};
  const side=match[1].toLowerCase(),kind=match[2].toLowerCase();
