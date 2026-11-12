@@ -18,7 +18,9 @@ const publicAircraftFiles=[
  "assets/aircraft/r44-flightgear.ac",
  "assets/aircraft/r44-flightgear-texture.png",
  "assets/aircraft/r44-molen-raven-ii.glb",
- "assets/aircraft/MOLEN-LICENSE.txt"
+ "assets/aircraft/MOLEN-LICENSE.txt",
+ "assets/aircraft/f22-fguk-exterior.json",
+ "assets/aircraft/F22-ATTRIBUTION.md"
 ];
 const publicCuratedPaths=["accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
