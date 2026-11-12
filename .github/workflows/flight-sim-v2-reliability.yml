@@ -10,6 +10,7 @@ on:
       - 'tests/simulator-v2-circuit-pedals.test.cjs'
       - 'tests/simulator-v2-touch-pedals.test.cjs'
       - 'tests/simulator-v2-flight-sequence.test.cjs'
+      - 'tests/simulator-v2-complete-circuit.test.cjs'
       - 'flight-sim-windsocks.js'
       - 'flight-sim-scenery.js'
       - 'flight-sim-countryside.js'
@@ -87,7 +88,7 @@ jobs:
       - run: node --check flight-sim-exterior-2d.js
       - run: node --check flight-sim-ground-traffic.js
       - run: node --check scripts/test-flight-sim-browser.mjs
-      - run: node --test tests/simulator-v2-circuit-pedals.test.cjs tests/simulator-v2-flight-sequence.test.cjs tests/simulator-v2-windsocks.test.cjs tests/simulator-v2-aircraft-fidelity.test.cjs tests/simulator-v2-ground-traffic.test.cjs tests/simulator-v2-terrain-framing.test.cjs
+      - run: node --test tests/simulator-v2-circuit-pedals.test.cjs tests/simulator-v2-flight-sequence.test.cjs tests/simulator-v2-complete-circuit.test.cjs tests/simulator-v2-windsocks.test.cjs tests/simulator-v2-aircraft-fidelity.test.cjs tests/simulator-v2-ground-traffic.test.cjs tests/simulator-v2-terrain-framing.test.cjs
       - run: node --test tests/simulator-v2-real-airframes.test.cjs
       - run: node --test tests/simulator-v2-touch-pedals.test.cjs
       - run: node --test tests/simulator-v2-real-r44.test.cjs
