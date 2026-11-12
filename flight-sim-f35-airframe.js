@@ -58,10 +58,16 @@ function parseF35(text){
      part.v.length<9||part.v.length>36000||
      !Array.isArray(part.g)||part.g.length>16)throw Error("F-35B geometry part invalid");
   const n=part.v.length/3,positions=new Float32Array(part.v.length);
+  // The imported Gear.ac upper links extend through the F-35B dorsal skin.
+  // Keep the undercarriage inside the lower fuselage without moving the
+  // wheels or changing the aircraft's orientation. This applies only to
+  // F-35B gear source parts, not to any other aircraft or flying surface.
+  const gearUpperLimit=part.name.startsWith("gear:")?-.65:null;
   for(let i=0;i<part.v.length;i++){
    const q=part.v[i];
    if(!Number.isInteger(q)||Math.abs(q)>30000)throw Error("F-35B coordinate invalid");
-   const a=i%3,x=q/1000;positions[i]=x;
+   const a=i%3,x=gearUpperLimit!==null&&a===1?
+    Math.min(q/1000,gearUpperLimit):q/1000;positions[i]=x;
    bounds[a*2]=Math.min(bounds[a*2],x);
    bounds[a*2+1]=Math.max(bounds[a*2+1],x);
   }
