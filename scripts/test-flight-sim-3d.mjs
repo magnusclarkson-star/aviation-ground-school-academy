@@ -8,6 +8,8 @@ const PadDetail=require("../flight-sim-helipad-detail.js");
 const Scenery=require("../flight-sim-scenery.js");
 const Countryside=require("../flight-sim-countryside.js");
 const Clouds=require("../flight-sim-clouds.js");
+const C172Source=require("../flight-sim-c172-airframe.js");
+const R44Source=require("../flight-sim-r44-airframe.js");
 
 // Regression guard: the GPU lighting must follow aircraft attitude and hinge
 // rotation, not illuminate the fixed untransformed original mesh normals.
@@ -95,6 +97,44 @@ for(const id of ["c172","r44"]){
  assert.ok(red&&green&&white,id+" nav light colours match port, starboard and rear");
 }
 assert.throws(()=>Three.buildExteriorPositionLights("f22"),/require a trainer or R44/);
+
+/* Source model fixture test: all external lamp centres MUST be vertices
+   of the actually imported C172/R44 hull, never floating meters away at
+   the old illustrative airframe's coordinates. This catches the exact
+   detached-light bug seen in 360-degree R44/C172 browser screenshots. */
+const sourceModels={
+ c172:C172Source.parseC172GLB((()=>{
+  const b=readFileSync(new URL("../assets/aircraft/c172-molen-skyhawk.glb",import.meta.url));
+  return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);
+ })()),
+ r44:R44Source.parseR44GLB((()=>{
+  const b=readFileSync(new URL("../assets/aircraft/r44-molen-raven-ii.glb",import.meta.url));
+  return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);
+ })())
+};
+for(const [id,source] of Object.entries(sourceModels)){
+ const stationary=source.primitives.filter(p=>(p.partAxis||0)===0);
+ const stations=Three.exteriorLightStations(id,source.primitives);
+ const strobe=Three.exteriorStrobeStation(id,source.primitives);
+ assert.equal(stations.length,3);
+ const attached=point=>stationary.some(p=>{
+  const a=p.positions;
+  for(let i=0;i<a.length;i+=3)
+   if(Math.abs(a[i]-point[0])<.00001&&
+    Math.abs(a[i+1]-point[1])<.00001&&
+    Math.abs(a[i+2]-point[2])<.00001)return true;
+  return false;
+ });
+ assert.ok(stations.every(attached),id+" red/green/rear lamp stations must lie exactly on imported aircraft surface");
+ assert.ok(attached(strobe),id+" beacon must be attached to imported cabin, not floating above it");
+ assert.ok(stations[2][2]>=source.bounds[4]-.001&&stations[2][2]<=source.bounds[5]+.001,
+  id+" rear marker must remain inside real aft fuselage bounds");
+ assert.ok(Three.buildExteriorPositionLights(id,source.primitives).triangles===72);
+ assert.ok(Three.buildExteriorStrobe(id,source.primitives).triangles===12);
+}
+assert.ok(Three.exteriorLightStations("r44",sourceModels.r44.primitives)[2][2]>-5,
+ "R44 rear nav light must not use old -8.19 m tailboom when imported model ends much sooner");
+
 assert.equal(Three.exteriorStrobePulse(0),1);
 assert.equal(Three.exteriorStrobePulse(.12),0);
 assert.equal(Three.exteriorStrobePulse(.20),1);
