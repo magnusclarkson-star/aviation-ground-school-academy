@@ -274,6 +274,8 @@ jobs:
         run: node scripts/test-flight-switchgear-browser.mjs
       - name: Verify C172 and R44 focus-mode scenery and controls
         run: node scripts/test-flight-focus-browser.mjs
+      - name: Verify R44 spoken instructor More-menu accessibility
+        run: node scripts/test-flight-sim-instructor-voice-browser.mjs
       - name: Test desktop and simultaneous touch controls
         run: |
           node scripts/test-flight-sim-browser.mjs
@@ -292,7 +294,6 @@ jobs:
           node scripts/test-flight-sim-aerodynamics-browser.mjs
           node scripts/test-flight-sim-loading-browser.mjs
           node scripts/test-flight-sim-exercises-browser.mjs
-          node scripts/test-flight-sim-instructor-voice-browser.mjs
           node scripts/test-flight-sim-pwa-browser.mjs
 
       - name: Save C172 whole-cockpit screenshots for review
