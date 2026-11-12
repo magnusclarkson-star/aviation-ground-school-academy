@@ -617,7 +617,13 @@ try{
     .map(el=>el.getBoundingClientRect());
    return {
     horizontal:document.documentElement.scrollWidth<=innerWidth+2,
-    instrumentsAboveControls:panel.bottom<=controls.top+15,
+    // Fighter controls can be beside the glass bank in a two-column
+    // landscape deck, rather than below the instruments. Both are valid.
+    separatedFromControls:
+     panel.bottom<=controls.top+2||
+     controls.bottom<=panel.top+2||
+     panel.right<=controls.left+2||
+     controls.right<=panel.left+2,
     allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
     heights:screens.map(v=>Math.round(v.height)),
     panelHeight:panel.height,
@@ -627,8 +633,8 @@ try{
     focus:document.body.dataset.cockpitFocus
    };
   });
-  assert.ok(fit.horizontal&&fit.instrumentsAboveControls&&fit.allInside,
-   id+' landscape glass displays remain inside cockpit above flight controls '+JSON.stringify(fit));
+  assert.ok(fit.horizontal&&fit.separatedFromControls&&fit.allInside,
+   id+' landscape glass displays stay readable without overlapping flight controls '+JSON.stringify(fit));
   assert.ok(fit.panelHeight<=185,id+' glass panel fits shallow screen');
  }
  // Focused 844x390 Android landscape must not require dragging the
