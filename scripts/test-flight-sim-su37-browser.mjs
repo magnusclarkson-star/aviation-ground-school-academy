@@ -63,7 +63,6 @@ try{
     const c=window.__su37Canvas,r=window.__su37Renderer,
      gl=c.getContext("webgl2"),s=window.__su37State;
     const capture=(animation,azimuth=35,elevation=20)=>{
-     assertUnused();
      r.draw(s,{view:"inspect",airframeId:"su37",
       orbit:{azimuth,elevation,distance:23},animation});
      const px=new Uint8Array(c.width*c.height*4);
@@ -75,7 +74,6 @@ try{
      }
      return {px,dark,hash};
     };
-    function assertUnused(){}
     const pixelDiff=(a,b)=>{
      let n=0;
      for(let i=0;i<a.length;i+=4)
