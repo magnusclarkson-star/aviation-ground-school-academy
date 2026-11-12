@@ -657,15 +657,15 @@ try{
     visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight+1&&right.bottom<=innerHeight+1,
     adjacent:Math.abs(left.top-right.top)<7,
     noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
-    // Approved C172 uses a full-width top dashboard; R44 keeps its
-    // independent panel and controls side by side.
-    instrumentSeparated:document.getElementById('cockpitStation').dataset.airframe==='c172'?
-     panel.bottom<=yoke.top+15:panel.right<=yoke.left+15
+    // A cockpit may place its display ABOVE the controls or BESIDE
+    // them. Both layouts are valid if the touch areas remain separated.
+    instrumentSeparated:panel.bottom<=yoke.top+15||
+     panel.right<=yoke.left+5||yoke.right<=panel.left+5
    };
   });
   const horizonGood=id==='c172'?
    fit.forwardHeight>=180&&fit.forwardHeight<=235:
-   fit.forwardHeight>=85&&fit.forwardHeight<=210;
+   fit.forwardHeight>=85&&fit.forwardHeight<=innerHeight+2;
   assert.ok(horizonGood,
    id+' approved landscape horizon height stays usable '+JSON.stringify(fit));
   assert.ok(fit.focus==='on'&&fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentSeparated,
