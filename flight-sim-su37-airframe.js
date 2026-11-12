@@ -20,8 +20,11 @@ function partMotion(name){
  if(["noseGear","mainGearLeft","mainGearRight"].includes(name)){
   // Dedicated full-size imported undercarriage: forward and inward hinges,
   // always below the source fuselage. No procedural gear is drawn over it.
+  // The original Su-37 geometry labels LEFT on negative X and RIGHT on
+  // positive X (opposite Typhoon's convention). The former swapped hinges
+  // swung both bogies over the dorsal fuselage when retracted.
   const pivot=name==="noseGear"?[0,-.50,2.5]:
-   name==="mainGearLeft"?[1.66,-.50,-3.2]:[-1.66,-.50,-3.2];
+   name==="mainGearLeft"?[-1.66,-.50,-3.2]:[1.66,-.50,-3.2];
   return {partName:name,partAxis:4,partPivot:pivot};
  }
  const partName=controls[name];
