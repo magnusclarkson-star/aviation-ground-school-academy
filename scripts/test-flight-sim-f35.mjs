@@ -41,8 +41,8 @@ assert.ok(readFileSync(new URL("../assets/aircraft/F35-ATTRIBUTION.md",import.me
 assert.ok(readFileSync(new URL("../assets/aircraft/F35-GPL-3.0.txt",import.meta.url),"utf8")
  .includes("GNU GENERAL PUBLIC LICENSE"));
 const renderer=readFileSync(new URL("../flight-sim-3d.js",import.meta.url),"utf8");
-assert.match(renderer,/id==="f35"\?realF35:null/);
-assert.match(renderer,/\(id==="f22"\|\|id==="f35"\)&&realModel\?\[\]/,
+assert.match(renderer,/id==="f35"\?realF35:/);
+assert.match(renderer,/id==="f35"&&realModel\?\[\]/,
  "do not layer incorrect procedural fighter parts over source geometry");
 assert.match(renderer,/id==="f35"\?"gpl-f35b-flightgear"/);
 const site=readFileSync(new URL("../flight-sim.html",import.meta.url),"utf8");
