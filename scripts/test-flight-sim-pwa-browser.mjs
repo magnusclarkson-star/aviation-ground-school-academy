@@ -1,5 +1,5 @@
-// Confirm the Android-installable flight app reloads offline after online
-// warm-up, and its two imported source models remain available from the cache.
+// Confirm the Android-installable flight app reloads offline after ONE online
+// first visit, and its two imported source models remain available from the cache.
 import assert from "node:assert/strict";
 import http from "node:http";
 import fs from "node:fs";
@@ -47,19 +47,26 @@ try{
  assert.equal(manifest.icons.length,2);
  await page.waitForFunction(()=>navigator.serviceWorker?.controller,null,
   {timeout:30000});
- // A second *online* load makes the worker cache the entire live simulator,
- // including browser scripts and styles. Explicitly request both aircraft
- // models to exercise the same asynchronous paths as the 3D inspection.
- await page.reload({waitUntil:"load"});
- await page.waitForFunction(()=>window.AGSAR44Airframe&&window.AGSARealAirframes,
-  null,{timeout:20000});
- const before=await page.evaluate(async()=>{
-  const r=await window.AGSAR44Airframe.ensureR44();
-  const c=await window.AGSARealAirframes.ensureC172();
-  return {r44:r.triangles,c172:c.triangles,controlled:!!navigator.serviceWorker.controller};
+ // The first online visit must install a complete offline cache. A second
+ // online reload is not an acceptable workaround on metered phone connections.
+ // The worker's claim occurs only after all linked JS/CSS and imported models
+ // have been successfully cached.
+ const firstVisitCache=await page.evaluate(async()=>{
+  const keys=await caches.keys();
+  const active=keys.find(key=>key.includes("first-visit-offline"));
+  const cache=active?await caches.open(active):null;
+  const urls=cache?(await cache.keys()).map(entry=>new URL(entry.url).pathname):[];
+  return {count:urls.length,hasSimulator:urls.some(p=>p.endsWith("/flight-sim.html")),
+   hasC172:urls.some(p=>p.endsWith("/c172-molen-skyhawk.glb")),
+   hasR44:urls.some(p=>p.endsWith("/r44-molen-raven-ii.glb")),
+   has3D:urls.some(p=>p.endsWith("/flight-sim-3d.js")),
+   hasControls:urls.some(p=>p.endsWith("/flight-sim.js"))};
  });
- assert.ok(before.r44>15000&&before.c172>13000&&before.controlled,
-  "both real 3D aircraft assets must be cached while online");
+ assert.ok(firstVisitCache.count>35&&firstVisitCache.hasSimulator&&
+  firstVisitCache.hasC172&&firstVisitCache.hasR44&&
+  firstVisitCache.has3D&&firstVisitCache.hasControls,
+  "single-visit offline installation must cache complete flight app: "+
+   JSON.stringify(firstVisitCache));
  await context.setOffline(true);
  await page.reload({waitUntil:"load",timeout:30000});
  const after=await page.evaluate(async()=>{
@@ -68,11 +75,10 @@ try{
   return {r44:r.triangles,c172:c.triangles,
    title:document.title,controlled:!!navigator.serviceWorker.controller};
  });
- assert.deepEqual({r44:after.r44,c172:after.c172},
-  {r44:before.r44,c172:before.c172},
-  "simulator must load both GLB assets offline after online warmup");
+ assert.ok(after.r44>15000&&after.c172>13000,
+  "both real imported aircraft must load during the very first offline restart");
  assert.ok(after.title.includes("Flight Simulator")&&after.controlled);
- console.log("Phone PWA offline browser test passed:",JSON.stringify(after));
+ console.log("First-visit phone PWA offline browser test passed:",JSON.stringify(after));
 }finally{
  await context?.close();
  await browser?.close();
