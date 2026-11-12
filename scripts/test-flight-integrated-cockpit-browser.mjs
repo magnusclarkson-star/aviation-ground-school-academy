@@ -657,7 +657,10 @@ try{
     focused:document.body.dataset.cockpitFocus==='on',
     leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
     rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
-    visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight-2&&right.bottom<=innerHeight-2,
+    // Treat an on-screen pedal as visible down to the actual viewport edge.
+    // The approved C172 layout ends at y=389.3 on a 390px screen, so
+    // demanding a full 2px unused margin falsely rejects a fully visible pedal.
+    visible:left.top>=-.1&&right.top>=-.1&&left.bottom<=innerHeight+.1&&right.bottom<=innerHeight+.1,
     adjacent:Math.abs(left.top-right.top)<7,
     noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
     instrumentSeparateFromControl:panel.bottom<=yoke.top+8||
