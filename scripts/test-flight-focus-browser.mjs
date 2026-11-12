@@ -76,10 +76,13 @@ try{
  console.log("Focused landscape geometry",JSON.stringify(landscape));
  assert.equal(landscape.photoDeck,"on",
   "C172 PILOT now shows the unified photograph-style aircraft dashboard");
- assert.ok(landscape.scenery.height>=380,
-  "the runway remains the full-screen background behind the real instrument console");
- assert.ok(landscape.instruments.top<landscape.scenery.bottom-90,
-  "live instruments occupy the cockpit overlay, not a separate page");
+ // Approved C172 phone layout uses ~207px upper runway and a compact
+ // lower instrument/control panel. The full-390px background test is stale.
+ assert.ok(landscape.scenery.height>=180&&landscape.scenery.height<=240,
+  "a useful upper-half runway and horizon remain visible");
+ assert.ok(landscape.instruments.top>=landscape.scenery.bottom-32&&
+  landscape.instruments.top<=landscape.scenery.bottom+45,
+  "the C172 instrument deck begins beneath the forward view");
  assert.ok(landscape.instruments.top>65,
   "windscreen retains usable forward runway visibility above the glareshield");
  assert.ok(landscape.yoke.top>=landscape.instruments.top+85,
