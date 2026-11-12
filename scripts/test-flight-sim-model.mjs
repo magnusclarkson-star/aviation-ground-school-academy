@@ -65,6 +65,52 @@ assert.ok(Math.abs(runway.rollDeg)>10);
 assert.ok(Math.abs(runway.xM-offsetBefore)>1||Math.abs(runway.headingDeg-hdgBefore)>1,"bank produces visible turn");
 assert.ok(cues.some(x=>x==="climb"));
 
+/* Fly four full right-hand turns in the C172 *without resetting*.
+   This protects the phone-bank/yaw response that students use to leave
+   the runway, turn crosswind/downwind/base and realign for final. It is
+   a trajectory test, not an autopilot exposed to users or a simulated
+   successful runway landing. Final descent/rollout is tested separately. */
+const loop=M.makeState("airplane","runway",{airframeId:"c172",windId:"calm"});
+const loopControls=M.makeInput("airplane");
+Object.assign(loopControls,{throttle:1,pitch:-.72,flaps:10});
+simulate(loop,loopControls,36);
+assert.equal(loop.phase,"flight","circuit check begins after actual manual-pattern takeoff");
+const startHeading=loop.headingDeg;
+const wrap=n=>(n%360+360)%360;
+let previousTravel={x:loop.xM,z:loop.zM},turnTravel=0;
+const turnTargets=[90,180,270,0];
+loopControls.throttle=.62;loopControls.flaps=0;
+for(const targetHeading of turnTargets){
+ let acquired=false;
+ for(let tick=0;tick<850;tick++){
+  const remaining=wrap(targetHeading-loop.headingDeg);
+  if(remaining<=9||remaining>=351){acquired=true;break;}
+  loopControls.bank=remaining>26?.88:.35;
+  // Keep the learner's fictional circuit in an altitude band with
+  // physical pitch input, never by directly setting state.altitudeM.
+  const altitudeError=125-loop.altitudeM;
+  loopControls.pitch=Math.max(-.25,Math.min(.24,-.04-altitudeError*.007));
+  M.step(loop,loopControls,.05);
+  assert.ok(Number.isFinite(loop.xM)&&Number.isFinite(loop.zM)&&
+    Number.isFinite(loop.altitudeM)&&Number.isFinite(loop.headingDeg),
+    "C172 banked circuit must not produce nonfinite position/heading");
+  assert.ok(!loop.onGround&&loop.phase!=="halted",
+    "C172 should stay airborne while turning and returning");
+  assert.ok(loop.speedKt>40&&loop.altitudeM>12,
+    "C172 should retain controllable energy throughout simulated circuit");
+ }
+ assert.ok(acquired,"C172 touch-bank turn can acquire heading "+targetHeading+"°");
+ loopControls.bank=0;
+ turnTravel+=Math.hypot(loop.xM-previousTravel.x,loop.zM-previousTravel.z);
+ previousTravel={x:loop.xM,z:loop.zM};
+ simulate(loop,loopControls,2);
+}
+assert.ok(turnTravel>900,"four turns represent real position changes, not heading teleport");
+assert.ok(Math.min(Math.abs(wrap(loop.headingDeg)-startHeading),
+  360-Math.abs(wrap(loop.headingDeg)-startHeading))<25,
+ "four right-hand turns return near the original northbound heading");
+
+
 const noRotate=M.makeState("airplane");
 const noRotateInput=M.makeInput();
 noRotateInput.throttle=1;
