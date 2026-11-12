@@ -54,11 +54,18 @@ try{
   {timeout:20000});
  fs.mkdirSync("artifacts",{recursive:true});
  const views=[];
- for(const [view,orbit] of [
-  ["inspect",{azimuth:35,elevation:18,distance:24}],
-  ["side",{azimuth:0,elevation:0,distance:24}],
-  ["top",{azimuth:0,elevation:0,distance:24}],
-  ["chase",{azimuth:0,elevation:0,distance:24}]
+ // Exercise both sides and underneath the airframe: the deployed F-35B
+ // gear previously pierced the top of the fuselage in the public build.
+ // Keep these fixed camera proofs alongside the original four views.
+ for(const [label,view,orbit] of [
+  ["inspect","inspect",{azimuth:35,elevation:18,distance:24}],
+  ["side","side",{azimuth:0,elevation:0,distance:24}],
+  ["top","top",{azimuth:0,elevation:0,distance:24}],
+  ["chase","chase",{azimuth:0,elevation:0,distance:24}],
+  ["left-quarter","inspect",{azimuth:-65,elevation:25,distance:24}],
+  ["right-quarter","inspect",{azimuth:65,elevation:25,distance:24}],
+  ["belly","inspect",{azimuth:25,elevation:-50,distance:24}],
+  ["rear-belly","inspect",{azimuth:160,elevation:-35,distance:24}]
  ]){
   const result=await page.evaluate(({view,orbit})=>{
    const r=window.__f35Renderer,s=window.__f35State,
@@ -79,12 +86,12 @@ try{
   assert.equal(result.source,"gpl-f35b-flightgear");
   assert.equal(result.status,"imported");
   assert.ok(result.dark>200,"F-35B model must occupy visible frame pixels");
-  views.push({view,...result});
+  views.push({view:label,...result});
   await page.locator("#f35SourceEvidence").screenshot({
-   path:"artifacts/real-f35-"+view+".png"});
+   path:"artifacts/real-f35-"+label+".png"});
  }
- assert.equal(new Set(views.map(v=>v.hash)).size,4,
-  "four F-35B source renders must differ across actual camera viewpoints");
+ assert.equal(new Set(views.map(v=>v.hash)).size,views.length,
+  "all eight F-35B views, including belly and rear, must render differently");
  const changed=await page.evaluate(()=>{
   const r=window.__f35Renderer,c=window.__f35Canvas,
    gl=c.getContext("webgl2"),s=window.__f35State;
