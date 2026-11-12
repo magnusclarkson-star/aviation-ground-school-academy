@@ -381,8 +381,15 @@ function step(state,input,seconds){
    state.altitudeM=0;state.onGround=true;
    const onRunway=state.zM>=-35&&state.zM<=1800&&Math.abs(state.xM)<24;
    const alignment=E.runwayAlignment(state.headingDeg,state.trackDeg);
+   // On the C172, the teaching model must not award a normal wheel
+   // touchdown when the nose is driven steeply into the runway or held
+   // abnormally high. Earlier only sink rate, roll, speed and alignment
+   // were checked, so a severe pitch attitude could still pass as gentle.
+   // Leave R44 skid grading, fighters and experimental aero unchanged.
+   const trainerPitchOK=state.airframeId!=="c172"||
+    (state.pitchDeg>=-6&&state.pitchDeg<=12);
    const gentle=state.verticalMs>=-3.3&&Math.abs(state.rollDeg)<13&&
-    state.speedKt<(p.landingMaxKt??93)&&onRunway&&alignment.aligned;
+    state.speedKt<(p.landingMaxKt??93)&&onRunway&&alignment.aligned&&trainerPitchOK;
    if(gentle){
     // Read-only contact record for flight replay and post-landing feedback:
     // never infer touchdown conditions from the next grounded physics tick.
@@ -397,6 +404,8 @@ function step(state,input,seconds){
    state.verticalMs=0;
    state.phase=gentle?"rollout":"halted";
    state.message=gentle?"Simulated touchdown. Reduce power and hold the brake to finish the rollout.":
+    onRunway&&alignment.aligned&&!trainerPitchOK?
+     "Unstable nose attitude at runway contact. Use a smaller, steadier pitch correction and try again.":
     onRunway&&!alignment.aligned?
      "Runway crossing angle too large. Approach along the strip for a controlled landing.":
      "Hard or off-runway contact. Use the approach reset and try a gentler descent.";
