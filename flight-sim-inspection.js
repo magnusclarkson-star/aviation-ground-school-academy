@@ -13,7 +13,7 @@
  }
  function zoomStep(orbit,factor){
   return Object.freeze({...orbit,distance:clamp(orbit.distance*factor,
-   limits.minDistance,limits.maxDistance)});
+   orbit.interior?1.45:limits.minDistance,orbit.interior?12:limits.maxDistance)});
  }
  // Enlarging the gap between two fingers zooms in, just like an aircraft photo.
  function pinchStep(orbit,previousSpan,nextSpan){
@@ -58,6 +58,16 @@
   const engine=win.AGSAFlight3D,exterior=win.AGSAExteriorChase2D,types=win.AGSAExteriorAirframes;
   if(!engine||!exterior||!types)throw Error("360° inspector needs 3D airframe and 2D fallback engines");
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
+  const interiorButton=$("aircraftInspectInterior");
+  const exteriorButton=$("aircraftInspectExterior");
+  const interiorDistance=id=>id==="f22"||id==="su37"?4.35:id==="r44"?3.25:2.90;
+  function setInterior(on){
+   if(Boolean(orbit.interior)===on)return;
+   orbit={azimuth:on?24:0,elevation:on?15:26,
+    distance:on?interiorDistance(selected()):fitDistance(),interior:on};
+   autoRotate=false;lastRenderedId=null;
+   updateHeading();
+  }
   // The two compact training aircraft need closer framing than large jets.
   const fitDistance=()=>fitDistanceFor(selected());
   function updateHeading(){
@@ -69,6 +79,11 @@
    $("aircraftInspectZoomValue").textContent=Math.round(fitDistance()/orbit.distance*100)+"%";
    $("aircraftInspectSpin").setAttribute("aria-pressed",String(autoRotate));
    $("aircraftInspectSpin").textContent=autoRotate?"Stop rotation":"Auto rotate";
+   interiorButton.setAttribute("aria-pressed",String(Boolean(orbit.interior)));
+   exteriorButton.setAttribute("aria-pressed",String(!orbit.interior));
+   $("aircraftInspectDescription").textContent=orbit.interior?
+    "Interior study · Drag to look around · Pinch to zoom · Exterior returns to the full aircraft.":
+    "Exterior 360° · Drag to rotate · Pinch or double tap to zoom.";
   }
   function fallback(){
    usingGPU=false;
@@ -194,7 +209,9 @@
    (triggerVisible?trigger:photoButton||trigger).focus({preventScroll:true});
   }
   function reset(){
-   orbit={azimuth:0,elevation:26,distance:fitDistance()};
+   orbit=orbit.interior?
+    {azimuth:24,elevation:15,distance:interiorDistance(selected()),interior:true}:
+    {azimuth:0,elevation:26,distance:fitDistance(),interior:false};
    autoRotate=false;updateHeading();
   }
   $("aircraftInspectModelSelect").addEventListener("change",event=>{
@@ -204,10 +221,12 @@
     select.value=id;
     select.dispatchEvent(new Event("change",{bubbles:true}));
    }
-   orbit={...orbit,distance:fitDistance()};
+   orbit={...orbit,distance:orbit.interior?interiorDistance(id):fitDistance()};
    updateHeading();
    if(!modal.hidden)syncModelVisibility();
   });
+  interiorButton.addEventListener("click",()=>setInterior(true));
+  exteriorButton.addEventListener("click",()=>setInterior(false));
   trigger.addEventListener("click",open);
   const closeButton=$("aircraftInspectClose");
   closeButton.addEventListener("click",close);
@@ -302,7 +321,8 @@
    if(event.key==="Tab"){
     // Match the actual DOM tab order so focus never escapes the modal
     // and shift-Tab from the first field wraps to the last button.
-    const els=[ $("aircraftInspectModelSelect"),$("aircraftInspectClose"),$("aircraftInspectZoomOut"),
+    const els=[ $("aircraftInspectModelSelect"),$("aircraftInspectClose"),
+      interiorButton,exteriorButton,$("aircraftInspectZoomOut"),
       $("aircraftInspectZoomIn"),$("aircraftInspectReset"),$("aircraftInspectSpin") ];
     const first=els[0],last=els[els.length-1];
     if(event.shiftKey&&doc.activeElement===first){event.preventDefault();last.focus()}
