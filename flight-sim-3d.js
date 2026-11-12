@@ -2096,7 +2096,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
-    if(realModel&&model.importedGear){
+    if(realModel&&model.importedGear&&!(view==="inspect"&&orbit.interior===true)){
      // Restore non-textured, opaque source-metal rendering before placing
      // the wheel-well recesses and independently hinged left/right doors.
      // Only real F-22/F-35B meshes receive these panels; no fake gear layers.
