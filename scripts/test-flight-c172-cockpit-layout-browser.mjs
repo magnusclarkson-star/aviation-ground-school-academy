@@ -51,6 +51,27 @@ try{
   assert.equal(info.focus,"on");
   assert.ok(info.instruments?.width>0&&info.yoke?.width>0&&info.leftPedal?.width>0&&info.rightPedal?.width>0);
   assert.ok(info.horizOverflow<=2,"no horizontal overflow");
+  // The original instrument faces/controls must remain unchanged in size.
+  if(view.name==="portrait"){
+   assert.ok(info.scene.height>=280,
+    "tall portrait uses the former bottom void for the pilot horizon "+JSON.stringify(info));
+   assert.ok(Math.abs(info.yoke.height-110)<=3&&info.leftPedal.height===42&&
+    info.rightPedal.height===42&&info.flaps.height===50,
+    "portrait controls retain their established sizes "+JSON.stringify(info));
+  }else if(view.name==="short-portrait"){
+   assert.ok(info.scene.height>=160,
+    "short portrait retains usable forward visibility "+JSON.stringify(info));
+  }else{
+   assert.ok(info.scene.height>=view.height-2,
+    "landscape WebGL forward scene fills the windscreen behind the dashboard "+JSON.stringify(info));
+   assert.ok(Math.abs(info.yoke.height-65)<=3,
+    "landscape C172 yoke retains its original height "+JSON.stringify(info));
+  }
+  for(const key of ["leftPedal","rightPedal","brake","restart","throttle","flaps"]){
+   assert.ok(info[key]?.bottom<=view.height-2,
+    view.name+" "+key+" must be visible without scrolling "+JSON.stringify(info));
+  }
+  assert.ok(info.scrollTop===0,"no automatic cockpit scrolling");
   assert.deepEqual(errors,[],"no JavaScript runtime errors");
   await page.close();
  }
