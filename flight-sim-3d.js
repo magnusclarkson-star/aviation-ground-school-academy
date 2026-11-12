@@ -938,7 +938,68 @@ const IMPORTED_CABIN_LAYOUT=Object.freeze({
 // airframe. Four distinct seats, restraints, a floor, and instrument binnacle
 // sit behind the existing window glass in chase and 360-degree inspection.
 // This does not interfere with the separate pilot-facing training cockpit UI.
+// Compact aircraft-specific fighter cockpit geometry. These cabin stations
+// are aligned to the original aircraft asset canopy bounds (local metres).
+// They add no exterior skin, no extra gear and no animated flight surfaces.
+const FIGHTER_INTERIOR_STATIONS=Object.freeze({
+ fa18:{rear:2.4,front:4.15,floor:-.12,width:.52,seats:1},
+ f22:{rear:3.75,front:6.45,floor:-.22,width:.43,seats:1},
+ f35:{rear:3.28,front:5.12,floor:-.25,width:.52,seats:1},
+ typhoon:{rear:2.55,front:5.85,floor:.85,width:.38,seats:1},
+ su37:{rear:3.62,front:6.45,floor:1.00,width:.41,seats:1}
+});
+function buildFighterInterior(id){
+ const p=FIGHTER_INTERIOR_STATIONS[id];
+ if(!p)return null;
+ const m=new Mesh(),dark=rgb(32,40,47),rail=rgb(85,96,103),
+  seat=rgb(65,72,77),padding=rgb(99,106,108),
+  screen=rgb(30,101,114),lit=rgb(97,180,175),belt=rgb(190,177,137);
+ const bottom=p.floor,z0=p.rear,z1=p.front,w=p.width;
+ // Cockpit tub with a floor and narrow side consoles, not a second fuselage.
+ m.box(-w,bottom,z0,w*2,.065,z1-z0,dark);
+ for(const side of [-1,1]){
+  const x=side<0?-w:-w*.0+w-.14;
+  m.box(x,bottom+.12,z0+.18,.14,.24,z1-z0-.46,rail);
+  for(let n=0;n<5;n++){
+   const z=z0+.36+n*(z1-z0-.75)/5;
+   m.box(x+.030,bottom+.368,z,.075,.012,.085,lit);
+  }
+ }
+ const seatZ=z0+(z1-z0)*.37;
+ // Ejection-style training seat: cushion, angled back, headrest,
+ // restraint straps, side rails and visible lower harness buckle.
+ m.box(-.25,bottom+.16,seatZ-.20,.50,.15,.55,padding);
+ m.box(-.25,bottom+.30,seatZ-.37,.50,.73,.17,seat);
+ m.box(-.20,bottom+1.02,seatZ-.36,.40,.23,.16,padding);
+ for(const side of [-1,1]){
+  const x=side*.215-.02;
+  m.box(x,bottom+.28,seatZ-.40,.04,.91,.09,rail);
+  m.box(side*.11-.024,bottom+.35,seatZ-.22,.048,.53,.04,belt);
+ }
+ m.box(-.07,bottom+.36,seatZ-.19,.14,.085,.05,lit);
+ // Single central stick and forward rudder footrests.
+ const stickZ=seatZ+.67;
+ m.box(-.028,bottom+.16,stickZ,.056,.51,.056,rail);
+ m.box(-.065,bottom+.63,stickZ-.038,.13,.18,.12,dark);
+ for(const side of [-1,1]){
+  const x=side*.22-.085;
+  m.box(x,bottom+.08,z1-.40,.17,.07,.17,rail);
+ }
+ // Tilted forward main display with two smaller multi-function displays;
+ // flat panels face the seated pilot, not the exterior viewer.
+ const dashZ=z1-.20;
+ m.box(-w*.83,bottom+.48,dashZ,w*1.66,.50,.12,dark);
+ for(const x of [-.23,.06]){
+  m.box(x,bottom+.63,dashZ-.022,.17,.22,.014,screen);
+  m.box(x+.025,bottom+.70,dashZ-.029,.10,.015,.006,lit);
+ }
+ m.box(-.12,bottom+.97,dashZ-.012,.24,.10,.035,rail);
+ // Short HUD combiner, clear enough to leave the existing canopy visible.
+ m.box(-.15,bottom+1.10,dashZ+.02,.30,.018,.025,lit);
+ return {...m.finish(),seats:p.seats,hasPanel:true,kind:"fighter-interior"};
+}
 function buildImportedCabin(id){
+ if(FIGHTER_INTERIOR_STATIONS[id])return buildFighterInterior(id);
  if(id!=="r44"&&id!=="c172")return null;
  const m=new Mesh(),leather=rgb(174,163,143),cushion=rgb(210,201,182),
   highlight=rgb(226,216,195),panel=rgb(35,48,57),
