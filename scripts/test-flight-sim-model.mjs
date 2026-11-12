@@ -305,6 +305,31 @@ assert.equal(M.shapeRotorCyclic(1),1);
 assert.equal(M.shapeRotorCyclic(-1),-1);
 assert.ok(M.shapeRotorCyclic(.20)>.10&&M.shapeRotorCyclic(.20)<.15);
 assert.equal(M.shapeRotorCyclic(-.20),-M.shapeRotorCyclic(.20));
+/* Low-speed R44 hover response must be smooth, not suddenly jump at the
+   former 6 kt / 12 m switching thresholds as the student turns for pad. */
+assert.equal(M.rotorHorizontalResponse(4,1,true),2.6,
+ "centred R44 cyclic retains established low-hover drift damping");
+assert.equal(M.rotorHorizontalResponse(4,1,false),1.52,
+ "deflected R44 cyclic retains full low-hover response");
+assert.equal(M.rotorHorizontalResponse(20,1,true),.95,
+ "at altitude, cyclic retains original forward-flight response");
+assert.equal(M.rotorHorizontalResponse(4,9,true),.95,
+ "above the low-speed blend, cyclic retains original flight response");
+for(const centred of [true,false]){
+ for(const altitudeM of [4,11.9,12,12.1,20]){
+  const a=M.rotorHorizontalResponse(altitudeM,5.99,centred);
+  const b=M.rotorHorizontalResponse(altitudeM,6.01,centred);
+  assert.ok(Math.abs(a-b)<.03,
+   "R44 horizontal acceleration response must not jump near six knots");
+ }
+ for(const speedKt of [0,3,6,8]){
+  const a=M.rotorHorizontalResponse(11.99,speedKt,centred);
+  const b=M.rotorHorizontalResponse(12.01,speedKt,centred);
+  assert.ok(Math.abs(a-b)<.03,
+   "R44 horizontal response must not jump at 12 metres");
+ }
+}
+
 const carefulHeli=M.makeState("helicopter"),carefulInput=M.makeInput("helicopter");
 carefulInput.collective=.8;
 simulate(carefulHeli,carefulInput,3);
@@ -454,6 +479,37 @@ assert.ok(lightHeli.touchdownData.sinkMs<0 &&
 assert.equal(lightHeli.verticalMs,0);
 assert.ok(lightHeli.touchdownData.padOffsetM<.01,
  "tiny physics integration movement at touchdown is valid, not a teleport");
+
+/* Landing is never labelled gentle when the R44 is still spinning or
+   sliding over the centre pad, even if vertical sink and position are good.
+   Only actual measured skid-contact state is used, not stick commands. */
+const rotorContact=(forwardMs,yawRateDegS)=>{
+ const state=M.makeState("helicopter");
+ Object.assign(state,{onGround:false,phase:"hover",altitudeM:.025,
+  verticalMs:-1.15,forwardMs,lateralMs:0,
+  speedKt:Math.abs(forwardMs)/M.KNOT,
+  groundSpeedKt:Math.abs(forwardMs)/M.KNOT,
+  yawRateDegS});
+ const controls={...M.makeInput("helicopter"),collective:.3,rudder:0,turbulence:0};
+ const result=M.step(state,controls,.05);
+ return {state,result};
+};
+const spinningContact=rotorContact(0,29);
+assert.equal(spinningContact.state.phase,"halted",
+ "R44 cannot score a soft landing while still turning rapidly");
+assert.equal(spinningContact.state.touchdownData.grade,"hard");
+assert.ok(spinningContact.state.touchdownData.yawRateDegS>12);
+assert.ok(spinningContact.result.events.includes("hardLanding"));
+const slidingContact=rotorContact(4.3,0);
+assert.equal(slidingContact.state.phase,"halted",
+ "R44 cannot score a soft landing while skids slide quickly over the pad");
+assert.ok(slidingContact.state.touchdownData.groundSpeedKt>7);
+assert.ok(slidingContact.result.events.includes("hardLanding"));
+const settledContact=rotorContact(.45,1);
+assert.equal(settledContact.state.phase,"landed",
+ "a gentle, nearly stationary R44 landing should still succeed");
+assert.ok(settledContact.result.events.includes("touchdown"));
+
 // Both cyclic channels build velocity through the displayed attitude.
 const attitudeHeli=M.makeState("helicopter"),attitudeInput=M.makeInput("helicopter");
 attitudeInput.collective=.80;attitudeInput.pitch=-.65;

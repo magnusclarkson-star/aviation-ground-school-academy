@@ -30,6 +30,16 @@ function shapeRotorCollective(value,altitudeM,onGround){
  const proximity=clamp((12-Math.max(0,altitudeM))/6,0,1);
  return trim+displacement*(1-proximity*(1-fineFactor));
 }
+// Blend hover cyclic translation damping smoothly across the low/slow
+// boundary. The former hard switch at 6 kt or 12 m could cause a noticeable
+// sudden change in response during an approach to the pad. The familiar
+// low-hover response and full-flight response remain exactly the same away
+// from the transition band. This does NOT hold altitude/position.
+function rotorHorizontalResponse(altitudeM,speedKt,centred){
+ const nearPad=clamp((14-altitudeM)/4,0,1);
+ const slow=clamp((8-speedKt)/4,0,1);
+ return .95+nearPad*slow*((centred?2.6:1.52)-.95);
+}
 const KNOT=0.514444;
 // Five distinct *illustrative*, bounded jet responses. These are teaching
 // settings, not manufacturer speeds, performance or flight-envelope data.
@@ -210,13 +220,12 @@ function step(state,input,seconds){
    // full-flight response. Give deliberate small/large cyclic corrections
    // a quicker but still damped low-speed response on a phone. Recentring
    // gets a little extra damping to settle drift, never an autopilot hold.
-   const lowSlow=state.altitudeM<12&&state.speedKt<6;
    const centred=Math.abs(bank)<.08&&Math.abs(pitch)<.08;
-   // Re-centred cyclic settles residual low-hover drift sooner so switching
-   // camera while watching the helipad doesn't exaggerate momentum.
-   // Only damp actual velocity when the cyclic is centred: no teleport,
-   // pad hold/autopilot, or change to the approved pedal yaw response.
-   const horizontalResponse=lowSlow?(centred?2.6:1.52):.95;
+   // Re-centred cyclic damps horizontal drift; the 4–8 kt and 10–14 m
+   // transitions are continuous instead of suddenly switching response.
+   // No teleport, position lock, altitude hold or pedal-yaw change.
+   const horizontalResponse=rotorHorizontalResponse(
+    state.altitudeM,state.speedKt,centred);
    const forward=smooth(state.forwardMs,state.pitchDeg*(13/9),horizontalResponse,dt);
    const lateral=smooth(state.lateralMs,state.rollDeg*(11/13),horizontalResponse,dt);
    state.forwardMs=forward;state.lateralMs=lateral;
@@ -249,7 +258,11 @@ function step(state,input,seconds){
     // raising collective before contact must not erase a hard impact.
     const impactVS=state.verticalMs;
     const insidePad=Math.hypot(state.xM,state.zM)<27;
-    const gentle=impactVS>=-1.75&&state.groundSpeedKt<9&&
+    // Skid touchdown must not be labelled gentle while sliding sideways
+    // at appreciable ground speed or rotating rapidly about the mast.
+    // These are forgiving fictional gameplay bands, NOT R44 POH limits.
+    const gentle=impactVS>=-1.75&&state.groundSpeedKt<7&&
+     Math.abs(state.yawRateDegS)<12&&
      Math.abs(state.rollDeg)<10&&insidePad;
     const precision=gentle&&state.hoverAchieved&&
      Math.hypot(state.xM,state.zM)<=6&&impactVS>=-1.4&&
@@ -416,7 +429,8 @@ function step(state,input,seconds){
  return {state,events};
 }
 const api={makeInput,makeState,step,markReturnFinal,rotorHoverCue,
- shapeRotorCyclic,shapeRotorCollective,flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
+ shapeRotorCyclic,shapeRotorCollective,rotorHorizontalResponse,
+ flightProfile,JET_SETTINGS,AIRFRAME_IDS,clamp,KNOT};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAImmersiveFlight=api;
 })(typeof window!=="undefined"?window:null);
