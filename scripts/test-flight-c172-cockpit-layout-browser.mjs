@@ -74,6 +74,9 @@ try{
     "dashboard does not cover most of the forward view "+JSON.stringify(info));
    assert.ok(info.yoke.bottom<=info.leftPedal.y+5,
     "C172 yoke remains unobstructed above both pedals "+JSON.stringify(info));
+   assert.ok(info.yokeArtwork.bottom<=info.leftPedal.y-1&&
+    info.yokeArtwork.width>=145&&info.yokeArtwork.height>=48,
+    "visible C172 yoke artwork fits above the pedals and remains readable "+JSON.stringify(info));
    assert.ok(info.switches.y>=info.map.bottom-5,
     "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
    assert.ok(info.switches.right<=info.throttle.x+4,
