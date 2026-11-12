@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="flight-sim-authentic.css">
 <link rel="stylesheet" href="flight-sim-focus.css?v=20261111-pilot-wide-cockpit3">
 <link rel="stylesheet" href="flight-sim-aircraft-gallery.css?v=20261109-360shortcut2">
-<link rel="stylesheet" href="flight-sim-inspection.css?v=20261112-fighter-load1">
+<link rel="stylesheet" href="flight-sim-inspection.css?v=20261112-interiorview1">
 <link rel="stylesheet" href="flight-sim-r44.css?v=20261111-r44-return-cue2">
 <link rel="stylesheet" href="flight-sim-compact-actions.css?v=20261109-cockpit4">
 <link rel="stylesheet" href="flight-sim-pfd-zoom.css?v=20261109-axisnav1">
@@ -131,9 +131,9 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
 <script src="flight-sim-f35-airframe.js?v=20261112-gearwells1" defer></script>
 <script src="flight-sim-su37-airframe.js?v=20261112-gearfinal2" defer></script>
 <script src="flight-sim-typhoon-airframe.js?v=20261112-gearfinal2" defer></script>
-<script src="flight-sim-3d.js?v=20261112-gearfinal2" defer></script>
+<script src="flight-sim-3d.js?v=20261112-interiorview1" defer></script>
 <script src="flight-sim-exterior-2d.js?v=20261110-v2closer2" defer></script>
-<script src="flight-sim-inspection.js?v=20261112-source-typhoon-1" defer></script>
+<script src="flight-sim-inspection.js?v=20261112-interiorview1" defer></script>
 <script src="flight-sim-aircraft-systems.js?v=20261110-r44link1" defer></script>
 <script src="flight-sim-exercises.js" defer></script>
 <script src="flight-sim-instructor-voice.js" defer></script>
@@ -921,6 +921,10 @@ body[data-cockpit-focus="on"] #cockpitStation #cockpitMain #cockpitSwitchPanel .
     <div id="aircraftInspectLoading" class="aircraft-inspect-loading" role="status" aria-live="polite"></div>
    </div>
    <div class="aircraft-inspect-controls">
+    <div class="aircraft-inspect-view-tabs" role="group" aria-label="Aircraft inspection view">
+     <button type="button" id="aircraftInspectExterior" aria-pressed="true">Exterior 360°</button>
+     <button type="button" id="aircraftInspectInterior" aria-pressed="false">Interior</button>
+    </div>
     <span id="aircraftInspectAngles" class="aircraft-inspect-metadata">AZ 000° · EL 026°</span>
     <span id="aircraftInspectRenderMode" class="aircraft-inspect-metadata">3D view</span>
     <button type="button" id="aircraftInspectZoomOut" aria-label="Zoom out aircraft">−</button>

@@ -112,3 +112,16 @@ body[data-aircraft-inspect="on"]{overflow:hidden}
  .aircraft-inspect-select-label{flex-direction:row;align-items:center;flex-basis:175px}
  #aircraftInspectModelSelect{min-height:27px;font-size:10px}
 }
+
+/* Two study modes share the same inspector; controls stay below the image. */
+.aircraft-inspect-view-tabs{display:inline-flex;gap:4px;flex-wrap:nowrap}
+.aircraft-inspect-view-tabs button{min-width:76px}
+.aircraft-inspect-view-tabs button[aria-pressed="true"]{
+ border-color:#f6d58d;background:#6d542c;color:#fff0c4
+}
+@media(max-width:740px){
+ .aircraft-inspect-view-tabs button{min-width:60px;font-size:10px;padding:4px 5px}
+}
+@media(orientation:landscape) and (max-height:620px){
+ .aircraft-inspect-view-tabs button{min-height:29px}
+}
