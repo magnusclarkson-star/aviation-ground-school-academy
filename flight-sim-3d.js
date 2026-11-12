@@ -40,6 +40,10 @@ const MolenC172=root?.AGSAC172Airframe||
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
+const Clouds=root?.AGSAFlightClouds||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-clouds.js"):null);
+if(!Clouds)throw Error("Deterministic cloud scenery module missing");
 
 class Mesh{
  constructor(){this.p=[];this.c=[];this.n=[];this.triangles=0}
@@ -325,11 +329,8 @@ function airfield(mesh){
   mesh.cone(x,y+h*.2,z,h*.28,h*.82,
    i%3?rgb(43,105,73):rgb(51,119,72),6);
  }
- for(let i=0;i<35;i++){
-  const x=(noise(i*8.4)-.5)*11000,y=800+noise(i*2+19)*540,
-   z=700+noise(i*1.9+41)*7000,s=75+noise(i*12.1)*80;
-  mesh.cloud(x,y,z,s);mesh.cloud(x+s*.6,y+9,z+s*.15,s*.65);
- }
+ // Moving clouds are uploaded as one distinct shared GPU object. They do
+ // not belong in the static terrain mesh or they would never drift.
 }
 function airportDetails(mesh){
  if(!Airport)return;
@@ -402,6 +403,16 @@ function buildWindsockFabric(anchor,limp=false){
   const color=i%2?rgb(249,229,223):rgb(221,100,78);
   for(let j=0;j<4;j++)
    m.quad(a[j],a[(j+1)%4],b[(j+1)%4],b[j],color);
+ }
+ return m.finish();
+}
+function buildCloudLayer(){
+ // Fixed, synthetic cloud coordinates shared with the phone fallback.
+ // Each low-poly cluster is uploaded ONCE, not regenerated every frame.
+ const m=new Mesh();
+ for(const c of Clouds.clouds){
+  m.cloud(c.x,c.y,c.z,c.size);
+  m.cloud(c.x+c.size*.6,c.y+9,c.z+c.size*.15,c.size*.65);
  }
  return m.finish();
 }
@@ -1101,7 +1112,11 @@ vec3 rotatePart(vec3 v,int axis,float angle){
 void main(){
  vec3 p=aPosition;
  vec3 normal=aNormal;
- if(uActor>4.5){
+ if(uActor>5.5){
+  // One translated cloud mesh drifts at simulated wind speed while retaining
+  // WORLD coordinates. It does not rotate with the airplane or the camera.
+  p+=uPartPivot;
+ }else if(uActor>4.5){
   // Ground vehicle geometry is local to its moving world position.
   p=rotatePart(p,2,uPartAngle)+uPartPivot;
   normal=rotatePart(normal,2,uPartAngle);
@@ -1431,7 +1446,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   void importC172();
   void importR44();
   const worldPlane=inspectionOnly?null:upload(buildWorld("airplane")),
-   worldHeli=inspectionOnly?null:upload(buildWorld("helicopter"));
+   worldHeli=inspectionOnly?null:upload(buildWorld("helicopter")),
+   cloudLayer=inspectionOnly?null:upload(buildCloudLayer());
   const glowPlane=inspectionOnly?null:upload(buildGroundGlow("airplane")),
    glowHeli=inspectionOnly?null:upload(buildGroundGlow("helicopter"));
   const trafficMeshes=inspectionOnly?null:{
@@ -1531,6 +1547,15 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    if(!inspectionOnly&&view!=="inspect"){
     gl.bindVertexArray(world.vao);
     gl.drawArrays(gl.TRIANGLES,0,world.count);
+    // Same world-anchored cloud layer for C172 and R44. Simulated weather
+    // moves it through the sky with no fresh vertex uploads or downloads.
+    const drifting=Clouds.drift(state.time,state.windXMps,state.windZMps,reducedMotion);
+    gl.uniform1f(uni.uActor,6);
+    gl.uniform3fv(uni.uPartPivot,[drifting.x,0,drifting.z]);
+    gl.bindVertexArray(cloudLayer.vao);
+    gl.drawArrays(gl.TRIANGLES,0,cloudLayer.count);
+    gl.uniform3fv(uni.uPartPivot,[0,0,0]);
+    gl.uniform1f(uni.uActor,0);
     if(lighting==="dusk"||lighting==="golden"){
      gl.uniform1f(uni.uActor,3);
      gl.uniform1f(uni.uOpacity,lighting==="dusk"?.88:.51);
@@ -1791,7 +1816,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
