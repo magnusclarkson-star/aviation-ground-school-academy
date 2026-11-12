@@ -192,9 +192,13 @@ try{
  assert.ok(control&&pedal&&pedal.y>=control.y+control.height-12&&pedal.y-control.y<280,
   "pedals remain below the centered yoke when narration panel expands");
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
- assert.equal(await phone.locator("#r44VoiceToggle").isVisible(),true);
- assert.equal(await phone.locator("#r44VoiceToggle").isDisabled(),true,
-  "unsupported phone remains silent and keeps the R44 cockpit usable");
+ assert.equal(await phone.locator("#r44VoiceToggle").isVisible(),false,
+  "the old R44 lesson strip remains hidden to preserve pedal space");
+ await phone.locator("#cockpitHelpToggle").tap();
+ assert.equal(await phone.locator("#r44VoiceMoreToggle").isVisible(),true,
+  "R44 spoken instructor control is reachable inside More on a phone");
+ assert.equal(await phone.locator("#r44VoiceMoreToggle").isDisabled(),true,
+  "unsupported phone stays silent without removing text-based guidance");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "R44 mute icon cannot create horizontal scrolling on a 390px phone");
  assert.deepEqual(errors,[]);
