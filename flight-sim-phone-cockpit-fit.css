@@ -311,3 +311,14 @@
   bottom:30px!important;
  }
 }
+
+
+/* R44 portrait: move ONLY the existing left/right pedal deck down 34px,
+   close to the phone's bottom edge. A visual transform preserves its
+   original size, finger targets and grid space, and leaves the horizon,
+   gauges, cyclic, collective, switches and restart untouched. */
+@media (orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="r44"] #cockpitMain .control-panel>.rudder-deck{
+  transform:translateY(34px)!important;
+ }
+}

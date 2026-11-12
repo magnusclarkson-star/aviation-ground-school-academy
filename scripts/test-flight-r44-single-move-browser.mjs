@@ -91,6 +91,13 @@ try {
   assert.ok(result.left.top>=0&&result.right.top>=0&&
    result.left.bottom<=result.viewport.height-2&&result.right.bottom<=result.viewport.height-2,
    mode.label+" both full-size pedals visible without scrolling "+JSON.stringify(result));
+  if(mode.label!=="landscape"){
+   const floorSpace=result.viewport.height-Math.max(result.left.bottom,result.right.bottom);
+   assert.ok(floorSpace>=2&&floorSpace<=13,
+    mode.label+" both R44 pedals sit at the screen bottom without scrolling "+JSON.stringify({floorSpace,...result}));
+   assert.ok(Math.abs(result.left.height-43)<1&&Math.abs(result.right.height-43)<1,
+    mode.label+" original pedal size is preserved");
+  }
   console.log("R44 "+mode.label+" geometry: "+JSON.stringify(result));
   assert.deepEqual(errors,[],"no runtime errors in "+mode.label);
   await page.close();
