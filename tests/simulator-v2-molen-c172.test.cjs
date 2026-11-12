@@ -50,7 +50,7 @@ test("source C172 is not covered by old box cabin or duplicated propeller",()=>{
  const code=fs.readFileSync("flight-sim-3d.js","utf8");
  assert.match(code,/const isMolenC172=id==="c172"&&realModel\?\.kind==="molen"/);
  assert.match(code,/if\(isMolenC172\)\{\s*\/\/ This complete source Skyhawk/);
- assert.match(code,/if\(model\.propSweep&&!realModel&&propOpacity>0\)/,
-  "procedural prop blur can only draw without any real aircraft");
+ assert.match(code,/if\(model\.propSweep&&!realModel&&!pendingSourceJet&&propOpacity>0\)/,
+  "procedural prop blur cannot draw over real C172 or a loading source fighter");
  assert.match(code,/const MolenR44=/,"approved R44 source remains connected");
 });
