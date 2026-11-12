@@ -618,6 +618,9 @@ try{
    return {
     horizontal:document.documentElement.scrollWidth<=innerWidth+2,
     instrumentsAboveControls:panel.bottom<=controls.top+15,
+    panelBottom:Math.round(panel.bottom),controlTop:Math.round(controls.top),
+    overlapPx:Math.round(panel.bottom-controls.top),
+    stationPhoto:document.getElementById('cockpitStation').dataset.photoCockpit,
     allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
     heights:screens.map(v=>Math.round(v.height)),
     panelHeight:panel.height
