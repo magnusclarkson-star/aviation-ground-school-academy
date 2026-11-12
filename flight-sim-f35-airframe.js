@@ -10,6 +10,17 @@ const MAX_BYTES=1200000,MAX_TRIANGLES=32000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
 function partMotion(name,coords){
+ // FlightGear wheel and strut meshes were previously static even though the
+ // flight-system model reports a retracting undercarriage. Fold each original
+ // source assembly into a belly-side hinge rather than overlaying fake gear.
+ if(name.startsWith("gear:")){
+  const key=name.endsWith(".F")?"noseGear":
+   name.endsWith(".R")?"mainGearRight":
+   name.endsWith(".L")?"mainGearLeft":null;
+  if(key)return {partAxis:4,partName:key,
+   partPivot:key==="noseGear"?[0,-.65,3.35]:
+    [key==="mainGearRight"?1.8:-1.8,-.65,-2.2]};
+ }
  const map={
   flaperonL:"leftAileron",flaperonR:"rightAileron",
   spoilerL:"leftFlap",spoilerR:"rightFlap",
