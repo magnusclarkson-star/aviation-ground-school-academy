@@ -117,11 +117,26 @@ try{
   {name:"landscape",w:844,h:390}]){
   await phone3d.setViewportSize({width:layout.w,height:layout.h});
   for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
-   await phone3d.locator("#aircraftInspectModelSelect").selectOption(id);
+   const changed=await phone3d.evaluate(id=>{
+    const select=document.querySelector("#aircraftInspectModelSelect");
+    const prev=select.value;
+    select.value=id;
+    select.dispatchEvent(new Event("change",{bubbles:true}));
+    const vp=document.querySelector("#aircraftInspectViewport");
+    const canvas=document.querySelector("#aircraftInspectCanvas3D");
+    return {prev,loading:vp.dataset.modelLoading,hidden:canvas.hidden};
+   },id);
+   if(changed.prev!==id){
+    assert.equal(changed.loading,"on",
+     "switching to "+id+" must hide the previous airplane immediately");
+    assert.equal(changed.hidden,true,
+     "no stale 360 airframe image can appear during model selection");
+   }
    await phone3d.waitForFunction(target=>{
     const vp=document.querySelector("#aircraftInspectViewport");
     const canvas=document.querySelector("#aircraftInspectCanvas3D");
-    if(vp.dataset.modelLoading!=="off"||!canvas.dataset.airframeSource)
+    if(vp.dataset.modelLoading!=="off"||
+       canvas.dataset.airframeId!==target||!canvas.dataset.airframeSource)
      return false;
     if(target==="f22")return canvas.dataset.airframeSource==="gpl-f22-fguk";
     if(target==="f35")return canvas.dataset.airframeSource==="gpl-f35b-flightgear";
@@ -131,6 +146,9 @@ try{
    },id,{timeout:25000});
    assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
     id+" genuine 360 mesh must be visible at "+layout.name);
+   assert.equal(await phone3d.evaluate(()=>document.querySelector(
+    "#aircraftInspectCanvas3D").dataset.airframeId),id,
+    "360 cannot mistake an earlier aircraft for another procedural fighter");
    assert.ok(await phone3d.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
     id+" inspection must fit without horizontal scrolling");
    await phone3d.locator("#aircraftInspectViewport").screenshot({
