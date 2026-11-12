@@ -1246,12 +1246,17 @@ void main(){
   // Rotate illustrated flap/aileron/elevator surfaces around their hinges,
   // or propeller/rotor parts around their hub. Static body/world have axis 0.
   if(uPartAxis==4){
-   // Original imported fighter undercarriage, fully present while deployed,
-   // folds into its belly hinge as the system's gear angle approaches 1.53.
-   // The shrinking fold avoids crossing the dorsal skin or adding fake wheels.
-   float retraction=clamp(uPartAngle/1.53,0.,1.);
-   p=uPartPivot+rotatePart(p-uPartPivot,1,uPartAngle*.88)*(1.-retraction);
-   normal=rotatePart(normal,1,uPartAngle*.88);
+   // Imported fighter wheels stay full-size throughout the gear cycle.
+   // The nose wheel swings aft about X; each main wheel rotates inward
+   // about its longitudinal Z hinge, rather than shrinking to a point.
+   // These source-specific pivots keep F-35B links below the dorsal skin.
+   float fraction=clamp(uPartAngle/1.53,0.,1.);
+   float fold=fraction*fraction*(3.-2.*fraction)*1.53;
+   bool mainGear=abs(uPartPivot.x)>.4;
+   int hingeAxis=mainGear?3:1;
+   float hingeAngle=mainGear?-sign(uPartPivot.x)*fold:fold;
+   p=uPartPivot+rotatePart(p-uPartPivot,hingeAxis,hingeAngle);
+   normal=rotatePart(normal,hingeAxis,hingeAngle);
   }else if(uPartAxis>0){
    p=rotatePart(p-uPartPivot,uPartAxis,uPartAngle)+uPartPivot;
    normal=rotatePart(normal,uPartAxis,uPartAngle);
@@ -1862,16 +1867,29 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.bindVertexArray(model.shellGlass.vao);
       gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
      }else if(id==="f22"||id==="f35"){
-      // Original FlightGear F-22 geometry replaces the illustrated jet.
-      // Source ailerons, flaps, elevators and rudders are hinged in WebGL;
-      // the translucent source canopy draws after the opaque surfaces.
+      // The genuine FlightGear airframe keeps its opaque skin and correctly
+      // hinged surfaces. Render full-size gear with depth writes while
+      // deployed and rotating; conceal it only at the very end of the fold
+      // rather than shrinking wheels into impossible miniature tyres.
+      const gearOpacity=part=>{
+       if(part.partAxis!==4)return 1;
+       const angle=animation?.[part.partName];
+       const progress=limit((Number.isFinite(angle)?angle:0)/1.53,0,1);
+       const fade=limit((progress-.82)/.16,0,1);
+       return 1-fade*fade*(3-2*fade);
+      };
       gl.disable(gl.BLEND);gl.depthMask(true);
-      for(const part of realModel.primitives)
-       if((part.opacity??1)>=.99)drawPrimitive(part,1);
+      for(const part of realModel.primitives){
+       if((part.opacity??1)<.99)continue;
+       if(part.partAxis!==4||gearOpacity(part)>.999)drawPrimitive(part,1);
+      }
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
-      for(const part of realModel.primitives)
-       if((part.opacity??1)<.99)drawPrimitive(part,limit(part.opacity,0,1));
+      for(const part of realModel.primitives){
+       const sourceAlpha=limit(part.opacity??1,0,1);
+       const alpha=sourceAlpha*gearOpacity(part);
+       if(alpha>.005&&alpha<.999)drawPrimitive(part,alpha);
+      }
      }else if(isMolen){
       // The MIT aircraft already contains source windows, cabin, landing
       // gear, main and tail rotors. Draw none of the older AC3D overlays.

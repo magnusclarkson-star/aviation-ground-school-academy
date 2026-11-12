@@ -118,15 +118,34 @@ try{
    gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,px);
    return px;
   };
-  const down=sample(0),up=sample(1.53);
-  let differences=0;
-  for(let i=0;i<down.length;i+=4)
-   if(Math.abs(down[i]-up[i])+Math.abs(down[i+1]-up[i+1])+
-      Math.abs(down[i+2]-up[i+2])>45)differences++;
-  return differences;
+  const down=sample(0),half=sample(.765),up=sample(1.53);
+  const pixelsChanged=(a,b)=>{
+   let n=0;
+   for(let i=0;i<a.length;i+=4)
+    if(Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+
+       Math.abs(a[i+2]-b[i+2])>45)n++;
+   return n;
+  };
+  return {whole:pixelsChanged(down,up),
+   first:pixelsChanged(down,half),second:pixelsChanged(half,up)};
  });
- assert.ok(gearChanged>15,
-  "imported F22 gear must change in real GPU pixels: "+gearChanged);
+ assert.ok(gearChanged.whole>15&&gearChanged.first>10&&gearChanged.second>10,
+  "source F22 must fold visibly in both halves, not disappear or shrink instantly: "+
+  JSON.stringify(gearChanged));
+ await page.evaluate(()=>{
+  const r=window.__f22Renderer,s=window.__f22State;
+  r.draw(s,{view:"inspect",airframeId:"f22",
+   orbit:{azimuth:25,elevation:-50,distance:23},
+   animation:{noseGear:.765,mainGearLeft:.765,mainGearRight:.765}});
+ });
+ await page.locator("#f22SourceEvidence").screenshot({
+  path:"artifacts/real-f22-gear-halfway.png"});
+ await page.evaluate(()=>{
+  const r=window.__f22Renderer,s=window.__f22State;
+  r.draw(s,{view:"inspect",airframeId:"f22",
+   orbit:{azimuth:25,elevation:-50,distance:23},
+   animation:{noseGear:1.53,mainGearLeft:1.53,mainGearRight:1.53}});
+ });
  await page.locator("#f22SourceEvidence").screenshot({
   path:"artifacts/real-f22-gear-retracted.png"});
  assert.deepEqual(errors,[],"imported F-22 must not cause browser exceptions");

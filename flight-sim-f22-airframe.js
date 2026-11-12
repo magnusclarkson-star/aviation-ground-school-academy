@@ -18,7 +18,10 @@ function partMotion(name,coords){
  if(nose||left||right){
   const key=nose?"noseGear":left?"mainGearLeft":"mainGearRight";
   return {partAxis:4,partName:key,
-   partPivot:nose?[0,-1.14,3.35]:[left?1.45:-1.45,-1.10,-2.90]};
+   partPivot:nose?[0,-1.14,3.35]:
+    // The real source main-gear supports start outside +/-1.25m; folding
+    // around these inboard hinges moves the intact wheels into the belly.
+    [left?1.25:-1.25,-1.10,-2.90]};
  }
  const match=name.match(/^(left|right)-(flap|aileron|slat|elevator|rudder)/i);
  if(!match)return {partAxis:0,partName:null,partPivot:[0,0,0]};

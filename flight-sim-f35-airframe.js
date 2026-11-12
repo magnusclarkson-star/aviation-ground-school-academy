@@ -19,7 +19,9 @@ function partMotion(name,coords){
    name.endsWith(".L")?"mainGearLeft":null;
   if(key)return {partAxis:4,partName:key,
    partPivot:key==="noseGear"?[0,-.65,3.35]:
-    [key==="mainGearRight"?1.8:-1.8,-.65,-2.2]};
+    // Inner-edge pivots make both main gears swing toward the centreline;
+    // a side-on rigid rotation stays below the previously enforced -.65m.
+    [key==="mainGearRight"?1.70:-1.70,-.65,-2.2]};
  }
  const map={
   flaperonL:"leftAileron",flaperonR:"rightAileron",
