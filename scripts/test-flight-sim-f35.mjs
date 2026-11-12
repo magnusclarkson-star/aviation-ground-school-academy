@@ -54,3 +54,26 @@ assert.throws(()=>F35.parseF35(asset.replace('"quantization":1000','"quantizatio
  /F-35B geometry metadata invalid/);
 console.log("GPL source F-35B passes: "+model.triangles+
  " authentic mesh triangles, separate tail/wings, source flight controls, valid WebGL and attribution.");
+
+
+/* The aircraft is lazy-loaded on mobile: a temporary offline/server failure
+ * must not poison future attempts, and simultaneous views share one fetch.
+ * This test runs in the existing F-35B source CI gate.
+ */
+let fetchAttempts=0;
+const flakyFetcher=async()=>{
+ fetchAttempts++;
+ if(fetchAttempts===1)return {ok:false,status:503};
+ return {ok:true,text:async()=>asset};
+};
+await assert.rejects(F35.ensureF35(flakyFetcher),/F-35B mesh HTTP 503/,
+ "a failed first source download must report the error");
+const [loadedFromTop,loadedFromInspect]=await Promise.all([
+ F35.ensureF35(flakyFetcher),F35.ensureF35(flakyFetcher)
+]);
+assert.strictEqual(loadedFromTop,loadedFromInspect,
+ "simultaneous F-35B views must share one parsed mesh");
+assert.equal(fetchAttempts,2,
+ "retry should perform only one additional source request");
+assert.strictEqual(await F35.ensureF35(()=>{throw Error("unexpected refetch");}),
+ loadedFromTop,"loaded mesh must be reused without network access");
