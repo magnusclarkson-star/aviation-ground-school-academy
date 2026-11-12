@@ -117,7 +117,9 @@
   function syncModelVisibility(){
    const id=selected();
    let phase="ready";
-   if(renderer&&usingGPU){
+   // Interior study renders self-contained cockpit geometry and must not
+   // depend on downloading the large external aircraft mesh.
+   if(renderer&&usingGPU&&!orbit.interior){
     if(id==="c172")phase=renderer.realC172Status;
     else if(id==="r44")phase=renderer.realR44Status;
     else if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon")
