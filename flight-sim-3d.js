@@ -1863,6 +1863,16 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      (id==="c172"?realC172:id==="r44"?realR44:
      id==="f22"?realF22:id==="su37"?realSu37:
      id==="typhoon"?realTyphoon:null);
+    // The four source-derived fighters no longer display their obsolete
+    // procedural jets while their genuine exterior assets load. This applies
+    // to chase/3D exterior views as well as the already guarded 360 inspector.
+    // Keep the scenery and flight controls live while the source is pending.
+    const sourceJet=id==="f22"||id==="f35"||
+     id==="su37"||id==="typhoon";
+    const pendingSourceJet=sourceJet&&!realModel;
+    const sourceJetStatus=id==="f22"?realF22Status:
+     id==="f35"?realF35Status:id==="su37"?realSu37Status:
+     id==="typhoon"?realTyphoonStatus:null;
     const isMolen=id==="r44"&&realModel?.kind==="molen";
     const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
@@ -1870,7 +1880,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       id==="su37"?"gpl-su37-fguk":
       id==="typhoon"?"gpl-typhoon-fg":
       isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
-      isMolen?"mit-r44-glb":"licensed-r44-ac3d"):"procedural";
+      isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
+      pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
+      "procedural";
     if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
      "source-cabin-and-panel":realModel&&model.cabin?
      "four-seats-and-panel":"not-rendered";
@@ -1999,7 +2011,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.bindTexture(gl.TEXTURE_2D,null);
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uOpacity,1);
      gl.uniform1f(uni.uAlphaCutoff,0);gl.uniform1i(uni.uC172Pass,0);
-    }else{
+    }else if(!pendingSourceJet){
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
@@ -2031,7 +2043,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      model.authenticRotorSweep:model.rotorSweep;
     const tailRotorSweep=isMolen?null:isImportedRotorcraft?
      model.authenticTailRotorSweep:model.tailRotorSweep;
-    const animatedParts=isMolen?[]:
+    const animatedParts=isMolen||pendingSourceJet?[]:
      id==="f22"&&realModel?[]:
      id==="f35"&&realModel?[]:
      id==="su37"&&realModel?[]:
@@ -2065,7 +2077,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // actual blades remain distinct at startup and low power.
     const propOpacity=Number.isFinite(animation?.propBlurOpacity)?
      limit(animation.propBlurOpacity,0,.16):0;
-    if(model.propSweep&&!realModel&&propOpacity>0){
+    if(model.propSweep&&!realModel&&!pendingSourceJet&&propOpacity>0){
      gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
      gl.uniform1f(uni.uOpacity,propOpacity);
      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -2092,7 +2104,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // Imported assets use fixtures mounted to their ACTUAL parsed surface
     // vertices; fallback models retain their own procedural light stations.
     const lightingModel=realModel?.positionLights?realModel:model;
-    if(view!=="cockpit"&&lightingModel.positionLights){
+    if(view!=="cockpit"&&!pendingSourceJet&&lightingModel.positionLights){
      // Three fixed, correctly sided colour references follow the exact
      // aircraft transform through chase, side, top and 360-degree inspection.
      // They are never drawn into the approved pilot-facing cockpit controls.
