@@ -24,6 +24,28 @@ assert.match(vertexSource,/normal=vec3\(normal\.x\*c\+normal\.z\*s/,
  "aircraft yaw rotates surface normals");
 assert.match(vertexSource,/dot\(normalize\(normal\)/,
  "directional light uses the transformed normal, not the source normal");
+// The Super Hornet's new under-tail hook and canted twin-tail detailing
+// belong only to FA18 exterior geometry and remain below the body.
+const hornet=Three.buildVehicle("fa18");
+const typhoonControl=Three.buildVehicle("typhoon");
+const hasVertex=(mesh,x,y,z,tol=.015)=>{
+ for(let i=0;i<mesh.positions.length;i+=3)
+  if(Math.abs(mesh.positions[i]-x)<tol&&
+     Math.abs(mesh.positions[i+1]-y)<tol&&
+     Math.abs(mesh.positions[i+2]-z)<tol)return true;
+ return false;
+};
+assert.ok(hasVertex(hornet,0,-1.13,-7.53),
+ "F/A-18 must include its centreline arresting hook below the tail");
+assert.ok(hasVertex(hornet,1.48,2.63,-5.84),
+ "F/A-18 must include right-hand canted tail detail");
+assert.ok(hasVertex(hornet,-1.48,2.63,-5.84),
+ "F/A-18 must include left-hand canted tail detail");
+assert.ok(!hasVertex(typhoonControl,0,-1.13,-7.53),
+ "FA18 arresting hook must not leak onto other jets");
+assert.ok(hornet.vertices<30000,
+ "F/A-18 visible detail must remain within the mobile mesh budget");
+
 const empty=new Three.Mesh();
 assert.equal(empty.finish().triangles,0);
 empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
