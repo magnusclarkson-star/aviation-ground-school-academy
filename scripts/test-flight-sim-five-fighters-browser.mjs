@@ -30,7 +30,7 @@ const aircraft=[
  {id:"f22",source:"gpl-f22-fguk"},
  {id:"f35",source:"gpl-f35b-flightgear"},
  {id:"typhoon",source:"procedural"},
- {id:"su37",source:"procedural"}
+ {id:"su37",source:"gpl-su37-fguk"}
 ];
 fs.mkdirSync("artifacts",{recursive:true});
 let browser;
@@ -72,10 +72,12 @@ try{
       orbit:{azimuth:30,elevation:18,distance:26}});
     },id);
     assert.ok(selected,"first "+id+" render must not fail");
-    if(id==="f22"||id==="f35"){
+    if(id==="f22"||id==="f35"||id==="su37"){
      await page.waitForFunction(id=>{
       const r=window.__fighterRenderer;
-      return (id==="f22"?r.realF22Status:r.realF35Status)==="imported";
+      const status=id==="f22"?r.realF22Status:
+       id==="f35"?r.realF35Status:r.realSu37Status;
+      return status==="imported";
      },id,{timeout:25000});
     }
     // Pixel evidence: each orbit genuinely changes the visual aircraft.
