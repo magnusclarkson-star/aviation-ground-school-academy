@@ -9,20 +9,12 @@
   min-height:0!important;max-height:none!important;
  }
 }
-/* C172 landscape: run the moving pilot scene behind the full dash, as
-   in an aircraft windscreen, and lift the ENTIRE existing panel by 30px.
-   This puts unchanged yoke/pedals/restart on-screen together and avoids
-   clipping their lower portions. No child control is individually moved. */
+/* C172 landscape: retain the existing projected runway/horizon
+   geometry at the original 34dvh forward-camera height. A full-screen
+   WebGL viewport pushed the horizon BEHIND the gauges, so do not stretch it.
+   Lift the entire unchanged dashboard just enough for both pedals and
+   Restart to remain visible, without altering any individual controls. */
 @media (orientation:landscape) and (min-width:600px) and (max-height:510px){
- body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]){
-  display:block!important;overflow:hidden!important;
- }
- body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="c172"][data-photo-cockpit="on"])>.scene-shell{
-  position:absolute!important;inset:0!important;
-  width:100%!important;height:100dvh!important;
-  min-height:0!important;max-height:none!important;
-  flex:none!important;aspect-ratio:auto!important;z-index:0!important;
- }
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]{
   position:absolute!important;inset:auto 0 30px 0!important;
   height:clamp(236px,64dvh,295px)!important;
