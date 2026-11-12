@@ -69,7 +69,7 @@ function parseF35(text){
   for(const group of part.g){
    if(!Array.isArray(group)||group.length!==2||!Number.isInteger(group[0])||
       !data.materials[group[0]]||!Array.isArray(group[1])||
-      group[1].length%3||group[1].length>15000)throw Error("F-35B faces invalid");
+      group[1].length%3||group[1].length>32000)throw Error("F-35B faces invalid");
    const sourceMat=data.materials[group[0]],faceIds=group[1];
    if(sourceMat.length!==4||!sourceMat.every(x=>finite(x)&&x>=0&&x<=1))
     throw Error("F-35B material invalid");
