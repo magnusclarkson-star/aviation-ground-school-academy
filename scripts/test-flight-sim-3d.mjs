@@ -71,6 +71,21 @@ assert.ok(hasTyphoonVertex(0,3.12,-7.35*typhoonZ),
 assert.ok(typhoonIntake.vertices<30000,
  "Typhoon geometry must stay inside mobile triangle budget");
 
+// The Su-37 has two genuinely separate aft exhaust fairings and distinct
+// forward canards; check vertices after the renderer's calibrated X/Z scale.
+const su37=Three.buildVehicle("su37"),suX=.850,suZ=1.260;
+const hasSu37=(x,y,z)=>hasVertex(su37,x*suX,y,z*suZ);
+assert.ok(hasSu37(1.15-.35,-.51,-7.57),
+ "right engine shroud should be attached below the Su-37 tail");
+assert.ok(hasSu37(-1.15-.35,-.51,-7.57),
+ "left engine shroud should remain independent");
+assert.ok(hasSu37(3.08,.71,3.31),
+ "right canard leading-edge panel must be visible");
+assert.ok(hasSu37(-3.08,.71,3.31),
+ "left canard leading-edge panel must mirror the right");
+assert.ok(su37.vertices<30000,
+ "Su-37 airframe must remain within the mobile vertex budget");
+
 const empty=new Three.Mesh();
 assert.equal(empty.finish().triangles,0);
 empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
