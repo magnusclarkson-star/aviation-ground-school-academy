@@ -36,7 +36,13 @@ try{
     airframe:station.dataset.airframe,photo:station.dataset.photoCockpit,
     scene:box(".scene-shell"),station:box("#cockpitStation"),
     cockpit:box("#cockpitMain"),instruments:box("#cockpitInstrumentWell"),
-    visual:box("#cockpitVisualPanel"),map:box("#cockpitVisualPanel .cockpit-nav-screen"),
+    visual:box("#cockpitVisualPanel"),
+    avionics:box("#cockpitVisualPanel .cockpit-avionics"),
+    map:box("#cockpitVisualPanel .cockpit-nav-screen"),
+    navSvg:box("#cockpitVisualPanel .cockpit-nav-scene svg"),
+    navReadouts:box("#cockpitVisualPanel .cockpit-nav-readouts"),
+    navWorld:document.querySelector("#cockpitVisualPanel [data-nav-world]")?.getAttribute("transform"),
+    navFields:document.querySelectorAll("#cockpitVisualPanel [data-nav-field]").length,
     yoke:box("#controlPad"),grip:box("#flightGrip"),
     yokeArtwork:box("#flightGrip .hardware-yoke"),
     gripStyle:{
@@ -77,6 +83,17 @@ try{
    assert.ok(info.yokeArtwork.bottom<=info.leftPedal.y-1&&
     info.yokeArtwork.width>=145&&info.yokeArtwork.height>=48,
     "visible C172 yoke artwork fits above the pedals and remains readable "+JSON.stringify(info));
+   assert.ok(info.avionics.height>info.avionics.width*1.2&&
+    info.avionics.height>=175&&info.avionics.width>=118,
+    "C172 NAV/COM is now a tall, readable portrait bezel "+JSON.stringify(info));
+   assert.ok(info.navSvg.height>=100&&info.navSvg.width>=100&&
+    info.navFields===5&&info.navWorld,
+    "LIVE moving map occupies substantial area with navigation telemetry "+JSON.stringify(info));
+   assert.ok(info.map.y>=info.avionics.y&&
+    info.avionics.bottom<=info.throttle.y-3,
+    "tall NAV/COM sits above engine throttle without hiding it "+JSON.stringify(info));
+   assert.ok(info.map.x>=info.instruments.x+info.instruments.width*.74,
+    "tall map remains to the right of the round instrument bank "+JSON.stringify(info));
    assert.ok(info.switches.y>=info.map.bottom-5,
     "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
    assert.ok(info.switches.right<=info.throttle.x+4,
@@ -89,6 +106,14 @@ try{
     view.name+" "+key+" must be visible without scrolling "+JSON.stringify(info));
   }
   assert.ok(info.scrollTop===0,"no automatic cockpit scrolling");
+  if(view.name==="landscape"){
+   await page.locator("#cockpitVisualPanel .cockpit-nav-screen").tap();
+   assert.ok(await page.locator("#cockpitZoomPanel").isVisible(),
+    "tapping the new portrait NAV/COM opens the larger live navigation display");
+   await page.locator("#cockpitZoomClose").tap();
+   assert.ok(!(await page.locator("#cockpitZoomPanel").isVisible()),
+    "the enlarged navigation display can be closed");
+  }
   assert.deepEqual(errors,[],"no JavaScript runtime errors");
   await page.close();
  }
