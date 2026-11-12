@@ -953,21 +953,45 @@ function buildFighterInterior(id){
  if(!p)return null;
  const m=new Mesh(),dark=rgb(32,40,47),rail=rgb(85,96,103),
   seat=rgb(65,72,77),padding=rgb(99,106,108),
-  screen=rgb(30,101,114),lit=rgb(97,180,175),belt=rgb(190,177,137);
+  screen=rgb(20,55,66),lit=rgb(93,192,174),belt=rgb(190,177,137),
+  metal=rgb(134,144,145),bezel=rgb(17,23,29),amber=rgb(216,163,81);
  const bottom=p.floor,z0=p.rear,z1=p.front,w=p.width;
- // Cockpit tub with a floor and narrow side consoles, not a second fuselage.
- m.box(-w,bottom,z0,w*2,.065,z1-z0,dark);
+ const dashZ=z1-.22,seatZ=z0+(z1-z0)*.37;
+ const face=(x,y,width,height,color=screen)=>{
+  // Faces point towards the occupant (-Z). Thin emissive-like graphics
+  // avoid overdraw/bleed through tinted imported glass.
+  m.box(x,y,dashZ-.041,width,height,.012,bezel);
+  m.box(x+.014,y+.014,dashZ-.056,width-.028,height-.028,.006,color);
+ };
+ const stroke=(x,y,width,height,color=lit,z=dashZ-.064)=>
+  m.box(x,y,z,width,height,.004,color);
+ const dial=(cx,cy,r)=>{
+  const z=dashZ-.069;
+  for(let k=0;k<20;k++){
+   const a=k*Math.PI/10,b=(k+1)*Math.PI/10;
+   const at=(radius,t)=>[cx+radius*Math.cos(t),cy+radius*Math.sin(t),z];
+   m.quad(at(r,a),at(r,b),at(r-.008,b),at(r-.008,a),metal);
+   m.tri([cx,cy,z-.004],at(r-.009,a),at(r-.009,b),bezel);
+  }
+  stroke(cx-.005,cy,.010,r*.65,amber,z-.011);
+ };
+ const symbology=(x,y,width,height)=>{
+  const z=dashZ-.065;
+  stroke(x+.04,y+height*.52,width-.08,.008,lit,z);
+  stroke(x+width*.50-.004,y+.03,.008,height-.06,lit,z);
+  for(let k=0;k<3;k++)stroke(x+.028,y+.045+k*.033,.035,.007,amber,z);
+ };
+ // Floor and low coaming are within the canopy, not part of the fuselage.
+ m.box(-w,bottom,z0,2*w,.055,z1-z0,dark);
  for(const side of [-1,1]){
-  const x=side<0?-w:-w*.0+w-.14;
+  const x=side<0?-w:w-.14;
   m.box(x,bottom+.12,z0+.18,.14,.24,z1-z0-.46,rail);
   for(let n=0;n<5;n++){
    const z=z0+.36+n*(z1-z0-.75)/5;
    m.box(x+.030,bottom+.368,z,.075,.012,.085,lit);
   }
  }
- const seatZ=z0+(z1-z0)*.37;
- // Ejection-style training seat: cushion, angled back, headrest,
- // restraint straps, side rails and visible lower harness buckle.
+ // One contoured pilot seat, headrest, guide rails and four-point harness.
  m.box(-.25,bottom+.16,seatZ-.20,.50,.15,.55,padding);
  m.box(-.25,bottom+.30,seatZ-.37,.50,.73,.17,seat);
  m.box(-.20,bottom+1.02,seatZ-.36,.40,.23,.16,padding);
@@ -975,27 +999,59 @@ function buildFighterInterior(id){
   const x=side*.215-.02;
   m.box(x,bottom+.28,seatZ-.40,.04,.91,.09,rail);
   m.box(side*.11-.024,bottom+.35,seatZ-.22,.048,.53,.04,belt);
+  m.box(side*.17-.025,bottom+.30,seatZ+.01,.05,.14,.16,rail);
  }
- m.box(-.07,bottom+.36,seatZ-.19,.14,.085,.05,lit);
- // Single central stick and forward rudder footrests.
+ m.box(-.07,bottom+.36,seatZ-.19,.14,.085,.05,metal);
+ // Central control column except F-35 side-stick to pilot's right.
+ const stickX=id==="f35"?w-.17:0;
  const stickZ=seatZ+.67;
- m.box(-.028,bottom+.16,stickZ,.056,.51,.056,rail);
- m.box(-.065,bottom+.63,stickZ-.038,.13,.18,.12,dark);
+ m.box(stickX-.028,bottom+.16,stickZ,.056,.51,.056,rail);
+ m.box(stickX-.065,bottom+.63,stickZ-.038,.13,.18,.12,bezel);
+ // HOTAS throttle to pilot's left, pair of physically separate rudder pedals.
+ m.box(-w+.035,bottom+.38,seatZ+.35,.10,.12,.21,bezel);
+ m.box(-w+.070,bottom+.49,seatZ+.47,.045,.15,.08,rail);
  for(const side of [-1,1]){
   const x=side*.22-.085;
   m.box(x,bottom+.08,z1-.40,.17,.07,.17,rail);
+  m.box(x+.035,bottom+.13,z1-.40,.10,.12,.08,padding);
  }
- // Tilted forward main display with two smaller multi-function displays;
- // flat panels face the seated pilot, not the exterior viewer.
- const dashZ=z1-.20;
- m.box(-w*.83,bottom+.48,dashZ,w*1.66,.50,.12,dark);
- for(const x of [-.23,.06]){
-  m.box(x,bottom+.63,dashZ-.022,.17,.22,.014,screen);
-  m.box(x+.025,bottom+.70,dashZ-.029,.10,.015,.006,lit);
+ // Forward glare shield and primary instrument bay.
+ m.box(-w*.89,bottom+.45,dashZ,w*1.78,.64,.12,dark);
+ m.box(-w*.91,bottom+1.075,dashZ-.04,w*1.82,.07,.21,rail);
+ if(id==="f35"){
+  // F-35B: wide panoramic touchscreen; no fake analogue six-pack.
+  const width=w*1.48;
+  face(-width/2,bottom+.62,width,.42);
+  symbology(-width/2,bottom+.62,width*.5,.42);
+  for(let n=0;n<4;n++)stroke(-width/2+.025+n*width*.24,bottom+.65,.008,.30,lit);
+ }else if(id==="f22"){
+  // F-22: central primary display, flanking tactical MFDs.
+  face(-.18,bottom+.60,.36,.44);symbology(-.18,bottom+.60,.36,.44);
+  face(-.36,bottom+.59,.16,.31);face(.20,bottom+.59,.16,.31);
+  for(const x of [-.36,.20])stroke(x+.030,bottom+.66,.09,.011,lit);
+ }else if(id==="typhoon"){
+  // Typhoon's three multi-function colour displays.
+  for(const x of [-.315,-.105,.105]){
+   face(x,bottom+.62,.21,.34);symbology(x,bottom+.62,.21,.34);
+  }
+ }else if(id==="su37"){
+  // Su-37: mix of glass avionics and smaller analogue round gauges.
+  face(-.18,bottom+.62,.36,.35);symbology(-.18,bottom+.62,.36,.35);
+  for(const x of [-.29,.29])for(const y of [bottom+.53,bottom+.74])
+   dial(x,y,.055);
+ }else{
+  // F/A-18: two large MFDs with compact central standby instruments.
+  for(const x of [-.35,.11]){
+   face(x,bottom+.61,.24,.34);symbology(x,bottom+.61,.24,.34);
+  }
+  for(const y of [bottom+.68,bottom+.82])dial(0,y,.045);
  }
- m.box(-.12,bottom+.97,dashZ-.012,.24,.10,.035,rail);
- // Short HUD combiner, clear enough to leave the existing canopy visible.
- m.box(-.15,bottom+1.10,dashZ+.02,.30,.018,.025,lit);
+ // HUD combiner glass represented by a narrow transparent outline rather
+ // than a solid opaque box which would conceal forward scenery.
+ const hudY=bottom+1.15,hudZ=dashZ+.035;
+ for(const x of [-.15,.145])m.box(x,hudY,hudZ,.005,.19,.007,lit);
+ m.box(-.15,hudY+.18,hudZ,.30,.006,.007,lit);
+ stroke(-.05,hudY+.10,.10,.006,lit,hudZ-.011);
  return {...m.finish(),seats:p.seats,hasPanel:true,kind:"fighter-interior"};
 }
 function buildImportedCabin(id){
