@@ -54,6 +54,23 @@ assert.ok(!hasVertex(typhoonControl,-.17*.890,-1.19,-7.75*1.148),
 assert.ok(hornet.vertices<30000,
  "F/A-18 visible detail must remain within the mobile mesh budget");
 
+// Isolated Typhoon inlet detail: inspect actual calibrated render geometry.
+const typhoonIntake=Three.buildVehicle("typhoon");
+const typhoonX=.711,typhoonZ=.874;
+const hasTyphoonVertex=(x,y,z)=>{
+ const p=typhoonIntake.positions;
+ for(let i=0;i<p.length;i+=3)
+  if(Math.abs(p[i]-x)<.015&&Math.abs(p[i+1]-y)<.015&&
+     Math.abs(p[i+2]-z)<.015)return true;
+ return false;
+};
+assert.ok(hasTyphoonVertex(-.055*typhoonX,-.68,1.04*typhoonZ),
+ "Typhoon single chin intake must include its centre splitter");
+assert.ok(hasTyphoonVertex(0,3.12,-7.35*typhoonZ),
+ "Typhoon must retain a distinct single-fin upper profile");
+assert.ok(typhoonIntake.vertices<30000,
+ "Typhoon geometry must stay inside mobile triangle budget");
+
 const empty=new Three.Mesh();
 assert.equal(empty.finish().triangles,0);
 empty.tri([0,0,0],[1,0,0],[0,1,0],[.1,.3,.4]);
