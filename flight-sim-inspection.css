@@ -125,3 +125,10 @@ body[data-aircraft-inspect="on"]{overflow:hidden}
 @media(orientation:landscape) and (max-height:620px){
  .aircraft-inspect-view-tabs button{min-height:29px}
 }
+
+/* Make unsupported interior viewing explicit instead of showing the wrong aircraft. */
+.aircraft-inspect-view-tabs button:disabled{opacity:.42;cursor:not-allowed}
+.aircraft-inspect-viewport[data-model-loading="unsupported"] .aircraft-inspect-loading{
+ display:flex;inset:auto 4px 4px;min-height:34px;padding:5px 9px;
+ background:#233e50;color:#fff;border-radius:6px;font-size:11px
+}

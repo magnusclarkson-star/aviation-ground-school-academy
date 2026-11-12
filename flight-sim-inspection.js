@@ -9,7 +9,9 @@
    ...orbit,
    azimuth:wrap((orbit?.azimuth??0)+deltaX*.55),
    elevation:clamp((orbit?.elevation??28)+deltaY*.38,limits.minElevation,limits.maxElevation),
-   distance:clamp(orbit?.distance??30,limits.minDistance,limits.maxDistance)
+   distance:clamp(orbit?.distance??30,
+    orbit?.interior?1.45:limits.minDistance,
+    orbit?.interior?12:limits.maxDistance)
   });
  }
  function zoomStep(orbit,factor){
@@ -65,6 +67,13 @@
   const exteriorButton=$("aircraftInspectExterior");
   const interiorDistance=id=>id==="f22"||id==="su37"?4.35:id==="r44"?3.25:2.90;
   function setInterior(on){
+   // Never silently display the exterior silhouette when WebGL2 is absent.
+   if(on&&!usingGPU){
+    $("aircraftInspectLoading").textContent="Interior 3D requires WebGL2 on this device.";
+    viewport.dataset.interiorUnsupported="on";
+    return;
+   }
+   delete viewport.dataset.interiorUnsupported;
    if(Boolean(orbit.interior)===on)return;
    orbit={azimuth:on?24:0,elevation:on?15:26,
     distance:on?interiorDistance(selected()):fitDistance(),interior:on};
@@ -79,7 +88,8 @@
    $("aircraftInspectModel").textContent=types.LABELS[id];
    $("aircraftInspectAngles").textContent="AZ "+String(Math.round(orbit.azimuth)).padStart(3,"0")+
     "° · EL "+Math.round(orbit.elevation)+"°";
-   $("aircraftInspectZoomValue").textContent=Math.round(fitDistance()/orbit.distance*100)+"%";
+   $("aircraftInspectZoomValue").textContent=Math.round(
+    (orbit.interior?interiorDistance(id):fitDistance())/orbit.distance*100)+"%";
    $("aircraftInspectSpin").setAttribute("aria-pressed",String(autoRotate));
    $("aircraftInspectSpin").textContent=autoRotate?"Stop rotation":"Auto rotate";
    interiorButton.setAttribute("aria-pressed",String(Boolean(orbit.interior)));
@@ -90,6 +100,12 @@
   }
   function fallback(){
    usingGPU=false;
+   if(orbit.interior){
+    orbit={azimuth:0,elevation:26,distance:fitDistance(),interior:false};
+    viewport.dataset.interiorUnsupported="on";
+   }
+   interiorButton.disabled=true;
+   updateHeading();
    if(renderer){renderer.destroy();renderer=null}
    canvas3D.hidden=true;canvas2D.hidden=false;
    viewport.dataset.modelLoading="off";
@@ -123,12 +139,16 @@
    viewport.dataset.modelLoading=unavailable?"unavailable":pending?"on":"off";
    canvas3D.hidden=!usingGPU||pending||unavailable;
    canvas2D.hidden=usingGPU||unavailable;
-   const statusText=loading?"Loading "+types.LABELS[id]+" 3D model…":
+   const statusText=viewport.dataset.interiorUnsupported==="on"?
+    "Interior 3D requires WebGL2. Exterior view is still available.":
+    loading?"Loading "+types.LABELS[id]+" 3D model…":
     unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":
     pending?"Rendering "+types.LABELS[id]+"…":"";
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
+   if(viewport.dataset.interiorUnsupported==="on")
+    viewport.dataset.modelLoading="unsupported";
    $("aircraftInspectRenderMode").textContent=unavailable?"3D unavailable":
     pending?"Loading 3D":usingGPU?"3D view":"2D view";
    // A stale frame must not prevent the new one from ever being drawn.
@@ -192,6 +212,8 @@
     try{renderer=engine.createRenderer(canvas3D,{inspectionOnly:true,onLost:fallback})}catch{renderer=null}
    }
    usingGPU=Boolean(renderer);
+   interiorButton.disabled=!usingGPU;
+   delete viewport.dataset.interiorUnsupported;
    syncModelVisibility();
    updateHeading();
    $("aircraftInspectClose").focus({preventScroll:true});
@@ -220,6 +242,7 @@
   $("aircraftInspectModelSelect").addEventListener("change",event=>{
    const id=event.target.value;
    if(!types.IDS.includes(id))return;
+   delete viewport.dataset.interiorUnsupported;
    if(select.value!==id){
     select.value=id;
     select.dispatchEvent(new Event("change",{bubbles:true}));
