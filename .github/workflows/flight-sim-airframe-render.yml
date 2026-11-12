@@ -14,6 +14,7 @@ on:
       - 'scripts/test-flight-sim-f35-browser.mjs'
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
+      - 'scripts/test-flight-sim-five-fighters-browser.mjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -36,6 +37,7 @@ on:
       - 'scripts/test-flight-sim-f35-browser.mjs'
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
+      - 'scripts/test-flight-sim-five-fighters-browser.mjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -72,6 +74,8 @@ jobs:
         run: node scripts/test-flight-sim-f22-browser.mjs
       - name: Prove imported F-35B source geometry in actual browser views
         run: node scripts/test-flight-sim-f35-browser.mjs
+      - name: Verify all five fighters in portrait and landscape with visible gear and controls
+        run: node scripts/test-flight-sim-five-fighters-browser.mjs
       - name: Save real-aircraft preview images
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,5 +87,6 @@ jobs:
             artifacts/mobile-*-inspector.png
             artifacts/real-f22-*.png
             artifacts/real-f35-*.png
+            artifacts/mobile-fighter-*.png
           if-no-files-found: ignore
           retention-days: 14
