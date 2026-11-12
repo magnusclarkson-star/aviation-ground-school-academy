@@ -37,7 +37,13 @@ try{
     scene:box(".scene-shell"),station:box("#cockpitStation"),
     cockpit:box("#cockpitMain"),instruments:box("#cockpitInstrumentWell"),
     visual:box("#cockpitVisualPanel"),map:box("#cockpitVisualPanel .cockpit-nav-screen"),
-    yoke:box("#controlPad"),leftPedal:box("#leftRudder"),rightPedal:box("#rightRudder"),
+    yoke:box("#controlPad"),grip:box("#flightGrip"),
+    yokeArtwork:box("#flightGrip .hardware-yoke"),
+    gripStyle:{
+      transform:getComputedStyle(document.getElementById("flightGrip")).transform,
+      position:getComputedStyle(document.getElementById("flightGrip")).position,
+      top:getComputedStyle(document.getElementById("flightGrip")).top
+    },leftPedal:box("#leftRudder"),rightPedal:box("#rightRudder"),
     throttle:box("#powerPanel"),flaps:box("#flapPanel"),brake:box("#brake"),
     restart:box("#restartFlight"),switches:box("#cockpitSwitchPanel"),
     scrollTop:station.scrollTop,
@@ -62,10 +68,21 @@ try{
    assert.ok(info.scene.height>=160,
     "short portrait retains usable forward visibility "+JSON.stringify(info));
   }else{
-   assert.ok(info.scene.height>=108&&info.scene.height<=161,
-    "landscape retains the original runway/horizon projection without stretching to full screen "+JSON.stringify(info));
-   assert.ok(Math.abs(info.yoke.height-65)<=3,
-    "landscape C172 yoke retains its original height "+JSON.stringify(info));
+   assert.ok(info.scene.height>=180&&info.scene.height<=235,
+    "landscape C172 has a real runway/horizon windscreen occupying the upper half "+JSON.stringify(info));
+   assert.ok(info.instruments.y>=info.scene.height-30,
+    "dashboard does not cover most of the forward view "+JSON.stringify(info));
+   assert.ok(info.yoke.bottom<=info.leftPedal.y+5,
+    "C172 yoke remains unobstructed above both pedals "+JSON.stringify(info));
+   assert.ok(info.yokeArtwork.bottom<=info.leftPedal.y-1&&
+    info.yokeArtwork.width>=145&&info.yokeArtwork.height>=48,
+    "visible C172 yoke artwork fits above the pedals and remains readable "+JSON.stringify(info));
+   assert.ok(info.switches.y>=info.map.bottom-5,
+    "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
+   assert.ok(info.switches.right<=info.throttle.x+4,
+    "switch rack does not cover engine throttle "+JSON.stringify(info));
+   assert.ok(info.yoke.height>=52&&info.yoke.height<=58,
+    "landscape C172 yoke keeps an accessible touch area without covering pedals "+JSON.stringify(info));
   }
   for(const key of ["leftPedal","rightPedal","brake","restart","throttle","flaps"]){
    assert.ok(info[key]?.bottom<=view.height-2,
