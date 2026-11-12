@@ -303,6 +303,15 @@ jobs:
           node scripts/test-flight-sim-exercises-browser.mjs
           node scripts/test-flight-sim-pwa-browser.mjs
 
+      - name: Save all seven imported/procedural 360 phone view proofs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seven-aircraft-360-portrait-landscape
+          path: artifacts/all-aircraft-360-*.png
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Save C172 whole-cockpit screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
