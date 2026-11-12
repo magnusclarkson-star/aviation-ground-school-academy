@@ -195,9 +195,9 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
   assert.ok(p.mesh.triangles>=24&&p.mesh.vertices<200,
    "door must have finite lightweight mesh on mobile");
   assert.ok(p.pivot.every(Number.isFinite));
-  const open=X.importedGearDoorAngle(0,p.doorSide),
-   halfway=X.importedGearDoorAngle(.9,p.doorSide),
-   closed=X.importedGearDoorAngle(1.53,p.doorSide);
+  const open=A.importedGearDoorAngle(0,p.doorSide),
+   halfway=A.importedGearDoorAngle(.9,p.doorSide),
+   closed=A.importedGearDoorAngle(1.53,p.doorSide);
   assert.ok(Math.abs(open)>1&&Math.abs(halfway)<Math.abs(open));
   assert.ok(Math.abs(closed)<1e-8,
    "retracted procedural fighter doors must lie flush against belly");
