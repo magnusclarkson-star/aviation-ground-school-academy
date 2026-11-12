@@ -36,7 +36,11 @@ function pilot(s,leg){
  if(leg==="base")desiredHeading=270;
  if(last){
   // Point at a spot on the runway, not the aircraft's current heading.
-  desiredHeading=headingTo(s,0,140);
+  // Aim well ahead of the moving airplane. A point at z=140 becomes
+  // BEHIND the aircraft once crossed and would command an unsafe sudden
+  // turn just before wheel contact. Keep a positive look-ahead all the
+  // way through the rollout approach; no artificial heading snap.
+  desiredHeading=headingTo(s,0,Math.max(400,s.zM+650));
   // Intercept shallowly near the centreline, leaving bank authority to
   // the learner's normal flight model rather than snapping position.
   const offset=signed(0,desiredHeading);
@@ -56,7 +60,7 @@ function run(windId){
  let minAlt=0,maxAlt=0;
  let reachedFinal=false;
  const points={};
- let initialFinal=null;
+ let initialFinal=null,nearContact=null;
  for(let i=0;i<7400;i++){
   const dt=.05;
   if(leg==="departure"&&state.zM>=1330&&state.altitudeM>=70)leg="crosswind";
@@ -66,6 +70,9 @@ function run(windId){
   if(leg!==lastLeg){points[leg]={x:Math.round(state.xM),z:Math.round(state.zM),
    alt:Math.round(state.altitudeM),heading:Math.round(state.headingDeg),
    time:Math.round(state.time)};lastLeg=leg;}
+  if(state.onGround===false&&leg==="final"&&state.altitudeM<2&&state.zM>-100)
+   nearContact={z:state.zM,x:state.xM,sink:state.verticalMs,
+    bank:state.rollDeg,pitch:state.pitchDeg,speed:state.speedKt};
   const result=M.step(state,pilot(state,leg),dt);
   result.events.forEach(x=>events.add(x));
   Circuit.update(circuit,state);
@@ -84,7 +91,7 @@ function run(windId){
   height:+state.altitudeM.toFixed(1),heading:+state.headingDeg.toFixed(1),
   speed:+state.speedKt.toFixed(1),maxAlt:+maxAlt.toFixed(1),
   phases:[...phases],stages:[...stages],events:[...events],points,
-  initialFinal,touchdownData:state.touchdownData,
+  initialFinal,nearContact,touchdownData:state.touchdownData,
   rolloutM:state.rolloutDistanceM};
  console.log("C172 full flight "+JSON.stringify(detail));
  assert.ok(events.has("liftoff"),"real runway liftoff "+JSON.stringify(detail));
