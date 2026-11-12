@@ -1052,7 +1052,13 @@ function buildFighterInterior(id){
  for(const x of [-.15,.145])m.box(x,hudY,hudZ,.005,.19,.007,lit);
  m.box(-.15,hudY+.18,hudZ,.30,.006,.007,lit);
  stroke(-.05,hudY+.10,.10,.006,lit,hudZ-.011);
- return {...m.finish(),seats:p.seats,hasPanel:true,kind:"fighter-interior"};
+ const mesh=m.finish();
+ // Reconcile instructional cockpit proportions with the real source canopy:
+ // imported fighters have <1m of canopy height, not a 1.3m open cabin.
+ // Scale only the added interior's Y dimension, keeping hull/gear untouched.
+ for(let i=1;i<mesh.positions.length;i+=3)
+  mesh.positions[i]=bottom+(mesh.positions[i]-bottom)*.46;
+ return {...mesh,seats:p.seats,hasPanel:true,kind:"fighter-interior"};
 }
 function buildImportedCabin(id){
  if(FIGHTER_INTERIOR_STATIONS[id])return buildFighterInterior(id);
@@ -2300,7 +2306,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,exteriorLightStations,exteriorStrobeStation,
+const api={Mesh,IMPORTED_CABIN_LAYOUT,FIGHTER_INTERIOR_STATIONS,buildFighterInterior,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,exteriorLightStations,exteriorStrobeStation,
  buildExteriorPositionLights,buildExteriorStrobe,exteriorStrobePulse,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
