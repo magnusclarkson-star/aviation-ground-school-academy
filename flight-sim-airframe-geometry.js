@@ -476,6 +476,16 @@ function genericJet(m,id){
   sheet(m,[[-.83,-.49,2.52],[.83,-.49,2.52],
    [.62,-.64,.76],[-.62,-.64,.76]],palette.dark,.09);
   m.box(-.83,-.54,2.49,1.66,.10,.11,tint(c,.80));
+  // Additional intake side lips and central splitter distinguish the
+  // Typhoon's single ventral intake from the twin side intakes on other jets.
+  for(const sign of [-1,1]){
+   sheet(m,[[sign*.83,-.49,2.52],[sign*.65,-.69,1.55],
+    [sign*.62,-.64,.76],[sign*.84,-.40,1.17]],tint(c,.75),.045);
+  }
+  m.box(-.055,-.68,1.04,.11,.075,1.10,tint(c,.64));
+  // Crisp centreline fin cap remains attached to the existing single fin.
+  sheet(m,[[0,3.35,-6.7],[0,3.12,-7.35],[0,2.75,-8.6],
+   [0,2.99,-7.05]],tint(c,.77),.018);
  }else if(id==="su37"){
   // Widely spaced intake trunks and distinct wing-panel tones.
   for(const sign of [-1,1]){
