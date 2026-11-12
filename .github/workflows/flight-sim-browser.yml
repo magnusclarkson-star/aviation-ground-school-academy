@@ -238,6 +238,7 @@ jobs:
         run: |
           node scripts/test-flight-sim-model.mjs
           node scripts/test-flight-c172-full-circuit.mjs
+          node scripts/test-flight-r44-full-hover-lesson.mjs
           node scripts/test-flight-sim-aerodynamics.mjs
           node scripts/test-flight-sim-loading.mjs
           node scripts/test-flight-sim-exercises.mjs
