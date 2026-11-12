@@ -10,6 +10,17 @@ const MAX_BYTES=800000,MAX_TRIANGLES=28000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
 function partMotion(name){
+ // This licensed Typhoon includes four ORIGINAL main-wheel bay doors.
+ // Rotate the source panels, rather than overlaying invented rectangle doors.
+ const gearDoor=/^geardoor([12])\.([LR])$/.exec(name);
+ if(gearDoor){
+  const left=gearDoor[2]==="L",side=left?1:-1;
+  const outer=gearDoor[1]==="1"?2.09:1.226;
+  const y=gearDoor[1]==="1"?-.13:-.40;
+  const z=gearDoor[1]==="1"?-.97:-.85;
+  return {partAxis:3,partName:left?"mainGearLeft":"mainGearRight",
+   partPivot:[side*outer,y,z],gearDoorSide:side};
+ }
  const controls={
   "elevator.L":"elevatorLeft","elevator.R":"elevatorRight",
   "rudder":"rudder",
@@ -119,6 +130,7 @@ function parseTyphoon(text){
     uvs:new Float32Array(used.length*2),imageId:null,opacity,
     alphaMask:false,alphaCutoff:0,partName:motion.partName,
     partAxis:motion.partAxis,partPivot:motion.partPivot,
+    gearDoorSide:motion.gearDoorSide||0,
     sourceName:part.name});
    vertices+=used.length;triangles+=indices.length/3;
   }
