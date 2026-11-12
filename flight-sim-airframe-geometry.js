@@ -771,6 +771,37 @@ function buildJetParts(Mesh,id){
    },{gearName:slot.gearName,doorSide:sign});
   }
  }
+ if(variant==="fa18"){
+  // The F/A-18 exterior uses a dedicated hull. Do not attach the generic
+  // fighter's control surfaces to it: their old wing and tail outlines were
+  // clearly visible over the dedicated Super Hornet body.
+  for(const part of props){
+   const m=new Mesh();
+   const isLeft=/^left|Left$/.test(part.name),sign=isLeft?-1:1;
+   if(/^(left|right)Aileron$/.test(part.name)){
+    sheet(m,[[sign*4.57,.31,-3.63],[sign*6.12,.31,-3.77],
+      [sign*6.02,.31,-4.40],[sign*4.38,.31,-4.07]],
+      tint(palette.jet,.78),.065);
+    part.pivot=[sign*5.18,.31,-3.88];
+   }else if(/^(left|right)Flap$/.test(part.name)){
+    sheet(m,[[sign*1.45,.31,-3.40],[sign*4.36,.31,-3.70],
+      [sign*4.21,.31,-4.05],[sign*1.48,.31,-3.79]],
+      tint(palette.jet,.85),.07);
+    part.pivot=[sign*2.7,.31,-3.69];
+   }else if(/^elevator(?:Left|Right)$/.test(part.name)){
+    sheet(m,[[sign*.83,.36,-6.65],[sign*2.73,.36,-6.83],
+      [sign*3.06,.36,-7.46],[sign*.86,.36,-7.34]],
+      tint(palette.jet,.85),.085);
+    part.pivot=[sign*1.71,.36,-7.02];
+   }else if(/^rudder(?:Left|Right)$/.test(part.name)){
+    sheet(m,[[sign*1.30,1.05,-5.75],[sign*1.48,2.22,-6.13],
+      [sign*1.67,1.94,-6.62],[sign*1.36,.91,-6.70]],
+      tint(palette.jet,.77),.045);
+    part.pivot=[sign*1.45,1.46,-6.25];
+   }else continue;
+   part.mesh=m.finish();
+  }
+ }
  return props;
 }
 // Lightweight wheel-well liners and hinged gear-door panels for the genuine
