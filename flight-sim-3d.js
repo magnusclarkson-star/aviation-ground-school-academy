@@ -103,6 +103,41 @@ function buildGroundVehicle(kind="service"){
  if(service)m.box(-.52,2.02,-.42,1.04,.14,.86,rgb(252,217,87));
  return m.finish();
 }
+// Small exterior position-light housings on the genuine C172/R44 models.
+// Kept separate from the licensed aircraft mesh, so texture decoding and
+// rotor/propeller assembly remain untouched. +X is starboard (green).
+function buildExteriorPositionLights(id){
+ if(id!=="c172"&&id!=="r44")throw Error("Position lights require a trainer or R44");
+ const mesh=new Mesh();
+ const dark=rgb(49,57,60),red=rgb(249,65,58),
+  green=rgb(81,246,120),whiteLight=rgb(249,248,222);
+ const stations=id==="c172"?[
+  [-5.25,.96,-1.52,red],[5.25,.96,-1.52,green],
+  [0,.85,-4.13,whiteLight]
+ ]:[
+  [-.71,-.04,3.52,red],[.71,-.04,3.52,green],
+  [0,.87,-8.19,whiteLight]
+ ];
+ for(const [x,y,z,color] of stations){
+  mesh.box(x-.15,y-.10,z-.17,.30,.20,.34,dark);
+  mesh.box(x-.115,y-.07,z-.18,.23,.15,.36,color,tint(color,1.08));
+ }
+ return mesh.finish();
+}
+function buildExteriorStrobe(id){
+ if(id!=="c172"&&id!=="r44")throw Error("Strobe requires trainer or R44");
+ const mesh=new Mesh(),light=rgb(255,252,237);
+ const [x,y,z]=id==="c172"?[0,1.68,.28]:[0,2.49,1.10];
+ // Double-flashing raised beacon; no physically modelled real aircraft
+ // lamp pattern or operational lighting specification is implied.
+ mesh.box(x-.13,y-.07,z-.13,.26,.14,.26,light);
+ return mesh.finish();
+}
+function exteriorStrobePulse(time=0,reducedMotion=false){
+ if(reducedMotion)return .38;
+ const t=Math.max(0,Number.isFinite(time)?time:0)%1.65;
+ return t<.065||(t>.16&&t<.225)?1:0;
+}
 function elevation(x,z){
  const edge=Math.max(0,Math.abs(x)-650),far=Math.max(0,z-2100);
  return Math.min(210,edge*.052+far*.015*(.55+.45*Math.sin(x*.002+z*.004)));
@@ -1470,6 +1505,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     tailRotorSweep:id==="r44"?upload(buildTailRotorSweep(id)):null,
     propSweep:id==="c172"?upload(buildPropellerSweep(id)):null,
     shadow:inspectionOnly?null:upload(buildShadow(id)),
+    positionLights:["c172","r44"].includes(id)?
+     upload(buildExteriorPositionLights(id)):null,
+    strobeLight:["c172","r44"].includes(id)?
+     upload(buildExteriorStrobe(id)):null,
     cabin:cabin?upload(cabin):null,
     shell:shell?upload(shell.skin):null,
     shellGlass:shell?upload(shell.glass):null,
@@ -1790,6 +1829,26 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,part.gpu.count);
     }
     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+    if(view!=="cockpit"&&model.positionLights){
+     // Three fixed, correctly sided colour references follow the exact
+     // aircraft transform through chase, side, top and 360-degree inspection.
+     // They are never drawn into the approved pilot-facing cockpit controls.
+     gl.uniform1f(uni.uActor,1);
+     gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uOpacity,1);
+     gl.disable(gl.BLEND);gl.depthMask(true);
+     gl.bindVertexArray(model.positionLights.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.positionLights.count);
+     const pulse=exteriorStrobePulse(state.time,reducedMotion);
+     if(pulse>0&&model.strobeLight){
+      gl.uniform1f(uni.uOpacity,pulse);
+      gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      gl.bindVertexArray(model.strobeLight.vao);
+      gl.drawArrays(gl.TRIANGLES,0,model.strobeLight.count);
+      gl.depthMask(true);gl.disable(gl.BLEND);
+      gl.uniform1f(uni.uOpacity,1);
+     }
+    }
    }
    gl.bindVertexArray(null);
    return !gl.isContextLost();
@@ -1816,7 +1875,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
+const api={Mesh,IMPORTED_CABIN_LAYOUT,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,buildExteriorPositionLights,buildExteriorStrobe,exteriorStrobePulse,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
 })(typeof window!=="undefined"?window:null);
