@@ -1620,7 +1620,15 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const id of Exterior.IDS){
    const cabin=buildImportedCabin(id);
    const shell=id==="c172"?buildImportedC172Shell():null;
+   // Generate just six tiny hinged panels for each imported fighter.
+   // They are omitted from both the procedural fallback and C172/R44.
+   const gearPlan=(id==="f22"||id==="f35")?
+    Exterior.buildImportedGearDoors(Mesh,id):null;
    airframes[id]={
+    importedGear:gearPlan?{
+     wells:upload(gearPlan.wells),
+     doors:gearPlan.doors.map(part=>({...part,gpu:upload(part.mesh)}))
+    }:null,
     body:upload(buildVehicle(id)),
     parts:buildMovingParts(id).map(part=>({...part,gpu:upload(part.mesh)})),
     rotorSweep:id==="r44"?upload(buildRotorSweep(id)):null,
@@ -1929,6 +1937,28 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }else{
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
+    }
+    if(realModel&&model.importedGear){
+     // Restore non-textured, opaque source-metal rendering before placing
+     // the wheel-well recesses and independently hinged left/right doors.
+     // Only real F-22/F-35B meshes receive these panels; no fake gear layers.
+     gl.bindTexture(gl.TEXTURE_2D,null);
+     gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
+     gl.uniform1f(uni.uOpacity,1);gl.disable(gl.BLEND);gl.depthMask(true);
+     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+     gl.bindVertexArray(model.importedGear.wells.vao);
+     gl.drawArrays(gl.TRIANGLES,0,model.importedGear.wells.count);
+     for(const door of model.importedGear.doors){
+      const angle=Exterior.importedGearDoorAngle(
+       animation?.[door.gearName],door.side);
+      gl.uniform1i(uni.uPartAxis,3);
+      gl.uniform3fv(uni.uPartPivot,door.pivot);
+      gl.uniform1f(uni.uPartAngle,angle);
+      gl.bindVertexArray(door.gpu.vao);
+      gl.drawArrays(gl.TRIANGLES,0,door.gpu.count);
+     }
+     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+     gl.uniform3fv(uni.uPartPivot,[0,0,0]);
     }
     // Motion-sweep draws before the actual two blades; never conceals them.
     const isImportedRotorcraft=id==="r44"&&realR44!==null;

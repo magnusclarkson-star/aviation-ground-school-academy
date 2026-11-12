@@ -8,6 +8,8 @@ import {createRequire} from "node:module";
 const require=createRequire(import.meta.url);
 const F22=require("../flight-sim-f22-airframe.js");
 const F35=require("../flight-sim-f35-airframe.js");
+const Exterior=require("../flight-sim-airframe-geometry.js");
+const Three=require("../flight-sim-3d.js");
 const shader=readFileSync(new URL("../flight-sim-3d.js",import.meta.url),"utf8");
 
 assert.match(shader,/float fold=fraction\*fraction\*\(3\.-2\.\*fraction\)\*1\.53/,
@@ -88,4 +90,56 @@ for(const [id,loader,asset] of [
   }
  }
 }
+
+// Gear door acceptance: three distinct belly wells, two independent
+// hinges per well, flush painted doors after stow and open clear when down.
+assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"c172"),null,
+ "source fighter doors must not alter the approved Cessna layout");
+assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"r44"),null,
+ "source fighter doors must not alter the approved R44 layout");
+for(const id of ["f22","f35"]){
+ const plan=Exterior.buildImportedGearDoors(Three.Mesh,id);
+ assert.ok(plan&&plan.wells.triangles>=36,
+  id+" needs three dark underside recesses");
+ assert.equal(plan.slots.length,3);
+ assert.equal(plan.doors.length,6);
+ assert.deepEqual([...new Set(plan.doors.map(p=>p.gearName))].sort(),
+  ["noseGear","mainGearLeft","mainGearRight"].sort());
+ for(const slot of plan.slots){
+  const panels=plan.doors.filter(p=>p.gearName===slot.name);
+  assert.deepEqual(panels.map(p=>p.side),[-1,1]);
+  const closed=panels.map(p=>Exterior.importedGearDoorAngle(1.53,p.side));
+  const open=panels.map(p=>Exterior.importedGearDoorAngle(0,p.side));
+  assert.ok(closed.every(a=>Math.abs(a)<1e-8));
+  assert.ok(open[0]<-1&&open[1]>1,
+   id+" belly doors open outward in opposite directions");
+  for(const door of panels){
+   assert.ok(door.mesh.triangles>=20&&door.mesh.vertices<100,
+    "mobile door mesh must be real but lightweight");
+   const position=door.mesh.positions;
+   const angle=Exterior.importedGearDoorAngle(0,door.side);
+   let lowestOpen=Infinity,lowestClosed=Infinity;
+   for(let i=0;i<position.length;i+=3){
+    const [x,y,z]=[position[i],position[i+1],position[i+2]];
+    const dx=x-door.pivot[0],dy=y-door.pivot[1];
+    const deployedY=door.pivot[1]+dx*Math.sin(angle)+dy*Math.cos(angle);
+    lowestOpen=Math.min(lowestOpen,deployedY);
+    lowestClosed=Math.min(lowestClosed,y);
+    assert.ok(Number.isFinite(z)&&Number.isFinite(deployedY));
+    if(id==="f35")assert.ok(deployedY<-.65,
+     "F-35B doors cannot cross the dorsal-gear clearance plane");
+   }
+   assert.ok(lowestOpen<lowestClosed-.15,
+    id+" door must visibly swing below its stowed position");
+  }
+ }
+ const a=Exterior.importedGearDoorAngle(.6,1);
+ const b=Exterior.importedGearDoorAngle(1.1,1);
+ assert.ok(a>b&&b>0,"doors must gradually close as gear retracts");
+}
+assert.match(shader,/if\(realModel&&model\.importedGear\)/,
+ "imported doors draw only after the authentic aircraft has loaded");
+assert.match(shader,/Exterior\.importedGearDoorAngle\(/,
+ "renderer must link gear-door angle to the same system gear input");
+
 console.log("Rigid source F-22/F-35B gear folds inward, keeps tyre size and stays below F-35B dorsal surface");
