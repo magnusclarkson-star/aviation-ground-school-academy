@@ -26,6 +26,9 @@ const Traffic=root?.AGSAAirfieldTraffic||
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
+const Clouds=root?.AGSAFlightClouds||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-clouds.js"):null);
 
 function project(state,x,y,z,width=960,height=540){
  const dx=x-state.xM,dz=z-state.zM,yaw=state.headingDeg*RAD;
@@ -68,11 +71,12 @@ function draw(canvas,state,{reducedMotion=false,lighting="day",view="cockpit",ai
  ctx.rotate(-state.rollDeg*RAD);
  ctx.translate(-w/2,-h/2);
  const horizon=h*.49+Math.tan(state.pitchDeg*RAD)*h*1.2;
- // Clouds and remote hills drift slowly as the heading changes, with a
- // smaller parallax effect than the foreground runway and roadside trees.
- // Real positional parallax continues even with reduced motion enabled;
- // only synthetic time-based cloud bobbing is suppressed in that mode.
- const cloudOffset=state.headingDeg*3+state.xM*.012+state.zM*.008;
+ // The fallback uses the SAME simulated downwind cloud drift as WebGL.
+ // Camera heading and position still create perspective parallax. Reduced
+ // motion suppresses synthetic weather drift, never genuine flight motion.
+ const cloudDrift=Clouds?.drift(state.time,state.windXMps,state.windZMps,reducedMotion)||{x:0,z:0};
+ const cloudOffset=state.headingDeg*3+state.xM*.012+state.zM*.008+
+  cloudDrift.x*.25+cloudDrift.z*.12;
  for(let i=-2;i<7;i++){
   const x=((i*227+138-cloudOffset)%(w+460)+w+460)%(w+460)-120;
   const y=horizon-130-(i%3)*33+(reducedMotion?0:Math.sin(state.time*.1+i)*4);
