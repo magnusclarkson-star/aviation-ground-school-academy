@@ -29,8 +29,8 @@ test("preferred detailed MIT R44 includes real cabin, skids and native rotor nod
  const renderer=fs.readFileSync("flight-sim-3d.js","utf8");
  assert.match(renderer,/const isMolen=id==="r44"&&realModel\?\.kind==="molen"/,
   "native airframe has a dedicated render path");
- assert.match(renderer,/const animatedParts=isMolen\?\[\]:/,
-  "source-native rotor cannot be doubled by older rotor meshes");
+ assert.match(renderer,/const animatedParts=isMolen\|\|pendingSourceJet\?\[\]:/,
+  "source-native R44 rotor and loading fighter meshes cannot be doubled by older rotor meshes");
 });
 
 const texture=fs.readFileSync(R44.TEXTURE_FILE);
