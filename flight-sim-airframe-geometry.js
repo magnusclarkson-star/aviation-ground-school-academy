@@ -360,6 +360,18 @@ function addR44(m){
    [sign*.85,.48,-2.02],[sign*.93,.44,-2.34],palette.dark);
  }
 }
+// Three procedural fighter families are not licensed imported jets: add
+// compact, aircraft-attached belly recesses and matching articulated doors.
+// Only local unscaled coordinates are used; scalePart applies jet geometry's
+// X/Z factors consistently to the source hull and all six moving doors.
+function proceduralGearSlots(id){
+ const gearWidth=id==="su37"?1.70:id==="f35"?1.18:1.42;
+ return [
+  {gearName:"noseGear",x:0,y:-.48,z:3.24,w:.62,len:.94},
+  {gearName:"mainGearLeft",x:-gearWidth,y:-.23,z:-2.38,w:.64,len:1.04},
+  {gearName:"mainGearRight",x:gearWidth,y:-.23,z:-2.38,w:.64,len:1.04}
+ ];
+}
 function genericJet(m,id){
  const c=id==="f22"?palette.stealth:id==="f35"?palette.lightning:
   id==="typhoon"?palette.typhoon:id==="su37"?palette.su:palette.jet;
@@ -436,6 +448,17 @@ function genericJet(m,id){
   mirrored(m,[[.8,.36,-5.6],[3.0,.36,-6.4],[2.6,.36,-7.65],[.88,.36,-7.45]],c,.12);
  }else if(id==="f35"){
   mirrored(m,[[.71,.35,-5.35],[2.25,.35,-6.05],[1.85,.35,-7.2],[.7,.35,-7.1]],c,.11);
+ }
+ // The deployed tricycle gear has visible access recesses in its
+ // underside. Hinged covers are separately animated below with the wheel
+ // commands; only one body recess per station is baked into the hull.
+ for(const slot of proceduralGearSlots(id)){
+  m.box(slot.x-slot.w/2,slot.y-.012,slot.z-slot.len/2,
+   slot.w,.018,slot.len,palette.dark);
+  for(const edge of [-1,1]){
+   m.box(slot.x+edge*(slot.w/2-.02)-.014,slot.y-.018,
+    slot.z-slot.len/2,.028,.022,slot.len,tint(c,.82));
+  }
  }
  // Typhoon and Su-37 canards are animated separately below. Do not also
  // bake fixed copies into the hull; that creates overlapping surfaces.
@@ -541,9 +564,9 @@ function buildJetParts(Mesh,id){
  const variant=normalize(id);
  if(variant==="c172"||variant==="r44")return null;
  const props=[];
- const add=(name,pivot,axis,draw)=>{
+ const add=(name,pivot,axis,draw,meta=null)=>{
   const m=new Mesh();draw(m);
-  props.push({name,pivot,axis,mesh:m.finish()});
+  props.push({name,pivot,axis,mesh:m.finish(),...(meta||{})});
  };
  const white=palette.metal,wing=palette.lightning;
  const span=variant==="su37"?6.7:variant==="typhoon"?6.2:variant==="f35"?4.3:5.4;
@@ -618,7 +641,7 @@ function buildJetParts(Mesh,id){
   wheel(m,0,-1.21,3.12,.28,.105);
   m.box(-.13,-.55,3.23,.26,.12,.30,tint(palette.dark,1.15));
  });
- const gearWidth=variant==="su37"?1.70:variant==="f35"?1.18:1.42;
+ const gearWidth=proceduralGearSlots(variant)[2].x;
  for(const sign of [-1,1]){
   const side=sign<0?"Left":"Right",x=sign*gearWidth;
   add("mainGear"+side,[x,-.30,-2.32],1,m=>{
@@ -631,6 +654,27 @@ function buildJetParts(Mesh,id){
     [x+sign*.05,-1.05,-2.35]],.035,palette.metal,6);
    m.box(x-.15,-.36,-2.42,.30,.10,.42,tint(palette.dark,1.12));
   });
+ }
+ // Six individual longitudinally hinged doors, rather than a separate
+ // generic gear image. Each door is full-size and follows its corresponding
+ // nose/left/right undercarriage command in the WebGL renderer.
+ const paint=variant==="su37"?palette.su:
+  variant==="typhoon"?palette.typhoon:
+  variant==="fa18"?palette.jet:
+  variant==="f22"?palette.stealth:palette.lightning;
+ for(const slot of proceduralGearSlots(variant)){
+  for(const sign of [-1,1]){
+   const suffix=sign<0?"Left":"Right";
+   const pivotX=slot.x+sign*slot.w/2;
+   const x0=sign<0?pivotX+.012:slot.x+.010;
+   const panelWidth=slot.w/2-.024;
+   add(slot.gearName+"Door"+suffix,[pivotX,slot.y,slot.z],3,m=>{
+    m.box(x0,slot.y-.038,slot.z-slot.len/2+.024,
+     panelWidth,.027,slot.len-.048,tint(paint,.91));
+    m.box(x0,slot.y-.042,slot.z+slot.len/2-.061,
+     panelWidth,.032,.035,tint(palette.dark,1.12));
+   },{gearName:slot.gearName,doorSide:sign});
+  }
  }
  return props;
 }
