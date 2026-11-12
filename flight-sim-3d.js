@@ -2109,8 +2109,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
        if((part.opacity??1)<.99)continue;
        if(part.partAxis!==4||gearOpacity(part)>.999)drawPrimitive(part,1);
       }
-      // Draw cockpit hardware behind the translucent canopy, never over the skin.
-      drawCabin();
+      // Exterior inspection must not add the approximate training panel on
+      // top of a licensed fuselage: its coordinates have not been fitted to
+      // each real canopy. Interior mode above still shows the dedicated mesh.
+      // Re-enable exterior cabin only after aircraft-specific fit validation.
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
       for(const part of realModel.primitives){
