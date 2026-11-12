@@ -117,54 +117,58 @@
   function syncModelVisibility(){
    const id=selected();
    let phase="ready";
-   // Interior study renders self-contained cockpit geometry and must not
-   // depend on downloading the large external aircraft mesh.
+   // A cockpit is an independent local mesh, so no exterior download is
+   // required when the user selects Interior.
    if(renderer&&usingGPU&&!orbit.interior){
     if(id==="c172")phase=renderer.realC172Status;
     else if(id==="r44")phase=renderer.realR44Status;
-    else if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon")
+    else if(["f22","f35","su37","typhoon"].includes(id))
      phase=renderer.prepareAirframe?.(id)??"fallback";
    }
    const loading=Boolean(usingGPU&&(phase==="loading"||phase==="idle"));
-   const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35"||
-    id==="su37"||id==="typhoon")&&phase==="fallback");
-   // A previously rendered frame remains on the same canvas until draw()
-   // completes. Hide it immediately when ANY of the seven models changes.
-   // The next available frame is drawn while hidden, then revealed.
-   const stale=lastRenderedId!==id,pending=loading||(stale&&usingGPU);
-   // On Canvas 2D-only phones, keep the already approved 2D controls and
-   // canvas visible, but immediately erase the prior aircraft silhouette.
-   if(stale&&!usingGPU){
+   const failed=Boolean(usingGPU&&phase==="fallback");
+   const stale=lastRenderedId!==id;
+   const gpuVisible=usingGPU&&!loading&&!failed&&!stale;
+   // The 2D renderer is aircraft-specific. It must remain visible while
+   // 3D assets load or fail, rather than displaying a blank dark viewport.
+   canvas3D.hidden=!gpuVisible;
+   canvas2D.hidden=gpuVisible;
+   if(stale&&!gpuVisible){
     ctx.fillStyle="#162a37";
     ctx.fillRect(0,0,canvas2D.width,canvas2D.height);
    }
-   viewport.dataset.modelLoading=unavailable?"unavailable":pending?"on":"off";
-   canvas3D.hidden=!usingGPU||pending||unavailable;
-   canvas2D.hidden=usingGPU||unavailable;
+   viewport.dataset.modelLoading="off";
    const statusText=viewport.dataset.interiorUnsupported==="on"?
-    "Interior 3D requires WebGL2. Exterior view is still available.":
-    loading?"Loading "+types.LABELS[id]+" 3D model…":
-    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":
-    pending?"Rendering "+types.LABELS[id]+"…":"";
+    "Interior 3D requires WebGL2. Exterior view is available.":
+    loading?"Showing "+types.LABELS[id]+" while 3D model loads…":
+    failed?types.LABELS[id]+" 3D unavailable — showing 2D view.":
+    "";
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
-   if(viewport.dataset.interiorUnsupported==="on")
-    viewport.dataset.modelLoading="unsupported";
-   $("aircraftInspectRenderMode").textContent=unavailable?"3D unavailable":
-    pending?"Loading 3D":usingGPU?"3D view":"2D view";
-   // A stale frame must not prevent the new one from ever being drawn.
-   return loading||unavailable;
+   $("aircraftInspectRenderMode").textContent=gpuVisible?"3D view":
+    loading?"2D preview · loading 3D":"2D view";
+   return {loading,failed,gpuVisible};
+  }
+  function paint2D(state,id,animation){
+   const rect=viewport.getBoundingClientRect();
+   const pixelRatio=Math.min(1.25,win.devicePixelRatio||1);
+   const w=Math.max(1,Math.min(960,Math.round(rect.width*pixelRatio)));
+   const h=Math.max(1,Math.min(630,Math.round(rect.height*pixelRatio)));
+   if(canvas2D.width!==w||canvas2D.height!==h){
+    canvas2D.width=w;canvas2D.height=h;
+   }
+   const gradient=ctx.createLinearGradient(0,0,0,h);
+   gradient.addColorStop(0,"#263f51");
+   gradient.addColorStop(1,"#09151d");
+   ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
+   exterior.paint(ctx,state,{id,width:w,height:h,view:"inspect",orbit,animation});
   }
   function render(now){
    if(modal.hidden)return;
    const id=selected();
    updateHeading();
-   if(syncModelVisibility()){
-    last=now;
-    raf=win.requestAnimationFrame(frame);
-    return;
-   }
+   const phase=syncModelVisibility();
    if(autoRotate&&last)orbit={...orbit,azimuth:wrap(orbit.azimuth+
     Math.min(.08,(now-last)/1000)*17)};
    last=now;
@@ -173,28 +177,30 @@
     id==="c172"?{propeller:spin*43}:{};
    const state={mode:id==="r44"?"helicopter":"airplane",xM:0,zM:0,
     altitudeM:0,headingDeg:0,pitchDeg:0,rollDeg:0};
-   if(renderer&&usingGPU){
-    try{if(!renderer.draw(state,{view:"inspect",airframeId:id,orbit,animation,lighting:"day"}))
+   // Preserve the 2D aircraft while the matching 3D mesh is pending. Even
+   // a failed WebGL draw must not leave both canvases invisible.
+   let drawn=false;
+   if(renderer&&usingGPU&&!phase.loading&&!phase.failed){
+    try{drawn=Boolean(renderer.draw(state,{
+     view:"inspect",airframeId:id,orbit,animation,lighting:"day"
+    }));}catch(error){
+     if(typeof console!=="undefined")console.warn("360° 3D draw:",error);
      fallback();
-    }catch{fallback()}
-   }
-   if(!usingGPU){
-    const rect=viewport.getBoundingClientRect(),pixelRatio=Math.min(1.25,win.devicePixelRatio||1);
-    const w=Math.max(1,Math.min(960,Math.round(rect.width*pixelRatio)));
-    const h=Math.max(1,Math.min(630,Math.round(rect.height*pixelRatio)));
-    if(canvas2D.width!==w||canvas2D.height!==h){
-     canvas2D.width=w;canvas2D.height=h;
     }
-    const gradient=ctx.createLinearGradient(0,0,0,h);
-    gradient.addColorStop(0,"#263f51");gradient.addColorStop(1,"#09151d");
-    ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
-    exterior.paint(ctx,state,{id,width:w,height:h,view:"inspect",orbit,animation});
    }
-   // Only reveal the canvas after the newly selected airframe was
-   // actually painted. Never show an old C172/R44/fighter frame on change.
-   lastRenderedId=id;
-   syncModelVisibility();
-   // 24 fps is sufficient for inspection and protects mobile battery.
+   if(!drawn){
+    canvas3D.hidden=true;
+    canvas2D.hidden=false;
+    try{paint2D(state,id,animation)}
+    catch(error){
+     if(typeof console!=="undefined")console.warn("360° 2D draw:",error);
+     $("aircraftInspectLoading").textContent="Aircraft preview could not be drawn. Close and reopen the inspector.";
+     viewport.dataset.modelLoading="unavailable";
+    }
+   }else{
+    lastRenderedId=id;
+    syncModelVisibility();
+   }
    raf=win.requestAnimationFrame(frame);
   }
   function frame(now){if(!modal.hidden&&now-lastFrameTime>=40){lastFrameTime=now;render(now)}
