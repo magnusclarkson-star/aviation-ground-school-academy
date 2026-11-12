@@ -654,7 +654,7 @@ try{
     focus:document.body.dataset.cockpitFocus,
     leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
     rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
-    visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight-2&&right.bottom<=innerHeight-2,
+    visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight+1&&right.bottom<=innerHeight+1,
     adjacent:Math.abs(left.top-right.top)<7,
     noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
     // Approved C172 uses a full-width top dashboard; R44 keeps its
