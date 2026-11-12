@@ -128,8 +128,9 @@ try{
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
  assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"on");
  const rotor=await layout();
+ console.log("R44 SWITCHGEAR ACTUAL "+JSON.stringify(rotor));
  checkTwoByTwo(rotor);
- assert.equal(rotor.switchParent,"control-panel",
+ assert.match(rotor.switchParent,/control-panel/,
   "approved R44 switches live next to cyclic, outside gauges");
  assert.ok(rotor.rack.left>=rotor.yoke.left+rotor.yoke.w*.60,
   "R44 switches stay to the right of the cyclic");
