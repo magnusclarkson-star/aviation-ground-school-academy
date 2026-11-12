@@ -28,6 +28,21 @@ for(const x of ["leftFlap","rightFlap","leftAileron","rightAileron",
 assert.ok([...animated.values()].every(x=>x.partPivot.every(Number.isFinite)));
 assert.ok(model.primitives.some(x=>x.sourceName==="canopy"&&x.opacity<.6),
  "source canopy must be translucent, not a solid opaque block");
+// Imported Gear.ac struts must never break through the F-35B upper skin.
+const undercarriage=model.primitives.filter(p=>p.sourceName.startsWith("gear:"));
+assert.ok(undercarriage.length>=10,"authentic source gear parts retained");
+for(const part of undercarriage){
+ const heights=[];
+ for(let i=1;i<part.positions.length;i+=3)heights.push(part.positions[i]);
+ assert.ok(Math.max(...heights)<=-.649,
+  part.sourceName+" must remain beneath F-35B fuselage");
+}
+for(const wheelName of ["gear:wheel.F","gear:wheel.R","gear:wheel.L"]){
+ const wheel=undercarriage.find(p=>p.sourceName===wheelName);
+ assert.ok(wheel&&wheel.positions.some((v,i)=>i%3===1&&v< -1.9),
+  wheelName+" must retain deployed tyre height");
+}
+
 assert.ok(model.primitives.every(p=>{
  if(p.positions.length!==p.normals.length||
     p.positions.length!==p.colors.length||
