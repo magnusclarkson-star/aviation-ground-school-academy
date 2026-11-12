@@ -128,7 +128,7 @@ for(const goodPitch of [-3,6]){
  assert.ok(contact.events.includes("touchdown"));
  assert.ok(Object.isFrozen(contact.state.touchdownData));
 }
-const fighterPitch=contactWithPitch(17,"f22");
+const fighterPitch=contactWithPitch(-12,"f22");
 assert.equal(fighterPitch.state.phase,"rollout",
  "the new C172-specific teaching guard does not rewrite fighter landing thresholds");
 
