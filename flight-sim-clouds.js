@@ -16,7 +16,10 @@ const clouds=Object.freeze(Array.from({length:35},(_,i)=>Object.freeze({
  size:72+cloudSeed(i,4)*92
 })));
 function drift(time=0,windXMps=0,windZMps=0,reducedMotion=false){
- const t=reducedMotion?0:Math.max(0,Number.isFinite(time)?time:0);
+ // Keep both axes exactly zero, even with negative wind, when the user
+ // requests reduced animation; avoid a -0 value and unnecessary GPU motion.
+ if(reducedMotion)return Object.freeze({x:0,z:0});
+ const t=Math.max(0,Number.isFinite(time)?time:0);
  const wx=Number.isFinite(windXMps)?windXMps:0;
  const wz=Number.isFinite(windZMps)?windZMps:0;
  // Light background circulation is visual only. A real selected simulator
