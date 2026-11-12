@@ -487,12 +487,24 @@ function genericJet(m,id){
   sheet(m,[[0,3.35,-6.7],[0,3.12,-7.35],[0,2.75,-8.6],
    [0,2.99,-7.05]],tint(c,.77),.018);
  }else if(id==="su37"){
-  // Widely spaced intake trunks and distinct wing-panel tones.
+  // Su-37's wide-spaced inlet trunks, full-span control edges and separated
+  // exhaust fairings are static exterior details, not flight-force changes.
   for(const sign of [-1,1]){
    const x=sign*1.15;
    m.box(x-.39,-.54,-1.28,.78,.10,2.43,tint(c,.70));
    sheet(m,[[sign*1.26,.38,-2.23],[sign*4.67,.39,-2.83],
     [sign*4.40,.39,-3.10],[sign*1.28,.38,-2.66]],tint(c,.66),.023);
+   // Separate canard leading edge and dark hinge seam, positioned ahead of
+   // the main wing rather than floating above the centre fuselage.
+   sheet(m,[[sign*.69,.71,4.08],[sign*3.08,.71,3.31],
+    [sign*2.73,.71,3.10],[sign*.70,.71,3.42]],tint(c,.90),.028);
+   sheet(m,[[sign*.76,.73,3.38],[sign*2.63,.73,3.09],
+    [sign*2.40,.73,3.02],[sign*.76,.73,3.31]],palette.dark,.012);
+   // Independent twin nozzle shrouds at the aft ends of each nacelle:
+   // the centres remain separated at +/-1.15 local X.
+   m.box(x-.35,-.51,-7.57,.70,.15,.20,tint(c,.61));
+   sheet(m,[[x-.31,-.38,-7.52],[x+.31,-.38,-7.52],
+    [x+.24,-.46,-7.80],[x-.24,-.46,-7.80]],palette.dark,.035);
   }
  }else if(id==="fa18"){
   // Super Hornet shoulder intakes and sharply swept LEX fairings.
