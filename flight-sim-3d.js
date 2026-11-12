@@ -1779,6 +1779,20 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(selectedJet==="f22")importF22();
     if(selectedJet==="f35")importF35();
    }
+   // A direct inspector draw must never flash the obsolete procedurally
+   // illustrated F-22/F-35B while source meshes are still being fetched.
+   // The UI also hides both canvases behind its loading indicator.
+   if(inspectionOnly&&view==="inspect"){
+    const choice=Exterior.normalize(airframeId||state.mode);
+    if(choice==="f22"||choice==="f35"){
+     const status=choice==="f22"?realF22Status:realF35Status;
+     if(status!=="imported"){
+      if(canvas.dataset)canvas.dataset.airframeSource=
+       status==="fallback"?"unavailable":"loading";
+      return true; // Sky/background only, never the obsolete jet.
+     }
+    }
+   }
    // The genuine C172 cockpit must draw the original *interior* mesh in
    // pilot view; exterior-only logic used to hide every cabin surface.
    if(view!=="cockpit"||sourceCockpit){
@@ -2053,6 +2067,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    }
   }
   return {draw,destroy,resetCamera(){cameraRig?.reset()},
+   // Allow the 360-degree inspector to request a source jet before the first
+   // frame. It must not draw the old procedural fighter during model loading.
+   prepareAirframe(id){
+    if(id==="f22"){importF22();return realF22Status}
+    if(id==="f35"){importF35();return realF35Status}
+    return null;
+   },
    get realC172Status(){return realC172Status},
    get realR44Status(){return realR44Status},
    get realF22Status(){return realF22Status},
