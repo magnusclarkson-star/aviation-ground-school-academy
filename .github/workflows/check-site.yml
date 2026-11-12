@@ -86,3 +86,4 @@ jobs:
       - run: node scripts/build-pages.mjs
       - run: node scripts/test-pages-package.mjs
       - run: node --check flight-sim-sw.js
+      - run: node --check scripts/verify-published-simulator.mjs

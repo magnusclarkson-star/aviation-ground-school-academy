@@ -52,3 +52,7 @@ jobs:
           exit 1
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify public Pages serves this exact simulator and its real model files
+        env:
+          AGSA_PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+        run: node scripts/verify-published-simulator.mjs
