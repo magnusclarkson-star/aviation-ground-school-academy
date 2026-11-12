@@ -40,6 +40,9 @@ const MolenC172=root?.AGSAC172Airframe||
 const F22Airframe=root?.AGSAF22Airframe||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-f22-airframe.js"):null);
+const F35Airframe=root?.AGSAF35Airframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-f35-airframe.js"):null);
 const Windsocks=root?.AGSAFlightWindsocks||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-windsocks.js"):null);
@@ -1387,6 +1390,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let realC172=null,realC172Status="loading";
  let realR44=null,realR44Status="loading";
  let realF22=null,realF22Status="idle";
+ let realF35=null,realF35Status="idle";
  const cameraRig=root?.AGSACameraRig?.create?.({responseMs:180,teleportMetres:175})||null;
  const contextLost=e=>{e.preventDefault();lost=true;onLost()};
  canvas.addEventListener?.("webglcontextlost",contextLost,false);
@@ -1566,6 +1570,22 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(typeof console!=="undefined")console.warn("F-22 geometry fallback:",error);
    });
   }
+  // F-35B geometry is 414 KB and lazy-loaded only when this aircraft is
+  // selected, so it does not slow approved trainer/helicopter launch.
+  function importF35(){
+   if(realF35Status!=="idle")return;
+   if(!F35Airframe){realF35Status="fallback";return;}
+   realF35Status="loading";
+   void boundedModelLoad(F35Airframe.ensureF35()).then(model=>{
+    if(disposed||lost)return;
+    realF35={primitives:model.primitives.map(uploadImported),images:[],
+     vertices:model.vertices,triangles:model.triangles,kind:"flightgear"};
+    realF35Status="imported";
+   }).catch(error=>{
+    realF35Status="fallback";
+    if(typeof console!=="undefined")console.warn("F-35B geometry fallback:",error);
+   });
+  }
   // This is deliberately non-blocking: controls and simulated flight start
   // immediately with the legacy model, then swap to genuine C172 geometry.
   void importC172();
@@ -1734,8 +1754,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     gl.uniform1f(uni.uActor,0);
    }
    // The F-22 source is loaded on first exterior view, not at page startup.
-   if(view!=="cockpit"&&state.mode==="airplane"&&
-      Exterior.normalize(airframeId||state.mode)==="f22")importF22();
+   if(view!=="cockpit"&&state.mode==="airplane"){
+    const selectedJet=Exterior.normalize(airframeId||state.mode);
+    if(selectedJet==="f22")importF22();
+    if(selectedJet==="f35")importF35();
+   }
    // The genuine C172 cockpit must draw the original *interior* mesh in
    // pilot view; exterior-only logic used to hide every cabin surface.
    if(view!=="cockpit"||sourceCockpit){
@@ -1754,13 +1777,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const realModel=id==="c172"?realC172:id==="r44"?realR44:
-     id==="f22"?realF22:null;
+    const realModel=id==="f35"?realF35:
+     (id==="c172"?realC172:id==="r44"?realR44:
+     id==="f22"?realF22:null);
     const isMolen=id==="r44"&&realModel?.kind==="molen";
     const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
-     (id==="f22"?"gpl-f22-fguk":isMolenC172?"mit-c172s-glb":
-      id==="c172"?"licensed-c172-glb":
+     (id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":
+      isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):"procedural";
     if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
      "source-cabin-and-panel":realModel&&model.cabin?
@@ -1782,7 +1806,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
-      if((isMolen||isMolenC172||id==="f22")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="f22"||id==="f35")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
        const angle=animation?.[part.partName];
@@ -1790,7 +1814,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if((isMolen||isMolenC172||id==="f22")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="f22"||id==="f35")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,0);
        gl.uniform1f(uni.uPartAngle,0);
        gl.uniform3fv(uni.uPartPivot,[0,0,0]);
@@ -1830,7 +1854,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uOpacity,.26);
       gl.bindVertexArray(model.shellGlass.vao);
       gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
-     }else if(id==="f22"){
+     }else if(id==="f22"||id==="f35"){
       // Original FlightGear F-22 geometry replaces the illustrated jet.
       // Source ailerons, flaps, elevators and rudders are hinged in WebGL;
       // the translucent source canopy draws after the opaque surfaces.
@@ -1889,6 +1913,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      model.authenticTailRotorSweep:model.tailRotorSweep;
     const animatedParts=isMolen?[]:
      id==="f22"&&realModel?[]:
+     id==="f35"&&realModel?[]:
      exteriorAnimatedParts(id,Boolean(realModel),model);
     const rawSweep=animation?.rotorBlurOpacity;
     const sweepOpacity=Number.isFinite(rawSweep)?limit(rawSweep,0,.22):0;
@@ -1976,6 +2001,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    get realC172Status(){return realC172Status},
    get realR44Status(){return realR44Status},
    get realF22Status(){return realF22Status},
+   get realF35Status(){return realF35Status},
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};

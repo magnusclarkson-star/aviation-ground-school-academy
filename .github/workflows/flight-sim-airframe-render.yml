@@ -9,6 +9,9 @@ on:
       - 'flight-sim-real-r44.js'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-f22-airframe.js'
+      - 'flight-sim-f35-airframe.js'
+      - 'assets/aircraft/f35b-fg-exterior.json'
+      - 'scripts/test-flight-sim-f35-browser.mjs'
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
       - 'assets/aircraft/**'
@@ -28,6 +31,9 @@ on:
       - 'flight-sim-real-r44.js'
       - 'flight-sim-airframe-geometry.js'
       - 'flight-sim-f22-airframe.js'
+      - 'flight-sim-f35-airframe.js'
+      - 'assets/aircraft/f35b-fg-exterior.json'
+      - 'scripts/test-flight-sim-f35-browser.mjs'
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
       - 'assets/aircraft/**'
@@ -64,6 +70,8 @@ jobs:
         run: node scripts/test-flight-sim-mobile-airframes-browser.mjs
       - name: Prove imported F-22 source geometry in actual browser views
         run: node scripts/test-flight-sim-f22-browser.mjs
+      - name: Prove imported F-35B source geometry in actual browser views
+        run: node scripts/test-flight-sim-f35-browser.mjs
       - name: Save real-aircraft preview images
         if: always()
         uses: actions/upload-artifact@v4
@@ -74,5 +82,6 @@ jobs:
             artifacts/real-c172-*.png
             artifacts/mobile-*-inspector.png
             artifacts/real-f22-*.png
+            artifacts/real-f35-*.png
           if-no-files-found: ignore
           retention-days: 14
