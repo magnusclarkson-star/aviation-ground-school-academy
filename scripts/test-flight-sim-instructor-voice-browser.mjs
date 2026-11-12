@@ -120,13 +120,21 @@ try{
  await coachPage.waitForTimeout(200);
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),1,
   "animation frames cannot spam the instructor announcement");
- await coachPage.locator("#r44VoiceToggle").click();
+ // The R44 lesson strip is deliberately hidden to protect pedal space.
+ // The live voice control is now reachable via the existing More button.
+ await coachPage.locator("#cockpitHelpToggle").click();
+ const reachableVoice=coachPage.locator("#r44VoiceMoreToggle");
+ assert.ok(await reachableVoice.isVisible(),
+  "R44 voice must be reachable without adding cockpit clutter");
+ await reachableVoice.click();
+ assert.equal(await reachableVoice.getAttribute("aria-pressed"),"false");
  assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"false");
  const mutedCount=await coachPage.evaluate(()=>window.__coachSpeech.length);
  await coachPage.waitForTimeout(150);
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount);
- await coachPage.locator("#r44VoiceToggle").click();
- assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"true");
+ if(!(await reachableVoice.isVisible()))await coachPage.locator("#cockpitHelpToggle").click();
+ await reachableVoice.click();
+ assert.equal(await reachableVoice.getAttribute("aria-pressed"),"true");
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount+1,
   "unmuting repeats the current stage only after the learner taps");
  await coachPage.locator("#collective").evaluate(el=>{
@@ -184,9 +192,13 @@ try{
  assert.ok(control&&pedal&&pedal.y>=control.y+control.height-12&&pedal.y-control.y<280,
   "pedals remain below the centered yoke when narration panel expands");
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
- assert.equal(await phone.locator("#r44VoiceToggle").isVisible(),true);
- assert.equal(await phone.locator("#r44VoiceToggle").isDisabled(),true,
-  "unsupported phone remains silent and keeps the R44 cockpit usable");
+ assert.equal(await phone.locator("#r44VoiceToggle").isVisible(),false,
+  "the old R44 lesson strip remains hidden to preserve pedal space");
+ await phone.locator("#cockpitHelpToggle").tap();
+ assert.equal(await phone.locator("#r44VoiceMoreToggle").isVisible(),true,
+  "R44 spoken instructor control is reachable inside More on a phone");
+ assert.equal(await phone.locator("#r44VoiceMoreToggle").isDisabled(),true,
+  "unsupported phone stays silent without removing text-based guidance");
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
   "R44 mute icon cannot create horizontal scrolling on a 390px phone");
  assert.deepEqual(errors,[]);

@@ -22,15 +22,22 @@ function create({windowLike,documentLike,getLesson=()=>null,isBusy=()=>false}={}
  const stageKey=lesson=>lesson?.status&&lesson.status!=="active"?
   lesson.status:lesson?.stage;
  function syncUI(){
-  const button=doc?.getElementById?.("r44VoiceToggle");
-  if(!button)return;
-  button.disabled=!supported;
-  button.setAttribute("aria-pressed",String(supported&&enabled));
-  button.textContent=supported?(enabled?"🔊":"🔇"):"🔇";
-  button.setAttribute("aria-label",!supported?"R44 instructor speech unavailable":
-   enabled?"Mute R44 spoken instructor":"Enable R44 spoken instructor");
-  button.title=!supported?"Device speech unavailable":
-   enabled?"Instructor voice on. Tap to mute.":"Instructor voice muted. Tap to enable.";
+  // The old voice button is kept in the hidden R44 lesson strip for
+  // compatibility, while a reachable control in More provides a real
+  // mute/unmute touch target without changing the approved cockpit layout.
+  for(const id of ["r44VoiceToggle","r44VoiceMoreToggle"]){
+   const button=doc?.getElementById?.(id);
+   if(!button)continue;
+   button.disabled=!supported;
+   button.setAttribute("aria-pressed",String(supported&&enabled));
+   button.textContent=id==="r44VoiceMoreToggle"?
+    (!supported?"🔇 Voice unavailable":enabled?"🔊 Instructor voice":"🔇 Instructor voice"):
+    supported?(enabled?"🔊":"🔇"):"🔇";
+   button.setAttribute("aria-label",!supported?"R44 instructor speech unavailable":
+    enabled?"Mute R44 spoken instructor":"Enable R44 spoken instructor");
+   button.title=!supported?"Device speech unavailable":
+    enabled?"Instructor voice on. Tap to mute.":"Instructor voice muted. Tap to enable.";
+  }
  }
  function interrupt(){
   const hadSpeech=speaking;

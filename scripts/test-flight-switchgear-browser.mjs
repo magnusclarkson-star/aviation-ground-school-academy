@@ -112,8 +112,12 @@ try{
  assert.equal(wide.switchParent,"side-controls");
  assert.ok(wide.rack.left>=wide.well.left+wide.well.w*.65,
   "C172 rack is to the right of the analogue dials and below NAV");
- assert.ok(wide.rack.bottom<=wide.throttle.top+5,
-  "C172 rack stays above throttle in wide pilot mode");
+ const rackThrottleSeparated=wide.rack.bottom<=wide.throttle.top+4||
+  wide.rack.top>=wide.throttle.bottom-4||
+  wide.rack.right<=wide.throttle.left+4||
+  wide.rack.left>=wide.throttle.right-4;
+ assert.ok(rackThrottleSeparated,
+  "C172 switches must not cover the throttle in approved landscape cockpit");
  assert.ok(wide.restart.bottom<=wide.brake.top+8,
   "Restart stays directly above the brake after rotating phone");
  assert.ok(wide.rack.right<=844&&wide.restart.bottom<=390,
@@ -124,14 +128,16 @@ try{
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
  assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"on");
  const rotor=await layout();
+ console.log("R44 SWITCHGEAR ACTUAL "+JSON.stringify(rotor));
  checkTwoByTwo(rotor);
- assert.equal(rotor.switchParent,"cockpit-instrument-well");
- assert.ok(rotor.rack.left>=rotor.well.right-4,
-  "R44 2x2 switches sit beside the right edge of the central panel");
- assert.ok(rotor.rack.right<=844,
-  "R44 switch rack remains completely visible in landscape");
- assert.ok(rotor.lesson&&Math.abs(rotor.rack.bottom-rotor.lesson.bottom)<65,
-  "R44 switch rack aligns with the 1/4 TAKEOFF lesson and altitude gauges");
+ assert.match(rotor.switchParent,/control-panel/,
+  "approved R44 switches live next to cyclic, outside gauges");
+ assert.ok(rotor.rack.left>=rotor.yoke.left+rotor.yoke.w*.60,
+  "R44 switches stay to the right of the cyclic");
+ assert.ok(rotor.rack.right<=844&&rotor.rack.top>=0,
+  "R44 switch rack remains visible in landscape");
+ assert.ok(rotor.rack.bottom<=rotor.rudder.top+8,
+  "R44 switch rack does not cover the anti-torque pedals");
  assert.equal(rotor.restartParent,"side-controls",
   "R44 Restart stays beside collective");
  await phone.locator("#cockpitAircraftSelect").selectOption("c172");

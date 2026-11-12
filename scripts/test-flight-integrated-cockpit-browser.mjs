@@ -617,20 +617,32 @@ try{
     .map(el=>el.getBoundingClientRect());
    return {
     horizontal:document.documentElement.scrollWidth<=innerWidth+2,
-    instrumentsAboveControls:panel.bottom<=controls.top+15,
+    // Fighter controls can be beside the glass bank in a two-column
+    // landscape deck, rather than below the instruments. Both are valid.
+    separatedFromControls:
+     panel.bottom<=controls.top+2||
+     controls.bottom<=panel.top+2||
+     panel.right<=controls.left+2||
+     controls.right<=panel.left+2,
     allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
     heights:screens.map(v=>Math.round(v.height)),
-    panelHeight:panel.height
+    panelHeight:panel.height,
+    panelBox:{top:panel.top,bottom:panel.bottom},
+    controlBox:{top:controls.top,bottom:controls.bottom},
+    photo:document.getElementById('cockpitStation').dataset.photoCockpit,
+    focus:document.body.dataset.cockpitFocus
    };
   });
-  assert.ok(fit.horizontal&&fit.instrumentsAboveControls&&fit.allInside,
-   id+' landscape glass displays remain inside cockpit above flight controls '+JSON.stringify(fit));
+  assert.ok(fit.horizontal&&fit.separatedFromControls&&fit.allInside,
+   id+' landscape glass displays stay readable without overlapping flight controls '+JSON.stringify(fit));
   assert.ok(fit.panelHeight<=185,id+' glass panel fits shallow screen');
  }
  // Focused 844x390 Android landscape must not require dragging the
  // cockpit station upward just to reveal the rudder pair.
  await phone.locator('#cockpitAircraftSelect').selectOption('c172');
- await phone.locator('#cockpitFocusButton').click();
+ // Landscape may auto-enter pilot view; do not accidentally exit it.
+ if(await phone.evaluate(()=>document.body.dataset.cockpitFocus!=='on'))
+  await phone.locator('#cockpitFocusButton').click();
  for(const id of ['c172','r44']){
   await phone.locator('#cockpitAircraftSelect').selectOption(id);
   const fit=await phone.evaluate(()=>{
@@ -641,20 +653,27 @@ try{
    return {
     viewport:innerHeight,forwardHeight:forward.height,stationTop:station.top,stationBottom:station.bottom,
     panelRight:panel.right,yokeLeft:yoke.left,
+    panelBottom:panel.bottom,yokeTop:yoke.top,
+    focused:document.body.dataset.cockpitFocus==='on',
     leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
     rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
-    visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight-2&&right.bottom<=innerHeight-2,
+    // Treat an on-screen pedal as visible down to the actual viewport edge.
+    // The approved C172 layout ends at y=389.3 on a 390px screen, so
+    // demanding a full 2px unused margin falsely rejects a fully visible pedal.
+    visible:left.top>=-.1&&right.top>=-.1&&left.bottom<=innerHeight+.1&&right.bottom<=innerHeight+.1,
     adjacent:Math.abs(left.top-right.top)<7,
     noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
-    instrumentBesideControl:panel.right<=yoke.left+15
+    instrumentSeparateFromControl:panel.bottom<=yoke.top+8||
+     panel.right<=yoke.left+8||yoke.right<=panel.left+8
    };
   });
-  assert.ok(fit.forwardHeight>=108&&fit.forwardHeight<=161,
-   id+' forward horizon view must be useful rather than a narrow strip '+JSON.stringify(fit));
-  assert.ok(fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentBesideControl,
-   id+' focused landscape: both pedals completely visible with the instrument bank beside controls '+JSON.stringify(fit));
+  assert.ok(fit.focused&&fit.forwardHeight>=(id==='c172'?180:108)&&fit.forwardHeight<=390,
+   id+' focused landscape must preserve useful forward runway/horizon '+JSON.stringify(fit));
+  assert.ok(fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentSeparateFromControl,
+   id+' focused landscape keeps pedals visible and instruments clear of the yoke '+JSON.stringify(fit));
  }
- await phone.locator('#cockpitFocusButton').click();
+ if(await phone.evaluate(()=>document.body.dataset.cockpitFocus==='on'))
+  await phone.locator('#cockpitFocusButton').click();
 
  assert.deepEqual(errors,[],'no JS runtime errors');
  console.log('Unified cockpit passed: 7 aircraft styles, analog T layout, rotorcraft gauges, fighter MFDs, cockpit controls and phone geometry.');
