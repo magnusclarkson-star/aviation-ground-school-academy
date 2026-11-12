@@ -114,8 +114,9 @@ try{
  const rotorDeck=await metrics(phone);
  console.log("R44 focused landscape geometry "+JSON.stringify(rotorDeck));
  assert.equal(rotorDeck.photoDeck,"on","R44 retains its approved physical cockpit");
- assert.ok(rotorDeck.instruments.width<landscape.instruments.width*.9,
-  "R44 instrument face remains narrower than the C172 instrument bank");
+ assert.equal(rotorDeck.gauges.length,8,"R44 preserves its eight live round gauges");
+ assert.ok(rotorDeck.gauges.every(g=>g.width>=44&&g.width<=70&&g.height>=44),
+  "R44 actual compact gauges remain readable regardless of full-width background container");
  assert.ok(rotorDeck.gauges.every(g=>g.width>=44&&g.bottom<=392),
   "R44 central console keeps all eight live instruments within landscape");
  assert.ok(rotorDeck.left.bottom<=392&&rotorDeck.right.bottom<=392,
