@@ -175,12 +175,32 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
   "elevatorLeft","rightAileron","rightFlap",
   ...(id==="su37"?["canardRight"]:[]),"elevatorRight",
   ...(id==="typhoon"?["rudder"]:["rudderLeft","rudderRight"]),
-  "noseGear","mainGearLeft","mainGearRight"
- ],id+" has animated control surfaces and three retractable gear assemblies");
+  "noseGear","mainGearLeft","mainGearRight",
+  "noseGearDoorLeft","noseGearDoorRight",
+  "mainGearLeftDoorLeft","mainGearLeftDoorRight",
+  "mainGearRightDoorLeft","mainGearRightDoorRight"
+ ],id+" has animated controls, three retractable gear assemblies and six individual doors");
  assert.ok(parts.every(x=>x.mesh.vertices>0&&x.axis>0));
  for(const p of parts.filter(p=>p.name.endsWith("Gear"))){
   assert.equal(p.axis,1,id+" jet gear pivots inward around its horizontal hinge");
   assert.ok(p.mesh.triangles>60,id+" gear has a round wheel with a hub and support strut");
+ }
+ const doors=parts.filter(p=>p.gearName);
+ assert.equal(doors.length,6,id+" must have two independent doors per wheel station");
+ assert.deepEqual([...new Set(doors.map(p=>p.gearName))].sort(),
+  ["noseGear","mainGearLeft","mainGearRight"].sort());
+ for(const p of doors){
+  assert.equal(p.axis,3,id+" wheel-well door hinges about the longitudinal axis");
+  assert.ok([-1,1].includes(p.doorSide));
+  assert.ok(p.mesh.triangles>=24&&p.mesh.vertices<200,
+   "door must have finite lightweight mesh on mobile");
+  assert.ok(p.pivot.every(Number.isFinite));
+  const open=A.importedGearDoorAngle(0,p.doorSide),
+   halfway=A.importedGearDoorAngle(.9,p.doorSide),
+   closed=A.importedGearDoorAngle(1.53,p.doorSide);
+  assert.ok(Math.abs(open)>1&&Math.abs(halfway)<Math.abs(open));
+  assert.ok(Math.abs(closed)<1e-8,
+   "retracted procedural fighter doors must lie flush against belly");
  }
  const names=parts.map(x=>x.name);
  const rudders=names.filter(name=>name.toLowerCase().includes("rudder"));
