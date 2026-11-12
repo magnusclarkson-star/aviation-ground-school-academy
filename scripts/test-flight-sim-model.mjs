@@ -100,6 +100,38 @@ assert.equal(contactInstant.rolloutDistanceM,0,
 assert.ok(Number.isFinite(contactInstant.touchdownData.pitchDeg) &&
  Number.isFinite(contactInstant.touchdownData.bankDeg),
  "contact snapshot captures airborne attitude before wheels settle");
+
+/* C172 landing attitude reliability. This is a contact-condition test of
+   the existing physics, not an automatic landing or a pilot-control change.
+   An overpitched yoke at impact must not count as a controlled landing. */
+const contactWithPitch=(pitchDeg,airframeId="c172")=>{
+ const state=M.makeState("airplane","approach",{airframeId});
+ Object.assign(state,{xM:0,zM:600,altitudeM:.01,verticalMs:-1.0,
+  pitchDeg,rollDeg:0,headingDeg:0,trackDeg:0,speedKt:75,groundSpeedKt:75});
+ const output=M.step(state,{...M.makeInput(),throttle:.49,pitch:0},.05);
+ return {state,events:output.events};
+};
+for(const badPitch of [-12,17]){
+ const contact=contactWithPitch(badPitch);
+ assert.equal(contact.state.phase,"halted",
+  "C172 must not accept an extreme "+badPitch+"° nose attitude at wheel contact");
+ assert.ok(contact.events.includes("hardLanding"));
+ assert.match(contact.state.message,/nose attitude/i,
+  "report the actual landing error rather than generic runway failure");
+ assert.equal(contact.state.touchdownData,null,
+  "unsafe pitch cannot create a gentle-touchdown record");
+}
+for(const goodPitch of [-3,6]){
+ const contact=contactWithPitch(goodPitch);
+ assert.equal(contact.state.phase,"rollout",
+  "moderate C172 pitch "+goodPitch+"° still permits a wheel landing");
+ assert.ok(contact.events.includes("touchdown"));
+ assert.ok(Object.isFrozen(contact.state.touchdownData));
+}
+const fighterPitch=contactWithPitch(17,"f22");
+assert.equal(fighterPitch.state.phase,"rollout",
+ "the new C172-specific teaching guard does not rewrite fighter landing thresholds");
+
 // A nose-up or banked touch-yoke held after contact must not leave the
 // aircraft visually floating above the runway during the rollout.
 const rollSettling=Object.assign(M.makeState("airplane","approach"),{
