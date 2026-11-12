@@ -102,21 +102,26 @@ function engine(m,x,z,w=.9,color=palette.dark){
 }
 // Thin, round, fixed tricycle wheels rather than rectangular landing-gear
 // blocks. The wheel rolls in the local YZ plane around a lateral X axle.
-function wheel(m,x,y,z,r,halfWidth=.105){
- const slices=12;
- const core=r*.42;
+function wheel(m,x,y,z,r,halfWidth=.14){
+ // A substantial 3D tyre: central tread, rounded shoulder strips, dark
+ // sidewalls and inset metal hubs. Former thin disk tyres disappeared edge-on.
+ const slices=14,core=r*.39,shoulder=r*.91;
+ const circle=(xx,rad,a)=>[xx,y+rad*Math.sin(a),z+rad*Math.cos(a)];
  for(let i=0;i<slices;i++){
-  const a=i*2*Math.PI/slices,b=(i+1)*2*Math.PI/slices;
-  const point=(xx,rad,angle)=>[xx,y+rad*Math.sin(angle),z+rad*Math.cos(angle)];
-  m.quad(point(x-halfWidth,r,a),point(x+halfWidth,r,a),
-   point(x+halfWidth,r,b),point(x-halfWidth,r,b),palette.black);
+  const a=i*Math.PI*2/slices,b=(i+1)*Math.PI*2/slices;
+  // Tread width plus curved shoulders, with real thickness in X.
+  m.quad(circle(x-halfWidth*.74,r,a),circle(x+halfWidth*.74,r,a),
+   circle(x+halfWidth*.74,r,b),circle(x-halfWidth*.74,r,b),palette.black);
   for(const sign of [-1,1]){
-   const face=x+sign*halfWidth;
-   m.tri([face,y,z],point(face,r,sign>0?a:b),
-    point(face,r,sign>0?b:a),palette.black);
-   const hub=face+sign*.012;
-   m.tri([hub,y,z],point(hub,core,sign>0?a:b),
-    point(hub,core,sign>0?b:a),palette.metal);
+   const outer=x+sign*halfWidth;
+   const inner=x+sign*halfWidth*.74;
+   m.quad(circle(inner,r,a),circle(outer,shoulder,a),
+    circle(outer,shoulder,b),circle(inner,r,b),palette.black);
+   m.tri([outer,y,z],circle(outer,shoulder,sign>0?a:b),
+    circle(outer,shoulder,sign>0?b:a),palette.dark);
+   const hub=outer+sign*.008;
+   m.tri([hub,y,z],circle(hub,core,sign>0?a:b),
+    circle(hub,core,sign>0?b:a),palette.metal);
   }
  }
 }
@@ -379,9 +384,20 @@ function genericJet(m,id){
  const rx=id==="su37"?1.72:id==="f35"?1.15:1.53;
  const nose=id==="typhoon"?9.5:id==="f22"?8.8:8.2;
  const zTail=id==="su37"?-9.4:-7.8;
- fuselage(m,[[zTail,.33,.37,0],[-6.5,rx*.78,.70,.05],
-  [-3.4,rx,.85,.04],[.5,rx*.77,.70,.03],
-  [4.5,rx*.46,.44,.0],[nose,.10,.10,-.02]],c);
+ if(id==="fa18"){
+  // Dedicated naval fighter profile: broad twin-engine rear barrels,
+  // blended shoulders, raised cockpit, and a long narrow radar nose.
+  // Unlike the old generic jet, these nine stations trace a Super Hornet.
+  fuselage(m,[[-8.05,.48,.43,-.06],[-6.72,1.40,.70,.0],
+   [-4.88,1.70,.78,.02],[-2.15,1.75,.79,.05],
+   [-.25,1.60,.72,.08],[1.70,1.08,.64,.10],
+   [3.72,.64,.55,.08],[6.00,.35,.30,.025],
+   [8.33,.035,.06,-.02]],c);
+ }else{
+  fuselage(m,[[zTail,.33,.37,0],[-6.5,rx*.78,.70,.05],
+   [-3.4,rx,.85,.04],[.5,rx*.77,.70,.03],
+   [4.5,rx*.46,.44,.0],[nose,.10,.10,-.02]],c);
+ }
  if(isTwin){
   for(const x of [-.65,.65])engine(m,x,-5.7,id==="su37"?.73:.64,palette.dark);
  }else engine(m,0,-5.85,.74,palette.dark);
@@ -543,6 +559,27 @@ function genericJet(m,id){
     [sign*1.86,2.17,-7.42],[sign*1.07,.35,-7.30]],
     tint(c,.86),.07);
   }
+  // Recognisable naval-fighter wing-fold seams, broad wing roots and
+  // two separate round engine exhaust collars, rather than the old
+  // generic square-nozzle boxes.
+  for(const sign of [-1,1]){
+   sheet(m,[[sign*5.47,.43,-.04],[sign*5.61,.44,-.02],
+    [sign*5.06,.43,-4.01],[sign*4.92,.43,-4.08]],
+    tint(c,.51),.012);
+   sheet(m,[[sign*1.61,.41,-2.24],[sign*5.62,.41,-2.88],
+    [sign*5.48,.42,-3.10],[sign*1.56,.41,-2.48]],
+    tint(c,.66),.014);
+   // Rounded exhaust rim, aft dark throat and spaced nacelle.
+   const x=sign*.82,z=-7.83,r=.40;
+   for(let k=0;k<14;k++){
+    const a=k*Math.PI*2/14,b=(k+1)*Math.PI*2/14;
+    const at=(rr,ang,zz)=>[x+rr*Math.cos(ang),-.07+rr*Math.sin(ang),zz];
+    m.quad(at(r,a,z),at(r,b,z),at(r*.80,b,z-.10),
+     at(r*.80,a,z-.10),palette.metal);
+    m.tri([x,-.07,z-.12],at(r*.79,b,z-.11),
+     at(r*.79,a,z-.11),palette.black);
+   }
+  }
   // Carrier-style centreline arresting hook: a short, downward-curving
   // under-tail shaft terminating below and behind the two jet nozzles.
   // Static visual equipment only: no arresting-wire physics is implied.
@@ -638,7 +675,7 @@ function buildJetParts(Mesh,id){
  add("noseGear",[0,-.36,3.25],1,m=>{
   curvedTube(m,[[0,-.37,3.25],[0,-.86,3.20],[0,-1.18,3.12]],
    .085,palette.metal,8);
-  wheel(m,0,-1.21,3.12,.28,.105);
+  wheel(m,0,-1.21,3.12,.30,.16);
   m.box(-.13,-.55,3.23,.26,.12,.30,tint(palette.dark,1.15));
  });
  const gearWidth=proceduralGearSlots(variant)[2].x;
@@ -647,7 +684,7 @@ function buildJetParts(Mesh,id){
   add("mainGear"+side,[x,-.30,-2.32],1,m=>{
    curvedTube(m,[[x,-.32,-2.32],[x+sign*.05,-.88,-2.34],
     [x+sign*.06,-1.13,-2.41]],.105,palette.metal,8);
-   wheel(m,x+sign*.06,-1.16,-2.43,.35,.135);
+   wheel(m,x+sign*.06,-1.16,-2.43,.38,.22);
    // A slim articulated drag link helps the gear read as landing hardware
    // rather than an unrelated hanging black cylinder.
    curvedTube(m,[[x,-.52,-2.30],[x+sign*.23,-.88,-2.06],
