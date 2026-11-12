@@ -485,12 +485,28 @@ function genericJet(m,id){
     [sign*4.40,.39,-3.10],[sign*1.28,.38,-2.66]],tint(c,.66),.023);
   }
  }else if(id==="fa18"){
-  // Shoulder intakes and reinforced leading-edge wing-root extensions.
+  // Super Hornet shoulder intakes and sharply swept LEX fairings.
+  // These are attached to the exterior only, not an invisible control rig.
   for(const sign of [-1,1]){
    sheet(m,[[sign*1.01,-.12,1.49],[sign*1.67,-.12,1.15],
     [sign*1.56,-.44,-.06],[sign*1.01,-.44,.06]],tint(c,.70),.065);
    m.box(sign*1.05-.32,-.54,.98,.64,.10,.16,tint(c,1.04));
+   // Long swept leading-edge extension visually joins the wide wing root
+   // to the fuselage, removing the detached slab-wing appearance.
+   sheet(m,[[sign*.82,.38,3.37],[sign*1.65,.37,2.10],
+    [sign*2.48,.35,.82],[sign*1.12,.36,.74]],tint(c,.91),.045);
+   // Twin canted fin roots and trailing edge panel make the two vertical
+   // stabilizers separately recognizable in oblique rear views.
+   sheet(m,[[sign*1.0,.37,-4.38],[sign*1.48,2.63,-5.84],
+    [sign*1.86,2.17,-7.42],[sign*1.07,.35,-7.30]],
+    tint(c,.86),.07);
   }
+  // Carrier-style centreline arresting hook: a short, downward-curving
+  // under-tail shaft terminating below and behind the two jet nozzles.
+  // Static visual equipment only: no arresting-wire physics is implied.
+  curvedTube(m,[[0,-.61,-5.58],[0,-.86,-6.41],
+   [0,-1.00,-7.19],[0,-1.13,-7.53]],.053,palette.metal,7);
+  m.box(-.17,-1.19,-7.75,.34,.12,.35,palette.dark);
  }
  m.box(-.11,-.17,nose-.15,.22,.25,.31,palette.dark);
 }
