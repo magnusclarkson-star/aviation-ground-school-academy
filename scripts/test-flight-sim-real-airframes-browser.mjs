@@ -286,20 +286,20 @@ try{
  assert.equal(wide.focus,"on");
  assert.equal(wide.source,"on");
  assert.equal(wide.frameHidden,true,"no fake gauges overlay real 3D interior");
- // The forward scene is 133px tall on an 844×390 phone so its runway
- // HORIZON stays above the instrument top; stretching WebGL to 390px
- // put the horizon behind the gauges. Measure the visible horizon region,
- // not total GPU canvas height.
+ // The 207px forward scene on an 844×390 phone leaves the runway horizon
+ // above the compact 195px cockpit dashboard without hiding controls.
  assert.ok(wide.scene.w>=800&&wide.scene.h>=108&&wide.station.y>=85,
   "landscape retains a wide, unobstructed real-pilot runway and horizon");
  assert.ok(wide.pedal.y+wide.pedal.h<=390&&
   wide.restart.y+wide.restart.h<=390,
   "landscape right pedal and Restart remain fully visible without scrolling");
  assert.ok(wide.switch.w>=38&&wide.switch.y>=0&&
-  wide.switch.y+wide.switch.h<=390&&wide.rack.x>=wide.throttle.x-5,
-  "C172 switch is reachable in the 2x2 rack beside the NAV/throttle corner");
- assert.ok(wide.rack.y+wide.rack.h<=wide.throttle.y+6,
-  "the new 2x2 C172 switch rack sits above engine power");
+  wide.switch.y+wide.switch.h<=390&&
+  wide.rack.x>=wide.yoke.x+wide.yoke.w+10&&
+  wide.rack.x+wide.rack.w<=wide.throttle.x+2,
+  "C172 switch rack sits clear of yoke and throttle in its dedicated side gap");
+ assert.ok(wide.rack.y>=wide.yoke.y&&wide.rack.y+wide.rack.h<=390,
+  "2x2 C172 switches are below navigation and fully visible");
  assert.ok(wide.yoke.w>60&&wide.pedal.w>20,
   "original yoke and rudder controls remain in the lower flight deck");
  assert.deepEqual(errors,[]);
