@@ -147,8 +147,11 @@
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
-   $("aircraftInspectRenderMode").textContent=gpuVisible?"3D view":
-    loading?"2D preview · loading 3D":"2D view";
+   const modeText=gpuVisible?"3D view":loading?"Loading 3D":"2D fallback";
+   // Make a stale browser bundle immediately detectable on Android. If
+   // this label is missing, the phone has not loaded the dedicated mesh.
+   $("aircraftInspectRenderMode").textContent=
+    id==="fa18"?"Super Hornet V3 · "+modeText:modeText;
    return {loading,failed,gpuVisible};
   }
   function paint2D(state,id,animation){
