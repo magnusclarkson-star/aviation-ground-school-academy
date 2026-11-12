@@ -11,6 +11,9 @@ on:
       - 'flight-sim-f22-airframe.js'
       - 'flight-sim-f35-airframe.js'
       - 'flight-sim-su37-airframe.js'
+      - 'flight-sim-typhoon-airframe.js'
+      - 'scripts/test-flight-sim-typhoon.mjs'
+      - 'scripts/test-flight-sim-typhoon-browser.mjs'
       - 'scripts/test-flight-sim-su37.mjs'
       - 'scripts/test-flight-sim-su37-browser.mjs'
       - 'assets/aircraft/f35b-fg-exterior.json'
@@ -38,6 +41,9 @@ on:
       - 'flight-sim-f22-airframe.js'
       - 'flight-sim-f35-airframe.js'
       - 'flight-sim-su37-airframe.js'
+      - 'flight-sim-typhoon-airframe.js'
+      - 'scripts/test-flight-sim-typhoon.mjs'
+      - 'scripts/test-flight-sim-typhoon-browser.mjs'
       - 'scripts/test-flight-sim-su37.mjs'
       - 'scripts/test-flight-sim-su37-browser.mjs'
       - 'assets/aircraft/f35b-fg-exterior.json'
@@ -87,6 +93,10 @@ jobs:
         run: |
           node scripts/test-flight-sim-su37.mjs
           node scripts/test-flight-sim-su37-browser.mjs
+      - name: Prove real Typhoon source canards and landing gear in mobile WebGL
+        run: |
+          node scripts/test-flight-sim-typhoon.mjs
+          node scripts/test-flight-sim-typhoon-browser.mjs
       - name: Verify all five fighters in portrait and landscape with visible gear and controls
         run: node scripts/test-flight-sim-five-fighters-browser.mjs
       - name: Save real-aircraft preview images
@@ -101,6 +111,7 @@ jobs:
             artifacts/real-f22-*.png
             artifacts/real-f35-*.png
             artifacts/real-su37-*.png
+            artifacts/real-typhoon-*.png
             artifacts/mobile-fighter-*.png
           if-no-files-found: ignore
           retention-days: 14
