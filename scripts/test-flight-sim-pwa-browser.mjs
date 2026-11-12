@@ -53,7 +53,9 @@ try{
  // have been successfully cached.
  const firstVisitCache=await page.evaluate(async()=>{
   const keys=await caches.keys();
-  const active=keys.find(key=>key.includes("first-visit-offline"));
+  // The cache identifier changes with every offline release. Verify the
+  // installed simulator cache by stable namespace, not a stale version tag.
+  const active=keys.find(key=>key.startsWith("agsa-flight-sim-v2-"));
   const cache=active?await caches.open(active):null;
   const urls=cache?(await cache.keys()).map(entry=>new URL(entry.url).pathname):[];
   return {count:urls.length,hasSimulator:urls.some(p=>p.endsWith("/flight-sim.html")),
