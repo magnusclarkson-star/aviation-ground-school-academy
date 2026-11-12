@@ -2017,7 +2017,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
       pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
-      "procedural";
+      id==="fa18"?"superhornet-dedicated-v3":"procedural";
     if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
      "not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
