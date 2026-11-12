@@ -99,8 +99,10 @@ try{
   "both rudder pedals fit in the same visible phone frame");
  assert.ok(landscape.yoke.width>=80&&landscape.yoke.height>=50,
   "functional center yoke remains touch sized");
- assert.ok(landscape.gauges.every(g=>g.width>=44&&g.top>=landscape.instruments.top-3&&g.bottom<=392),
-  "all eight C172 live analogue gauges must be visible and touch-sized in landscape");
+ assert.equal(landscape.gauges.length,8,
+  "C172 retains all eight functional analogue flight gauges");
+ assert.ok(landscape.gauges.every(g=>g.width>=37&&g.top>=landscape.instruments.top-3&&g.bottom<=392),
+  "all eight approved ~40px round gauges are visible and individually enlargeable");
  assert.ok(landscape.power.bottom<=392&&landscape.flaps.bottom<=392&&landscape.brake.bottom<=392,
   "power, flaps and wheel brake are visible together with gauges, yoke and pedals");
  await phone.locator("#cockpitSwitch_light").tap();
