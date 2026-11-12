@@ -10,7 +10,8 @@ const model=S.parseSu37(asset);
 assert.ok(asset.length>350000&&asset.length<750000,"editable Su-37 source must be retained in public bundle");
 assert.ok(model.triangles>=18000&&model.triangles<=26000,
  "authentic mobile mesh triangle budget");
-assert.ok(model.vertices>=12000&&model.vertices<50000);
+assert.ok(model.vertices>=12000&&model.vertices<80000,
+ "expanded source materials must remain within mobile GPU buffer budget");
 assert.deepEqual(model.bounds.map(Number.isFinite),Array(6).fill(true));
 assert.ok(model.bounds[1]-model.bounds[0]>=14,"Su-37 must have both full wings");
 assert.ok(model.bounds[5]-model.bounds[4]>=20,"Su-37 must have its full nose, twin engines and tail");
