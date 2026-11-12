@@ -28,6 +28,7 @@ const schedule=[
  {name:"final",target:[0,200],height:0,throttle:.32,flaps:20}
 ];
 const itinerary=[],events=new Set(),circuit=Circuit.create(s);
+const actualGuideStages=[circuit.stage];
 let leg=0,landed=false,completed=false;
 u.throttle=1;u.flaps=10;u.pitch=-.72;
 for(let i=0;i<10500;i++){
@@ -63,6 +64,7 @@ for(let i=0;i<10500;i++){
  const result=M.step(s,u,dt);
  for(const ev of result.events)events.add(ev);
  Circuit.update(circuit,s);
+ if(actualGuideStages.at(-1)!==circuit.stage)actualGuideStages.push(circuit.stage);
  if(!s.onGround&&leg===0&&s.zM>1280){
   itinerary.push("departure");log("departure-turn");leg=1;
  }else if(!s.onGround&&leg===1&&s.xM>590&&s.zM>600){
@@ -85,8 +87,11 @@ log("final-"+leg);
 console.log("C172 CIRCUIT RESULT "+JSON.stringify({
  itinerary,events:[...events],leg,phase:s.phase,landed,completed,
  touchdown:s.touchdownData,rolloutM:s.rolloutDistanceM,
- circuitStage:circuit.stage
+ circuitStage:circuit.stage,actualGuideStages
 }));
+assert.deepEqual(actualGuideStages,
+ ["departure","crosswind","downwind","base","final","landed"],
+ "the existing instructor/circuit navigation must recognize every leg from live flight state");
 assert.deepEqual(itinerary,["departure","crosswind","downwind","base"],
  "one uninterrupted C172 flight must navigate all four named legs");
 assert.ok(landed&&completed&&s.phase==="complete",
