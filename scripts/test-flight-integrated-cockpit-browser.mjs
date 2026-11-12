@@ -617,17 +617,21 @@ try{
     .map(el=>el.getBoundingClientRect());
    return {
     horizontal:document.documentElement.scrollWidth<=innerWidth+2,
-    instrumentsAboveControls:panel.bottom<=controls.top+15,
+    // Phone landscape jets have side-by-side instrument and yoke
+    // columns. Vertical bands may overlap when HIT AREAS do not.
+    noInstrumentControlOverlap:
+     panel.right<=controls.left+5||controls.right<=panel.left+5||
+     panel.bottom<=controls.top+15,
+    panelRight:Math.round(panel.right),controlLeft:Math.round(controls.left),
     panelBottom:Math.round(panel.bottom),controlTop:Math.round(controls.top),
-    overlapPx:Math.round(panel.bottom-controls.top),
     stationPhoto:document.getElementById('cockpitStation').dataset.photoCockpit,
     allInside:screens.every(v=>v.left>=panel.left-2&&v.right<=panel.right+2),
     heights:screens.map(v=>Math.round(v.height)),
     panelHeight:panel.height
    };
   });
-  assert.ok(fit.horizontal&&fit.instrumentsAboveControls&&fit.allInside,
-   id+' landscape glass displays remain inside cockpit above flight controls '+JSON.stringify(fit));
+  assert.ok(fit.horizontal&&fit.noInstrumentControlOverlap&&fit.allInside,
+   id+' landscape glass displays remain visible without covering flight controls '+JSON.stringify(fit));
   assert.ok(fit.panelHeight<=185,id+' glass panel fits shallow screen');
  }
  // Focused 844x390 Android landscape must not require dragging the
