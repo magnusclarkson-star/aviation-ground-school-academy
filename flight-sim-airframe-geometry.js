@@ -777,7 +777,7 @@ function buildJetParts(Mesh,id){
   // clearly visible over the dedicated Super Hornet body.
   for(const part of props){
    const m=new Mesh();
-   const isLeft=/Left$/.test(part.name),sign=isLeft?-1:1;
+   const isLeft=/^left|Left$/.test(part.name),sign=isLeft?-1:1;
    if(/^(left|right)Aileron$/.test(part.name)){
     sheet(m,[[sign*4.57,.31,-3.63],[sign*6.12,.31,-3.77],
       [sign*6.02,.31,-4.40],[sign*4.38,.31,-4.07]],
