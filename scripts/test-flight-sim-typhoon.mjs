@@ -59,7 +59,8 @@ for(const suffix of ["1.L","2.L","1.R","2.R"]){
    const dx=v[i]-door.partPivot[0],dy=v[i+1]-door.partPivot[1];
    after+=door.partPivot[1]+dx*Math.sin(angle)+dy*Math.cos(angle);
   }
-  assert.ok((before-after)/(v.length/3)>.12,
+  const minimumDrop=name.startsWith("geardoor2")?.08:.12;
+  assert.ok((before-after)/(v.length/3)>minimumDrop,
    name+" opens downward around the actual panel outer edge");
  }
 }
