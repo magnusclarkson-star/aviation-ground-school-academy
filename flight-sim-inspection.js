@@ -49,6 +49,7 @@
    throw Error("360° inspector requires its cockpit controls and canvases");
   let orbit={azimuth:0,elevation:26,distance:18};
   let renderer=null,raf=0,last=0,drag=null,autoRotate=false,usingGPU=false;
+  let lastRenderedId=null;
   // Pointer IDs are tracked independently so a second touch changes zoom,
   // rather than making the model unexpectedly spin or the flight yoke move.
   const pointers=new Map(),tapStarts=new Map();
@@ -91,16 +92,22 @@
    const loading=Boolean(usingGPU&&(phase==="loading"||phase==="idle"));
    const unavailable=Boolean(usingGPU&&(id==="f22"||id==="f35")&&
     phase==="fallback");
-   viewport.dataset.modelLoading=loading?"on":unavailable?"unavailable":"off";
-   canvas3D.hidden=!usingGPU||loading||unavailable;
-   canvas2D.hidden=usingGPU||loading||unavailable;
+   // A previously rendered frame remains on the same canvas until draw()
+   // completes. Hide it immediately when ANY of the seven models changes.
+   // The next available frame is drawn while hidden, then revealed.
+   const stale=lastRenderedId!==id,pending=loading||stale;
+   viewport.dataset.modelLoading=unavailable?"unavailable":pending?"on":"off";
+   canvas3D.hidden=!usingGPU||pending||unavailable;
+   canvas2D.hidden=usingGPU||pending||unavailable;
    const statusText=loading?"Loading "+types.LABELS[id]+" 3D model…":
-    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":"";
+    unavailable?types.LABELS[id]+" 3D model unavailable. Reopen online to retry.":
+    stale?"Rendering "+types.LABELS[id]+"…":"";
    const statusLabel=$("aircraftInspectLoading");
    if(statusLabel&&statusLabel.textContent!==statusText)
     statusLabel.textContent=statusText;
    $("aircraftInspectRenderMode").textContent=unavailable?"3D unavailable":
-    loading?"Loading 3D":usingGPU?"3D view":"2D view";
+    pending?"Loading 3D":usingGPU?"3D view":"2D view";
+   // A stale frame must not prevent the new one from ever being drawn.
    return loading||unavailable;
   }
   function render(now){
@@ -137,6 +144,10 @@
     ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
     exterior.paint(ctx,state,{id,width:w,height:h,view:"inspect",orbit,animation});
    }
+   // Only reveal the canvas after the newly selected airframe was
+   // actually painted. Never show an old C172/R44/fighter frame on change.
+   lastRenderedId=id;
+   syncModelVisibility();
    // 24 fps is sufficient for inspection and protects mobile battery.
    raf=win.requestAnimationFrame(frame);
   }
@@ -146,6 +157,7 @@
   function open(){
    if(!modal.hidden)return;
    orbit={azimuth:0,elevation:26,distance:fitDistance()};autoRotate=false;last=0;lastFrameTime=0;
+   lastRenderedId=null;
    modal.hidden=false;doc.body.dataset.aircraftInspect="on";
    // Inspection is visual only: entering it must not trigger a tower or
    // lesson voice, even when a full-flight audio session was armed.
@@ -166,7 +178,7 @@
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
    viewport.dataset.modelLoading="off";
    trigger.setAttribute("aria-expanded","false");
-   win.cancelAnimationFrame(raf);raf=0;last=0;
+   win.cancelAnimationFrame(raf);raf=0;last=0;lastRenderedId=null;
    drag=null;pointers.clear();tapStarts.clear();pinchSpan=0;lastTap=null;
    // On narrow phones the inspector launch button lives inside the collapsed
    // More menu. Returning keyboard focus there leaves it invisible; restore
