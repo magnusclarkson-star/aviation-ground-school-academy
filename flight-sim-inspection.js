@@ -65,6 +65,29 @@
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   const interiorButton=$("aircraftInspectInterior");
   const exteriorButton=$("aircraftInspectExterior");
+  // A licensed, authored F/A-18E replaces the old simplified fighter only
+  // in exterior 360° inspection. Flight simulation continues to use the
+  // in-house geometry until an offline source mesh is integrated.
+  const hornetViewer=$("aircraftInspectSuperHornet");
+  const hornetFrame=$("aircraftInspectSuperHornetFrame");
+  const hornetSource="https://sketchfab.com/models/9e852037bf2141dcb3fda17013958131/embed?autostart=1&ui_infos=0&ui_controls=1&ui_watermark=1";
+  const hornetControls=["aircraftInspectZoomIn","aircraftInspectZoomOut",
+   "aircraftInspectReset","aircraftInspectSpin"];
+  function syncHornetViewer(){
+   const active=!modal.hidden&&selected()==="fa18"&&!orbit.interior;
+   hornetViewer.hidden=!active;
+   for(const id of hornetControls)$(id).disabled=active;
+   if(!active)return false;
+   if(hornetFrame.getAttribute("src")!==hornetSource)
+    hornetFrame.setAttribute("src",hornetSource);
+   canvas3D.hidden=true;canvas2D.hidden=true;
+   viewport.dataset.modelLoading="off";
+   $("aircraftInspectLoading").textContent="";
+   $("aircraftInspectRenderMode").textContent="Licensed F/A-18E 3D";
+   $("aircraftInspectDescription").textContent=
+    "Drag within the aircraft to rotate · Pinch inside to zoom · Source: KOG_THORNS (CC BY).";
+   return true;
+  }
   const interiorDistance=id=>id==="f22"||id==="su37"?4.35:id==="r44"?3.25:2.90;
   function setInterior(on){
    // Never silently display the exterior silhouette when WebGL2 is absent.
@@ -80,6 +103,7 @@
    autoRotate=false;lastRenderedId=null;
    canvas3D.hidden=true;canvas2D.hidden=true;
    updateHeading();
+   syncHornetViewer();
   }
   // The two compact training aircraft need closer framing than large jets.
   const fitDistance=()=>fitDistanceFor(selected());
@@ -172,6 +196,11 @@
    if(modal.hidden)return;
    const id=selected();
    updateHeading();
+   if(syncHornetViewer()){
+    last=now;
+    raf=win.requestAnimationFrame(frame);
+    return;
+   }
    const phase=syncModelVisibility();
    if(autoRotate&&last)orbit={...orbit,azimuth:wrap(orbit.azimuth+
     Math.min(.08,(now-last)/1000)*17)};
@@ -233,12 +262,16 @@
    delete viewport.dataset.interiorUnsupported;
    syncModelVisibility();
    updateHeading();
+   syncHornetViewer();
    $("aircraftInspectClose").focus({preventScroll:true});
    raf=win.requestAnimationFrame(frame);
   }
   function close(){
    if(modal.hidden)return;
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
+   hornetViewer.hidden=true;
+   // Stop a hidden external 3D renderer using the phone GPU.
+   hornetFrame.removeAttribute("src");
    viewport.dataset.modelLoading="off";
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;lastRenderedId=null;
@@ -270,7 +303,7 @@
    ctx.clearRect(0,0,canvas2D.width,canvas2D.height);
    orbit={...orbit,distance:orbit.interior?interiorDistance(id):fitDistance()};
    updateHeading();
-   if(!modal.hidden)syncModelVisibility();
+   if(!modal.hidden){syncModelVisibility();syncHornetViewer();}
   });
   interiorButton.addEventListener("click",()=>setInterior(true));
   exteriorButton.addEventListener("click",()=>setInterior(false));
