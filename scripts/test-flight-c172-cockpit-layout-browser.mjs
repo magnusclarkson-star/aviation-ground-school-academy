@@ -107,9 +107,21 @@ try{
   }
   assert.ok(info.scrollTop===0,"no automatic cockpit scrolling");
   if(view.name==="landscape"){
-   await page.locator("#cockpitVisualPanel .cockpit-nav-screen").tap();
+   // The map is intentionally a viewport-positioned child of the small
+   // instrument panel. Playwright locator.tap() incorrectly scrolls its
+   // original panel container, so tap the actual on-screen map coordinates
+   // as a user does instead.
+   const hit=await page.evaluate(()=>{
+    const rect=document.querySelector("#cockpitVisualPanel .cockpit-nav-screen").getBoundingClientRect();
+    const x=rect.left+rect.width*.5,y=rect.top+rect.height*.49;
+    const el=document.elementFromPoint(x,y);
+    return {x,y,target:el?.tagName,
+      mapHit:!!el?.closest?.(".cockpit-nav-screen")};
+   });
+   assert.ok(hit.mapHit,"C172 vertical NAV remains the topmost touch target "+JSON.stringify(hit));
+   await page.touchscreen.tap(hit.x,hit.y);
    assert.ok(await page.locator("#cockpitZoomPanel").isVisible(),
-    "tapping the new portrait NAV/COM opens the larger live navigation display");
+    "touching vertical NAV/COM opens the larger live navigation display");
    await page.locator("#cockpitZoomClose").tap();
    assert.ok(!(await page.locator("#cockpitZoomPanel").isVisible()),
     "the enlarged navigation display can be closed");
