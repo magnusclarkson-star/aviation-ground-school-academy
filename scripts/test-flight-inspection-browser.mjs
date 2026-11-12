@@ -1,17 +1,41 @@
 import assert from "node:assert/strict";
+import http from "node:http";
+import fs from "node:fs";
 import path from "node:path";
-import {pathToFileURL} from "node:url";
 import {chromium} from "playwright";
 
-const url=pathToFileURL(path.resolve("flight-sim.html")).href;
-const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+// Imported fighter models require same-origin HTTP. file:// rendered an old
+// placeholder and hid the very loading defect this regression covers.
+const root=process.cwd();
+const mime={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",
+ ".css":"text/css; charset=utf-8",".json":"application/json",
+ ".webp":"image/webp",".png":"image/png",".glb":"model/gltf-binary",
+ ".ac":"text/plain; charset=utf-8",".svg":"image/svg+xml"};
+const server=http.createServer((req,res)=>{
+ try{
+  const u=new URL(req.url,"http://localhost");
+  const file=path.resolve(root,"."+decodeURIComponent(u.pathname));
+  if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||
+    !fs.statSync(file).isFile()){
+   res.writeHead(404);res.end("Not found");return;
+  }
+  res.writeHead(200,{"Content-Type":mime[path.extname(file)]||
+   "application/octet-stream","Cache-Control":"no-store"});
+  fs.createReadStream(file).pipe(res);
+ }catch{res.writeHead(500);res.end("file error")}
+});
+await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+const url="http://127.0.0.1:"+server.address().port+"/flight-sim.html";
+const browser=await chromium.launch({headless:true,args:["--no-sandbox",
+ "--enable-webgl","--use-gl=angle","--use-angle=swiftshader-webgl",
+ "--enable-unsafe-swiftshader"]});
 const errors=[];
 const wait=page=>page.waitForTimeout(140);
 const activeCanvas=page=>page.locator("#aircraftInspectCanvas3D").isVisible().then(
  visible=>visible?"#aircraftInspectCanvas3D":"#aircraftInspectCanvas2D");
 const shot=async page=>page.locator(await activeCanvas(page)).evaluate(c=>c.toDataURL("image/png"));
 try{
- const desktop=await browser.newPage({viewport:{width:1200,height:900}});
+ const desktop=await browser.newPage({viewport:{width:1200,height:900},serviceWorkers:"block"});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
  assert.equal(await desktop.locator("#aircraftInspectOpen").count(),1);
@@ -21,6 +45,8 @@ try{
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),true);
  assert.equal(await desktop.locator("#aircraftInspectOpen").getAttribute("aria-expanded"),"true");
  assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),"Cessna 172");
+ await desktop.waitForFunction(()=>document.getElementById(
+  "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
  await wait(desktop);
  const before=await shot(desktop);
  assert.ok(before.length>1200,"model image drawn, not a blank canvas");
@@ -49,6 +75,15 @@ try{
   assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,"inspector switches the flight simulator model");
   assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),
    (await desktop.evaluate(id=>window.AGSAExteriorAirframes.LABELS[id],id)));
+  await desktop.waitForFunction(()=>document.getElementById(
+   "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
+  if(id==="f22"||id==="f35")assert.equal(
+   await desktop.locator("#aircraftInspectCanvas3D").getAttribute("data-airframe-source"),
+   null,"canvas source must be checked through dataset, not a DOM attribute");
+  if(id==="f22"||id==="f35")assert.equal(await desktop.evaluate(()=>
+   document.querySelector("#aircraftInspectCanvas3D").dataset.airframeSource),
+   id==="f22"?"gpl-f22-fguk":"gpl-f35b-flightgear",
+   "the 360 inspector must display authentic imported "+id+" geometry");
   await wait(desktop);
   const png=await shot(desktop);
   assert.ok(png.length>1000,"model rendered in inspector: "+id);
@@ -70,7 +105,7 @@ try{
   "the inspector cannot resize the selected R44 flight control");
  await desktop.close();
 
- const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:"block"});
  mobile.on("pageerror",e=>errors.push("phone "+e.message));
  await mobile.addInitScript(()=>{
   const original=HTMLCanvasElement.prototype.getContext;
@@ -138,4 +173,4 @@ try{
  assert.ok(await mobile.locator("#controlPad").isVisible());
  assert.deepEqual(errors,[],"no crashes on desktop, phone or 2D fallback");
  console.log("Aircraft inspection browser checks passed: seven distinct orbit renders, drag, zoom, auto-spin, Escape, phone layout and rotorcraft 2D fallback.");
-}finally{await browser.close();}
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
