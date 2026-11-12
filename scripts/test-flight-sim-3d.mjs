@@ -135,6 +135,8 @@ for(const [id,source] of Object.entries(sourceModels)){
 const r44Rear=Three.exteriorLightStations("r44",sourceModels.r44.primitives)[2];
 assert.ok(Number.isFinite(r44Rear[2])&&r44Rear[2]>=sourceModels.r44.bounds[4],
  "R44 rear marker must be on the actual loaded tail geometry, not past its bounds");
+assert.ok(r44Rear[1]>-.12&&r44Rear[2]< -2.6,
+ "R44 aft lamp must attach to a raised tail surface, never the lower fin tip");
 
 assert.equal(Three.exteriorStrobePulse(0),1);
 assert.equal(Three.exteriorStrobePulse(.12),0);
