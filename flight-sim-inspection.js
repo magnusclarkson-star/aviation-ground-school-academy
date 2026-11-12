@@ -78,6 +78,7 @@
    orbit={azimuth:on?24:0,elevation:on?15:26,
     distance:on?interiorDistance(selected()):fitDistance(),interior:on};
    autoRotate=false;lastRenderedId=null;
+   canvas3D.hidden=true;canvas2D.hidden=true;
    updateHeading();
   }
   // The two compact training aircraft need closer framing than large jets.
@@ -129,18 +130,18 @@
    const failed=Boolean(usingGPU&&phase==="fallback");
    const stale=lastRenderedId!==id;
    const gpuVisible=usingGPU&&!loading&&!failed&&!stale;
-   // The 2D renderer is aircraft-specific. It must remain visible while
-   // 3D assets load or fail, rather than displaying a blank dark viewport.
+   // Do not show the old procedural 2D fighter in the seconds before its
+   // genuine 3D mesh becomes ready. The loading panel names the selection
+   // until the first matching 3D frame has successfully rendered.
    canvas3D.hidden=!gpuVisible;
-   canvas2D.hidden=gpuVisible;
-   if(stale&&!gpuVisible){
-    ctx.fillStyle="#162a37";
-    ctx.fillRect(0,0,canvas2D.width,canvas2D.height);
+   canvas2D.hidden=loading||gpuVisible;
+   if(stale){
+    ctx.clearRect(0,0,canvas2D.width,canvas2D.height);
    }
-   viewport.dataset.modelLoading="off";
+   viewport.dataset.modelLoading=loading?"on":"off";
    const statusText=viewport.dataset.interiorUnsupported==="on"?
     "Interior 3D requires WebGL2. Exterior view is available.":
-    loading?"Showing "+types.LABELS[id]+" while 3D model loads…":
+    loading?"Loading "+types.LABELS[id]+" 3D model…":
     failed?types.LABELS[id]+" 3D unavailable — showing 2D view.":
     "";
    const statusLabel=$("aircraftInspectLoading");
@@ -190,8 +191,10 @@
    }
    if(!drawn){
     canvas3D.hidden=true;
-    canvas2D.hidden=false;
-    try{paint2D(state,id,animation)}
+    canvas2D.hidden=phase.loading;
+    // A model in transit must not flash the earlier simplified exterior.
+    // Real GPU failure keeps the explicit 2D fallback available.
+    if(!phase.loading)try{paint2D(state,id,animation)}
     catch(error){
      if(typeof console!=="undefined")console.warn("360° 2D draw:",error);
      $("aircraftInspectLoading").textContent="Aircraft preview could not be drawn. Close and reopen the inspector.";
@@ -215,7 +218,10 @@
    // lesson voice, even when a full-flight audio session was armed.
    doc.dispatchEvent(new Event("agsa:inspection-open"));
    trigger.setAttribute("aria-expanded","true");
-   canvas2D.hidden=false;canvas3D.hidden=true;
+   canvas2D.hidden=true;canvas3D.hidden=true;
+   ctx.clearRect(0,0,canvas2D.width,canvas2D.height);
+   viewport.dataset.modelLoading="on";
+   $("aircraftInspectLoading").textContent="Preparing "+types.LABELS[selected()]+"…";
    if(!renderer){
     try{renderer=engine.createRenderer(canvas3D,{inspectionOnly:true,onLost:fallback})}catch{renderer=null}
    }
@@ -255,6 +261,10 @@
     select.value=id;
     select.dispatchEvent(new Event("change",{bubbles:true}));
    }
+   lastRenderedId=null;
+   canvas3D.hidden=true;
+   canvas2D.hidden=true;
+   ctx.clearRect(0,0,canvas2D.width,canvas2D.height);
    orbit={...orbit,distance:orbit.interior?interiorDistance(id):fitDistance()};
    updateHeading();
    if(!modal.hidden)syncModelVisibility();
