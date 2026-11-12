@@ -66,7 +66,9 @@ assert.ok(cloudLayer.positions.every(Number.isFinite));
 assert.equal(cloudLayer.colors.length,cloudLayer.positions.length);
 assert.deepEqual(Clouds.drift(10,0,0),{x:11,z:4.2},
  "calm simulated air still moves background cloud weather gently");
-assert.deepEqual(Clouds.drift(10,4,-3),{x:39.8,z:-17.4},
+const crosswindCloud=Clouds.drift(10,4,-3);
+assert.ok(Math.abs(crosswindCloud.x-39.8)<1e-10&&
+ Math.abs(crosswindCloud.z+17.4)<1e-10,
  "wind controls the world-anchored direction of sky motion");
 assert.deepEqual(Clouds.drift(1000,4,-3,true),{x:0,z:0},
  "reduced motion freezes synthetic cloud animation without stopping flight");
