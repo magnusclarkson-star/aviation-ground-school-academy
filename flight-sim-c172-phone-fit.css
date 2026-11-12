@@ -205,3 +205,94 @@
   margin:0!important;
  }
 }
+
+/* C172 LANDSCAPE NAV/COM ROTATION — the only visual component changed.
+   Re-orient the existing LIVE navigation display into a tall portrait
+   bezel at upper-right, ABOVE the existing throttle, leaving all gauges,
+   yoke, pedals, 2x2 switches and R44 position/sizes untouched.
+   Anchoring to the viewport avoids shrinking it into the 98px gauge row. */
+@media (orientation:landscape) and (min-width:600px) and (max-height:510px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics{
+  position:fixed!important;
+  inset:clamp(52px,19dvh,82px) 10px auto auto!important;
+  top:clamp(52px,19dvh,82px)!important;
+  right:10px!important;bottom:auto!important;left:auto!important;
+  display:flex!important;flex-direction:column!important;
+  box-sizing:border-box!important;
+  width:clamp(118px,18.5vw,160px)!important;
+  min-width:0!important;max-width:160px!important;
+  height:clamp(150px,52dvh,214px)!important;
+  min-height:0!important;max-height:none!important;
+  padding:3px!important;margin:0!important;gap:2px!important;
+  overflow:hidden!important;align-self:auto!important;
+  z-index:30!important;transform:none!important;
+  border-radius:7px!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .avionics-topline{
+  display:block!important;
+  flex:0 0 auto!important;font-size:9px!important;line-height:1.15!important;
+  margin:0!important;padding:0!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .avionics-radio,
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .avionics-buttons{
+  display:none!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .avionics-screen.cockpit-nav-screen{
+  position:relative!important;
+  flex:1 1 0!important;
+  display:flex!important;flex-direction:column!important;
+  box-sizing:border-box!important;
+  width:100%!important;max-width:100%!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  padding:1px!important;margin:0!important;
+  overflow:hidden!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .cockpit-nav-scene{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 0!important;min-height:0!important;
+  width:100%!important;overflow:hidden!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .cockpit-nav-scene svg{
+  display:block!important;flex:1 1 0!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-height:none!important;
+  object-fit:contain!important;
+ }
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .cockpit-nav-readouts{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  flex:0 0 auto!important;gap:1px 2px!important;
+  min-height:0!important;max-height:34px!important;
+  padding:2px 1px!important;margin:0!important;
+  font-size:8px!important;line-height:1.1!important;
+  overflow:hidden!important;
+ }
+ /* The shared photo-cockpit popover was inheriting translate(-50%,-50%)
+    from the old centred desktop zoom, while its landscape rules positioned
+    it from top/left percentages. That left its Close control OFF SCREEN.
+    Reset only this C172 landscape instrument zoom so touch-to-enlarge is safe. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitZoomPanel:not([hidden]){
+  display:flex!important;position:fixed!important;
+  inset:8% 12% 8% 12%!important;
+  top:8%!important;right:12%!important;bottom:8%!important;left:12%!important;
+  width:auto!important;height:auto!important;max-height:84dvh!important;
+  margin:0!important;padding:6px!important;
+  transform:none!important;z-index:1200!important;
+  overflow:auto!important;
+ }
+ /* The long runway text remains available when users enlarge the map,
+    but it must not take half the height of the small live map. */
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-instruments="round"][data-photo-cockpit="on"]
+ #cockpitMain #cockpitVisualPanel .cockpit-avionics .cockpit-nav-readouts [data-nav-field="runway"]{
+  display:none!important;
+ }
+}

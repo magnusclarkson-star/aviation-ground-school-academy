@@ -36,7 +36,13 @@ try{
     airframe:station.dataset.airframe,photo:station.dataset.photoCockpit,
     scene:box(".scene-shell"),station:box("#cockpitStation"),
     cockpit:box("#cockpitMain"),instruments:box("#cockpitInstrumentWell"),
-    visual:box("#cockpitVisualPanel"),map:box("#cockpitVisualPanel .cockpit-nav-screen"),
+    visual:box("#cockpitVisualPanel"),
+    avionics:box("#cockpitVisualPanel .cockpit-avionics"),
+    map:box("#cockpitVisualPanel .cockpit-nav-screen"),
+    navSvg:box("#cockpitVisualPanel .cockpit-nav-scene svg"),
+    navReadouts:box("#cockpitVisualPanel .cockpit-nav-readouts"),
+    navWorld:document.querySelector("#cockpitVisualPanel [data-nav-world]")?.getAttribute("transform"),
+    navFields:document.querySelectorAll("#cockpitVisualPanel [data-nav-field]").length,
     yoke:box("#controlPad"),grip:box("#flightGrip"),
     yokeArtwork:box("#flightGrip .hardware-yoke"),
     gripStyle:{
@@ -77,6 +83,17 @@ try{
    assert.ok(info.yokeArtwork.bottom<=info.leftPedal.y-1&&
     info.yokeArtwork.width>=145&&info.yokeArtwork.height>=48,
     "visible C172 yoke artwork fits above the pedals and remains readable "+JSON.stringify(info));
+   assert.ok(info.avionics.height>info.avionics.width*1.2&&
+    info.avionics.height>=175&&info.avionics.width>=118,
+    "C172 NAV/COM is now a tall, readable portrait bezel "+JSON.stringify(info));
+   assert.ok(info.navSvg.height>=100&&info.navSvg.width>=100&&
+    info.navFields===5&&info.navWorld,
+    "LIVE moving map occupies substantial area with navigation telemetry "+JSON.stringify(info));
+   assert.ok(info.map.y>=info.avionics.y&&
+    info.avionics.bottom<=info.throttle.y-3,
+    "tall NAV/COM sits above engine throttle without hiding it "+JSON.stringify(info));
+   assert.ok(info.map.x>=info.instruments.x+info.instruments.width*.74,
+    "tall map remains to the right of the round instrument bank "+JSON.stringify(info));
    assert.ok(info.switches.y>=info.map.bottom-5,
     "2x2 view switches sit below the navigation display, not over it "+JSON.stringify(info));
    assert.ok(info.switches.right<=info.throttle.x+4,
@@ -89,6 +106,40 @@ try{
     view.name+" "+key+" must be visible without scrolling "+JSON.stringify(info));
   }
   assert.ok(info.scrollTop===0,"no automatic cockpit scrolling");
+  if(view.name==="landscape"){
+   // The map is intentionally a viewport-positioned child of the small
+   // instrument panel. Playwright locator.tap() incorrectly scrolls its
+   // original panel container, so tap the actual on-screen map coordinates
+   // as a user does instead.
+   const hit=await page.evaluate(()=>{
+    const rect=document.querySelector("#cockpitVisualPanel .cockpit-nav-screen").getBoundingClientRect();
+    const x=rect.left+rect.width*.5,y=rect.top+rect.height*.49;
+    const el=document.elementFromPoint(x,y);
+    return {x,y,target:el?.tagName,
+      mapHit:!!el?.closest?.(".cockpit-nav-screen")};
+   });
+   assert.ok(hit.mapHit,"C172 vertical NAV remains the topmost touch target "+JSON.stringify(hit));
+   await page.touchscreen.tap(hit.x,hit.y);
+   assert.ok(await page.locator("#cockpitZoomPanel").isVisible(),
+    "touching vertical NAV/COM opens the larger live navigation display");
+   await page.screenshot({path:"artifacts/c172-nav-expanded-landscape.png"});
+   const closeHit=await page.evaluate(()=>{
+    const close=document.getElementById("cockpitZoomClose");
+    const zoom=document.getElementById("cockpitZoomPanel");
+    const b=close.getBoundingClientRect(),z=zoom.getBoundingClientRect();
+    return {x:b.left+b.width/2,y:b.top+b.height/2,
+      button:{x:b.x,y:b.y,w:b.width,h:b.height},
+      panel:{x:z.x,y:z.y,w:z.width,h:z.height},
+      withinViewport:b.left>=0&&b.top>=0&&b.right<=innerWidth&&b.bottom<=innerHeight,
+      topmost:document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)?.id};
+   });
+   console.log("C172 expanded NAV close control: "+JSON.stringify(closeHit));
+   assert.ok(closeHit.withinViewport,
+    "expanded navigation close button must remain on the phone screen");
+   await page.touchscreen.tap(closeHit.x,closeHit.y);
+   assert.ok(!(await page.locator("#cockpitZoomPanel").isVisible()),
+    "the enlarged navigation display can be closed by touch");
+  }
   assert.deepEqual(errors,[],"no JavaScript runtime errors");
   await page.close();
  }
