@@ -137,6 +137,9 @@
   width:min(100%,248px)!important;max-width:248px!important;
   height:35px!important;min-height:0!important;
   margin:0!important;padding:0!important;
+  /* The inherited rotor/axis CSS pulled the pedal deck 24px upward
+     over the Cessna yoke. The only adjustment below is this deck. */
+  transform:translateY(24px)!important;
  }
  body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"] #cockpitMain .control-panel .rudder-pedals{
   width:100%!important;height:35px!important;
