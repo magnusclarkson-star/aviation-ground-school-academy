@@ -41,6 +41,15 @@ body[data-aircraft-inspect="on"]{overflow:hidden}
 .aircraft-inspect-viewport canvas{display:block;position:absolute;inset:0;
  width:100%;height:100%;max-height:none;touch-action:none;pointer-events:none}
 .aircraft-inspect-viewport canvas[hidden]{display:none!important}
+.aircraft-inspect-loading{display:none;position:absolute;inset:0;z-index:2;
+ align-items:center;justify-content:center;padding:12px;
+ background:linear-gradient(160deg,#1b3546,#0b1825);
+ color:#d8eaf2;text-align:center;font:700 13px/1.5 system-ui,sans-serif;
+ pointer-events:none}
+.aircraft-inspect-viewport[data-model-loading="on"] .aircraft-inspect-loading,
+.aircraft-inspect-viewport[data-model-loading="unavailable"] .aircraft-inspect-loading{
+ display:flex
+}
 .aircraft-inspect-controls{display:flex;gap:7px;align-items:center;justify-content:center;
  flex-wrap:wrap;background:#132535;border:1px solid #3f6577;border-radius:8px;padding:7px}
 .aircraft-inspect-controls button{
