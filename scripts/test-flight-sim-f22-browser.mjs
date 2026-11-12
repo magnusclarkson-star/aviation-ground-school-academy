@@ -105,6 +105,30 @@ try{
   return changed;
  });
  assert.ok(changed>20,"original source F-22 control surface geometry must animate in actual GPU pixels: "+changed);
+ // Prove on actual mobile WebGL pixels that the imported source gear folds
+ // away after departure; F-22/F-35B used to show permanently deployed tyres.
+ const gearChanged=await page.evaluate(()=>{
+  const r=window.__f22Renderer,c=window.__f22Canvas,
+   gl=c.getContext("webgl2"),s=window.__f22State;
+  const sample=(angle)=>{
+   r.draw(s,{view:"inspect",airframeId:"f22",
+    orbit:{azimuth:25,elevation:-50,distance:23},
+    animation:{noseGear:angle,mainGearLeft:angle,mainGearRight:angle}});
+   const px=new Uint8Array(c.width*c.height*4);
+   gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,px);
+   return px;
+  };
+  const down=sample(0),up=sample(1.53);
+  let differences=0;
+  for(let i=0;i<down.length;i+=4)
+   if(Math.abs(down[i]-up[i])+Math.abs(down[i+1]-up[i+1])+
+      Math.abs(down[i+2]-up[i+2])>45)differences++;
+  return differences;
+ });
+ assert.ok(gearChanged>15,
+  "imported F22 gear must change in real GPU pixels: "+gearChanged);
+ await page.locator("#f22SourceEvidence").screenshot({
+  path:"artifacts/real-f22-gear-retracted.png"});
  assert.deepEqual(errors,[],"imported F-22 must not cause browser exceptions");
  console.log("Real F-22 WebGL renders "+JSON.stringify({views,animatedPixels:changed}));
  await context.close();
