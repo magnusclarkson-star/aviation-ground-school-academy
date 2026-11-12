@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -35,6 +36,7 @@ const activeCanvas=page=>page.locator("#aircraftInspectCanvas3D").isVisible().th
  visible=>visible?"#aircraftInspectCanvas3D":"#aircraftInspectCanvas2D");
 const shot=async page=>page.locator(await activeCanvas(page)).evaluate(c=>c.toDataURL("image/png"));
 try{
+ fs.mkdirSync("artifacts",{recursive:true});
  const desktop=await browser.newPage({viewport:{width:1200,height:900},serviceWorkers:"block"});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
  await desktop.goto(url,{waitUntil:"load"});
@@ -101,6 +103,41 @@ try{
  assert.ok(Math.abs(rotorControlsAfter.height-rotorControlsBefore.height)<1,
   "the inspector cannot resize the selected R44 flight control");
  await desktop.close();
+
+ // Capture each true aircraft mesh (not a photo or procedural placeholder)
+ // under both Android viewport orientations. A wider, fitted fighter should
+ // stay inside the modal without altering C172/R44 cockpit geometry.
+ const phone3d=await browser.newPage({viewport:{width:390,height:844},
+  isMobile:true,hasTouch:true,serviceWorkers:"block"});
+ phone3d.on("pageerror",e=>errors.push("phone 3D "+e.message));
+ await phone3d.goto(url,{waitUntil:"load"});
+ await phone3d.locator("#cockpitHelpToggle").tap();
+ await phone3d.locator("#aircraftInspectOpen").tap();
+ for(const layout of [{name:"portrait",w:390,h:844},
+  {name:"landscape",w:844,h:390}]){
+  await phone3d.setViewportSize({width:layout.w,height:layout.h});
+  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
+   await phone3d.locator("#aircraftInspectModelSelect").selectOption(id);
+   await phone3d.waitForFunction(target=>{
+    const vp=document.querySelector("#aircraftInspectViewport");
+    const canvas=document.querySelector("#aircraftInspectCanvas3D");
+    if(vp.dataset.modelLoading!=="off"||!canvas.dataset.airframeSource)
+     return false;
+    if(target==="f22")return canvas.dataset.airframeSource==="gpl-f22-fguk";
+    if(target==="f35")return canvas.dataset.airframeSource==="gpl-f35b-flightgear";
+    if(target==="c172"||target==="r44")
+     return canvas.dataset.airframeSource!=="procedural";
+    return canvas.dataset.airframeSource==="procedural";
+   },id,{timeout:25000});
+   assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
+    id+" genuine 360 mesh must be visible at "+layout.name);
+   assert.ok(await phone3d.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
+    id+" inspection must fit without horizontal scrolling");
+   await phone3d.locator("#aircraftInspectViewport").screenshot({
+    path:"artifacts/all-aircraft-360-"+layout.name+"-"+id+".png"});
+  }
+ }
+ await phone3d.close();
 
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:"block"});
  mobile.on("pageerror",e=>errors.push("phone "+e.message));
