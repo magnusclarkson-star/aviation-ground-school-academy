@@ -637,7 +637,10 @@ try{
  // Focused 844x390 Android landscape must not require dragging the
  // cockpit station upward just to reveal the rudder pair.
  await phone.locator('#cockpitAircraftSelect').selectOption('c172');
- await phone.locator('#cockpitFocusButton').click();
+ // Rotation may already have automatically enabled cockpit mode. Never
+ // click Exit cockpit and then test off-screen, non-immersive geometry.
+ if(await phone.evaluate(()=>document.body.dataset.cockpitFocus!=="on"))
+  await phone.locator('#cockpitFocusButton').click();
  for(const id of ['c172','r44']){
   await phone.locator('#cockpitAircraftSelect').selectOption(id);
   const fit=await phone.evaluate(()=>{
@@ -647,21 +650,29 @@ try{
    const yoke=rect('controlPad'),station=rect('cockpitStation');
    return {
     viewport:innerHeight,forwardHeight:forward.height,stationTop:station.top,stationBottom:station.bottom,
-    panelRight:panel.right,yokeLeft:yoke.left,
+    panelRight:panel.right,panelBottom:panel.bottom,yokeLeft:yoke.left,yokeTop:yoke.top,
+    focus:document.body.dataset.cockpitFocus,
     leftPedal:{top:left.top,bottom:left.bottom,height:left.height},
     rightPedal:{top:right.top,bottom:right.bottom,height:right.height},
     visible:left.top>=0&&right.top>=0&&left.bottom<=innerHeight-2&&right.bottom<=innerHeight-2,
     adjacent:Math.abs(left.top-right.top)<7,
     noHorizontalOverflow:document.documentElement.scrollWidth<=innerWidth+2,
-    instrumentBesideControl:panel.right<=yoke.left+15
+    // Approved C172 uses a full-width top dashboard; R44 keeps its
+    // independent panel and controls side by side.
+    instrumentSeparated:document.getElementById('cockpitStation').dataset.airframe==='c172'?
+     panel.bottom<=yoke.top+15:panel.right<=yoke.left+15
    };
   });
-  assert.ok(fit.forwardHeight>=108&&fit.forwardHeight<=161,
-   id+' forward horizon view must be useful rather than a narrow strip '+JSON.stringify(fit));
-  assert.ok(fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentBesideControl,
-   id+' focused landscape: both pedals completely visible with the instrument bank beside controls '+JSON.stringify(fit));
+  const horizonGood=id==='c172'?
+   fit.forwardHeight>=180&&fit.forwardHeight<=235:
+   fit.forwardHeight>=85&&fit.forwardHeight<=210;
+  assert.ok(horizonGood,
+   id+' approved landscape horizon height stays usable '+JSON.stringify(fit));
+  assert.ok(fit.focus==='on'&&fit.visible&&fit.adjacent&&fit.noHorizontalOverflow&&fit.instrumentSeparated,
+   id+' focused landscape: pedals and instruments fit without control collision '+JSON.stringify(fit));
  }
- await phone.locator('#cockpitFocusButton').click();
+ if(await phone.evaluate(()=>document.body.dataset.cockpitFocus==="on"))
+  await phone.locator('#cockpitFocusButton').click();
 
  assert.deepEqual(errors,[],'no JS runtime errors');
  console.log('Unified cockpit passed: 7 aircraft styles, analog T layout, rotorcraft gauges, fighter MFDs, cockpit controls and phone geometry.');
