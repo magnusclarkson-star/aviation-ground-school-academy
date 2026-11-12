@@ -1192,14 +1192,25 @@ function cameraPose(state,view="cockpit",orbit={},options={}){
  const altitude=Number.isFinite(state.altitudeM)?Math.max(0,state.altitudeM):0;
  const craft=[state.xM,altitude+(state.mode==="airplane"?1.5:2),state.zM];
  if(view==="inspect"){
+  const interior=orbit.interior===true;
   const azimuth=limit(orbit.azimuth??0,-720,720)*RAD;
   const elevation=limit(orbit.elevation??28,-70,78)*RAD;
-  const distance=limit(orbit.distance??18,6.8,70);
+  const distance=limit(orbit.distance??18,interior?1.45:6.8,interior?12:70);
   const direction=yaw+Math.PI+azimuth;
   const horizontal=distance*Math.cos(elevation);
-  return {view,eye:[craft[0]+Math.sin(direction)*horizontal,
-   craft[1]+Math.sin(elevation)*distance,
-   craft[2]+Math.cos(direction)*horizontal],
+  // Local cockpit stations are not world camera targets: transform their
+  // offsets with the aircraft heading, but do not translate the model itself.
+  const station=interior?{
+   c172:[0,-.2,1.35],r44:[0,-.2,3.45],
+   fa18:[0,.30,3.25],f22:[0,.18,5.10],f35:[0,.18,4.20],
+   typhoon:[0,1.23,4.15],su37:[0,1.32,4.90]
+  }[options.airframeId]||[0,0,0]:[0,0,0];
+  const target=[craft[0]+station[0]*Math.cos(yaw)+station[2]*Math.sin(yaw),
+   craft[1]+station[1],
+   craft[2]-station[0]*Math.sin(yaw)+station[2]*Math.cos(yaw)];
+  return {view,eye:[target[0]+Math.sin(direction)*horizontal,
+   target[1]+Math.sin(elevation)*distance,
+   target[2]+Math.cos(direction)*horizontal],
    yaw:direction+Math.PI,pitch:-elevation,roll:0,craft};
  }
  if(view==="cockpit"&&options.sourceCockpit===true&&state.mode==="airplane"){
@@ -1786,7 +1797,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    const realTrainer=state.mode==="airplane"&&realC172!==null&&
     Exterior.normalize(airframeId||state.mode)==="c172";
    const sourceCockpit=view==="cockpit"&&realTrainer;
-   const baseCamera=cameraPose(state,view,orbit,{sourceCockpit});
+   const baseCamera=cameraPose(state,view,orbit,{sourceCockpit,airframeId});
    if(canvas.dataset)canvas.dataset.sourceCockpit=sourceCockpit?"on":"off";
    const liveScene=canvas.closest?.(".scene-shell");
    if(liveScene)liveScene.dataset.sourceC172=sourceCockpit?"on":"off";
@@ -1794,7 +1805,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     realHelicopter?.72:realTrainer?.82:1);
    const clock=root?.performance?.now?.()??Date.now();
    const reducedMotion=root?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
-   const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode)||targetCamera);
+   const camera=reducedMotion?targetCamera:(cameraRig?.next(targetCamera,clock,(airframeId||state.mode)+"|"+state.mode+(orbit?.interior?"|interior":"|exterior"))||targetCamera);
    gl.uniform3fv(uni.uEye,camera.eye);
    // Visual touchdown suspension offsets only the rendered aircraft, not
    // the true camera target, simulated height or ground-shadow footprint.
@@ -1810,7 +1821,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uAspect,w/h);gl.uniform1f(uni.uFocal,1.65);
    // A pilot's instrument panel is less than a metre from the eye. The
    // exterior .40m clipping plane would cut it off entirely.
-   gl.uniform1f(uni.uCameraNear,sourceCockpit?.075:.4);
+   gl.uniform1f(uni.uCameraNear,sourceCockpit?.075:view==="inspect"&&orbit.interior===true?.08:.4);
    const world=state.mode==="helicopter"?worldHeli:worldPlane;
    gl.uniform1f(uni.uActor,0);
    gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
@@ -1957,7 +1968,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.bindVertexArray(model.cabin.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.cabin.count);
     };
-    if(realModel){
+    if(view==="inspect"&&orbit.interior===true&&model.cabin){
+     // Isolate aircraft cockpit hardware for readable inspection. Removing
+     // the exterior here is visual only; no flight geometry is changed.
+     drawCabin();
+    }else if(realModel){
      gl.activeTexture(gl.TEXTURE0);
      const drawPrimitive=(part,alpha)=>{
       const img=part.imageId===null?null:realModel.images[part.imageId];
