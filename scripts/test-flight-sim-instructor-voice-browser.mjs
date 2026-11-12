@@ -120,13 +120,21 @@ try{
  await coachPage.waitForTimeout(200);
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),1,
   "animation frames cannot spam the instructor announcement");
- await coachPage.locator("#r44VoiceToggle").click();
+ // The R44 lesson strip is deliberately hidden to protect pedal space.
+ // The live voice control is now reachable via the existing More button.
+ await coachPage.locator("#cockpitHelpToggle").click();
+ const reachableVoice=coachPage.locator("#r44VoiceMoreToggle");
+ assert.ok(await reachableVoice.isVisible(),
+  "R44 voice must be reachable without adding cockpit clutter");
+ await reachableVoice.click();
+ assert.equal(await reachableVoice.getAttribute("aria-pressed"),"false");
  assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"false");
  const mutedCount=await coachPage.evaluate(()=>window.__coachSpeech.length);
  await coachPage.waitForTimeout(150);
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount);
- await coachPage.locator("#r44VoiceToggle").click();
- assert.equal(await coachPage.locator("#r44VoiceToggle").getAttribute("aria-pressed"),"true");
+ if(!(await reachableVoice.isVisible()))await coachPage.locator("#cockpitHelpToggle").click();
+ await reachableVoice.click();
+ assert.equal(await reachableVoice.getAttribute("aria-pressed"),"true");
  assert.equal(await coachPage.evaluate(()=>window.__coachSpeech.length),mutedCount+1,
   "unmuting repeats the current stage only after the learner taps");
  await coachPage.locator("#collective").evaluate(el=>{
