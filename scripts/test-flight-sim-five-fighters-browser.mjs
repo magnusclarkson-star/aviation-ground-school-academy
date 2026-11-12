@@ -29,7 +29,7 @@ const aircraft=[
  {id:"fa18",source:"procedural"},
  {id:"f22",source:"gpl-f22-fguk"},
  {id:"f35",source:"gpl-f35b-flightgear"},
- {id:"typhoon",source:"procedural"},
+ {id:"typhoon",source:"gpl-typhoon-fg"},
  {id:"su37",source:"gpl-su37-fguk"}
 ];
 fs.mkdirSync("artifacts",{recursive:true});
@@ -72,11 +72,12 @@ try{
       orbit:{azimuth:30,elevation:18,distance:26}});
     },id);
     assert.ok(selected,"first "+id+" render must not fail");
-    if(id==="f22"||id==="f35"||id==="su37"){
+    if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon"){
      await page.waitForFunction(id=>{
       const r=window.__fighterRenderer;
       const status=id==="f22"?r.realF22Status:
-       id==="f35"?r.realF35Status:r.realSu37Status;
+       id==="f35"?r.realF35Status:
+       id==="su37"?r.realSu37Status:r.realTyphoonStatus;
       return status==="imported";
      },id,{timeout:25000});
     }
