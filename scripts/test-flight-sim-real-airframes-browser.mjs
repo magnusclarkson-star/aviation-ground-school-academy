@@ -273,11 +273,12 @@ try{
    rack=document.querySelector("#cockpitSwitchPanel"),
    throttle=document.querySelector("#powerPanel"),
    yoke=document.querySelector("#controlPad"),
-   pedal=document.querySelector("#rightRudder");
+   pedal=document.querySelector("#rightRudder"),
+   restart=document.querySelector("#restartFlight");
   const box=e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,w:b.width,h:b.height}};
   return {scene:box(shell),station:box(station),switch:box(switchView),
    rack:box(rack),throttle:box(throttle),
-   yoke:box(yoke),pedal:box(pedal),source:shell.dataset.sourceC172,
+   yoke:box(yoke),pedal:box(pedal),restart:box(restart),source:shell.dataset.sourceC172,
    focus:document.body.dataset.cockpitFocus,
    frameHidden:getComputedStyle(frame).display==="none",
    scrollable:station.scrollHeight>station.clientHeight};
@@ -285,10 +286,15 @@ try{
  assert.equal(wide.focus,"on");
  assert.equal(wide.source,"on");
  assert.equal(wide.frameHidden,true,"no fake gauges overlay real 3D interior");
- assert.ok(wide.scene.w>=800&&wide.scene.h>=175,
-  "landscape presents a wide real-pilot windscreen");
- assert.ok(wide.scene.h>wide.station.h,
-  "landscape prioritizes forward view over secondary gauges");
+ // The forward scene is 133px tall on an 844×390 phone so its runway
+ // HORIZON stays above the instrument top; stretching WebGL to 390px
+ // put the horizon behind the gauges. Measure the visible horizon region,
+ // not total GPU canvas height.
+ assert.ok(wide.scene.w>=800&&wide.scene.h>=108&&wide.station.y>=85,
+  "landscape retains a wide, unobstructed real-pilot runway and horizon");
+ assert.ok(wide.pedal.y+wide.pedal.h<=390&&
+  wide.restart.y+wide.restart.h<=390,
+  "landscape right pedal and Restart remain fully visible without scrolling");
  assert.ok(wide.switch.w>=38&&wide.switch.y>=0&&
   wide.switch.y+wide.switch.h<=390&&wide.rack.x>=wide.throttle.x-5,
   "C172 switch is reachable in the 2x2 rack beside the NAV/throttle corner");

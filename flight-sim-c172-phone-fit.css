@@ -1,0 +1,23 @@
+/* Cessna 172 only — measured on 390×844, 390×720 and 844×390.
+   R44 and all other airframes retain their existing approved layouts.
+   Reallocate UNUSED portrait space to the pilot view; do not resize
+   gauges, map, yoke, throttle, flap lever, rudder pedals or switches. */
+@media (orientation:portrait) and (max-width:740px){
+ body[data-cockpit-focus="on"] .scene-panel:has(#cockpitStation[data-airframe="c172"][data-photo-cockpit="on"])>.scene-shell{
+  flex:0 0 clamp(150px,calc(100dvh - 550px),330px)!important;
+  height:clamp(150px,calc(100dvh - 550px),330px)!important;
+  min-height:0!important;max-height:none!important;
+ }
+}
+/* C172 landscape: retain the existing projected runway/horizon
+   geometry at the original 34dvh forward-camera height. A full-screen
+   WebGL viewport pushed the horizon BEHIND the gauges, so do not stretch it.
+   Lift the entire unchanged dashboard just enough for both pedals and
+   Restart to remain visible, without altering any individual controls. */
+@media (orientation:landscape) and (min-width:600px) and (max-height:510px){
+ body[data-cockpit-focus="on"] #cockpitStation[data-airframe="c172"][data-photo-cockpit="on"]{
+  position:absolute!important;inset:auto 0 30px 0!important;
+  height:clamp(236px,64dvh,295px)!important;
+  overflow:visible!important;z-index:4!important;
+ }
+}

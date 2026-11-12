@@ -267,6 +267,8 @@ jobs:
         run: npx playwright install chromium
       - name: Verify R44 original controls and four-switch location in three phone sizes
         run: node scripts/test-flight-r44-single-move-browser.mjs
+      - name: Verify C172 cockpit geometry in portrait and landscape
+        run: node scripts/test-flight-c172-cockpit-layout-browser.mjs
       - name: Test desktop and simultaneous touch controls
         run: |
           node scripts/test-flight-sim-browser.mjs
@@ -289,6 +291,15 @@ jobs:
           node scripts/test-flight-sim-exercises-browser.mjs
           node scripts/test-flight-sim-instructor-voice-browser.mjs
           node scripts/test-flight-sim-pwa-browser.mjs
+
+      - name: Save C172 whole-cockpit screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c172-mobile-cockpit-screenshots
+          path: artifacts/c172-cockpit-*.png
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Save R44 whole-cockpit screenshots for visual review
         if: always()

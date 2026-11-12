@@ -559,8 +559,8 @@ try{
    pedalWidths:[left.width,right.width],viewport:innerHeight,
    canScroll:getComputedStyle(document.getElementById('cockpitStation')).overflowY};
  });
- assert.ok(portraitFocus.sceneHeight>=158&&portraitFocus.sceneHeight<=246,
-  'portrait pilot windscreen must be large enough to see the horizon '+JSON.stringify(portraitFocus));
+ assert.ok(portraitFocus.sceneHeight>=280&&portraitFocus.sceneHeight<=330,
+  'C172 portrait windscreen must use the spare bottom space for a taller horizon '+JSON.stringify(portraitFocus));
  assert.ok(portraitFocus.stationHeight>0&&portraitFocus.pedalWidths.every(w=>w>35),
   'enlarged portrait forward view preserves both rudder pedal controls');
  await phone.locator('#cockpitFocusButton').tap();
