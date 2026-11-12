@@ -25,7 +25,9 @@ const publicAircraftFiles=[
  "assets/aircraft/F35-ATTRIBUTION.md",
  "assets/aircraft/F35-GPL-3.0.txt",
  "assets/aircraft/su37-fguk-exterior.json",
- "assets/aircraft/SU37-ATTRIBUTION.md"
+ "assets/aircraft/SU37-ATTRIBUTION.md",
+ "assets/aircraft/typhoon-fg-exterior.json",
+ "assets/aircraft/TYPHOON-ATTRIBUTION.md"
 ];
 const publicCuratedPaths=["accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
