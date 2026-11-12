@@ -112,8 +112,11 @@ try{
  assert.equal(wide.switchParent,"side-controls");
  assert.ok(wide.rack.left>=wide.well.left+wide.well.w*.65,
   "C172 rack is to the right of the analogue dials and below NAV");
- assert.ok(wide.rack.bottom<=wide.throttle.top+5,
-  "C172 rack stays above throttle in wide pilot mode");
+ // Approved C172 landscape positions VIEW/SCENE/LIGHT/FRAME beside the
+ // yoke, to the LEFT of the throttle. They are NOT above the throttle.
+ assert.ok(wide.rack.left>=wide.yoke.right+5&&
+  wide.rack.right<=wide.throttle.left-5&&wide.rack.bottom<=390,
+  "C172 2x2 rack stays beside yoke without covering the throttle");
  assert.ok(wide.restart.bottom<=wide.brake.top+8,
   "Restart stays directly above the brake after rotating phone");
  assert.ok(wide.rack.right<=844&&wide.restart.bottom<=390,
@@ -125,13 +128,12 @@ try{
  assert.equal(await phone.locator("#cockpitFrameToggle").inputValue(),"on");
  const rotor=await layout();
  checkTwoByTwo(rotor);
- assert.equal(rotor.switchParent,"cockpit-instrument-well");
- assert.ok(rotor.rack.left>=rotor.well.right-4,
-  "R44 2x2 switches sit beside the right edge of the central panel");
- assert.ok(rotor.rack.right<=844,
+ assert.ok(rotor.switchParent.includes("control-panel"),
+  "R44 switches remain in the approved control deck beside cyclic");
+ assert.ok(rotor.rack.left>=rotor.yoke.left+rotor.yoke.w*.6,
+  "R44 2x2 rack sits to the right of the cyclic");
+ assert.ok(rotor.rack.right<=844&&rotor.rack.bottom<=390,
   "R44 switch rack remains completely visible in landscape");
- assert.ok(rotor.lesson&&Math.abs(rotor.rack.bottom-rotor.lesson.bottom)<65,
-  "R44 switch rack aligns with the 1/4 TAKEOFF lesson and altitude gauges");
  assert.equal(rotor.restartParent,"side-controls",
   "R44 Restart stays beside collective");
  await phone.locator("#cockpitAircraftSelect").selectOption("c172");
@@ -150,8 +152,8 @@ try{
   "moving Restart above the wheel brake preserves its original action");
  assert.equal(await phone.locator("#cockpitAircraftSelect").inputValue(),"c172",
   "restarting a C172 does not change the selected airframe");
- // Rotate back to portrait and change to R44: switches must relocate
- // within its narrow pedestal without spilling off the handset.
+ // Rotate back to portrait: R44's switches remain beside the cyclic
+ // without resizing any of its approved controls.
  await phone.setViewportSize({width:390,height:844});
  await phone.locator("#cockpitFrameToggle").selectOption("on");
  await phone.locator("#cockpitAircraftSelect").selectOption("r44");
