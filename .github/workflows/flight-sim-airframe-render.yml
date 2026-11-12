@@ -22,6 +22,7 @@ on:
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
       - 'scripts/test-flight-sim-five-fighters-browser.mjs'
+      - 'scripts/test-flight-sim-source-exterior-loading-browser.mjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -52,6 +53,7 @@ on:
       - 'assets/aircraft/f22-fguk-exterior.json'
       - 'scripts/test-flight-sim-f22-browser.mjs'
       - 'scripts/test-flight-sim-five-fighters-browser.mjs'
+      - 'scripts/test-flight-sim-source-exterior-loading-browser.mjs'
       - 'assets/aircraft/**'
       - 'tests/simulator-v2-real-r44.test.cjs'
       - 'tests/simulator-v2-real-airframes.test.cjs'
@@ -99,6 +101,8 @@ jobs:
           node scripts/test-flight-sim-typhoon-browser.mjs
       - name: Verify all five fighters in portrait and landscape with visible gear and controls
         run: node scripts/test-flight-sim-five-fighters-browser.mjs
+      - name: Verify all four imported fighters never show obsolete chase-view meshes
+        run: node scripts/test-flight-sim-source-exterior-loading-browser.mjs
       - name: Save real-aircraft preview images
         if: always()
         uses: actions/upload-artifact@v4
