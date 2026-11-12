@@ -1947,7 +1947,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       "procedural";
     if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
      "source-cabin-and-panel":realModel&&model.cabin?
-     "four-seats-and-panel":"not-rendered";
+     id==="c172"||id==="r44"?"four-seats-and-panel":
+     model.cabin?"fighter-seat-console-panel":"not-rendered";
     const drawCabin=()=>{
      if(!model.cabin)return;
      gl.disable(gl.BLEND);gl.depthMask(true);
@@ -2032,6 +2033,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
        if((part.opacity??1)<.99)continue;
        if(part.partAxis!==4||gearOpacity(part)>.999)drawPrimitive(part,1);
       }
+      // Draw cockpit hardware behind the translucent canopy, never over the skin.
+      drawCabin();
       gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
       for(const part of realModel.primitives){
