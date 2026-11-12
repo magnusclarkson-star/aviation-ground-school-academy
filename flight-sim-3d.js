@@ -1945,10 +1945,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
       pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
       "procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=isMolen||isMolenC172?
-     "source-cabin-and-panel":realModel&&model.cabin?
-     id==="c172"||id==="r44"?"four-seats-and-panel":
-     model.cabin?"fighter-seat-console-panel":"not-rendered";
+    if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
+     "not-rendered":id==="c172"||id==="r44"?
+     "four-seats-and-panel":"fighter-seat-console-panel";
     const drawCabin=()=>{
      if(!model.cabin)return;
      gl.disable(gl.BLEND);gl.depthMask(true);
