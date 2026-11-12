@@ -67,6 +67,7 @@ jobs:
       - run: node --check flight-sim-scenery.js
       - run: node --check flight-sim-3d.js
       - run: node scripts/test-flight-sim-3d.mjs
+      - run: node scripts/test-flight-sim-f22.mjs
       - run: node --check flight-sim-aircraft-systems.js
       - run: node scripts/test-flight-sim-aircraft-systems.mjs
       - run: node --check flight-sim.js
