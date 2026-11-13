@@ -65,27 +65,65 @@
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   const interiorButton=$("aircraftInspectInterior");
   const exteriorButton=$("aircraftInspectExterior");
-  // A licensed, authored F/A-18E replaces the old simplified fighter only
-  // in exterior 360° inspection. Flight simulation continues to use the
-  // in-house geometry until an offline source mesh is integrated.
-  const hornetViewer=$("aircraftInspectSuperHornet");
-  const hornetFrame=$("aircraftInspectSuperHornetFrame");
-  const hornetSource="https://sketchfab.com/models/9e852037bf2141dcb3fda17013958131/embed?autostart=1&ui_infos=0&ui_controls=1&ui_watermark=1";
-  const hornetControls=["aircraftInspectZoomIn","aircraftInspectZoomOut",
+  // Author-hosted 360° textured exteriors. Interior mode and all active
+  // flight physics stay on the existing local meshes. Only one iframe is
+  // mounted at any time to avoid exhausting mobile GPU resources.
+  const texturedViewer=$("aircraftInspectSuperHornet");
+  const texturedFrame=$("aircraftInspectSuperHornetFrame");
+  const texturedTitle=$("aircraftInspectTexturedTitle");
+  const texturedCredit=$("aircraftInspectTexturedCredit");
+  const texturedLink=$("aircraftInspectTexturedSource");
+  const texturedModels=Object.freeze({
+   fa18:{uid:"9e852037bf2141dcb3fda17013958131",
+    name:"F/A-18E Super Hornet",author:"KOG_THORNS",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/boeing-fa-18e-super-hornet-9e852037bf2141dcb3fda17013958131"},
+   f22:{uid:"2a64abf0866a405c865466c7642ca689",
+    name:"F-22 Raptor",author:"NLM",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/f22-raptor-free-2a64abf0866a405c865466c7642ca689"},
+   f35:{uid:"db911de503c74285a8d506951df786d6",
+    name:"F-35 Lightning II (family reference)",author:"andertan",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6",
+    note:"Family reference model, not verified as F-35B-specific"},
+   typhoon:{uid:"b3ede3f4280f4bf99ebbd4ebc7f5480d",
+    name:"Eurofighter Typhoon",author:"Chenzoss",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/eurofighter-typhoon-3d-b3ede3f4280f4bf99ebbd4ebc7f5480d"},
+   c172:{uid:"be55bf96a63b41fdb953b6829ff0d4bf",
+    name:"Cessna 172SP",author:"NLM",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/free-cessna-172sp-be55bf96a63b41fdb953b6829ff0d4bf"},
+   r44:{uid:"36e3498a5dc54d16a6d964f9b525deb8",
+    name:"Robinson R44",author:"syarifudinirfan701",license:"CC BY",
+    page:"https://sketchfab.com/3d-models/robinson-r44-36e3498a5dc54d16a6d964f9b525deb8"}
+   // Su-37 retains its local viewer until a source-authentic and clearly
+   // licensed Su-37 model is verified; Su-35 is not interchangeable.
+  });
+  const externalControls=["aircraftInspectZoomIn","aircraftInspectZoomOut",
    "aircraftInspectReset","aircraftInspectSpin"];
-  function syncHornetViewer(){
-   const active=!modal.hidden&&selected()==="fa18"&&!orbit.interior;
-   hornetViewer.hidden=!active;
-   for(const id of hornetControls)$(id).disabled=active;
-   if(!active)return false;
-   if(hornetFrame.getAttribute("src")!==hornetSource)
-    hornetFrame.setAttribute("src",hornetSource);
+  function syncTexturedViewer(){
+   const model=!orbit.interior?texturedModels[selected()]:null;
+   const active=!modal.hidden&&Boolean(model);
+   texturedViewer.hidden=!active;
+   for(const id of externalControls)$(id).disabled=active;
+   if(!active){
+    // Prevent invisible Sketchfab views from consuming phone memory.
+    if(texturedFrame.hasAttribute("src"))texturedFrame.removeAttribute("src");
+    return false;
+   }
+   const src="https://sketchfab.com/models/"+model.uid+
+    "/embed?autostart=1&ui_infos=0&ui_controls=1&ui_watermark=1";
+   if(texturedFrame.getAttribute("src")!==src)
+    texturedFrame.setAttribute("src",src);
+   texturedFrame.title="Rotate the "+model.name+" textured 3D model";
+   texturedTitle.textContent=model.name;
+   texturedCredit.textContent="3D: "+model.author+" · "+model.license+
+    (model.note?" · "+model.note:"");
+   texturedLink.href=model.page;
    canvas3D.hidden=true;canvas2D.hidden=true;
    viewport.dataset.modelLoading="off";
    $("aircraftInspectLoading").textContent="";
-   $("aircraftInspectRenderMode").textContent="Licensed F/A-18E 3D";
+   $("aircraftInspectRenderMode").textContent="Textured 3D · "+selected().toUpperCase();
    $("aircraftInspectDescription").textContent=
-    "Drag within the aircraft to rotate · Pinch inside to zoom · Source: KOG_THORNS (CC BY).";
+    "Drag in the model to rotate · Pinch inside to zoom · Exterior only · "+
+    model.author+" ("+model.license+")";
    return true;
   }
   const interiorDistance=id=>id==="f22"||id==="su37"?4.35:id==="r44"?3.25:2.90;
@@ -103,7 +141,7 @@
    autoRotate=false;lastRenderedId=null;
    canvas3D.hidden=true;canvas2D.hidden=true;
    updateHeading();
-   syncHornetViewer();
+   syncTexturedViewer();
   }
   // The two compact training aircraft need closer framing than large jets.
   const fitDistance=()=>fitDistanceFor(selected());
@@ -196,7 +234,7 @@
    if(modal.hidden)return;
    const id=selected();
    updateHeading();
-   if(syncHornetViewer()){
+   if(syncTexturedViewer()){
     last=now;
     raf=win.requestAnimationFrame(frame);
     return;
@@ -262,16 +300,16 @@
    delete viewport.dataset.interiorUnsupported;
    syncModelVisibility();
    updateHeading();
-   syncHornetViewer();
+   syncTexturedViewer();
    $("aircraftInspectClose").focus({preventScroll:true});
    raf=win.requestAnimationFrame(frame);
   }
   function close(){
    if(modal.hidden)return;
    modal.hidden=true;delete doc.body.dataset.aircraftInspect;
-   hornetViewer.hidden=true;
+   texturedViewer.hidden=true;
    // Stop a hidden external 3D renderer using the phone GPU.
-   hornetFrame.removeAttribute("src");
+   texturedFrame.removeAttribute("src");
    viewport.dataset.modelLoading="off";
    trigger.setAttribute("aria-expanded","false");
    win.cancelAnimationFrame(raf);raf=0;last=0;lastRenderedId=null;
@@ -303,7 +341,7 @@
    ctx.clearRect(0,0,canvas2D.width,canvas2D.height);
    orbit={...orbit,distance:orbit.interior?interiorDistance(id):fitDistance()};
    updateHeading();
-   if(!modal.hidden){syncModelVisibility();syncHornetViewer();}
+   if(!modal.hidden){syncModelVisibility();syncTexturedViewer();}
   });
   interiorButton.addEventListener("click",()=>setInterior(true));
   exteriorButton.addEventListener("click",()=>setInterior(false));
