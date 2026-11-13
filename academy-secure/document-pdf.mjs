@@ -1,6 +1,6 @@
 // Original print layouts for Academy records. pdf-lib is bundled in private Node server.
 // IMPORTANT: image signature is an optional visual reproduction, NOT cryptographic signing.
-import {PDFDocument,StandardFonts,rgb} from "pdf-lib";
+import {PDFDocument,StandardFonts,rgb,degrees} from "pdf-lib";
 import {buildTranscriptPdf} from "./transcript-pdf.mjs";
 export const STYLES=Object.freeze({
  FORMAL_TRADITIONAL:"Formal academic ivory and burgundy",
@@ -48,7 +48,7 @@ function seal(page,x,y,ink=C.gold){
  rays.forEach(([dx,dy])=>rule(page,x,y,x+dx,y+dy,ink,.95));
  page.drawText("AGSA",{x:x-15,y:y-5,size:10,color:ink});
 }
-export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL",options={},signaturePng=null}={}){
+export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL",options={},signaturePng=null,sample=false}={}){
  if(!STYLES[style])throw Error("Unrecognised Academy certificate design");
  const opts=validateOptions(options);
  if(!record||typeof record.name!=="string"||record.name.trim().length<3||
@@ -98,9 +98,20 @@ export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL"
  if(left)page.drawText(left,{x:69,y:73,size:9,font:ser,color:theme.body});
  if(opts.showCertificateNumber)page.drawText("Academy reference: "+clean(record.serial,55),{x:470,y:73,size:9,font:ser,color:theme.body});
  centered(page,"ACADEMY RECORD ONLY - ANY REGULATORY STATUS REQUIRES INDEPENDENT VERIFICATION",41,8,ser,theme.body);
+ if(sample){
+  // Rendered after all document art so the watermark can never be covered by
+  // seal, decorative text, or a sample signature. Not an issued credential.
+  page.drawText("SAMPLE - NOT ISSUED",{
+   x:116,y:283,size:53,font:bold,color:C.burgundy,rotate:degrees(18),opacity:.36
+  });
+  page.drawRectangle({x:190,y:15,width:460,height:24,color:C.burgundy,opacity:.92});
+  page.drawText("SPECIMEN ONLY - NOT A STUDENT CERTIFICATE",{
+   x:236,y:22,size:12,font:bold,color:C.white
+  });
+ }
  return doc.save({useObjectStreams:false});
 }
-export async function renderAcademicTranscript(record,{options={},signaturePng=null}={}){
+export async function renderAcademicTranscript(record,{options={},signaturePng=null,sample=false}={}){
  const opts=validateOptions(options);
  if(opts.showSignature&&!signaturePng)throw Error("Signature preference is enabled but signature image has not been authorised");
  const raw=buildTranscriptPdf(record);
@@ -111,6 +122,14 @@ export async function renderAcademicTranscript(record,{options={},signaturePng=n
   if(opts.showSeal)seal(page,521,103,C.gold);
   if(png){const ratio=Math.min(130/png.width,28/png.height);page.drawImage(png,{x:333,y:90,width:png.width*ratio,height:png.height*ratio})}
   page.drawText("Academy records - identity and payment checked before release",{x:38,y:71,size:7.6,font,color:C.grey});
+  if(sample){
+   const heading=await doc.embedFont(StandardFonts.HelveticaBold);
+   page.drawText("SAMPLE - NOT ISSUED",{
+    x:95,y:389,size:45,font:heading,color:C.burgundy,rotate:degrees(33),opacity:.34
+   });
+   page.drawRectangle({x:125,y:15,width:345,height:22,color:C.burgundy,opacity:.92});
+   page.drawText("SPECIMEN - NOT A VERIFIED TRANSCRIPT",{x:162,y:21,size:10,font:heading,color:C.white});
+  }
  }
  return doc.save({useObjectStreams:false});
 }

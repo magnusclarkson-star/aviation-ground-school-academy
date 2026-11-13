@@ -322,12 +322,37 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/admin/documents/layouts","POST",{
    audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
   },admin)).status,400,"Unverified QR codes must stay disabled");
+  // Preview PDFs are sample-only, owner-restricted, and carry no student data
+  // or actual encrypted signature even when the owner has enabled signature use.
+  for(const audience of ["FORMAL","SCOUT","ENTHUSIAST","TRANSCRIPT"]){
+   const path="/api/admin/documents/preview/"+audience;
+   const denied=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:student}});
+   assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
+   const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
+   assert.equal(example.status,200,audience+" preview failed");
+   assert.ok(example.headers.get("content-type")?.includes("application/pdf"));
+   assert.match(example.headers.get("content-disposition"),/inline/);
+   const pdf=Buffer.from(await example.arrayBuffer());
+   assert.equal(pdf.subarray(0,5).toString(),"%PDF-");
+   assert.ok(pdf.length>2000,"Sample must contain full printable document design");
+  }
   const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
   assert.equal(pdfResponse.status,200);
   assert.match(pdfResponse.headers.get("content-type"),/application\/pdf/);
   assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  const printCertificate=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
+   headers:{Origin:ORIGIN,Cookie:student}
+  });
+  assert.equal(printCertificate.status,200);
+  assert.ok(printCertificate.headers.get("content-disposition")?.startsWith("inline"),
+   "Inline print path must open an existing issued PDF in the browser");
+  assert.equal(Buffer.from(await printCertificate.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  const forbiddenPrint=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
+   headers:{Origin:ORIGIN,Cookie:head}
+  });
+  assert.equal(forbiddenPrint.status,403,"Other users cannot print a learner's private document");
   const premature=await fetch(ORIGIN+"/api/my/documents/"+pendingTranscript.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });

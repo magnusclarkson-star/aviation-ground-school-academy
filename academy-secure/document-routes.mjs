@@ -59,14 +59,50 @@ async function transcriptData(db,studentId,cutoff){
  }
  return entries;
 }
-function binaryPdf(res,bytes,filename){
- res.writeHead(200,{"Content-Type":"application/pdf","Content-Disposition":'attachment; filename="'+filename+'"',
+function binaryPdf(res,bytes,filename,disposition="attachment"){
+ if(!["attachment","inline"].includes(disposition))throw Error("Unsafe PDF content disposition");
+ res.writeHead(200,{"Content-Type":"application/pdf","Content-Disposition":disposition+'; filename="'+filename+'"',
   "Content-Length":bytes.length,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff",
   "X-Frame-Options":"DENY","Content-Security-Policy":"default-src 'none'; frame-ancestors 'none'",
   "Referrer-Policy":"no-referrer"});res.end(Buffer.from(bytes));
 }
 export async function handleDocumentRoute({req,res,method,pathname,actor,db,transaction,audit,json,send,fail}){
  if(!(pathname.startsWith("/api/admin/documents")||pathname.startsWith("/api/my/documents")))return false;
+ const preview=/^\/api\/admin\/documents\/preview\/(FORMAL|SCOUT|ENTHUSIAST|TRANSCRIPT)$/.exec(pathname);
+ if(method==="GET"&&preview){
+  assertOwner(actor,fail);
+  const audience=preview[1],stored=await layout(db,audience);
+  const defaults={FORMAL:"FORMAL_TRADITIONAL",SCOUT:"SCOUT_MODERN",
+   ENTHUSIAST:"ENTHUSIAST_NAVY_GOLD",TRANSCRIPT:"FORMAL_TRADITIONAL"};
+  let options;
+  try{options=validateOptions(stored?.options||{showSeal:true})}
+  catch{fail(409,"Fix the saved certificate display options before printing a sample")}
+  // Samples may show a seal but intentionally NEVER expose an encrypted owner
+  // signature or any real student identity, result or receipt data.
+  options={...options,showSignature:false,showQrVerification:false};
+  let bytes;
+  if(audience==="TRANSCRIPT"){
+   bytes=await renderAcademicTranscript({
+    name:"Example Academic Learner",studentId:"SAMPLE-STUDENT-NO-IDENTITY",
+    issuedAt:"2026-11-13T12:00:00Z",releaseId:"SAMPLE-NOT-ISSUED",
+    entries:[{courseId:"aviation-safety-basics",courseTitle:"Aviation Safety Foundations",
+      revision:"DEMONSTRATION",startedAt:"2026-01-01",enrolmentStatus:"DEMO",
+      stages:[{stageKey:"training-exercise",status:"DEMO",trainingDate:"2026-02-01"}],
+      assessments:[],completion:null}],verifiedIdentity:false
+   },{options,sample:true});
+  }else{
+   bytes=await renderCourseCertificate({
+    name:"Example Academy Learner",serial:"AGSA-COURSE-"+"0".repeat(24),
+    courseTitle:audience==="FORMAL"?"Aircraft Accident & Incident Investigation":
+     audience==="SCOUT"?"Air Scouts Aviation Foundations":"Aviation Ground School Foundations",
+    issuedAt:"2026-11-13T12:00:00Z",completedAt:"2026-11-13T12:00:00Z",
+    verifiedAcademicRecord:true
+   },{style:stored?.style||defaults[audience],options,sample:true});
+  }
+  binaryPdf(res,bytes,"agsa-"+audience.toLowerCase()+"-sample-not-issued.pdf","inline");
+  return true;
+ }
+
  if(method==="GET"&&pathname==="/api/my/documents"){
   if(actor.role!=="student")fail(403,"Private student record access only");
   const {rows}=await db.query(`SELECT g.id,g.kind,g.course_id,g.grant_type,g.status,g.payable_minor,
@@ -75,7 +111,7 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
    WHERE g.student_id=$1 ORDER BY g.created_at DESC LIMIT 100`,[actor.id]);
   send(res,200,{documents:rows,warning:"Document access is separate from training qualification and SLCAA approval."});return true;
  }
- const download=/^\/api\/my\/documents\/([a-f0-9-]{36})\/download$/.exec(pathname);
+ const download=/^\/api\/my\/documents\/([a-f0-9-]{36})\/(download|print)$/.exec(pathname);
  if(method==="GET"&&download){
   if(actor.role!=="student")fail(403,"Only the student can download their formal documents");
   const grantId=uuid(download[1],fail);
@@ -119,7 +155,7 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
   }catch(e){if(e?.status)throw e;fail(409,"Document cannot be printed: "+String(e.message).slice(0,160))}
   finally{if(png)png.fill(0)}
   await transaction(tx=>audit(tx,actor.id,"DOCUMENT_PDF_DOWNLOADED","DOCUMENT_RELEASE",grant.id,{kind:grant.kind}));
-  binaryPdf(res,document,"agsa-"+grant.kind.toLowerCase()+"-"+grant.id.slice(0,8)+".pdf");
+  binaryPdf(res,document,"agsa-"+grant.kind.toLowerCase()+"-"+grant.id.slice(0,8)+".pdf",download[2]==="print"?"inline":"attachment");
   return true;
  }
  if(method==="GET"&&pathname==="/api/admin/documents/identity-pending"){
