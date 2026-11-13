@@ -39,9 +39,27 @@ bundling the asset into a publicly accessible repository.
    `assets/aircraft/fa18e-native.glb`. Fill in the correct source
    node names, axes and original-source-space hinge pivots in
    `fa18e-native-manifest.json`.
-6. Only then set `"enabled": true`. Enabling a model without all eleven
-   distinct verified control bindings is rejected. Keep the licence
+6. Calculate its SHA-256 using `sha256sum assets/aircraft/fa18e-native.glb`
+   on Linux/Mac or `Get-FileHash -Algorithm SHA256` in PowerShell.
+   Copy the **64 lowercase hexadecimal characters** to the manifest's
+   `sha256` field. This pins the exact inspected export; any change
+   to its bytes requires a new visual/control review and new checksum.
+7. Only then set `"enabled": true`. Enabling a model without the checksum
+   and all eleven distinct verified control bindings is rejected.
+   Run `node scripts/validate-fa18-native.js` and then the
+   `Verify F-A-18E native model` GitHub Actions workflow. Preserve the
    attribution in the app and in this directory.
+
+The browser validates the GLB's SHA-256 with the secure Web Crypto API
+*before* parsing or displaying it. Mismatching or unverifiable downloads
+fall back to the current single aircraft; the cockpit, flight controls
+and high-detail 360° external viewer remain available.
+
+The offline release script validates the exact same manifest and checks
+file size, source geometry, the authorization checksum and all eleven
+animation bindings. GitHub Actions runs it whenever Super Hornet source
+files or tests are changed. If the manifest remains disabled, both
+validators report that the new model has **not** been installed.
 
 ## Deployment status and safety
 
