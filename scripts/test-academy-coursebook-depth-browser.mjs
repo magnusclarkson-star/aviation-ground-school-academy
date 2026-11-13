@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -44,6 +44,10 @@ try{
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.equal(await desktop.locator(".related-original-pictures").count(),1);
+ await desktop.locator(".related-original-pictures>summary").click();
+ assert.ok(await desktop.locator(".related-original-card").count()>=2,"Other previously shown visual panels must appear inside the lesson");
+
  assert.match(await desktop.locator(".approved-visual-heading h4").first().textContent(),/original illustrated aviation/i);
  assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),0);
  const displayed=desktop.locator(".approved-picture-trigger img").first();
@@ -133,6 +137,10 @@ try{
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
  assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await phone.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.equal(await phone.locator(".related-original-pictures").count(),1);
+ await phone.locator(".related-original-pictures>summary").tap();
+ assert.ok(await phone.locator(".related-original-card").count()>=2,"Phone needs other original pictures for this subject");
+
  assert.match(await phone.locator(".approved-visual-heading h4").first().textContent(),/helicopter/i);
  assert.match(await phone.locator(".approved-cropped-picture").first().evaluate(x=>getComputedStyle(x).backgroundImage),/aviation-learning-overview\.webp/);
  await phone.locator(".approved-picture-trigger").first().tap();
@@ -153,6 +161,23 @@ try{
  assert.match(await phone.locator("#deepFeedback").textContent(),/4\/4 correct/);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2));
  await phone.close();
+ // Inspect the dedicated picture atlas at 390px width: every original can be reached
+ // even when the large source poster is hard to read inside a small coursebook view.
+ const gallery=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ gallery.on("pageerror",e=>errors.push("gallery: "+e.message));
+ await gallery.goto("http://127.0.0.1:"+server.address().port+"/academy-approved-visual-gallery.html",{waitUntil:"load"});
+ assert.equal(await gallery.locator(".gallery-original-link").count(),4);
+ assert.equal(await gallery.locator(".atlas-item").count(),33);
+ assert.equal(await gallery.locator(".atlas-item:visible").count(),33);
+ await gallery.locator("#atlasFilters button").filter({hasText:"Four aviation photographs"}).tap();
+ assert.equal(await gallery.locator(".atlas-item:visible").count(),4);
+ await gallery.locator(".atlas-item:visible .atlas-picture-button").first().tap();
+ assert.equal(await gallery.locator("#atlasZoomDialog").isVisible(),true);
+ assert.ok(await gallery.locator("#atlasZoomDialog canvas").evaluate(c=>c.width>0&&c.height>0));
+ await gallery.locator("#atlasZoomDialog button").tap();
+ assert.ok(await gallery.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+  "All 33 source-cropped pictures must fit the phone display");
+ await gallery.close();
  assert.deepEqual(errors,[]);
  console.log("Illustrated Academy browser passed: 12 subject diagrams with touch enlargement, desktop/Android-sized touch, scenarios, local revision, routes, 24-question capstone, unsigned export, deletion and self-study milestone.");
 }finally{
