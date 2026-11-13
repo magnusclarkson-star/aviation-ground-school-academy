@@ -1982,9 +1982,10 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const id of Exterior.IDS){
    const cabin=buildImportedCabin(id);
    const shell=id==="c172"?buildImportedC172Shell():null;
-   // Generate just six tiny hinged panels for each imported fighter.
-   // They are omitted from both the procedural fallback and C172/R44.
-   const gearPlan=(id==="f22"||id==="f35"||id==="su37")?
+   // F-22 and Su-37 need their small imported wheel-well panels.
+   // The F-35B has six ORIGINAL source bay doors already; do not add another
+   // set that overlaps the correct F-35B fuselage and source surfaces.
+   const gearPlan=(id==="f22"||id==="su37")?
     Exterior.buildImportedGearDoors(Mesh,id):null;
    airframes[id]={
     importedGear:gearPlan?{
@@ -2387,7 +2388,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(realModel&&model.importedGear&&!(view==="inspect"&&orbit.interior===true)){
      // Restore non-textured, opaque source-metal rendering before placing
      // the wheel-well recesses and independently hinged left/right doors.
-     // Only real F-22/F-35B meshes receive these panels; no fake gear layers.
+     // Only real F-22/Su-37 meshes receive these supplemental panels.
      gl.bindTexture(gl.TEXTURE_2D,null);
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
      gl.uniform1f(uni.uOpacity,1);gl.disable(gl.BLEND);gl.depthMask(true);
