@@ -55,6 +55,12 @@ jobs:
       - run: node --check academy-coursebook-data.js
       - run: node --check academy-coursebook.js
       - run: node scripts/test-academy-coursebook.mjs
+      - run: node --check academy-coursebook-depth-a.js
+      - run: node --check academy-coursebook-depth-b1.js
+      - run: node --check academy-coursebook-depth-b2.js
+      - run: node --check academy-coursebook-depth-model.js
+      - run: node --check academy-coursebook-depth-ui.js
+      - run: node scripts/test-academy-coursebook-depth.mjs
       - run: node --check flight-sim-model.js
       - run: node --check flight-sim-aerodynamics.js
       - run: node scripts/test-flight-sim-aerodynamics.mjs

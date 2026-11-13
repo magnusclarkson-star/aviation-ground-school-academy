@@ -1,9 +1,47 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><meta name="description" content="Aviation Ground School Academy 12-module introductory coursebook with 36 lesson sections and private practice checks for Air Scouts and aspiring pilots."><title>Full Ground School Coursebook | Aviation Ground School Academy</title><link rel="stylesheet" href="academy-coursebook.css"><script src="academy-brand.js" defer></script><script src="academy-coursebook-data.js" defer></script><script src="academy-coursebook.js" defer></script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><meta name="description" content="Aviation Ground School Academy 12-module introductory coursebook with 36 lesson sections and private practice checks for Air Scouts and aspiring pilots."><title>Full Ground School Coursebook | Aviation Ground School Academy</title><link rel="stylesheet" href="academy-coursebook.css"><script src="academy-brand.js" defer></script><script src="academy-coursebook-data.js" defer></script><script src="academy-coursebook.js" defer></script>
+<script src="academy-coursebook-depth-a.js" defer></script>
+<script src="academy-coursebook-depth-b1.js" defer></script>
+<script src="academy-coursebook-depth-b2.js" defer></script>
+<script src="academy-coursebook-depth-model.js" defer></script>
+<script src="academy-coursebook-depth-ui.js" defer></script></head><body>
 <header class="site-head"><a class="brand" href="index.html">✈ AVIATION GROUND SCHOOL ACADEMY<small>STRUCTURED LEARNING COURSEBOOK</small></a><nav aria-label="Academy navigation"><a href="index.html">Academy home</a><a href="ground-school-modules.html">Starter practice</a><a href="ai-instructor.html">Speaking lessons</a><a href="flight-sim.html">Flight simulator</a></nav></header>
-<main><section class="hero"><div class="eyebrow">12 SUBJECT MODULES · 36 LESSON SECTIONS · 36 PRACTICE QUESTIONS</div><h1>Ground school: learn from foundations to flight planning</h1><p>Follow a complete introductory study sequence, read each lesson, try its three-question knowledge check and track your own revision. Choose the Scouts/Air Scouts route or the aviation enthusiast/aspiring pilot route.</p></section>
+<main><section class="hero"><div class="eyebrow">12 MODULES · 72 LESSON SECTIONS · 72 PRACTICE QUESTIONS · 12 SCENARIOS</div><h1>Ground school: learn from foundations to flight planning</h1><p>Follow a complete introductory study sequence, study six teaching sections per module, practise the scenarios, take the topic checks and consolidate your knowledge in a cumulative review. Choose the Scouts/Air Scouts route or the aviation enthusiast/aspiring pilot route.</p></section>
 <div class="notice"><strong>Draft educational course.</strong> These lessons are not yet reviewed or approved by a qualified aviation instructor or a regulator. The practice results are local, editable and not examinations, training credits, licences or certificates. Use current approved references and supervision for real aviation.</div>
 <section class="panel" aria-label="Course settings"><div class="toolbar"><label for="route">Learning pathway</label><select id="route"><option value="scouts">Scouts &amp; Air Scouts</option><option value="pilots">Aviation enthusiasts &amp; aspiring pilots</option></select><label for="search">Find a topic</label><input type="search" id="search" placeholder="Search modules" autocomplete="off"></div><label for="courseProgress" class="meta" id="progressLabel">0 of 12 modules practised</label><progress id="courseProgress" max="12" value="0">0</progress><p id="storageStatus" role="status">Progress stays on this device only.</p><div class="actions"><button type="button" id="nextLesson" class="primary">Continue suggested module</button><button type="button" id="downloadRecord">Export local study record</button><button type="button" id="clearRecord">Clear local record</button></div></section>
 <div class="grid"><aside class="panel sidebar" aria-label="Course modules"><h2>Course modules</h2><div id="moduleList"></div></aside><section class="panel" aria-label="Lesson reading and self-check"><div class="eyebrow" id="moduleLevel">FOUNDATIONS</div><h2 id="moduleTitle">Select a module</h2><p id="moduleMeta" class="meta"></p><h3>Learning objectives</h3><ul id="objectives" class="objectives"></ul><div id="lessonReading"></div><h3>Study activity</h3><p id="studyActivity"></p><div class="actions"><button type="button" id="readAloud">🔊 Read module</button><button type="button" id="stopReading">Stop audio</button><a class="reference" href="https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak" id="reference" target="_blank" rel="noopener noreferrer">FAA handbook — verify current edition</a></div>
-<hr><h3>Module knowledge check</h3><p class="meta">Three practice questions. Two correct meets the self-study target only. All answers explained after submission; retakes are unlimited.</p><form id="quizForm"><div id="quizQuestions"></div><div class="actions"><button type="submit" id="submitQuiz" class="primary">Check my answers</button><button type="button" id="retryQuiz">Try again</button></div></form><div id="quizResult" class="feedback" role="status" aria-live="polite">Read the lessons, then answer the questions.</div><ol id="answers" hidden></ol><div class="actions"><button type="button" id="previousModule">← Previous</button><button type="button" id="followingModule" class="primary">Next module →</button></div></section></div>
+<hr><h3>Module knowledge check</h3><p class="meta">Three practice questions. Two correct meets the self-study target only. All answers explained after submission; retakes are unlimited.</p><form id="quizForm"><div id="quizQuestions"></div><div class="actions"><button type="submit" id="submitQuiz" class="primary">Check my answers</button><button type="button" id="retryQuiz">Try again</button></div></form><div id="quizResult" class="feedback" role="status" aria-live="polite">Read the lessons, then answer the questions.</div><ol id="answers" hidden></ol>
+<details id="deepModuleSection" class="deep-section" open>
+ <summary><strong>Deeper study · three extended lessons and applied practice</strong><span id="deepModuleStatus" class="meta">Explore concepts and situations</span></summary>
+ <div class="deep-inside">
+  <p id="deepRouteFocus" class="deep-focus"></p>
+  <div id="deepReading" aria-label="Additional detailed lessons"></div>
+  <h3>Key terms</h3><dl id="deepGlossary" class="glossary"></dl>
+  <p id="deepReference" class="meta"></p>
+  <div class="actions"><button type="button" id="deepReadAloud">🔊 Read deeper lessons</button><button type="button" id="deepStopAudio">Stop audio</button></div>
+  <h3>Applied situation</h3><form id="deepForm">
+   <div id="deepScenario"></div>
+   <h3>Three applied knowledge checks</h3>
+   <div id="deepQuestions"></div>
+   <div class="actions"><button type="submit" id="deepSubmit" class="primary">Check scenario and answers</button><button type="button" id="deepRetry">Try the advanced check again</button></div>
+  </form>
+  <div id="deepFeedback" class="feedback" role="status" aria-live="polite">Review the extended lessons before your self-check.</div>
+  <ol id="deepAnswers" hidden></ol>
+ </div>
+</details>
+<div class="actions"><button type="button" id="previousModule">← Previous</button><button type="button" id="followingModule" class="primary">Next module →</button></div></section></div>
+<section class="panel capstone-panel" id="capstonePanel" aria-label="End-of-course review">
+ <div class="eyebrow">END-OF-COURSE SELF-STUDY REVIEW</div>
+ <h2>Consolidate all 12 subjects</h2>
+ <p>Finish the core and advanced questions in every module, then practise a 24-question mixed review across all 12 subjects. A local self-study milestone appears when both practice sequences meet their targets and the mixed review reaches 18/24. This is not a formal examination or certificate.</p>
+ <div class="course-stats" id="deepCourseProgress" role="status" aria-live="polite"></div>
+ <div class="actions"><button type="button" id="startCapstone" class="primary">Start 24-question review</button><button type="button" id="exportFullProgress">Export all local self-study results</button></div>
+ <form id="capstoneForm" hidden>
+  <div id="capstoneQuestions"></div>
+  <div class="actions"><button type="submit" class="primary" id="submitCapstone">Check 24 answers</button><button type="button" id="cancelCapstone">Close review</button></div>
+ </form>
+ <div id="capstoneFeedback" class="feedback" role="status" aria-live="polite">No cumulative review completed on this device.</div>
+ <details id="capstoneExplanations" hidden><summary>Review answer explanations</summary><ol id="capstoneAnswerList"></ol></details>
+ <div class="completion-celebration" id="completionCelebration" hidden aria-live="polite"><span aria-hidden="true">🎉</span><strong>All Academy self-study practice milestones reached!</strong><p>This is a personal, unverified study milestone on this device, not a qualification or official certificate.</p></div>
+</section>
 <footer>Independent Academy draft coursebook. Not an approved syllabus, pilot licence, examination record, verified instructor assessment or operational flight reference. FAA handbook links are independent source pointers, not endorsement or qualification equivalence.</footer></main></body></html>

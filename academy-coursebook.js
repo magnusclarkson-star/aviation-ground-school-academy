@@ -81,6 +81,7 @@ function select(nextId){
  $("studyActivity").textContent=m.activity;$("reference").href=m.reference;
  const order=M.routes[route],index=order.indexOf(id);
  $("previousModule").disabled=index===0;$("followingModule").disabled=index===order.length-1;
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-module",{detail:{moduleId:id,route}}));
 }
 function submit(e){
  e.preventDefault();if(completed)return;
@@ -103,6 +104,7 @@ function submit(e){
   list.appendChild(li);
  });
  renderList();progress();
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-core-checked"));
 }
 function download(){
  const doc={schema:"agsa.coursebook.study-practice.v1",status:"UNVERIFIED_BROWSER_ONLY",revision:M.REVISION,pathway:route,exportedAt:new Date().toISOString(),attempts:M.clean(history),warning:"Editable learner-local practice only. No verified student, instructor approval, certification, school credit or licence."};
@@ -123,6 +125,7 @@ $("clearRecord").addEventListener("click",()=>{
  if(!window.confirm("Clear coursebook practice results stored on this device?"))return;
  history=[];try{storage?.removeItem(KEY)}catch{}
  renderList();renderQuiz();progress();
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-cleared"));
 });
 $("readAloud").addEventListener("click",()=>{
  if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){$("quizResult").textContent="Your device does not support speech playback.";return}
