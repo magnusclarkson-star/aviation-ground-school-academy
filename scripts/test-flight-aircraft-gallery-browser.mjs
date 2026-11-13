@@ -48,13 +48,12 @@ try{
  assert.equal(await desktop.locator("#cockpitAircraftGallery").isVisible(),false);
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),true);
  assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),"Cessna 172");
- // Hosted, licensed 360° aircraft own their touch rotation controls.
- // The old native auto-spin button must be disabled, not clicked.
- assert.equal(await desktop.locator("#aircraftInspectSpin").isDisabled(),true);
- assert.equal(await desktop.locator("#aircraftInspectTexturedTitle").textContent(),"Cessna 172SP");
- assert.equal(await desktop.locator("#aircraftInspectTexturedSource").getAttribute("href"),
-  "https://sketchfab.com/3d-models/free-cessna-172sp-be55bf96a63b41fdb953b6829ff0d4bf");
- // The Su-37 remains native WebGL and must retain manual/auto orbit controls.
+ // The approved C172 uses the Academy's local native 360° viewer,
+ // not the briefly substituted hosted model. Its orbit controls remain ours.
+ assert.equal(await desktop.locator("#aircraftInspectSpin").isEnabled(),true);
+ assert.equal(await desktop.locator("#aircraftInspectSuperHornet").isVisible(),false);
+ assert.equal(await desktop.locator("#aircraftInspectSuperHornetFrame").getAttribute("src"),null);
+ // The Su-37 also retains manual/auto orbit controls.
  await desktop.locator("#aircraftInspectClose").click();
  await desktop.locator("#cockpitAircraftSelect").selectOption("su37");
  await desktop.locator("#cockpitAircraftPhotoButton").click();
