@@ -4,6 +4,8 @@ on:
     paths:
       - 'academy-secure/**'
       - 'docs/SLCAA-ATO-CERTIFICATION-DOSSIER.md'
+      - 'docs/SLCAA-PREAPPLICATION-INQUIRY-DRAFT.md'
+      - 'standards-readiness.html'
       - '.github/workflows/ato-foundation.yml'
   push:
     branches: [main]
