@@ -2,7 +2,8 @@
 // No regulator approval is inferred from public self-study marks.
 import http from "node:http";
 import {readFile} from "node:fs/promises";
-import {Pool} from "pg";
+import pg from "pg";
+const {Pool}=pg;
 import {randomUUID,randomBytes} from "node:crypto";
 import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEmail,cookieToken,sessionCookie,clearSessionCookie,checkOrigin,SESSION_HOURS} from "./auth.mjs";
 import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,canRecordApprovedTraining,canRecordOfficialExam,canIssueApprovedCourseCompletion} from "./policy.mjs";
