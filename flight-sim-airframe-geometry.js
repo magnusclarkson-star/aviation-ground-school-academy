@@ -623,14 +623,71 @@ function addFA18(m){
  for(const sign of [-1,1])
   sheet(m,[[sign*.97,.32,-4.42],[sign*1.46,2.54,-5.80],
    [sign*1.68,2.06,-6.66],[sign*1.12,.34,-6.94]],edge,.105);
- // One pair of nacelles and one set of round exhausts. Do not add a
- // second nozzle layer after the engine() builder's original exhaust rims.
- for(const x of [-.82,.82])engine(m,x,-5.74,.70,palette.dark);
- // Dorsal spine and canopy at the forward pilot station.
+ // Two separate afterburner nacelles: one core each; the original
+ // engine() creates exactly one nozzle ring, never overlay a second hull.
+ for(const x of [-.82,.82]){
+  engine(m,x,-5.74,.70,palette.dark);
+  // Alternating metal petal seams at each exhaust's aft lip.
+  const exhaustZ=-5.74-1.64,hubY=-.12,ringRadius=.70*.63;
+  for(let j=0;j<12;j++){
+   const angle=j*Math.PI/6;
+   const dx=Math.cos(angle)*ringRadius,dy=Math.sin(angle)*ringRadius;
+   curvedTube(m,[[x+dx,hubY+dy,exhaustZ-.05],
+    [x+dx*.92,hubY+dy*.92,exhaustZ+.13]],
+    .008,j%2?palette.metal:trim,5);
+  }
+  // Shallow dorsal fairing on the aft nacelle, not a second engine.
+  sheet(m,[[x-.42,.48,-4.52],[x+.42,.48,-4.52],
+   [x+.30,.48,-6.28],[x-.30,.48,-6.28]],tint(skin,.79),.015);
+ }
+ // Dorsal spine and more recognizable Super Hornet windscreen shape.
+ // Distinct two-piece front glazing, aft bow, frames and centre sill.
+ // All are fitted to the SAME fuselage; no generic-aircraft overlay.
  canopy(m,1.10,4.52,.69,.49,.76,palette.window);
+ for(const sign of [-1,1]){
+  const side=(z,x,y)=>[sign*x,y,z];
+  // Three longitudinal canopy sills, tapered toward the nose.
+  curvedTube(m,[side(1.12,.57,.77),side(1.60,.71,.89),
+   side(2.65,.68,.93),side(3.76,.42,.90),
+   side(4.47,.11,.79)],.026,trim,6);
+  // Narrow windscreen post blended into upper rim.
+  curvedTube(m,[side(3.65,.41,1.03),side(3.90,.31,1.12),
+   side(4.43,.10,.84)],.024,tint(palette.dark,1.09),6);
+ }
+ curvedTube(m,[[0,1.23,1.18],[0,1.26,2.75],
+  [0,1.19,3.70],[0,.88,4.43]],.019,trim,7);
+ // Aft canopy frame and the single centre dorsal spine.
+ curvedTube(m,[[-.52,.99,1.23],[0,1.22,1.16],
+  [.52,.99,1.23]],.037,trim,8);
  sheet(m,[[-.10,1.20,1.10],[-.08,1.38,3.30],
   [-.08,1.20,4.50],[-.10,1.13,1.10]],palette.dark,.04);
  m.box(-.14,.77,-3.72,.28,.12,4.12,trim);
+ // Symmetrical upper LEX vents, access panels and root fairings, all
+ // flush to the existing aircraft; they do not extend beyond its outline.
+ for(const sign of [-1,1]){
+  const plate=(coordinates,color,depth=.013)=>sheet(m,
+   coordinates.map(([x,y,z])=>[sign*x,y,z]),color,depth);
+  plate([[.87,.77,1.15],[1.13,.56,1.60],[1.41,.40,2.40],
+   [1.03,.58,2.02]],tint(skin,.84));
+  plate([[1.14,.39,.86],[1.68,.37,.78],[2.19,.36,.03],
+   [1.42,.38,.17]],tint(skin,.95));
+  // Intake louvres are inset, avoiding detached external rectangles.
+  for(let j=0;j<4;j++){
+   const z=.56-j*.16;
+   curvedTube(m,[[sign*1.24,.41,z],[sign*1.55,.39,z-.07]],
+    .009,tint(palette.dark,1.15),5);
+  }
+ }
+ // Low-profile wing root access panels and hinges.
+ for(const sign of [-1,1]){
+  const wingPanel=(z1,z2,x1,x2)=>sheet(m,[
+   [sign*x1,.402,z1],[sign*x2,.401,z1-.10],
+   [sign*x2,.401,z2],[sign*x1,.402,z2+.05]
+  ],tint(skin,.93),.009);
+  wingPanel(-.92,-1.48,2.10,2.65);
+  wingPanel(-1.88,-2.35,2.33,3.12);
+  wingPanel(-2.95,-3.25,2.75,3.51);
+ }
  // Two shoulder intakes, recessed mouths and their boundary lips.
  for(const sign of [-1,1]){
   sheet(m,[[sign*1.14,-.12,1.22],[sign*1.66,-.12,.91],

@@ -73,6 +73,20 @@ metallic/roughness PBR shader or a substitute for downloadable
 high-resolution aircraft texture maps. Device-level WebGL testing is still
 needed to validate appearance and frame rate.
 
+## Super Hornet native hull refinement
+
+The F/A-18E's native flying aircraft now has a more developed single
+procedural airframe: tapered canopy/windscreen framing, flush wing-root and
+LEX access panels, intake louvres, and individually detailed nozzle petal
+seams. These additions use the existing airframe coordinates and **do not
+layer a second old generic fighter on top**. Landing gear, active control
+surfaces, cockpit modes and flight dynamics are unchanged.
+
+The original model is still **procedural**, not the high-polygon
+Sketchfab model shown in Exterior 360°. Visual and device-level checks
+are still necessary before treating the native flying aircraft as a
+photorealistic replacement.
+
 ## Limitations
 
 On phones without WebGL2, the legacy 2D preview is used and does not have
