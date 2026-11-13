@@ -12,7 +12,7 @@ const completion={name:"Academic Test Learner",serial,verifiedAcademicRecord:tru
 test("formal and student-track PDF templates are structured A4 pages",async()=>{
  for(const style of Object.keys(STYLES)){
   const bytes=await renderCourseCertificate(completion,{style,options:{showSeal:true,showSignature:false}});
-  assert.match(Buffer.from(bytes).subarray(0,8).toString(),"PDF-1.");
+  assert.match(Buffer.from(bytes).subarray(0,8).toString(),/%PDF-1/);
   const doc=await PDFDocument.load(bytes);
   assert.equal(doc.getPageCount(),1);
   assert.ok(bytes.length>2000);
@@ -21,7 +21,7 @@ test("formal and student-track PDF templates are structured A4 pages",async()=>{
  }
 });
 test("formal documents cannot be generated from self-study scores or fake serials",async()=>{
- await assert.rejects(()=>renderCourseCertificate({...completion,serial:"FAKE-123"}),/completion reference/);
+ await assert.rejects(()=>renderCourseCertificate({...completion,serial:"FAKE-123"}),/course completion/);
  await assert.rejects(()=>renderCourseCertificate({...completion,verifiedAcademicRecord:false}),/completion/);
  await assert.rejects(()=>renderCourseCertificate(completion,{options:{showSignature:true}}),/signature image/);
  assert.throws(()=>validateOptions({showQrVerification:true}),/registry/);
