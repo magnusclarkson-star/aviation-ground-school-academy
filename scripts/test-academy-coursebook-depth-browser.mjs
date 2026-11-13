@@ -46,6 +46,7 @@ try{
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
  assert.equal(await desktop.locator(".related-original-pictures").count(),1);
  await desktop.locator(".related-original-pictures>summary").click();
+ await desktop.locator(".related-original-card").first().waitFor({state:"visible"});
  assert.ok(await desktop.locator(".related-original-card").count()>=2,"Other previously shown visual panels must appear inside the lesson");
 
  assert.match(await desktop.locator(".approved-visual-heading h4").first().textContent(),/original illustrated aviation/i);
@@ -139,6 +140,7 @@ try{
  assert.equal(await phone.locator("#lessonReading .approved-visual-figure").count(),1);
  assert.equal(await phone.locator(".related-original-pictures").count(),1);
  await phone.locator(".related-original-pictures>summary").tap();
+ await phone.locator(".related-original-card").first().waitFor({state:"visible"});
  assert.ok(await phone.locator(".related-original-card").count()>=2,"Phone needs other original pictures for this subject");
 
  assert.match(await phone.locator(".approved-visual-heading h4").first().textContent(),/helicopter/i);
