@@ -330,7 +330,7 @@ test("private ATO roles, verified-source gates and independent completion record
    assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
    const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
    assert.equal(example.status,200,audience+" preview failed");
-   assert.match(example.headers.get("content-type"),/application\\/pdf/);
+   assert.ok(example.headers.get("content-type")?.includes("application/pdf"));
    assert.match(example.headers.get("content-disposition"),/inline/);
    const pdf=Buffer.from(await example.arrayBuffer());
    assert.equal(pdf.subarray(0,5).toString(),"%PDF-");
