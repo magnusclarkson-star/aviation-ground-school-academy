@@ -29,7 +29,8 @@ const publicAircraftFiles=[
  "assets/aircraft/typhoon-fg-exterior.json",
  "assets/aircraft/TYPHOON-ATTRIBUTION.md"
 ];
-const publicCuratedPaths=["accreditation/readiness-register.json",
+const publicCuratedPaths=["academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",
+ "accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
