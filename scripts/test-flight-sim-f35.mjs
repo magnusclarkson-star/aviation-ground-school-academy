@@ -28,9 +28,9 @@ for(const x of ["leftFlap","rightFlap","leftAileron","rightAileron",
 assert.ok([...animated.values()].every(x=>x.partPivot.every(Number.isFinite)));
 // Genuine imported wheels and struts follow the same flight-system gear
 // command as the other three fighters; no procedural overlay is required.
-const gearParts=model.primitives.filter(p=>
- p.partName==="noseGear"||p.partName==="mainGearLeft"||
- p.partName==="mainGearRight");
+const gearParts=model.primitives.filter(p=>p.partAxis===4&&
+ (p.partName==="noseGear"||p.partName==="mainGearLeft"||
+ p.partName==="mainGearRight"));
 assert.ok(gearParts.length>=14,
  "all original F35 gear assemblies must be independently animated");
 for(const name of ["noseGear","mainGearLeft","mainGearRight"]){
@@ -41,6 +41,23 @@ assert.ok(gearParts.every(p=>p.partAxis===4&&
  p.partPivot.every(Number.isFinite)),
  "imported gear must use folding hinge mode and finite lower-belly pivots");
 
+// Original F-35B nose and main-bay doors must rotate with source gear.
+const actualDoors=model.primitives.filter(p=>p.partAxis===3&&
+ p.gearDoorSide!==0);
+const doorNames=["doorFL","doorFR","doorB1L","doorB1R","doorB2L","doorB2R"];
+assert.equal(actualDoors.length,6,"use six genuine source bay-door assemblies");
+assert.deepEqual(actualDoors.map(p=>p.sourceName).sort(),doorNames.sort());
+for(const panel of actualDoors){
+ assert.ok(panel.partPivot.every(Number.isFinite));
+ assert.equal(panel.partName,panel.sourceName.startsWith("doorF")?"noseGear":
+  panel.sourceName.endsWith("L")?"mainGearLeft":"mainGearRight");
+ assert.equal(panel.gearDoorSide,panel.sourceName.endsWith("L")?-1:1);
+ assert.ok(panel.positions.length>=100,"retain source door triangles");
+}
+const Exterior=require("../flight-sim-airframe-geometry.js");
+const Three=require("../flight-sim-3d.js");
+assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"f35"),null,
+ "never overlay second rectangular doors on the F-35B source");
 assert.ok(model.primitives.some(x=>x.sourceName==="canopy"&&x.opacity<.6),
  "source canopy must be translucent, not a solid opaque block");
 // Imported Gear.ac struts must never break through the F-35B upper skin.
