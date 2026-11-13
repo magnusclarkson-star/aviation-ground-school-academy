@@ -156,4 +156,79 @@ DROP TRIGGER IF EXISTS academy_stage_immutable ON academy_training_stages;
 CREATE TRIGGER academy_stage_immutable BEFORE UPDATE OR DELETE ON academy_training_stages FOR EACH ROW EXECUTE FUNCTION academy_block_training_mutation();
 DROP TRIGGER IF EXISTS academy_exam_immutable ON academy_assessment_records;
 CREATE TRIGGER academy_exam_immutable BEFORE UPDATE OR DELETE ON academy_assessment_records FOR EACH ROW EXECUTE FUNCTION academy_block_training_mutation();
+-- Fee and scholarship administration belongs only to the accountable manager.
+-- Money is represented in integer hundredths of the selected currency.
+-- This schema records ADMINISTRATIVE access, not regulator-approved training credit.
+CREATE TABLE IF NOT EXISTS academy_fee_plans (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ course_id text NOT NULL REFERENCES academy_courses(id),
+ country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}
+),
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ billing_period text NOT NULL CHECK(billing_period IN ('ONE_TIME','MONTHLY','QUARTERLY','YEARLY')),
+ amount_minor bigint NOT NULL CHECK(amount_minor BETWEEN 0 AND 100000000000),
+ status text NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','ARCHIVED')),
+ created_by uuid NOT NULL REFERENCES academy_users(id),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ archived_at timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS fee_current_plan_idx ON academy_fee_plans(course_id,country_code,currency,billing_period)
+ WHERE status='ACTIVE';
+CREATE TABLE IF NOT EXISTS academy_access_grants (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ student_id uuid NOT NULL REFERENCES academy_users(id),
+ course_id text NOT NULL REFERENCES academy_courses(id),
+ fee_plan_id uuid NOT NULL REFERENCES academy_fee_plans(id),
+ grant_type text NOT NULL CHECK(grant_type IN ('PAID','SCHOLARSHIP','WAIVER','PROMOTION','FREE')),
+ discount_bps integer NOT NULL CHECK(discount_bps BETWEEN 0 AND 10000),
+ gross_minor bigint NOT NULL CHECK(gross_minor BETWEEN 0 AND 100000000000),
+ discount_minor bigint NOT NULL CHECK(discount_minor>=0 AND discount_minor<=gross_minor),
+ payable_minor bigint NOT NULL CHECK(payable_minor=gross_minor-discount_minor),
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ country_code char(2) NOT NULL,
+ billing_period text NOT NULL CHECK(billing_period IN ('ONE_TIME','MONTHLY','QUARTERLY','YEARLY')),
+ status text NOT NULL CHECK(status IN ('ACTIVE','PENDING_PAYMENT','REVOKED','EXPIRED')),
+ reason text NOT NULL CHECK(length(reason) BETWEEN 8 AND 1000),
+ awarded_by uuid NOT NULL REFERENCES academy_users(id),
+ awarded_at timestamptz NOT NULL DEFAULT now(),
+ starts_at timestamptz NOT NULL DEFAULT now(),
+ expires_at timestamptz,
+ activated_at timestamptz,
+ revoked_by uuid REFERENCES academy_users(id),
+ revoked_at timestamptz,
+ revoked_reason text,
+ CHECK (expires_at IS NULL OR expires_at>starts_at),
+ CHECK (status<>'ACTIVE' OR (activated_at IS NOT NULL AND payable_minor>=0)),
+ CHECK (status<>'REVOKED' OR (revoked_by IS NOT NULL AND revoked_at IS NOT NULL AND length(revoked_reason)>=8)),
+ CHECK ((grant_type<>'PAID' OR discount_bps=0) AND
+       (grant_type<>'WAIVER' OR discount_bps=10000) AND
+       (grant_type<>'FREE' OR (discount_bps=10000 AND gross_minor=0)) AND
+       (grant_type NOT IN ('SCHOLARSHIP','PROMOTION') OR discount_bps>0))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS active_student_course_grant_idx
+ ON academy_access_grants(student_id,course_id) WHERE status IN ('ACTIVE','PENDING_PAYMENT');
+CREATE INDEX IF NOT EXISTS access_student_course_idx ON academy_access_grants(student_id,course_id,awarded_at DESC);
+CREATE TABLE IF NOT EXISTS academy_manual_payment_attestations (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ grant_id uuid NOT NULL UNIQUE REFERENCES academy_access_grants(id),
+ amount_minor bigint NOT NULL CHECK(amount_minor>0),
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ reference text NOT NULL CHECK(length(reference) BETWEEN 6 AND 250),
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
+),
+ notes text NOT NULL CHECK(length(notes) BETWEEN 12 AND 1000),
+ attested_by uuid NOT NULL REFERENCES academy_users(id),
+ attested_at timestamptz NOT NULL DEFAULT now()
+);
+-- Money evidence and grant award history cannot be rewritten, even when access
+-- changes. Revocation is a separate, auditable transition, not a deletion.
+CREATE OR REPLACE FUNCTION academy_protect_fee_history() RETURNS trigger LANGUAGE plpgsql AS $fee_history$
+BEGIN
+ RAISE EXCEPTION 'fee plans and manual payment attestation history cannot be deleted or rewritten';
+END;
+$fee_history$;
+DROP TRIGGER IF EXISTS academy_payment_immutable ON academy_manual_payment_attestations;
+CREATE TRIGGER academy_payment_immutable BEFORE UPDATE OR DELETE ON academy_manual_payment_attestations
+ FOR EACH ROW EXECUTE FUNCTION academy_protect_fee_history();
+
 COMMIT;
