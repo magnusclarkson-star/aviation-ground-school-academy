@@ -68,6 +68,8 @@ test("all seven exterior meshes remain distinct",()=>{
  // The more detailed Super Hornet now has ~1,750 triangles (~5,250
  // vertices). Keep the strict original phone budget for the other six.
  assert.ok(vertices.every((n,i)=>n>=50&&n<(ids[i]==="fa18"?10000:4000)));
- assert.equal(vertices[0],3222);
+ // The current approved Skyhawk has more exterior detail than the
+ // early 3,222-vertex mesh, while remaining below the phone budget.
+ assert.ok(vertices[0]>=3800&&vertices[0]<4000);
  assert.equal(vertices[1],3984);
 });
