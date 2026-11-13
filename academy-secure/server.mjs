@@ -208,6 +208,31 @@ async function handle(req,res){
    });
    send(res,200,{evidence:doc,warning:"Internal attestation; not an online verification with SLCAA"});return;
   }
+  const revoke=/^\\/api\\/authority\\/evidence\\/([0-9a-f-]{36})\\/revoke$/.exec(pathname);
+  if(method==="POST"&&revoke){
+   requireRole(actor,"verify_evidence");const body=await json(req),why=requiredString(body,"reason",20,1500);
+   const result=await transaction(async db=>{
+    const {rows}=await db.query(`UPDATE academy_authority_evidence SET status='REVOKED',review_notes=$1
+     WHERE id=$2 AND status='VERIFIED' RETURNING id,type,scope,status`,[why,revoke[1]]);
+    if(!rows[0])fail(409,"No active verified evidence to revoke");
+    await audit(db,actor.id,"EVIDENCE_REVOKED","AUTHORITY_EVIDENCE",rows[0].id,{reason:why});
+    return rows[0];
+   });
+   send(res,200,{evidence:result,trainingRightsReevaluatedImmediately:true});return;
+  }
+  const disable=/^\\/api\\/admin\\/users\\/([0-9a-f-]{36})\\/disable$/.exec(pathname);
+  if(method==="POST"&&disable){
+   if(actor.role!=="accountable_manager"||actor.id===disable[1])fail(403,"Separate accountable manager required");
+   const body=await json(req),reason=requiredString(body,"reason",20,1500);
+   await transaction(async db=>{
+    const {rows}=await db.query(`UPDATE academy_users SET active=false,disabled_at=now()
+     WHERE id=$1 AND active=true RETURNING id,role`,[disable[1]]);
+    if(!rows[0])fail(409,"User already disabled or not found");
+    await db.query("UPDATE academy_sessions SET revoked_at=now() WHERE user_id=$1 AND revoked_at IS NULL",[disable[1]]);
+    await audit(db,actor.id,"ACCOUNT_DISABLED","USER",disable[1],{reason,role:rows[0].role});
+   });
+   send(res,200,{disabled:true,sessionsRevoked:true});return;
+  }
   if(method==="GET"&&pathname==="/api/authority/register"){
    if(!["quality_manager","head_of_training","accountable_manager"].includes(actor.role))fail(403,"Staff only");
    const {rows}=await pool.query(`SELECT id,type,scope,reference,effective_from,effective_until,status,submitted_at,verified_at FROM academy_authority_evidence ORDER BY submitted_at DESC LIMIT 300`);
@@ -356,5 +381,10 @@ async function handle(req,res){
  }
 }
 const server=http.createServer((req,res)=>{void handle(req,res)});
+server.requestTimeout=15000;
+server.headersTimeout=8000;
+server.maxRequestsPerSocket=100;
+pool.on("error",error=>console.error("PostgreSQL idle connection failure",error?.code||error?.name||"unknown"));
+
 server.listen(httpPort,process.env.HOST||"127.0.0.1",()=>console.log("Academy private ATO service listening on "+httpPort+"; no regulator approval asserted."));
 process.on("SIGTERM",()=>{server.close(()=>{void pool.end()})});
