@@ -115,6 +115,7 @@ function checkCapstone(e){
  result.feedback.forEach((x,i)=>list.appendChild(text("li",(i+1)+". "+(x.correct?"Correct. ":"Review. ")+"Subject: "+x.moduleId+". Preferred answer: "+x.answer+". "+x.explanation)));
  $("capstoneExplanations").hidden=false;
  summary();
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-capstone-checked"));
 }
 function exportAll(){
  const doc=D.exportSummary(coreHistory(),deepHistory,finalHistory,route);
