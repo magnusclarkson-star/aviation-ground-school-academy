@@ -74,13 +74,26 @@ function render(id){
  if(dialog.open)dialog.close();
  reading.querySelectorAll(".academy-reference-photo").forEach(el=>el.remove());
  const articles=reading.querySelectorAll("article");
- unit.forEach(item=>{
-  const article=articles[item.section];if(!article)return;
+ const deeper=document.getElementById("deepReading");
+ if(deeper)deeper.querySelectorAll(".academy-reference-photo,.academy-photo-deep-link").forEach(el=>el.remove());
+ unit.forEach((item,i)=>{
   const panel=figureFor(item);
+  // The primary high-quality visual sits beside the core explanation. The
+  // second photograph, when available, belongs in the extended lesson rather
+  // than crowding the introductory reading with two tall reference plates.
+  const deepLesson=deeper?.querySelector(".deep-lesson");
+  if(i===1&&deepLesson){deepLesson.appendChild(panel);return}
+  const article=articles[item.section];if(!article)return;
   const concept=article.querySelector(".lesson-pictorial");
   if(concept)article.insertBefore(panel,concept);
   else article.appendChild(panel);
  });
+ if(deeper?.querySelector(".deep-lesson")&&unit.length===1){
+  const link=make("button","Review the photographic reference: "+unit[0].title);
+  link.type="button";link.className="academy-photo-deep-link";
+  link.addEventListener("click",()=>reading.querySelector(".academy-reference-photo")?.scrollIntoView({behavior:"smooth",block:"center"}));
+  deeper.querySelector(".deep-lesson").appendChild(link);
+ }
  const index=document.getElementById("photoReferenceCount");
  if(index)index.textContent=unit.length+" detailed image reference"+(unit.length===1?"":"s")+
   " + original labelled concept diagram";
