@@ -42,7 +42,7 @@ assert.equal((gallery.match(/class="gallery-original-link"/g)||[]).length,4);
 assert.ok(gallery.includes('id="atlasItems"'));
 assert.ok(gallery.includes('id="atlasFilters"'));
 const viewer=fs.readFileSync(new URL("../academy-original-picture-atlas-ui.js",import.meta.url),"utf8");
-for(const token of ["ctx","sourceCache","drawImage","showModal","aria-label","all 33","panel-"]){
+for(const token of ["ctx","sourceCache","drawImage","showModal","aria-label","atlas.items","panel-"]){
  if(token==="ctx")assert.ok(viewer.includes("context.drawImage"));
  else if(token==="all 33")assert.ok(viewer.includes("All 33 picture details")||viewer.includes("33 picture details"));
  else assert.ok(viewer.includes(token),"Panel viewer missing "+token);
