@@ -322,6 +322,25 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/admin/documents/layouts","POST",{
    audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
   },admin)).status,400,"Unverified QR codes must stay disabled");
+  // Originals must be the exact chosen PNGs. No silent fallback to generic art.
+  const masterStatus=await call("/api/admin/certificate-master/status","GET",undefined,admin);
+  assert.equal(masterStatus.status,200);
+  assert.equal(masterStatus.body.allInstalled,false);
+  assert.equal(masterStatus.body.originalMasters.length,3);
+  assert.equal((await call("/api/admin/certificate-master/status","GET",undefined,student)).status,403);
+  const fakeImage=Buffer.alloc(70000);
+  Buffer.from([137,80,78,71,13,10,26,10]).copy(fakeImage,0);
+  fakeImage.write("IHDR",12,"ascii");
+  fakeImage.writeUInt32BE(1491,16);
+  fakeImage.writeUInt32BE(1055,20);
+  const deniedUpload=await fetch(ORIGIN+"/api/admin/certificate-master/FORMAL_TRADITIONAL",{
+   method:"POST",headers:{Origin:ORIGIN,Cookie:student,"Content-Type":"image/png"},body:fakeImage
+  });
+  assert.equal(deniedUpload.status,403);
+  const substituted=await fetch(ORIGIN+"/api/admin/certificate-master/FORMAL_TRADITIONAL",{
+   method:"POST",headers:{Origin:ORIGIN,Cookie:admin,"Content-Type":"image/png"},body:fakeImage
+  });
+  assert.equal(substituted.status,422,"Image modifications or alternative designs must be rejected");
   // Preview PDFs are sample-only, owner-restricted, and carry no student data
   // or actual encrypted signature even when the owner has enabled signature use.
   for(const audience of ["FORMAL","SCOUT","ENTHUSIAST","TRANSCRIPT"]){
@@ -329,7 +348,9 @@ test("private ATO roles, verified-source gates and independent completion record
    const denied=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:student}});
    assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
    const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
-   assert.equal(example.status,200,audience+" preview failed");
+   assert.equal(example.status,audience==="TRANSCRIPT"?200:409,
+    audience+" preview must refuse absent original artwork");
+   if(audience!=="TRANSCRIPT")continue;
    assert.ok(example.headers.get("content-type")?.includes("application/pdf"));
    assert.match(example.headers.get("content-disposition"),/inline/);
    const pdf=Buffer.from(await example.arrayBuffer());
@@ -339,16 +360,13 @@ test("private ATO roles, verified-source gates and independent completion record
   const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(pdfResponse.status,200);
-  assert.match(pdfResponse.headers.get("content-type"),/application\/pdf/);
-  assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  assert.equal(pdfResponse.status,409,"Formal certificate must be blocked until original artwork is installed");
+
   const printCertificate=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(printCertificate.status,200);
-  assert.ok(printCertificate.headers.get("content-disposition")?.startsWith("inline"),
-   "Inline print path must open an existing issued PDF in the browser");
-  assert.equal(Buffer.from(await printCertificate.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  assert.equal(printCertificate.status,409,"Printing requires the original certificate image");
+
   const forbiddenPrint=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
    headers:{Origin:ORIGIN,Cookie:head}
   });
