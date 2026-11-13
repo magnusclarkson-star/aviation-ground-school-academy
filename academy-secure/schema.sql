@@ -316,6 +316,21 @@ CREATE TRIGGER academy_document_payment_immutable
  BEFORE UPDATE OR DELETE ON academy_document_manual_settlements
  FOR EACH ROW EXECUTE FUNCTION academy_protect_fee_history();
 
+CREATE TABLE IF NOT EXISTS academy_document_layouts (
+ id text PRIMARY KEY CHECK(id IN ('FORMAL','SCOUT','ENTHUSIAST','TRANSCRIPT')),
+ style text NOT NULL CHECK(style IN ('FORMAL_TRADITIONAL','SCOUT_MODERN','ENTHUSIAST_NAVY_GOLD')),
+ enabled boolean NOT NULL DEFAULT false,
+ options jsonb NOT NULL DEFAULT '{}'::jsonb CHECK(jsonb_typeof(options)='object'),
+ changed_by uuid NOT NULL REFERENCES academy_users(id),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS academy_course_certificate_templates (
+ course_id text PRIMARY KEY REFERENCES academy_courses(id),
+ audience text NOT NULL CHECK(audience IN ('FORMAL','SCOUT','ENTHUSIAST')),
+ changed_by uuid NOT NULL REFERENCES academy_users(id),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 COMMIT;
 ),
  currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
