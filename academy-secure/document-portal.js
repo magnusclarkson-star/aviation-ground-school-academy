@@ -112,6 +112,13 @@ async function reloadStudent(){
    link.textContent="  Download printable PDF";
    link.style.marginLeft="12px";link.rel="nofollow";
    row.appendChild(link);
+   const printable=document.createElement("a");
+   printable.href="/api/my/documents/"+encodeURIComponent(grant.id)+"/print";
+   printable.target="_blank";
+   printable.rel="noopener noreferrer nofollow";
+   printable.textContent="  Open for printing";
+   printable.style.marginLeft="12px";
+   row.appendChild(printable);
   }
   list.appendChild(row);
  }
