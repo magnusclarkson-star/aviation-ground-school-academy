@@ -72,7 +72,7 @@ for(const [asset,minBytes] of [
  const details=await stat(path.join(output,asset));
  if(!details.isFile()||details.size<minBytes)throw Error("Missing imported aircraft asset: "+asset);
 }
-for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","flight-sim.html"]){
+for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","flight-sim.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
 }
 for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
