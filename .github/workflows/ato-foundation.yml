@@ -36,6 +36,9 @@ jobs:
       - run: node --check academy-secure/signature-routes.mjs
       - run: node --check academy-secure/signature-portal.js
       - run: node --check academy-secure/document-pdf.mjs
+      - run: node --check academy-certificate-core.mjs
+      - run: node --check academy-certificate-eligibility.mjs
+      - run: node --check academy-certificate-ui.mjs
       - run: node --check academy-secure/document-routes.mjs
       - run: node --check academy-secure/document-portal.js
       - run: node --check academy-secure/transcript-pdf.mjs
