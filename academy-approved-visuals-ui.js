@@ -68,10 +68,49 @@ function figure(item){
  frame.append(head,button,caption,note);
  return frame;
 }
+/* All related picture details remain original source-pixel crops, drawn only
+ * when a learner opens this compact panel. No replacement imagery is fetched.
+ */
+function earlierPicturesForModule(moduleId){
+ const atlas=root.AGSAOriginalPictureAtlas;
+ const refs=atlas?.byModule(moduleId)||[];
+ if(!refs.length)return null;
+ const wrap=make("details");wrap.className="related-original-pictures";
+ const summary=make("summary","See all "+refs.length+" earlier picture details for this lesson");
+ const box=make("div");box.className="related-original-grid";
+ let drawn=false;
+ function render(){
+  if(drawn)return;drawn=true;
+  for(const item of refs){
+   const card=make("figure");card.className="related-original-card";
+   const heading=make("figcaption",item.title);
+   const link=make("a");link.className="related-original-link";
+   link.href="academy-approved-visual-gallery.html?group="+encodeURIComponent(item.group)+"#panel-"+encodeURIComponent(item.id);
+   link.setAttribute("aria-label","Open larger original panel: "+item.title);
+   const canvas=make("canvas");canvas.width=360;canvas.height=Math.round(360*item.rect[3]/item.rect[2]);
+   canvas.setAttribute("role","img");canvas.setAttribute("aria-label",item.alt);
+   const caption=make("span","View original picture in gallery");caption.className="related-original-cue";
+   link.append(canvas,caption);
+   card.append(link,heading);box.appendChild(card);
+   const image=new Image();image.decoding="async";
+   image.onload=()=>{
+    const ctx=canvas.getContext("2d");
+    if(!ctx)return;
+    ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(image,...item.rect,0,0,canvas.width,canvas.height);
+   };
+   image.onerror=()=>{caption.textContent="Picture unavailable — open gallery to inspect original";canvas.hidden=true};
+   image.src=item.src;
+  }
+ }
+ wrap.addEventListener("toggle",()=>{if(wrap.open)render()});
+ wrap.append(summary,box);
+ return wrap;
+}
 function showModule(id){
  const area=document.getElementById("lessonReading"),item=catalogue.getModule(id);
  if(!area||!item)return;
- area.querySelectorAll(".approved-visual-figure").forEach(x=>x.remove());
+ area.querySelectorAll(".approved-visual-figure,.related-original-pictures").forEach(x=>x.remove());
  const articles=area.querySelectorAll("article");
  if(!articles.length)return;
  const target=articles[0];
@@ -80,8 +119,10 @@ function showModule(id){
  const concept=target.querySelector(".lesson-pictorial");
  if(concept)target.insertBefore(image,concept);
  else target.appendChild(image);
+ const related=earlierPicturesForModule(id);
+ if(related)image.after(related);
  const count=document.getElementById("photoReferenceCount");
- if(count)count.textContent="Original illustration from the pictures previously shown to you · tap to enlarge. Accompanying labelled schematic remains below.";
+ if(count)count.textContent="Original featured illustration plus "+(root.AGSAOriginalPictureAtlas?.byModule(id).length||0)+" previously shown supporting pictorials. Open the gallery or the expandable collection under this lesson.";
 }
 root.AGSACoursebookApprovedFigure=Object.freeze({figure,expand});
 document.addEventListener("agsa:coursebook-module",event=>{

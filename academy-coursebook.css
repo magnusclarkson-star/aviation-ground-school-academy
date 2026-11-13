@@ -111,3 +111,17 @@
 .approved-visual-lightbox button{background:#13546f;border-color:#13546f;color:white;min-height:44px}
 @media(max-width:540px){.approved-visual-heading{padding:10px 11px}.approved-visual-heading h4{font-size:15px}.approved-visual-figure figcaption{padding:10px 11px 2px;font-size:12px}.approved-picture-source{padding:6px 11px 11px}.approved-visual-lightbox{padding:10px;border-radius:10px}}
 @media print{.approved-visual-figure{break-inside:avoid;box-shadow:none;background:#fff}.approved-picture-hint{display:none}.approved-cropped-picture,.approved-full-picture{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+
+/* The full original visual archive is available in a compact expandable panel. */
+.related-original-pictures{margin:14px 0;padding:13px;background:#123247;border:1px solid #598da3;border-radius:12px}
+.related-original-pictures>summary{font-size:14px;line-height:1.5;font-weight:800;color:#b9edf5;cursor:pointer}
+.related-original-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-top:13px}
+.related-original-card{background:#edf5f8;border:1px solid #a4bdca;border-radius:10px;padding:9px;margin:0;min-width:0}
+.related-original-card figcaption{font-size:12px;line-height:1.5;color:#214358;font-weight:730;margin-top:7px}
+.related-original-link{display:block;text-decoration:none;border-radius:7px;overflow:hidden;background:white}
+.related-original-link canvas{width:100%;height:auto;display:block}
+.related-original-cue{display:block;padding:7px 9px;background:#deedf4;color:#1c546d;font-size:11px;font-weight:800;text-align:center}
+.related-original-link:focus-visible,.related-original-pictures>summary:focus-visible{outline:3px solid #e2af56;outline-offset:3px}
+@media(max-width:550px){.related-original-pictures{padding:9px}.related-original-grid{grid-template-columns:1fr}}
+@media print{.related-original-pictures{break-inside:avoid}.related-original-grid{grid-template-columns:repeat(2,1fr)}}
