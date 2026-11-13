@@ -10,6 +10,7 @@ import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,c
 import {handleFeesRoute} from "./fees-routes.mjs";
 import {handleSignatureRoute} from "./signature-routes.mjs";
 import {handleDocumentRoute} from "./document-routes.mjs";
+import {handleMasterArtworkRoute} from "./master-artwork.mjs";
 
 const httpPort=Number(process.env.PORT||8787);
 const baseOrigin=process.env.ACADEMY_ORIGIN;
@@ -134,6 +135,7 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  if(await handleMasterArtworkRoute({req,res,method,pathname,actor,db:pool,transaction,audit,send,fail}))return;
   if(await handleDocumentRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   if(await handleSignatureRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   // Financial access is a separate gate. Only accountable_manager may
