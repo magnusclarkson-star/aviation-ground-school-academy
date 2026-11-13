@@ -39,9 +39,23 @@ const correctAdvanced=async page=>{
 try{
  const desktop=await browser.newPage({viewport:{width:1280,height:900},acceptDownloads:true});
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
+
+ // Fixture image: tests can verify image rendering without requiring Wikipedia access.
+ const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGOUqlvwn4GBgYGJAQoAISICOyA5b1QAAAAASUVORK5CYII=","base64");
+ await desktop.route("https://upload.wikimedia.org/**",req=>req.fulfill({status:200,contentType:"image/png",body:png}));
  await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
+ assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),1);
+ assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/instructor/i);
+ assert.match(await desktop.locator(".academy-photo-source a").first().getAttribute("href"),/creativecommons\.org/);
+ const firstImage=desktop.locator(".academy-reference-zoom img").first();
+ assert.equal(await firstImage.evaluate(img=>img.complete&&img.naturalWidth>0),true);
+ await desktop.locator(".academy-reference-zoom").first().click();
+ assert.equal(await desktop.locator("#academyPhotoDialog").isVisible(),true);
+ await desktop.locator("#academyPhotoDialog button").click();
+ assert.equal(await desktop.locator("#academyPhotoDialog").isVisible(),false);
+
  assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/learning pathway/i);
  assert.equal(await desktop.locator(".lesson-pictorial img").evaluate(img=>img.complete&&img.naturalWidth>0),true);
@@ -71,6 +85,9 @@ try{
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/weather hazards/i);
+ assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),2);
+ assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/cumulonimbus/i);
+
  assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
  assert.match(await desktop.locator("#deepReading .deep-lesson").nth(0).textContent(),/density/i);
  await desktop.locator("#startCapstone").click();
@@ -112,9 +129,19 @@ try{
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
+ await phone.route("https://upload.wikimedia.org/**",req=>req.fulfill({status:200,contentType:"image/png",body:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGOUqlvwn4GBgYGJAQoAISICOyA5b1QAAAAASUVORK5CYII=","base64")}));
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
  assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
+ assert.equal(await phone.locator("#lessonReading .academy-reference-photo").count(),2);
+ assert.match(await phone.locator(".academy-reference-head h4").first().textContent(),/Robinson/i);
+ assert.equal(await phone.locator(".academy-reference-zoom img").first().evaluate(img=>img.complete&&img.naturalWidth>0),true);
+ await phone.locator(".academy-reference-zoom").first().tap();
+ assert.equal(await phone.locator("#academyPhotoDialog").isVisible(),true);
+ await phone.locator("#academyPhotoDialog button").tap();
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+  "Real aviation photo/lightbox must not cause horizontal phone overflow");
+
  assert.match(await phone.locator(".lesson-pictorial h4").textContent(),/helicopter/i);
  await phone.locator(".diagram-trigger").tap();
  assert.equal(await phone.locator("#academyDiagramDialog").isVisible(),true);
