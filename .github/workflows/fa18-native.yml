@@ -1,0 +1,38 @@
+name: F/A-18E native asset validation
+
+on:
+  pull_request:
+    paths:
+      - 'flight-sim-fa18-native.js'
+      - 'flight-sim-3d.js'
+      - 'tools/prepare-fa18-native.js'
+      - 'tests/flight-sim-fa18-native.test.js'
+      - '.github/workflows/fa18-native.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'flight-sim-fa18-native.js'
+      - 'flight-sim-3d.js'
+      - 'tools/prepare-fa18-native.js'
+      - 'tests/flight-sim-fa18-native.test.js'
+      - '.github/workflows/fa18-native.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse and validate the optional 3D source pipeline
+        run: |
+          node --check flight-sim-fa18-native.js
+          node --check flight-sim-3d.js
+          node --check tools/prepare-fa18-native.js
+          node --test tests/flight-sim-fa18-native.test.js
