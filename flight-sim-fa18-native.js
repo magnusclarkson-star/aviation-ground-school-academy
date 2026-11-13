@@ -42,7 +42,8 @@ function parseFa18GLB(file){
  // renderer supports uncompressed geometry and embedded PNG/JPEG/WebP.
  if((gltf.extensionsRequired||[]).some(x=>x!=="KHR_mesh_quantization"))
   throw Error("F/A-18E compressed/unsupported glTF extension");
- if((gltf.buffers||[]).length!==1||gltf.buffers[0].uri)
+ if((gltf.buffers||[]).length!==1||gltf.buffers[0].uri||
+    gltf.buffers[0].byteLength>binBytes)
   throw Error("F/A-18E requires a single embedded buffer");
  const views=gltf.bufferViews||[],accessors=gltf.accessors||[];
  function view(id){
@@ -95,10 +96,10 @@ function parseFa18GLB(file){
  // Conversion pipeline bakes all transforms into POSITION/NORMAL. Any
  // nontrivial node transform is rejected to avoid misplaced gear or fins.
  const primitives=[],controls=new Set();
- let triangles=0,vertices=0;
+ let triangles=0,vertices=0,texturedTriangles=0;
  const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
  const visited=new Set();
- function traverse(id,parentControl=null){
+ function traverse(id,parentControl=null,parentPivot=null){
   const node=gltf.nodes?.[id];
   if(!node||visited.has(id))throw Error("F/A-18E scene graph invalid");
   visited.add(id);
@@ -108,7 +109,7 @@ function parseFa18GLB(file){
   const meta=node.extras||{};
   const control=meta.agsaControl||parentControl;
   if(control&&!axes[control])throw Error("F/A-18E unknown moving part "+control);
-  const pivot=meta.agsaPivot||[0,0,0];
+  const pivot=meta.agsaPivot||parentPivot||[0,0,0];
   if(control&&(!Array.isArray(pivot)||pivot.length!==3||
      !pivot.every(x=>finite(x)&&Math.abs(x)<=15)))
    throw Error("F/A-18E moving-part pivot invalid");
@@ -156,16 +157,18 @@ function parseFa18GLB(file){
      partName:control||null,partAxis:control?axes[control]:0,
      partPivot:control?pivot:[0,0,0],sourceName:label||"fa18e_body"});
     triangles+=indices.length/3;vertices+=pos.count;
+    if(imageId!==null)texturedTriangles+=indices.length/3;
     if(control)controls.add(control);
    }
   }
-  for(const child of node.children||[])traverse(child,control);
+  for(const child of node.children||[])traverse(child,control,pivot);
  }
  const scene=gltf.scenes?.[gltf.scene||0];
  if(!scene?.nodes?.length)throw Error("F/A-18E active scene absent");
  for(const id of scene.nodes)traverse(id);
  const span=lo.map((v,i)=>hi[i]-v);
  if(primitives.length<12||triangles<4000||triangles>120000||
+    texturedTriangles<triangles*.5||
     vertices>180000||!span.every(finite)||
     span[0]<11||span[0]>18||span[1]<2||span[1]>7||
     span[2]<15||span[2]>22||Math.abs((lo[0]+hi[0])/2)>1.5||
