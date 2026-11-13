@@ -41,6 +41,15 @@ try{
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
  await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
+ assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
+ assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
+ assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/learning pathway/i);
+ assert.equal(await desktop.locator(".lesson-pictorial img").evaluate(img=>img.complete&&img.naturalWidth>0),true);
+ await desktop.locator(".diagram-trigger").click();
+ assert.equal(await desktop.locator("#academyDiagramDialog").isVisible(),true);
+ assert.equal(await desktop.locator("#academyDiagramDialog img").evaluate(img=>img.complete&&img.naturalWidth>0),true);
+ await desktop.locator("#academyDiagramDialog button").click();
+ assert.equal(await desktop.locator("#academyDiagramDialog").isVisible(),false);
  assert.equal(await desktop.locator("#certificatesPanel").count(),1);
  assert.equal(await desktop.locator("#downloadProgrammeCertificate").isDisabled(),true);
  assert.equal(await desktop.locator("#deepGlossary dt").count(),3);
@@ -60,6 +69,9 @@ try{
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
+ assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
+ assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/weather hazards/i);
+ assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
  assert.match(await desktop.locator("#deepReading .deep-lesson").nth(0).textContent(),/density/i);
  await desktop.locator("#startCapstone").click();
  assert.equal(await desktop.locator("#capstoneQuestions fieldset").count(),24);
@@ -102,6 +114,14 @@ try{
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
+ assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
+ assert.match(await phone.locator(".lesson-pictorial h4").textContent(),/helicopter/i);
+ await phone.locator(".diagram-trigger").tap();
+ assert.equal(await phone.locator("#academyDiagramDialog").isVisible(),true);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+   "Enlarged pictorial must not make the 390px phone scroll horizontally");
+ await phone.locator("#academyDiagramDialog button").tap();
+ assert.equal(await phone.locator("#academyDiagramDialog").isVisible(),false);
  assert.equal(await phone.locator("#deepQuestions fieldset").count(),3);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),"390px phone must not scroll horizontally");
  await correctAdvanced(phone);
@@ -109,7 +129,7 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2));
  await phone.close();
  assert.deepEqual(errors,[]);
- console.log("Deep Academy browser passed: desktop/Android-sized touch, scenarios, local revision, routes, 24-question capstone, unsigned export, deletion and self-study milestone.");
+ console.log("Illustrated Academy browser passed: 12 subject diagrams with touch enlargement, desktop/Android-sized touch, scenarios, local revision, routes, 24-question capstone, unsigned export, deletion and self-study milestone.");
 }finally{
  await browser.close();
  await new Promise(resolve=>server.close(resolve));
