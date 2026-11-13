@@ -11,9 +11,7 @@ const records=[
  ['fa18','9e852037bf2141dcb3fda17013958131','KOG_THORNS'],
  ['f22','2a64abf0866a405c865466c7642ca689','NLM'],
  ['f35','db911de503c74285a8d506951df786d6','andertan'],
- ['typhoon','b3ede3f4280f4bf99ebbd4ebc7f5480d','Chenzoss'],
- ['c172','be55bf96a63b41fdb953b6829ff0d4bf','NLM'],
- ['r44','36e3498a5dc54d16a6d964f9b525deb8','syarifudinirfan701']
+ ['typhoon','b3ede3f4280f4bf99ebbd4ebc7f5480d','Chenzoss']
 ];
 test('each verified external model has a source id and attributed author',()=>{
  for(const [id,uid,author] of records){
@@ -36,4 +34,11 @@ test('external renderer has exact source attribution, accessible UI and distinct
  assert.match(html,/id="aircraftInspectTexturedSource"/);
  assert.match(js,/Family reference model, not verified as F-35B-specific/);
  assert.match(js,/if\(syncTexturedViewer\(\)\)/);
+});
+
+test('approved C172 and R44 360 views remain native and not externally replaced',()=>{
+ assert.ok(!js.includes('c172:{uid:'));
+ assert.ok(!js.includes('r44:{uid:'));
+ assert.match(js,/if\(id==="c172"\)phase=renderer\.realC172Status/);
+ assert.match(js,/else if\(id==="r44"\)phase=renderer\.realR44Status/);
 });
