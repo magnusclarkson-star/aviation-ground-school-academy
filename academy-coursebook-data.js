@@ -44,22 +44,22 @@ const modules=Object.freeze([
     "id": "orientation-1",
     "question": "Which activity is appropriate for an Air Scout lesson?",
     "options": [
-     "Practising observation and teamwork",
      "Operating an aircraft without supervision",
-     "Issuing ATC clearances"
+     "Issuing ATC clearances",
+     "Practising observation and teamwork"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Supervised observation and teamwork are appropriate educational activities."
    },
    {
     "id": "orientation-2",
     "question": "What should a learner do when a simulator conflicts with an aircraft flight manual?",
     "options": [
+     "Use whichever figure is faster",
      "Trust the simulator",
-     "Use the current approved manual and qualified instructor",
-     "Use whichever figure is faster"
+     "Use the current approved manual and qualified instructor"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "Approved aircraft information and qualified instruction take priority."
    }
   ],
@@ -97,11 +97,11 @@ const modules=Object.freeze([
     "id": "aircraft-0",
     "question": "What is the empennage?",
     "options": [
+     "Electrical bus",
      "Tail assembly",
-     "Nose wheel",
-     "Electrical bus"
+     "Nose wheel"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "The empennage is the conventional aeroplane tail assembly."
    },
    {
@@ -119,11 +119,11 @@ const modules=Object.freeze([
     "id": "aircraft-2",
     "question": "Why is the R44 not flown using Cessna-specific procedures?",
     "options": [
-     "Rotorcraft systems and handling differ",
      "Both aircraft use identical controls",
-     "Helicopters have no limitations"
+     "Helicopters have no limitations",
+     "Rotorcraft systems and handling differ"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Rotorcraft require separate approved procedures and specialist instruction."
    }
   ],
@@ -161,22 +161,22 @@ const modules=Object.freeze([
     "id": "aerodynamics-0",
     "question": "What defines an aerodynamic stall?",
     "options": [
-     "Critical angle of attack is exceeded",
      "The engine is switched off",
-     "The wheels stop turning"
+     "The wheels stop turning",
+     "Critical angle of attack is exceeded"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "An aerodynamic stall is fundamentally related to exceeding critical angle of attack."
    },
    {
     "id": "aerodynamics-1",
     "question": "During an increasing banked level turn, load factor generally...",
     "options": [
+     "Always decreases",
      "Increases",
-     "Becomes zero",
-     "Always decreases"
+     "Becomes zero"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Maintaining level flight at greater bank generally raises load factor."
    },
    {
@@ -236,22 +236,22 @@ const modules=Object.freeze([
     "id": "systems-1",
     "question": "Which system might actuate landing gear on a larger aircraft?",
     "options": [
-     "Hydraulic system",
      "Compass card",
-     "Static port alone"
+     "Static port alone",
+     "Hydraulic system"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Hydraulic systems commonly power moving mechanisms including some landing gear."
    },
    {
     "id": "systems-2",
     "question": "Where are specific engine and fuel limitations found?",
     "options": [
+     "A different aircraft's checklist",
      "Applicable aircraft flight manual",
-     "A generic app tutorial",
-     "A different aircraft's checklist"
+     "A generic app tutorial"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Type-specific limitations belong in the applicable approved documents."
    }
   ],
@@ -289,11 +289,11 @@ const modules=Object.freeze([
     "id": "instruments-0",
     "question": "Which input does a conventional pressure altimeter primarily use?",
     "options": [
+     "Wheel rotation",
      "Static pressure",
-     "Fuel flow",
-     "Wheel rotation"
+     "Fuel flow"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "A pressure altimeter uses static pressure with a selected reference setting."
    },
    {
@@ -311,11 +311,11 @@ const modules=Object.freeze([
     "id": "instruments-2",
     "question": "A simulated GPS course display is...",
     "options": [
-     "An educational indication, not ATC clearance",
      "Authority to enter restricted airspace",
-     "Proof of airworthiness"
+     "Proof of airworthiness",
+     "An educational indication, not ATC clearance"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Displays cannot issue operational permission or demonstrate aircraft fitness."
    }
   ],
@@ -353,22 +353,22 @@ const modules=Object.freeze([
     "id": "meteorology-0",
     "question": "What does a TAF provide?",
     "options": [
-     "Aerodrome forecast",
      "Pilot licence",
-     "Aircraft weight certificate"
+     "Aircraft weight certificate",
+     "Aerodrome forecast"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "TAFs provide forecasts for designated aerodromes."
    },
    {
     "id": "meteorology-1",
     "question": "What does a METAR normally represent?",
     "options": [
+     "Engine service log",
      "Weather observation",
-     "ATC takeoff clearance",
-     "Engine service log"
+     "ATC takeoff clearance"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "METAR is a standard routine aerodrome weather observation."
    },
    {
@@ -428,22 +428,22 @@ const modules=Object.freeze([
     "id": "navigation-1",
     "question": "What can cause heading and track to differ?",
     "options": [
-     "Wind drift",
      "Paint colour",
-     "Seat adjustment"
+     "Seat adjustment",
+     "Wind drift"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Wind can move an aircraft sideways relative to its heading."
    },
    {
     "id": "navigation-2",
     "question": "If a fictional route is 120 NM and groundspeed is 60 kt, estimated time is...",
     "options": [
+     "Four hours",
      "Two hours",
-     "Thirty minutes",
-     "Four hours"
+     "Thirty minutes"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "At 60 nautical miles per hour, 120 nautical miles requires two hours in this simple example."
    }
   ],
@@ -481,11 +481,11 @@ const modules=Object.freeze([
     "id": "airspace-0",
     "question": "Who defines binding local operating requirements?",
     "options": [
+     "Any social media account",
      "Relevant state aviation authority and applicable law",
-     "A fictional flight lab",
-     "Any social media account"
+     "A fictional flight lab"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Operational requirements come from applicable law and authorised authorities."
    },
    {
@@ -503,11 +503,11 @@ const modules=Object.freeze([
     "id": "airspace-2",
     "question": "Can passing an Academy quiz authorise entry to controlled airspace?",
     "options": [
-     "No",
      "Yes",
-     "Only on mobile phones"
+     "Only on mobile phones",
+     "No"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Access requirements are set by applicable regulations and real ATC procedures."
    }
   ],
@@ -545,22 +545,22 @@ const modules=Object.freeze([
     "id": "communications-0",
     "question": "Why use the aviation spelling alphabet?",
     "options": [
-     "Improve clarity of letters",
      "Replace runway markings",
-     "Measure visibility"
+     "Measure visibility",
+     "Improve clarity of letters"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Standardised spelling words reduce ambiguity in radio transmissions."
    },
    {
     "id": "communications-1",
     "question": "Who may issue real ATC clearances?",
     "options": [
+     "Any passenger",
      "Authorised air traffic service",
-     "Academy course software",
-     "Any passenger"
+     "Academy course software"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Real ATC clearances come from authorised air traffic services."
    },
    {
@@ -620,22 +620,22 @@ const modules=Object.freeze([
     "id": "performance-1",
     "question": "Higher density altitude commonly...",
     "options": [
-     "Reduces many aircraft performance margins",
      "Improves all takeoff performance",
-     "Changes licence validity"
+     "Changes licence validity",
+     "Reduces many aircraft performance margins"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "High density altitude can decrease engine, propeller and wing performance."
    },
    {
     "id": "performance-2",
     "question": "Where should real takeoff distance be calculated?",
     "options": [
+     "An unrelated aircraft chart",
      "Approved aircraft performance data and current conditions",
-     "A generic simulator score",
-     "An unrelated aircraft chart"
+     "A generic simulator score"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Use aircraft-specific approved data and current environmental inputs."
    }
   ],
@@ -673,11 +673,11 @@ const modules=Object.freeze([
     "id": "human-0",
     "question": "Which factor can reduce situational awareness?",
     "options": [
+     "A full briefing",
      "Fatigue",
-     "A correctly labelled diagram",
-     "A full briefing"
+     "A correctly labelled diagram"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Fatigue can impair vigilance, judgement and decision-making."
    },
    {
@@ -695,11 +695,11 @@ const modules=Object.freeze([
     "id": "human-2",
     "question": "What does a positive safety culture encourage?",
     "options": [
-     "Reporting hazards and learning",
      "Concealing errors",
-     "Avoiding questions"
+     "Avoiding questions",
+     "Reporting hazards and learning"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Early communication and learning help mitigate risk."
    }
   ],
@@ -737,22 +737,22 @@ const modules=Object.freeze([
     "id": "rotorcraft-0",
     "question": "What does helicopter collective normally change?",
     "options": [
-     "Overall main rotor blade pitch",
      "The heading bug",
-     "Only the cabin temperature"
+     "Only the cabin temperature",
+     "Overall main rotor blade pitch"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Collective changes main rotor blade pitch collectively."
    },
    {
     "id": "rotorcraft-1",
     "question": "What does cyclic normally influence?",
     "options": [
+     "Cabin door lock",
      "Rotor disc tilt and aircraft movement",
-     "Fuel colour",
-     "Cabin door lock"
+     "Fuel colour"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Cyclic input changes blade pitch cyclically to control rotor forces and orientation."
    },
    {
