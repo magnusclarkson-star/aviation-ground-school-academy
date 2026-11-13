@@ -1,6 +1,7 @@
 // Create the first accountable-manager account once, from a private secret manager.
 // Not a public HTTP endpoint. Do not store bootstrap secrets in GitHub or shell history.
-import {Pool} from "pg";
+import pg from "pg";
+const {Pool}=pg;
 import {validateEmail,hashPassword} from "./auth.mjs";
 if(process.env.ACADEMY_ENABLE_BOOTSTRAP!=="true")throw Error("Explicit ACADEMY_ENABLE_BOOTSTRAP=true required");
 if(!process.env.DATABASE_URL||!process.env.ACADEMY_BOOTSTRAP_EMAIL||!process.env.ACADEMY_BOOTSTRAP_PASSWORD)throw Error("Missing bootstrap settings");
