@@ -7,6 +7,7 @@ const {Pool}=pg;
 import {randomUUID,randomBytes} from "node:crypto";
 import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEmail,cookieToken,sessionCookie,clearSessionCookie,checkOrigin,SESSION_HOURS} from "./auth.mjs";
 import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,canRecordApprovedTraining,canRecordOfficialExam,canIssueApprovedCourseCompletion} from "./policy.mjs";
+import {handleFeesRoute} from "./fees-routes.mjs";
 
 const httpPort=Number(process.env.PORT||8787);
 const baseOrigin=process.env.ACADEMY_ORIGIN;
@@ -78,7 +79,7 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
-  if(method==="GET"&&["/","/portal.js","/portal.css"].includes(pathname)){
+  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/portal.css"].includes(pathname)){
    const file=pathname==="/"? "portal.html":pathname.slice(1);
    const bytes=await readFile(new URL("./"+file,import.meta.url));
    const type=file.endsWith(".html")?"text/html; charset=utf-8":file.endsWith(".css")?"text/css; charset=utf-8":"text/javascript; charset=utf-8";
@@ -131,6 +132,11 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  // Financial access is a separate gate. Only accountable_manager may
+  // price, waive, award scholarships, attest off-platform settlement or revoke.
+  if(await handleFeesRoute({req,res,method,pathname,actor,db:pool,transaction,
+    audit,json,send,fail}))return;
+
   if(method==="GET"&&pathname==="/api/me"){send(res,200,{user:actor});return}
   if(method==="GET"&&pathname==="/api/my/enrolments"){
    const {rows}=await pool.query(`SELECT e.id,e.course_id,c.title,c.revision,e.status,e.started_at,e.completed_at
@@ -287,6 +293,10 @@ async function handle(req,res){
    const record=await transaction(async db=>{
     const user=await db.query("SELECT id FROM academy_users WHERE id=$1 AND role='student' AND adult_confirmed=true AND active=true",[student]);
     if(!user.rows[0])fail(409,"Only active adult student accounts can enrol");
+    const access=await db.query(`SELECT id FROM academy_access_grants
+      WHERE student_id=$1 AND course_id=$2 AND status='ACTIVE' AND starts_at<=now()
+      AND (expires_at IS NULL OR expires_at>now()) FOR SHARE`,[student,course]);
+    if(!access.rows[0])fail(403,"Administrator-awarded active course access required before enrolment");
     const row=await db.query("INSERT INTO academy_enrolments(student_id,course_id) VALUES($1,$2) RETURNING id,course_id",[student,course]);
     await audit(db,actor.id,"ENROLLED","ENROLMENT",row.rows[0].id,{courseId:course});
     return row.rows[0];

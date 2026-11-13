@@ -97,6 +97,75 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/courses/ppl-theory/review","POST",{decision:"READY_FOR_AUTHORITY"},qa)).status,200);
   assert.equal((await call("/api/courses/ppl-theory/stages","POST",{
    stageKey:"too-late",standard:"This addition should be barred after independent quality sign off"},head)).status,409);
+  // Tuition and scholarships must be explicitly managed by the owner,
+  // without automatically changing the course's regulatory accreditation.
+  assert.equal((await call("/api/enrolments","POST",{
+   courseId:"ppl-theory",studentId:users.student.id},head)).status,403,
+   "Training management cannot enrol students who lack owner-granted access");
+  assert.equal((await call("/api/admin/fees","GET",undefined,student)).status,403);
+  assert.equal((await call("/api/admin/grants","GET",undefined,head)).status,403);
+  const price=await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"SL",
+   currency:"SLE",billingPeriod:"ONE_TIME",amountMinor:150000},admin);
+  assert.equal(price.status,201,JSON.stringify(price.body));
+  assert.equal(price.body.plan.amount_minor,"150000");
+  assert.equal((await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"SL",
+   currency:"SLE",billingPeriod:"ONE_TIME",amountMinor:199},head)).status,403);
+  assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,student)).status,403);
+  const scholarship=await call("/api/admin/grants","POST",{studentId:users.student.id,
+   planId:price.body.plan.id,grantType:"SCHOLARSHIP",discountBps:10000,
+   reason:"Full scholarship sponsored by the Academy administrator"},admin);
+  assert.equal(scholarship.status,201,JSON.stringify(scholarship.body));
+  assert.equal(scholarship.body.grant.status,"ACTIVE");
+  assert.equal(scholarship.body.grant.payable_minor,"0");
+  assert.equal(scholarship.body.manualSettlementRequired,false);
+  assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,student)).status,200);
+  assert.equal((await call("/api/my/access","GET",undefined,student)).body.accessGrants.length,1);
+  const revisedPrice=await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"SL",
+   currency:"SLE",billingPeriod:"ONE_TIME",amountMinor:180000},admin);
+  assert.equal(revisedPrice.status,201);
+  assert.equal((await call("/api/admin/fees","GET",undefined,admin)).body.plans.filter(p=>
+   p.course_id==="ppl-theory"&&p.country_code.trim()==="SL"&&p.status==="ACTIVE").length,1);
+  assert.equal((await call("/api/my/access","GET",undefined,student)).body.accessGrants[0].gross_minor,"150000",
+   "Scholarships preserve the price at which they were granted");
+  const internationalPrice=await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"GB",
+   currency:"GBP",billingPeriod:"MONTHLY",amountMinor:20000},admin);
+  assert.equal(internationalPrice.status,201);
+  const inviteeRow=await pool.query("SELECT id FROM academy_users WHERE email='invitee@academy.test'");
+  users.invitee={id:inviteeRow.rows[0].id,email:"invitee@academy.test"};
+  const inviteeSession=await login("invitee");
+  const partial=await call("/api/admin/grants","POST",{studentId:users.invitee.id,
+   planId:internationalPrice.body.plan.id,grantType:"SCHOLARSHIP",discountBps:6000,
+   reason:"Sixty percent scholarship, remaining tuition payable"},admin);
+  assert.equal(partial.status,201,JSON.stringify(partial.body));
+  assert.equal(partial.body.grant.payable_minor,"8000");
+  assert.equal(partial.body.grant.status,"PENDING_PAYMENT");
+  assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,inviteeSession)).status,403,
+    "A partially funded place without verified settlement must remain locked");
+  const wrongAmount=await call("/api/admin/grants/"+partial.body.grant.id+"/confirm-payment","POST",{
+   amountMinor:7000,reference:"SYNTHETIC-TRANSFER-001",evidenceSha256:"e".repeat(64),
+   notes:"Synthetic external payment verification, not a real transfer"
+  },admin);
+  assert.equal(wrongAmount.status,409);
+  const settled=await call("/api/admin/grants/"+partial.body.grant.id+"/confirm-payment","POST",{
+   amountMinor:8000,reference:"SYNTHETIC-TRANSFER-001",evidenceSha256:"e".repeat(64),
+   notes:"Synthetic test of fully settled external funds"
+  },admin);
+  assert.equal(settled.status,200,JSON.stringify(settled.body));
+  assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,inviteeSession)).status,200);
+  assert.equal((await call("/api/admin/grants/"+partial.body.grant.id+"/confirm-payment","POST",{
+   amountMinor:8000,reference:"SYNTHETIC-TRANSFER-001",evidenceSha256:"e".repeat(64),
+   notes:"Do not permit a duplicate attested payment"
+  },admin)).status,409);
+  assert.equal((await call("/api/admin/grants/"+partial.body.grant.id+"/revoke","POST",{
+   reason:"End of synthetic promotional and scholarship access period"
+  },head)).status,403);
+  assert.equal((await call("/api/admin/grants/"+partial.body.grant.id+"/revoke","POST",{
+   reason:"End of synthetic promotional and scholarship access period"
+  },admin)).status,200);
+  assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,inviteeSession)).status,403);
+  assert.equal((await call("/api/my/access","GET",undefined,inviteeSession)).body.accessGrants[0].status,"REVOKED");
+  assert.equal((await call("/api/admin/students","GET",undefined,admin)).body.students.length,2);
+  assert.equal((await call("/api/admin/students","GET",undefined,qa)).status,403);
   const enrol=await call("/api/enrolments","POST",{courseId:"ppl-theory",studentId:users.student.id},head);
   assert.equal(enrol.status,201,JSON.stringify(enrol.body));
   const enrolmentId=enrol.body.enrolment.id;

@@ -29,7 +29,10 @@ jobs:
       - run: node --check academy-secure/server.mjs
       - run: node --check academy-secure/bootstrap-admin.mjs
       - run: node --check academy-secure/portal.js
-      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs
+      - run: node --check academy-secure/fees-policy.mjs
+      - run: node --check academy-secure/fees-routes.mjs
+      - run: node --check academy-secure/fees-portal.js
+      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12
