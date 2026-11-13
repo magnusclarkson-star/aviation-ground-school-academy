@@ -82,3 +82,8 @@
 .visual-sourcing-note{font-size:12px;line-height:1.6;color:#9fd2e4}
 @media(max-width:560px){.academy-reference-head{padding:10px 12px}.academy-reference-head h4{font-size:15px}.academy-reference-photo figcaption{padding:9px 12px 4px;font-size:12px}.academy-photo-source{padding:4px 12px 11px}.academy-photo-dialog{padding:11px;border-radius:11px}.academy-reference-zoom img{max-height:330px}}
 @media print{.academy-reference-photo{box-shadow:none;break-inside:avoid;background:#fff}.academy-reference-zoom img{max-height:330px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.academy-reference-cue{display:none}.academy-reference-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+
+/* Visual signpost from advanced written concepts to their detailed photograph. */
+.academy-photo-deep-link{display:block;margin:10px 0 0;background:#1b516a;border-color:#6ac7d0;color:#f2ffff;font-weight:750;font-size:13px;text-align:left;white-space:normal;max-width:100%}
+.deep-lesson .academy-reference-photo{margin:18px 0 0}
