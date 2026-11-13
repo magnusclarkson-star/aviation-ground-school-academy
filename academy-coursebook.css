@@ -57,3 +57,33 @@
 .diagram-lightbox button{min-height:44px;background:#135c78;border-color:#125873;color:white}
 @media(max-width:560px){.lesson-pictorial{padding:8px;margin:12px 0}.lesson-pictorial figcaption{font-size:12px}.diagram-lightbox{max-width:98vw;width:98vw;padding:10px;border-radius:12px}.diagram-lightbox img{width:100%}}
 @media print{.diagram-expand,.pictorial-deep-link{display:none!important}.lesson-pictorial{break-inside:avoid;background:#fff!important}.lesson-pictorial .diagram-trigger{border:0}.lesson-pictorial img{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+
+/* Professional reference photography and technical-art plates: accessible on phones and in print. */
+.photo-reference-count{padding:9px 12px;border-left:3px solid #83d4de;background:#123e51;border-radius:7px;margin:8px 0 18px;font-size:12px}
+.academy-reference-photo{margin:15px 0 19px;border:1px solid #7195ab;background:#f7fafb;color:#173b50;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px #020f1d1e}
+.academy-reference-head{padding:13px 15px 10px;background:linear-gradient(110deg,#133e59,#1e6276);border-bottom:3px solid #d7b36e;color:white}
+.academy-reference-head span{display:block;font-size:10px;letter-spacing:1.2px;font-weight:850;color:#abecef}
+.academy-reference-head h4{font-size:17px;line-height:1.35;color:#fff;margin:5px 0 0}
+.academy-reference-zoom{display:block;position:relative;width:100%;padding:0;background:#edf4f8;cursor:zoom-in;border:0;border-radius:0;color:#143d58}
+.academy-reference-zoom img{display:block;width:100%;height:auto;max-height:440px;aspect-ratio:16/10;object-fit:contain;background:#edf3f6}
+.academy-reference-cue{display:block;padding:9px 12px;background:#e6f3f7;font-size:12px;letter-spacing:.15px;font-weight:800;color:#16455e;text-align:center}
+.academy-reference-photo figcaption{font-size:13px;line-height:1.65;padding:13px 15px 5px;color:#244a5e}
+.academy-photo-source{font-size:11px;line-height:1.6;color:#536b77;margin:0;padding:5px 15px 13px}
+.academy-photo-source a{color:#17628b;text-decoration:underline;text-underline-offset:2px}
+.academy-image-fallback{margin:0;padding:13px 15px;color:#5a6570;font-size:13px;background:#fbf9f2}
+.academy-photo-dialog{border:2px solid #89b6c7;color:#12364e;background:#fafcfd;border-radius:15px;padding:16px;max-width:min(98vw,1100px);width:min(98vw,1100px);max-height:94dvh;overflow:auto}
+.academy-photo-dialog::backdrop{background:#04101de8;backdrop-filter:blur(4px)}
+.academy-photo-dialog h3{font-size:clamp(18px,3vw,23px);margin:0 0 13px}
+.academy-photo-dialog>img{display:block;object-fit:contain;width:100%;height:auto;max-height:65dvh;border:1px solid #c8dce6;border-radius:9px;background:white}
+.academy-photo-dialog .academy-photo-context{font-size:14px;line-height:1.6;color:#25475c}
+.academy-photo-dialog .academy-photo-source{padding:2px 0 12px}
+.academy-photo-dialog button{min-height:46px;color:#fff;background:#185677;border-color:#185677}
+.visual-sourcing-note{font-size:12px;line-height:1.6;color:#9fd2e4}
+@media(max-width:560px){.academy-reference-head{padding:10px 12px}.academy-reference-head h4{font-size:15px}.academy-reference-photo figcaption{padding:9px 12px 4px;font-size:12px}.academy-photo-source{padding:4px 12px 11px}.academy-photo-dialog{padding:11px;border-radius:11px}.academy-reference-zoom img{max-height:330px}}
+@media print{.academy-reference-photo{box-shadow:none;break-inside:avoid;background:#fff}.academy-reference-zoom img{max-height:330px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.academy-reference-cue{display:none}.academy-reference-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+
+/* Visual signpost from advanced written concepts to their detailed photograph. */
+.academy-photo-deep-link{display:block;margin:10px 0 0;background:#1b516a;border-color:#6ac7d0;color:#f2ffff;font-weight:750;font-size:13px;text-align:left;white-space:normal;max-width:100%}
+.deep-lesson .academy-reference-photo{margin:18px 0 0}
