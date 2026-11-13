@@ -67,6 +67,12 @@ if(require.main===module){
    const {packed,model}=makeAsset(fs.readFileSync(input));
    fs.mkdirSync(path.dirname(dest),{recursive:true});
    fs.writeFileSync(dest,packed);
+   const importerFile=path.join(ROOT,'flight-sim-fa18-native.js');
+   const loader=fs.readFileSync(importerFile,'utf8');
+   if(!loader.includes('const ACTIVE=false;')&&!loader.includes('const ACTIVE=true;'))
+    throw Error('Native loader activation flag is missing');
+   fs.writeFileSync(importerFile,loader.replace('const ACTIVE=false;','const ACTIVE=true;'));
+   console.log('Native F/A-18E loader enabled. Commit both the GLB and JS.');
    console.log('Validated F/A-18E GLB:',model.triangles,'triangles,',
     model.images.length,'embedded texture(s),',model.controls.length,
     'moving channels; saved to',dest);
