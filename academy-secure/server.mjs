@@ -1,6 +1,7 @@
 // Private ATO operations API. Requires separately hosted HTTPS + PostgreSQL.
 // No regulator approval is inferred from public self-study marks.
 import http from "node:http";
+import {readFile} from "node:fs/promises";
 import {Pool} from "pg";
 import {randomUUID,randomBytes} from "node:crypto";
 import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEmail,cookieToken,sessionCookie,clearSessionCookie,checkOrigin,SESSION_HOURS} from "./auth.mjs";
@@ -76,6 +77,14 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
+  if(method==="GET"&&["/","/portal.js","/portal.css"].includes(pathname)){
+   const file=pathname==="/"? "portal.html":pathname.slice(1);
+   const bytes=await readFile(new URL("./"+file,import.meta.url));
+   const type=file.endsWith(".html")?"text/html; charset=utf-8":file.endsWith(".css")?"text/css; charset=utf-8":"text/javascript; charset=utf-8";
+   const csp="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
+   res.writeHead(200,{...securityHeaders,"Content-Type":type,"Content-Security-Policy":csp});
+   res.end(bytes);return;
+  }
   if(method==="GET"&&pathname==="/api/health"){send(res,200,{status:"ok",service:"academy-private-ato-foundation"});return}
   if(method==="GET"&&pathname==="/api/public/approval"){
    const docs=await evidence(pool);
