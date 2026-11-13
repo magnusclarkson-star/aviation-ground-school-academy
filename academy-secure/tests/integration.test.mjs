@@ -322,6 +322,20 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/admin/documents/layouts","POST",{
    audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
   },admin)).status,400,"Unverified QR codes must stay disabled");
+  // Preview PDFs are sample-only, owner-restricted, and carry no student data
+  // or actual encrypted signature even when the owner has enabled signature use.
+  for(const audience of ["FORMAL","SCOUT","ENTHUSIAST","TRANSCRIPT"]){
+   const path="/api/admin/documents/preview/"+audience;
+   const denied=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:student}});
+   assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
+   const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
+   assert.equal(example.status,200,audience+" preview failed");
+   assert.match(example.headers.get("content-type"),/application\\/pdf/);
+   assert.match(example.headers.get("content-disposition"),/inline/);
+   const pdf=Buffer.from(await example.arrayBuffer());
+   assert.equal(pdf.subarray(0,5).toString(),"%PDF-");
+   assert.ok(pdf.length>2000,"Sample must contain full printable document design");
+  }
   const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
