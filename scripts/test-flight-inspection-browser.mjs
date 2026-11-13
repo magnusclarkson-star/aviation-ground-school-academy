@@ -49,8 +49,8 @@ try{
  await desktop.goto(url,{waitUntil:"load"});
  assert.equal(await desktop.locator("#aircraftInspectOpen").count(),1);
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
- // The Su-37 is the Academy's native 360° renderer. Licensed aircraft
- // use their author-hosted model viewer with separate touch gestures.
+ // The C172, R44, Typhoon and Su-37 retain native 360° inspection.
+ // The approved F/A-18E, F-22 and F-35 use hosted previews.
  await desktop.locator("#cockpitAircraftSelect").selectOption("su37");
  const yoke=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectOpen").click();
@@ -83,7 +83,7 @@ try{
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
   "second double click restores fitted aircraft view");
  const frames=new Set();
- const hosted=new Set(["fa18","f22","f35","typhoon"]);
+ const hosted=new Set(["fa18","f22","f35"]);
  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
   await desktop.locator("#aircraftInspectModelSelect").selectOption(id);
   assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,
@@ -108,7 +108,8 @@ try{
     const v=document.getElementById("aircraftInspectViewport");
     const c=document.getElementById("aircraftInspectCanvas3D");
     const sources=id==="c172"?["mit-c172s-glb","licensed-c172-glb"]:
-     id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:["gpl-su37-fguk"];
+     id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:
+     id==="typhoon"?["gpl-typhoon-fg"]:["gpl-su37-fguk"];
     return v.dataset.modelLoading==="off"&&!c.hidden&&
      c.dataset.airframeId===id&&sources.includes(c.dataset.airframeSource);
    },id,{timeout:25000});
@@ -119,7 +120,7 @@ try{
    frames.add(png);
   }
  }
- assert.equal(frames.size,7,"four fighter viewers and three native aircraft models remain distinct");
+ assert.equal(frames.size,7,"three hosted and four native aircraft 360 models remain distinct");
  await desktop.locator("#aircraftInspectModelSelect").selectOption("su37");
  const nativeControlsBefore=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectSpin").click();
@@ -158,9 +159,9 @@ try{
     const canvas=document.querySelector("#aircraftInspectCanvas3D");
     return {prev,loading:vp.dataset.modelLoading,hidden:canvas.hidden};
    },id);
-   if(["fa18","f22","f35","typhoon"].includes(id)){
-    // Fighter exterior viewers use licensed external models. Trainers
-    // retain their approved native 3D geometry and working 360° controls.
+   if(hosted.has(id)){
+    // The three hosted fighter previews retain their original textures.
+    // C172/R44, Typhoon and Su-37 retain native 360° source geometry.
     await phone3d.waitForFunction(()=>{
      const v=document.getElementById("aircraftInspectSuperHornet");
      return v&&!v.hidden&&document.getElementById(
@@ -172,12 +173,13 @@ try{
     assert.ok(identity?.includes("/embed"),"hosted model selected for "+id);
    }else{
     if(changed.prev!==id)assert.equal(changed.hidden,true,
-     "native Su-37 must not briefly show prior aircraft");
+     "native airframe must not briefly show the previous aircraft");
     await phone3d.waitForFunction(id=>{
      const v=document.getElementById("aircraftInspectViewport");
      const c=document.getElementById("aircraftInspectCanvas3D");
      const sources=id==="c172"?["mit-c172s-glb","licensed-c172-glb"]:
-      id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:["gpl-su37-fguk"];
+      id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:
+      id==="typhoon"?["gpl-typhoon-fg"]:["gpl-su37-fguk"];
      // Match the newly visible native mesh rather than an old aircraft.
      return v.dataset.modelLoading==="off"&&!c.hidden&&
       c.dataset.airframeId===id&&sources.includes(c.dataset.airframeSource);
@@ -263,5 +265,5 @@ try{
   "touching Close after a pinch dismisses the inspector");
  assert.ok(await mobile.locator("#controlPad").isVisible());
  assert.deepEqual(errors,[],"no crashes on desktop, phone or 2D fallback");
- console.log("Aircraft inspection browser checks passed: six licensed 360 viewers, native Su-37 drag/zoom/auto-spin, Escape, phone layout and Su-37 2D fallback.");
+ console.log("Aircraft inspection browser checks passed: three hosted fighters, native C172/R44/Typhoon/Su-37, drag/zoom, phone and 2D fallback.");
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
