@@ -59,7 +59,7 @@ async function zoom(item){
  }
 }
 function one(item){
- const card=make("article");card.className="atlas-item";card.dataset.group=item.group;
+ const card=make("article");card.className="atlas-item";card.dataset.group=item.group;card.id="panel-"+item.id;
  const eyebrow=make("span",item.groupLabel);eyebrow.className="atlas-eyebrow";
  const heading=make("h3",item.title);
  const button=make("button");button.type="button";button.className="atlas-picture-button";
@@ -114,6 +114,14 @@ for(const [key,label] of groups){
 }
 show(groups.some(g=>g[0]===new URL(location.href).searchParams.get("group"))?
  new URL(location.href).searchParams.get("group"):"all");
+// Make direct links from lessons reveal and focus the requested original crop.
+const requested=location.hash.startsWith("#panel-")?location.hash.slice(7):null;
+const target=requested?atlas.getById(requested):null;
+if(target){
+ show(target.group);
+ const card=panels.get(target.id);
+ if(card)requestAnimationFrame(()=>card.scrollIntoView({behavior:"smooth",block:"center"}));
+}
 document.querySelectorAll(".gallery-original-link").forEach(link=>{
  link.target="_blank";link.rel="noopener noreferrer";
 });
