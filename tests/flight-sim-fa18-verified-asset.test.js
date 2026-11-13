@@ -6,7 +6,12 @@ const fs=require('node:fs');
 const {validateManifest,verifyFA18Digest}=require('../flight-sim-fa18-airframe.js');
 const cfg=JSON.parse(fs.readFileSync(path.join(__dirname,
  '../assets/aircraft/fa18e-native-manifest.json'),'utf8'));
-const authorized={...cfg,enabled:true,sha256:'ab'.repeat(32),requireControls:false};
+const names=['leftAileron','rightAileron','leftFlap','rightFlap',
+ 'elevatorLeft','elevatorRight','rudderLeft','rudderRight',
+ 'noseGear','mainGearLeft','mainGearRight'];
+const authorized={...cfg,enabled:true,sha256:'ab'.repeat(32),
+ controls:names.map((name,i)=>({name,node:'Source_'+name,axis:1,
+  pivot:[i,0,0]}))};
 const digestProvider={subtle:{digest:async(name,data)=>{
  assert.equal(name,'SHA-256');
  assert.ok(data instanceof ArrayBuffer);
