@@ -145,7 +145,7 @@ for(const id of ["f22","f35","su37"]){
  const b=Exterior.importedGearDoorAngle(1.1,1);
  assert.ok(a>b&&b>0,"doors must gradually close as gear retracts");
 }
-assert.match(shader,/if\(realModel&&model\.importedGear\)/,
+assert.match(shader,/if\(realModel&&model\.importedGear&&!\(view==="inspect"&&orbit\.interior===true\)\)/,
  "imported doors draw only after the authentic aircraft has loaded");
 assert.match(shader,/Exterior\.importedGearDoorAngle\(/,
  "renderer must link gear-door angle to the same system gear input");
