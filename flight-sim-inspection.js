@@ -213,6 +213,7 @@
    // Make a stale browser bundle immediately detectable on Android. If
    // this label is missing, the phone has not loaded the dedicated mesh.
    $("aircraftInspectRenderMode").textContent=
+    id==="su37"&&gpuVisible?"Su-37 · Native painted 3D":
     id==="fa18"?"Super Hornet V3 · "+modeText:modeText;
    return {loading,failed,gpuVisible};
   }

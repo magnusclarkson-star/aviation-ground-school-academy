@@ -55,6 +55,32 @@ function colorFor(name,index,materials){
  }
  return base.map(x=>Math.max(.14,Math.min(.85,x*.77)));
 }
+// Source-position camouflage for the licensed, *native* Su-37 mesh.
+// No invented Su-35 substitute and no external 3D hosting dependency.
+// This is procedural vertex paint, NOT a photographic/PBR texture map.
+const SU37_PAINT_PARTS=new Set([
+ "fuselage","wing","tail","WNG_Left_Slat","WNG_Right_Slat",
+ "WNG_Left_Flaperon","WNG_Right_Flaperon","ELV_Elevon_Left",
+ "ELV_Elevon_Right","TF_Left_Rudder","TF_Right_Rudder",
+ "CNRD_Left","CNRD_Right","engineMount","engineLeft","engineRight"
+]);
+const clamp01=v=>Math.max(0,Math.min(1,v));
+function su37SkinColor(name,x,y,z,base){
+ if(!SU37_PAINT_PARTS.has(name))return base;
+ // Three interlocking mottled upper-surface bands; continuous in the
+ // same aircraft-space coordinates on wings, canards, fins and fuselage.
+ const pattern=Math.sin(x*.87+Math.sin(z*.44)*.84)*
+  Math.cos(z*.73-Math.sin(x*.39)*.61)+
+  .36*Math.sin(z*1.11+x*.42);
+ const dark=[.24,.34,.39],light=[.61,.69,.70],mid=[.40,.51,.56];
+ const paint=pattern>.24?dark:pattern<-.31?light:mid;
+ // Aircraft undersides remain muted source-grey, not camouflage.
+ // Preserve a hint of the original material for panel relief.
+ const top=clamp01((y+.30)/.64);
+ const intensity=.88*top;
+ return base.map((c,i)=>clamp01(c*(1-intensity)+
+  (paint[i]*.88+c*.12)*intensity));
+}
 function parseSu37(text){
  if(typeof text!=="string"||text.length<300000||text.length>MAX_BYTES)
   throw Error("Su-37 source mesh length invalid");
@@ -111,7 +137,11 @@ function parseSu37(text){
    }
    const colors=new Float32Array(positions.length),
     shade=colorFor(part.name,group[0],data.materials);
-   for(let j=0;j<colors.length;j+=3)colors.set(shade,j);
+   for(let j=0;j<colors.length;j+=3){
+    const color=su37SkinColor(part.name,
+     positions[j],positions[j+1],positions[j+2],shade);
+    colors.set(color,j);
+   }
    const opacity=part.name==="canopy"?.39:Math.min(1,color[3]);
    primitives.push({positions,indices,normals,colors,
     uvs:new Float32Array(n*2),imageId:null,opacity,alphaMask:false,
@@ -143,7 +173,7 @@ function ensureSu37(fetcher=root?.fetch?.bind(root)){
  }
  return pending;
 }
-const api={FILE,SOURCE,parseSu37,ensureSu37,partMotion};
+const api={FILE,SOURCE,parseSu37,ensureSu37,partMotion,su37SkinColor};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSASu37Airframe=api;
 })(typeof window!=="undefined"?window:null);
