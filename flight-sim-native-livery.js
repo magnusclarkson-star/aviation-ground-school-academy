@@ -32,6 +32,15 @@ function cover(id,name,y){
 function paint(id,name,x,y,z,base){
  if(!Array.isArray(base)||base.length!==3||!skinPart(id,name))
   return base;
+ // A source Raptor belly panel can face the sun even below the body; the
+ // unpainted imported white material made its wheel-bay shoulders glow.
+ // Apply dark underside RAM-style colour only beneath its main fuselage.
+ // All original geometry and non-F-22 aircraft colours remain untouched.
+ if(id==="f22"&&/^fuselage_/i.test(name)&&y< -1.35){
+  const blend=clamp((-1.35-y)/.30)*.88;
+  const underside=[.34,.40,.44];
+  return base.map((c,i)=>clamp(mix(c,underside[i],blend)));
+ }
  const top=cover(id,name,y);
  if(top<=0)return base;
  // Smooth, deterministic changes in local X/Z ensure wings and matching
