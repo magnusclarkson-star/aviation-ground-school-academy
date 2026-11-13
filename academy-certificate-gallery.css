@@ -83,3 +83,22 @@ footer{padding:25px 16px;text-align:center;border-top:1px solid #355772;color:#a
  .certificate .detail,.certificate .date,.certificate .number{font-size:10px}.certificate .footerline{font-size:8px}
  .certificate .watermark{font-size:62px}
 }
+
+/* The source artwork is now the selected original PNG itself, never a CSS redraw. */
+.gallery .certificate{display:none!important}
+.switches{display:none!important}
+.master-local-picker{min-height:260px;display:flex;flex-direction:column;gap:10px}
+.master-local-picker p{color:#d4e4f1;margin:6px 0;font-size:13px}
+.master-local-picker input[type=file]{width:100%;padding:12px;border:1px solid #67899e;border-radius:10px;background:#0d2637;color:#fff}
+.exact-master-preview{width:100%;aspect-ratio:1491/1055;position:relative;overflow:hidden;background:#142c3e;border:1px solid #55758a}
+.exact-master-preview:empty{background:repeating-linear-gradient(135deg,#152f43 0 15px,#0e273a 15px 30px)}
+.approved-master-art{display:block;width:100%;height:100%;object-fit:contain}
+.sample-watermark{position:absolute;bottom:2%;left:2%;padding:4px 7px;border-radius:3px;background:#641a1ce8;color:#fff;font-size:clamp(9px,1.2vw,16px);font-weight:900;z-index:5}
+[data-print]:disabled{opacity:.45;cursor:not-allowed}
+@media print{
+ .master-local-picker{display:block;min-height:auto}
+ .master-local-picker>p,.master-local-picker>input{display:none!important}
+ .exact-master-preview{width:100%;aspect-ratio:1491/1055;border:0}
+ .approved-master-art{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .sample-watermark{font-size:16px}
+}
