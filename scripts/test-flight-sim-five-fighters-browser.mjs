@@ -26,7 +26,7 @@ const server=http.createServer((req,res)=>{
 });
 await new Promise(done=>server.listen(0,"127.0.0.1",done));
 const aircraft=[
- {id:"fa18",source:"procedural"},
+ {id:"fa18",source:"superhornet-dedicated-v3"},
  {id:"f22",source:"gpl-f22-fguk"},
  {id:"f35",source:"gpl-f35b-flightgear"},
  {id:"typhoon",source:"gpl-typhoon-fg"},
