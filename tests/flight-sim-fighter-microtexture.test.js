@@ -31,7 +31,7 @@ test('microtexture is bound only to selected fighter hulls and controls',()=>{
  assert.match(source,/gl\.activeTexture\(gl\.TEXTURE1\)/);
  assert.match(source,/gl\.uniform1i\(uni\.uSkinMicroTexture,1\)/);
  assert.match(source,/const finishId=microTexture\?\(\{f22:1,f35:2,typhoon:3,fa18:4,su37:5\}\[id\]\|\|0\):0/);
- assert.match(source,/part\.sourceName\|\|null/);
+ assert.match(source,/sourceName:primitive\.sourceName\|\|null/);
  assert.match(source,/if\(!part\|\|!part\.sourceName\|\|\(part\.opacity\?\?1\)<\.99\|\|part\.partAxis===4\)/);
  assert.match(source,/gl\.uniform1f\(uni\.uSkinFinish,0\);/);
  assert.match(source,/if\(gl\.getError\(\)===gl\.NO_ERROR\)/);
