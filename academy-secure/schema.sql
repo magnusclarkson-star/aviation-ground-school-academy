@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS academy_course_certificate_templates (
 CREATE TABLE IF NOT EXISTS academy_certificate_master_artwork (
  style text PRIMARY KEY CHECK (style IN ('FORMAL_TRADITIONAL','SCOUT_MODERN','ENTHUSIAST_NAVY_GOLD')),
  png bytea NOT NULL CHECK(octet_length(png) BETWEEN 50000 AND 6000000),
- sha256 char(64) NOT NULL CHECK(sha256 ~ '^[a-f0-9]{64}),
+ sha256 char(64) NOT NULL CHECK(sha256 ~ '^[a-f0-9]{64}$'),
  width integer NOT NULL CHECK(width=1491),
  height integer NOT NULL CHECK(height=1055),
  uploaded_by uuid NOT NULL REFERENCES academy_users(id),
