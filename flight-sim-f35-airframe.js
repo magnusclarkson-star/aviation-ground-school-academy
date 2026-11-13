@@ -25,6 +25,27 @@ function partMotion(name,coords){
     // a side-on rigid rotation stays below the previously enforced -.65m.
     [key==="mainGearRight"?1.70:-1.70,-.65,-2.2]};
  }
+ // The licensed F-35B includes authentic nose and main-gear bay panels.
+ // Hinge those original panels using the same wheel commands rather than
+ // drawing six extra rectangular doors over an already complete aircraft.
+ // Other source doors (fan, engine, top and weapons bays) remain fixed.
+ const noseDoor=/^doorF([LR])$/.exec(name);
+ const mainDoor=/^doorB[12]([LR])$/.exec(name);
+ if(noseDoor||mainDoor){
+  const side=(noseDoor||mainDoor)[1]==="L"?-1:1;
+  const mins=[Infinity,Infinity,Infinity],maxs=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<coords.length;i+=3)
+   for(let j=0;j<3;j++){
+    mins[j]=Math.min(mins[j],coords[i+j]);
+    maxs[j]=Math.max(maxs[j],coords[i+j]);
+   }
+  const pivotX=side*Math.max(Math.abs(mins[0]),Math.abs(maxs[0]));
+  const pivotY=noseDoor?-1.10:-.52;
+  const pivotZ=(mins[2]+maxs[2])*.5;
+  return {partAxis:3,
+   partName:noseDoor?"noseGear":side<0?"mainGearLeft":"mainGearRight",
+   partPivot:[pivotX,pivotY,pivotZ],gearDoorSide:side};
+ }
  const map={
   flaperonL:"leftAileron",flaperonR:"rightAileron",
   spoilerL:"leftFlap",spoilerR:"rightFlap",
@@ -122,7 +143,7 @@ function parseF35(text){
    primitives.push({positions,indices,normals,colors,uvs:new Float32Array(n*2),
     imageId:null,opacity,alphaMask:false,alphaCutoff:0,
     partName:motion.partName,partAxis:motion.partAxis,partPivot:motion.partPivot,
-    sourceName:part.name});
+    gearDoorSide:motion.gearDoorSide||0,sourceName:part.name});
    triangles+=indices.length/3;vertices+=n;
   }
  }
