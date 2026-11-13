@@ -39,7 +39,10 @@ try{
  const errors=[];
  page.on("pageerror",err=>errors.push(err.message));
  page.on("console",msg=>{
-  if(msg.type()==="error"||msg.type()==="warning")
+  // Capture application shader initialization errors, not benign Chromium
+  // WebGL ReadPixels perf notices or fullscreen attribute warnings.
+  if((msg.type()==="error"||msg.type()==="warning")&&
+     msg.text().includes("AGSA WebGL2 renderer initialization:"))
    errors.push(msg.text());
  });
  await page.goto(url,{waitUntil:"load"});
