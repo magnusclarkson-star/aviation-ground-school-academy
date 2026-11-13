@@ -1478,7 +1478,11 @@ void main(){
  // Imported and procedural fighter hulls share a small real bitmap
  // pattern, projected by local surface direction. No detail is applied
  // to aircraft wheels, glazing, cockpits or any runway/world geometry.
- if(uSkinFinish>.5){
+ if(uSkinFinish>.5&&(
+  uSkinFinish<3.5||uSkinFinish>4.5||
+  (vColor.r>.39&&vColor.g>.43&&vColor.b>.47))){
+  // The procedural F/A-18 groups glass, dark wells and skin in one mesh.
+  // Color-gate only its pale painted panels; never mark the dark canopy.
   vec3 axis=abs(normalize(vLocalNormal));
   vec2 uv=axis.y>=axis.x&&axis.y>=axis.z?vLocalPosition.xz:
    axis.x>=axis.z?vLocalPosition.yz:vLocalPosition.xy;
