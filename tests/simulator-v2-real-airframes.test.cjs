@@ -43,7 +43,9 @@ test("both imported aircraft have four separate seats and a visible instrument b
   assert.ok(extrema[3]>-.3&&extrema[2]<-.6,"seat backs and bases span usable cabin height");
   assert.ok(extrema[1]-extrema[0]>.8,id+" has two separated seat columns");
  }
- assert.equal(Three.buildImportedCabin("fa18"),null);
+ const fighter=Three.buildImportedCabin("fa18");
+ assert.equal(fighter.seats,1,"F/A-18E is single-seat, unlike four-seat trainers");
+ assert.ok(fighter.vertices>250,"fighter interior has its own dedicated cockpit geometry");
 });
 test("both cabins, cockpit panels and glazing sit forward in the real airframes",()=>{
  const layout=Three.IMPORTED_CABIN_LAYOUT;
