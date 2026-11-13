@@ -73,9 +73,9 @@ footer{padding:25px 16px;text-align:center;border-top:1px solid #355772;color:#a
  main{padding:0;max-width:none;margin:0}
  .gallery{display:block;padding:0;margin:0}
  .certificate-card{display:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0;box-shadow:none;max-width:none!important}
- body[data-print-style=formal] .certificate-card:has(#formal),
- body[data-print-style=scout] .certificate-card:has(#scout),
- body[data-print-style=enthusiast] .certificate-card:has(#enthusiast){display:block!important}
+ body[data-print-style=formal] .certificate-card[data-sample=formal],
+ body[data-print-style=scout] .certificate-card[data-sample=scout],
+ body[data-print-style=enthusiast] .certificate-card[data-sample=enthusiast]{display:block!important}
  .sheet-wrap{background:#fff;border:0;padding:0;border-radius:0}
  .certificate{width:100%;height:auto;aspect-ratio:842/595;-webkit-print-color-adjust:exact;print-color-adjust:exact}
  .certificate .academy-title{font-size:19px}.certificate .academy-subtitle{font-size:9px}.certificate .certificate-heading{font-size:24px}
