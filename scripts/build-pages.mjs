@@ -29,7 +29,7 @@ const publicAircraftFiles=[
  "assets/aircraft/typhoon-fg-exterior.json",
  "assets/aircraft/TYPHOON-ATTRIBUTION.md"
 ];
-const publicCuratedPaths=["academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",
+const publicCuratedPaths=["assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",
  "accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
@@ -72,8 +72,12 @@ for(const [asset,minBytes] of [
  const details=await stat(path.join(output,asset));
  if(!details.isFile()||details.size<minBytes)throw Error("Missing imported aircraft asset: "+asset);
 }
-for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","flight-sim.html"]){
+for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","academy-approved-visual-gallery.html","academy-specialist-lectures.html","academy-specialist-lectures.css","academy-specialist-lectures.js","academy-specialist-lesson-data.js","academy-specialist-technical-plates.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","flight-sim.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
+}
+for(const slug of ["ground-school-visuals-12-topic","aviation-learning-overview","aviation-real-world-photographs","illustrated-cessna-structures-lecture"]){
+ const img=await stat(path.join(output,"assets/lecture-visuals/"+slug+".webp"));
+ if(!img.isFile()||img.size<200000)throw Error("Missing the previously shown original Academy illustration: "+slug);
 }
 for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
  const file="aircraft-"+id+".webp";

@@ -87,3 +87,27 @@
 /* Visual signpost from advanced written concepts to their detailed photograph. */
 .academy-photo-deep-link{display:block;margin:10px 0 0;background:#1b516a;border-color:#6ac7d0;color:#f2ffff;font-weight:750;font-size:13px;text-align:left;white-space:normal;max-width:100%}
 .deep-lesson .academy-reference-photo{margin:18px 0 0}
+
+
+/* Exact owner-shown Academy imagery — original compositions, with optional CSS crop windows. */
+.approved-visual-figure{margin:15px 0 19px;background:#f8fbfd;border:1px solid #70a0b8;border-radius:14px;overflow:hidden;color:#13374f;box-shadow:0 4px 20px #0418261d}
+.approved-visual-heading{background:linear-gradient(120deg,#0b3453,#176f8d);padding:12px 15px;color:#fff;border-bottom:3px solid #c3a362}
+.approved-visual-heading span{font-size:10px;letter-spacing:1.2px;color:#b4f5e9;font-weight:850}
+.approved-visual-heading h4{font-size:17px;color:#fff;margin:4px 0 0;line-height:1.4}
+.approved-picture-trigger{display:block;background:#e9f5fb;color:#163c5b;width:100%;padding:0;border:0;overflow:hidden;border-radius:0;cursor:zoom-in;text-align:center}
+.approved-full-picture{display:block;width:100%;height:auto;object-fit:contain;max-height:650px;background:#fff}
+.approved-cropped-picture{width:100%;display:block;background-color:#f6fbff;background-repeat:no-repeat;max-height:600px;border-radius:3px}
+.approved-picture-hint{display:block;background:#e4f3f7;padding:9px 12px;font-weight:800;color:#164e66;font-size:12px}
+.approved-visual-figure figcaption{padding:12px 15px 2px;font-size:13px;line-height:1.65;color:#21495c}
+.approved-picture-source{font-size:11px;line-height:1.6;color:#536a79;margin:0;padding:6px 15px 13px}
+.approved-visual-lightbox{width:min(1100px,97vw);max-width:97vw;max-height:95dvh;overflow:auto;border:2px solid #82b4c5;padding:16px;border-radius:16px;background:#f9fcff;color:#17374e}
+.approved-visual-lightbox::backdrop{background:#03111de6;backdrop-filter:blur(4px)}
+.approved-visual-lightbox h3{margin:0 0 10px;font-size:clamp(18px,3vw,24px)}
+.approved-visual-expanded{background:white;border:1px solid #d5e0e6;border-radius:10px;overflow:hidden}
+.approved-visual-expanded .approved-full-picture{max-height:none;max-width:100%}
+.approved-visual-expanded .approved-cropped-picture{max-height:none;width:100%}
+.approved-visual-details{font-size:14px;line-height:1.6;color:#315467}
+.approved-original-file-link{display:inline-block;color:#165e83;margin:0 15px 12px 0}
+.approved-visual-lightbox button{background:#13546f;border-color:#13546f;color:white;min-height:44px}
+@media(max-width:540px){.approved-visual-heading{padding:10px 11px}.approved-visual-heading h4{font-size:15px}.approved-visual-figure figcaption{padding:10px 11px 2px;font-size:12px}.approved-picture-source{padding:6px 11px 11px}.approved-visual-lightbox{padding:10px;border-radius:10px}}
+@media print{.approved-visual-figure{break-inside:avoid;box-shadow:none;background:#fff}.approved-picture-hint{display:none}.approved-cropped-picture,.approved-full-picture{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
