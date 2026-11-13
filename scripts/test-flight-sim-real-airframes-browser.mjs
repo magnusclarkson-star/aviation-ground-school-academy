@@ -38,6 +38,13 @@ try{
  const page=await browser.newPage({viewport:{width:1200,height:900}});
  const errors=[];
  page.on("pageerror",err=>errors.push(err.message));
+ page.on("console",msg=>{
+  // Capture application shader initialization errors, not benign Chromium
+  // WebGL ReadPixels perf notices or fullscreen attribute warnings.
+  if((msg.type()==="error"||msg.type()==="warning")&&
+     msg.text().includes("AGSA WebGL2 renderer initialization:"))
+   errors.push(msg.text());
+ });
  await page.goto(url,{waitUntil:"load"});
  const created=await page.evaluate(()=>{
   if(!window.AGSAC172Airframe||!window.AGSAFlight3D)return false;
@@ -48,7 +55,7 @@ try{
   window.__c172TestRenderer=window.AGSAFlight3D.createRenderer(canvas,{inspectionOnly:true});
   return !!window.__c172TestRenderer;
  });
- assert.ok(created,"WebGL2 inspection renderer must initialize");
+ assert.ok(created,"WebGL2 inspection renderer must initialize. "+errors.join(" | "));
  await page.waitForFunction(()=>window.__c172TestRenderer?.realC172Status==="imported",null,
   {timeout:20000});
  const info=await page.evaluate(async()=>{
