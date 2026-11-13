@@ -19,10 +19,18 @@ II family model. It has **not** been verified as a B-variant, so the app
 explicitly calls it a family reference rather than falsely attributing B
 specific features or STOVL geometry.
 
-**Su-37 remains native:** No suitable exact Su-37 with verified licensing and
-realistic texture quality was confirmed in this pass. A Su-35 is not the same
-aircraft and is not silently relabelled as a Su-37. The existing Su-37
-inspection geometry remains available.
+**Su-37 native camouflage upgrade:** An exact Su-37 with suitable
+verified free-use licence and high-quality exterior textures remains
+unavailable in this pass. To avoid substituting a Su-35 for a Su-37, the
+existing GPL-2.0-or-later FlightGear Su-37 source mesh now uses native
+tri-tone upper-surface camouflage **in both the local 360° viewer and live
+flight model** whenever WebGL2 successfully loads its mesh.
+
+This is lightweight per-vertex procedural paint (continuous between aircraft
+components), **not** photographic/PBR texturing. Landing gear, canopy
+glazing and source controls are preserved.
+
+Source: https://github.com/FGMEMBERS/SU-37/blob/936d565cded05ea0c0f26f99f8878b18156bce09/Models/SU-37-005-125h.ac
 
 For every hosted 3D model, the inspector shows its creator, license label and
 a link back to its source. If a hosted model cannot load due to the user's
