@@ -173,7 +173,8 @@ try{
     await phone3d.waitForFunction(()=>{
      const v=document.getElementById("aircraftInspectViewport");
      const c=document.getElementById("aircraftInspectCanvas3D");
-     return v.dataset.modelLoading==="off"&&
+     // Match the visible new frame, not stale source metadata from portrait.
+     return v.dataset.modelLoading==="off"&&!c.hidden&&
       c.dataset.airframeId==="su37"&&c.dataset.airframeSource==="gpl-su37-fguk";
     },null,{timeout:25000});
     assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
