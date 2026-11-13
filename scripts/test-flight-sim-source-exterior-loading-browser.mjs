@@ -79,7 +79,8 @@ try{
   return {source:c.dataset.airframeSource,hash,detail};
  },id);
  const baseline=await render("fa18");
- assert.equal(baseline.source,"procedural","F/A-18 remains available during source loads");
+ assert.equal(baseline.source,"superhornet-dedicated-v3",
+  "F/A-18 dedicated flyable model remains available while imported jets load");
  let pendingHash=null;
  for(const [id,source] of [
   ["f22","gpl-f22-fguk"],["f35","gpl-f35b-flightgear"],
