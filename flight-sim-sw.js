@@ -1,6 +1,6 @@
 // Static simulator shell and its local flight assets only. No credentials,
 // payment data, location, or remote services are cached.
-const CACHE="agsa-flight-sim-v2-20261113-native-fa18-source1";
+const CACHE="agsa-flight-sim-v2-20261113-webgl-fix-aft-light1";
 const ROOT=new URL("./",self.location.href);
 const SHELL=[
  new URL("flight-sim.html",ROOT).href,
