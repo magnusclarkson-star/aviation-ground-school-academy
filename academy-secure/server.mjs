@@ -61,7 +61,7 @@ async function enrolment(db,id){
  const {rows}=await db.query(`SELECT e.*,u.adult_confirmed,u.active,c.review_status
  FROM academy_enrolments e JOIN academy_users u ON u.id=e.student_id
  JOIN academy_courses c ON c.id=e.course_id WHERE e.id=$1`,[id]);
- if(!rows[0]||rows[0].status!=="ENROLLED"||!rows[0].adult_confirmed||!rows[0].active)fail(409,"Adult active enrolment required");
+ if(!rows[0]||rows[0].status!=="ENROLLED"||!rows[0].adult_confirmed||!rows[0].active||rows[0].review_status!=="READY_FOR_AUTHORITY")fail(409,"Approved-syllabus adult enrolment required");
  return rows[0];
 }
 async function failureCount(key){
@@ -122,6 +122,33 @@ async function handle(req,res){
   }
   const actor=await actorFor(req);
   if(method==="GET"&&pathname==="/api/me"){send(res,200,{user:actor});return}
+  if(method==="GET"&&pathname==="/api/my/enrolments"){
+   const {rows}=await pool.query(`SELECT e.id,e.course_id,c.title,c.revision,e.status,e.started_at,e.completed_at
+    FROM academy_enrolments e JOIN academy_courses c ON c.id=e.course_id WHERE e.student_id=$1 ORDER BY e.started_at DESC`,[actor.id]);
+   send(res,200,{enrolments:rows});return;
+  }
+  if(method==="GET"&&pathname==="/api/my/assessments"){
+   const {rows}=await pool.query(`SELECT a.id,a.course_id,a.status,a.assessment_date,a.recorded_at
+    FROM academy_assessment_records a WHERE a.student_id=$1 ORDER BY a.recorded_at DESC LIMIT 50`,[actor.id]);
+   send(res,200,{assessmentRecords:rows,warning:"These are staff-recorded assessment results; no pilot licence is issued"});return;
+  }
+  if(method==="GET"&&pathname==="/api/my/completions"){
+   const {rows}=await pool.query(`SELECT r.id,r.status,r.serial,r.attested_at,e.course_id
+    FROM academy_completion_requests r JOIN academy_enrolments e ON e.id=r.enrolment_id
+    WHERE e.student_id=$1 ORDER BY r.requested_at DESC LIMIT 50`,[actor.id]);
+   send(res,200,{courseCompletions:rows,notPilotLicence:true});return;
+  }
+  if(method==="GET"&&pathname==="/api/admin/readiness"){
+   if(!["quality_manager","head_of_training","accountable_manager"].includes(actor.role))fail(403,"Staff role required");
+   const docs=await evidence(pool);
+   const {rows}=await pool.query(`SELECT id,title,revision,review_status,qa_reviewed_at FROM academy_courses ORDER BY created_at DESC LIMIT 100`);
+   send(res,200,{schoolDocumentChecks:{atoCertificate:docs.some(x=>x.type==="ATO_CERTIFICATE"&&x.scope==="ORG"),
+     trainingSpecs:docs.some(x=>x.type==="TRAINING_SPECIFICATIONS"&&x.scope==="ORG"),
+     trainingManual:docs.some(x=>x.type==="TPM_ACCEPTANCE"&&x.scope==="ORG"),
+     safetyManagement:docs.some(x=>x.type==="SMS_ACCEPTANCE"&&x.scope==="ORG")},
+     schoolApprovedForOperationsInApp:schoolApproved(docs),authorityVerification:"HUMAN_DOCUMENT_ATTESTATION_ONLY",courses:rows});return;
+  }
+
   if(method==="POST"&&pathname==="/api/logout"){
    await transaction(async db=>{
     await db.query("UPDATE academy_sessions SET revoked_at=now() WHERE token_hash=$1",[sha256(cookieToken(req.headers.cookie))]);
@@ -198,6 +225,10 @@ async function handle(req,res){
     const r=await db.query(`UPDATE academy_courses SET review_status=$1,qa_reviewed_by=$2,qa_reviewed_at=now()
     WHERE id=$3 AND prepared_by<>$2 AND review_status IN ('DRAFT','INTERNAL_REVIEW') RETURNING id,review_status`,[status,actor.id,courseReview[1]]);
     if(!r.rows[0])fail(409,"Course unavailable or self-review prohibited");
+    if(status==="READY_FOR_AUTHORITY"){
+      const stages=await db.query("SELECT COUNT(*)::int AS count FROM academy_course_stage_requirements WHERE course_id=$1",[courseReview[1]]);
+      if(stages.rows[0].count<1)fail(409,"Define course stages before quality approval");
+    }
     await audit(db,actor.id,"CURRICULUM_REVIEW","COURSE",courseReview[1],{status});
     return r;
    });
@@ -208,8 +239,8 @@ async function handle(req,res){
    if(actor.role!=="head_of_training")fail(403,"Head of training required");
    const b=await json(req),key=requiredString(b,"stageKey",1,99),standard=requiredString(b,"standard",25,2500);
    await transaction(async db=>{
-    const course=await db.query("SELECT * FROM academy_courses WHERE id=$1 AND prepared_by<>$2 AND review_status='READY_FOR_AUTHORITY'",[stageReq[1],actor.id]);
-    if(!course.rows[0])fail(409,"Course must first be reviewed by independent quality manager");
+    const course=await db.query("SELECT * FROM academy_courses WHERE id=$1 AND review_status='DRAFT'",[stageReq[1]]);
+    if(!course.rows[0])fail(409,"Course stages can only be defined before quality approval");
     await db.query("INSERT INTO academy_course_stage_requirements(course_id,stage_key,standard) VALUES($1,$2,$3)",[stageReq[1],key,standard]);
     await audit(db,actor.id,"STAGE_REQUIRED","COURSE",stageReq[1],{stage:key});
    });
@@ -264,7 +295,7 @@ async function handle(req,res){
     const x=await db.query("SELECT * FROM academy_assessment_records WHERE id=$1 AND enrolment_id=$2 AND status='PASS'",[examId,id]);
     if(!x.rows[0])fail(409,"Verified passing examination record required");
     const requirements=await db.query("SELECT stage_key FROM academy_course_stage_requirements WHERE course_id=$1",[e.course_id]);
-    const stages=await db.query("SELECT stage_key,status,instructor_id FROM academy_training_stages WHERE enrolment_id=$1",[id]);
+    const stages=await db.query("SELECT DISTINCT ON(stage_key) stage_key,status,instructor_id FROM academy_training_stages WHERE enrolment_id=$1 ORDER BY stage_key,recorded_at DESC,id DESC",[id]);
     if(!requirements.rows.length||requirements.rows.some(k=>!stages.rows.some(s=>s.stage_key===k.stage_key&&s.status==="COMPLETE")))fail(409,"Required training stages incomplete");
     const docs=await evidence(db);
     if(!canIssueApprovedCourseCompletion({evidence:docs,courseId:e.course_id,studentId:e.student_id,examinerId:x.rows[0].examiner_id,
@@ -288,7 +319,7 @@ async function handle(req,res){
      WHERE r.id=$1 AND r.status='PENDING_QA' FOR UPDATE OF r`,[graduation[1]]);
     const rec=rows[0];if(!rec||rec.requested_by===actor.id)fail(409,"Independent QA request required");
     const reqs=await db.query("SELECT stage_key FROM academy_course_stage_requirements WHERE course_id=$1",[rec.course_id]);
-    const stages=await db.query("SELECT stage_key,status,instructor_id FROM academy_training_stages WHERE enrolment_id=$1",[rec.enrolment_id]);
+    const stages=await db.query("SELECT DISTINCT ON(stage_key) stage_key,status,instructor_id FROM academy_training_stages WHERE enrolment_id=$1 ORDER BY stage_key,recorded_at DESC,id DESC",[rec.enrolment_id]);
     if(!reqs.rows.length||reqs.rows.some(k=>!stages.rows.some(s=>s.stage_key===k.stage_key&&s.status==="COMPLETE")))fail(409,"All course stages must be completed");
     const docs=await evidence(db);
     if(!canIssueApprovedCourseCompletion({evidence:docs,courseId:rec.course_id,studentId:rec.student_id,examinerId:rec.examiner_id,
