@@ -246,6 +246,7 @@ CREATE TABLE IF NOT EXISTS academy_admin_signatures (
  CHECK(jsonb_typeof(preferences)='object')
 );
 
+
 -- Administrator-priced academic PDF release services. Existing student records
 -- remain visible free of charge; a fee applies to issuing a printable document.
 -- No diploma, examination pass, course credit or SLCAA licence is sold here.
@@ -253,7 +254,7 @@ CREATE TABLE IF NOT EXISTS academy_document_fee_plans (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  kind text NOT NULL CHECK (kind IN ('CERTIFICATE','TRANSCRIPT')),
  course_id text REFERENCES academy_courses(id),
- country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}
+ country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}$'),
  currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
  amount_minor bigint NOT NULL CHECK(amount_minor BETWEEN 0 AND 100000000000),
  status text NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','ARCHIVED')),
@@ -272,7 +273,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS academy_document_active_fee_idx
 CREATE TABLE IF NOT EXISTS academy_student_document_identity (
  student_id uuid PRIMARY KEY REFERENCES academy_users(id),
  legal_name text NOT NULL CHECK(length(legal_name) BETWEEN 3 AND 160),
- evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}$'),
  verified_by uuid NOT NULL REFERENCES academy_users(id),
  verified_at timestamptz NOT NULL DEFAULT now()
 );
@@ -322,8 +323,7 @@ CREATE TABLE IF NOT EXISTS academy_document_manual_settlements (
  amount_minor bigint NOT NULL CHECK(amount_minor>0),
  currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
  payment_reference text NOT NULL CHECK(length(payment_reference) BETWEEN 6 AND 250),
- evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
-),
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}$'),
  notes text NOT NULL CHECK(length(notes) BETWEEN 12 AND 1000),
  attested_by uuid NOT NULL REFERENCES academy_users(id),
  attested_at timestamptz NOT NULL DEFAULT now()
