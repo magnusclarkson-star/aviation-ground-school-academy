@@ -96,7 +96,7 @@ const data=Object.freeze({
   caption:"Identify the actual rotor mast, main rotor, tail rotor, cabin and landing skids before reviewing cyclic, collective and anti-torque control effects.",
   credit:"Adrian Pingstone",license:"Public domain (author dedication)",licenseUrl:pd},
  {file:"Helicopter_Robinson_R44.jpg",hash:"b/b7",max:960,section:2,title:"Robinson R44: additional aircraft view",
-  alt:"Real Robinson R44 helicopter photographed in daylight.",
+  alt:"Real Robinson R44 helicopter photographed in daylight, showing the two-bladed main rotor, tail boom, cockpit cabin and landing skids.",
   caption:"Compare airframe proportions and visible rotor components with the instructional helicopter control diagram; this photo is not a cockpit-operating reference.",
   credit:"Tomas62",license:"CC BY-SA 3.0",licenseUrl:cc3}
  ]
