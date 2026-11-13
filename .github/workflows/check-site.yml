@@ -64,6 +64,7 @@ jobs:
       - run: node --check academy-specialist-courses-data.js
       - run: node --check academy-specialist-courses.js
       - run: node scripts/test-academy-specialist-courses.mjs
+      - run: node scripts/test-academy-certificates.mjs
       - run: node --check flight-sim-model.js
       - run: node --check flight-sim-aerodynamics.js
       - run: node scripts/test-flight-sim-aerodynamics.mjs

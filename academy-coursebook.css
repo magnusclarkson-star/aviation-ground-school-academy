@@ -28,3 +28,15 @@
 .capstone-question input{margin-top:5px;accent-color:#4fdddf}
 #capstoneForm[hidden],#completionCelebration[hidden],#capstoneExplanations[hidden]{display:none}
 @media(max-width:600px){.deep-section .deep-inside{padding:10px}.glossary{grid-template-columns:1fr;gap:3px}.glossary dd{margin-bottom:9px}.deep-lesson{padding:11px}.deep-section>summary{padding:13px}}
+
+
+/* Certificate panel stays separate from formal, paid and identity-verified records. */
+.certificate-panel{margin:22px 0;border-color:#bca26c}
+.certificate-panel .certificate-options{align-items:start;flex-direction:column}
+.certificate-panel .certificate-checkbox{display:flex;gap:9px;align-items:start;line-height:1.5}
+.certificate-panel .certificate-checkbox input{accent-color:#55cddb;margin-top:5px}
+.certificate-panel input:not([type=checkbox]),.certificate-panel select{background:#071f31;border:1px solid #64879e;border-radius:9px;padding:11px;color:#fff;max-width:100%}
+.certificate-panel #certificateLearnerName{min-width:min(320px,100%);flex:1}
+.certificate-panel .status{border-left:3px solid #a98c50;background:#193447;padding:13px;border-radius:8px}
+.certificate-panel button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:550px){.certificate-panel .toolbar{align-items:stretch;flex-direction:column}.certificate-panel button,.certificate-panel select{width:100%}}

@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install isolated private PDF and PostgreSQL dependencies
+        run: npm install --prefix academy-secure --ignore-scripts --no-audit --no-fund
       - run: node --check academy-secure/policy.mjs
       - run: node --check academy-secure/auth.mjs
       - run: node --check academy-secure/server.mjs
@@ -35,7 +37,14 @@ jobs:
       - run: node --check academy-secure/signature-vault.mjs
       - run: node --check academy-secure/signature-routes.mjs
       - run: node --check academy-secure/signature-portal.js
-      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/signature-vault.test.mjs
+      - run: node --check academy-secure/document-pdf.mjs
+      - run: node --check academy-certificate-core.mjs
+      - run: node --check academy-certificate-eligibility.mjs
+      - run: node --check academy-certificate-ui.mjs
+      - run: node --check academy-secure/document-routes.mjs
+      - run: node --check academy-secure/document-portal.js
+      - run: node --check academy-secure/transcript-pdf.mjs
+      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/signature-vault.test.mjs academy-secure/tests/document.test.mjs
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12

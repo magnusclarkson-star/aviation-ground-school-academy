@@ -79,6 +79,7 @@ function checkAdvanced(event){
  explanations.appendChild(text("li",(result.caseCorrect?"Scenario correct. ":"Scenario for review. ")+"Preferred response: "+result.caseFeedback.answer+". "+result.caseFeedback.explanation));
  result.checks.forEach((item,i)=>explanations.appendChild(text("li","Question "+(i+1)+": "+(item.correct?"Correct. ":"Review. ")+"Answer: "+item.answer+". "+item.explanation)));
  explanations.hidden=false;summary();
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-advanced-checked",{detail:{moduleId:activeId}}));
 }
 function readMore(){
  if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){$("deepFeedback").textContent="Speech playback is unavailable in this browser.";return}
@@ -114,6 +115,7 @@ function checkCapstone(e){
  result.feedback.forEach((x,i)=>list.appendChild(text("li",(i+1)+". "+(x.correct?"Correct. ":"Review. ")+"Subject: "+x.moduleId+". Preferred answer: "+x.answer+". "+x.explanation)));
  $("capstoneExplanations").hidden=false;
  summary();
+ document.dispatchEvent(new CustomEvent("agsa:coursebook-capstone-checked"));
 }
 function exportAll(){
  const doc=D.exportSummary(coreHistory(),deepHistory,finalHistory,route);

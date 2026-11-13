@@ -5,13 +5,13 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-brand.js"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
  try{
   const bytes=await readFile(path.join(root,name));
-  res.writeHead(200,{"Content-Type":name.endsWith(".js")?"text/javascript":name.endsWith(".css")?"text/css":"text/html"});
+  res.writeHead(200,{"Content-Type":(name.endsWith(".js")||name.endsWith(".mjs"))?"text/javascript":name.endsWith(".css")?"text/css":"text/html"});
   res.end(bytes);
  }catch{res.writeHead(404);res.end()}
 });
@@ -41,6 +41,8 @@ try{
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
  await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
+ assert.equal(await desktop.locator("#certificatesPanel").count(),1);
+ assert.equal(await desktop.locator("#downloadProgrammeCertificate").isDisabled(),true);
  assert.equal(await desktop.locator("#deepGlossary dt").count(),3);
  assert.equal(await desktop.locator("#deepQuestions fieldset").count(),3);
  assert.equal(await desktop.locator("#deepScenario fieldset").count(),1);

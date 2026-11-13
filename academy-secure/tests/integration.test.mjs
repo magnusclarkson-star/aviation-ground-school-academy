@@ -275,6 +275,82 @@ test("private ATO roles, verified-source gates and independent completion record
    confirmDocumentsChecked:true,confirmStagesChecked:true},qa);
   assert.equal(issued.status,200,JSON.stringify(issued.body));
   assert.equal(issued.body.notPilotLicence,true);
+  // Formal document fees are independent from tuition, grades, and examination authority.
+  assert.equal((await call("/api/admin/documents/fees","GET",undefined,student)).status,403);
+  assert.equal((await call("/api/my/documents","GET",undefined,student)).body.documents.length,0);
+  const identity=await call("/api/admin/documents/verify-identity","POST",{
+   studentId:users.student.id,legalName:"Academic Test Learner",evidenceSha256:"8".repeat(64)},qa);
+  assert.equal(identity.status,200,JSON.stringify(identity.body));
+  assert.equal((await call("/api/admin/documents/verify-identity","POST",{
+   studentId:users.student.id,legalName:"Unauthorized Self Attestation",evidenceSha256:"8".repeat(64)},admin)).status,403);
+  const certFee=await call("/api/admin/documents/fees","POST",{
+   kind:"CERTIFICATE",courseId:"ppl-theory",countryCode:"SL",currency:"SLE",amountMinor:20000
+  },admin);
+  assert.equal(certFee.status,201,JSON.stringify(certFee.body));
+  const transFee=await call("/api/admin/documents/fees","POST",{
+   kind:"TRANSCRIPT",countryCode:"SL",currency:"SLE",amountMinor:15000
+  },admin);
+  assert.equal(transFee.status,201,JSON.stringify(transFee.body));
+  const certificateGrant=await call("/api/admin/documents/grants","POST",{
+   kind:"CERTIFICATE",studentId:users.student.id,completionId:request.body.request.id,
+   feePlanId:certFee.body.feePlan.id,grantType:"SCHOLARSHIP",discountBps:10000,
+   reason:"Full scholarship covers course certificate issue fee"
+  },admin);
+  assert.equal(certificateGrant.status,201,JSON.stringify(certificateGrant.body));
+  assert.equal(certificateGrant.body.grant.status,"ACTIVE");
+  const pendingTranscript=await call("/api/admin/documents/grants","POST",{
+   kind:"TRANSCRIPT",studentId:users.student.id,feePlanId:transFee.body.feePlan.id,
+   grantType:"PAID",discountBps:0,reason:"Student requested official-style academic transcript"
+  },admin);
+  assert.equal(pendingTranscript.status,201,JSON.stringify(pendingTranscript.body));
+  assert.equal(pendingTranscript.body.grant.status,"PENDING_PAYMENT");
+  assert.equal((await call("/api/admin/documents/grants","GET",undefined,head)).status,403);
+  assert.equal((await call("/api/admin/documents/grants/"+pendingTranscript.body.grant.id+"/confirm-payment","POST",{
+   amountMinor:14500,reference:"TEST-RECEIPT-001",evidenceSha256:"a".repeat(64),
+   notes:"Synthetic test receipt, no live funds moved"},admin)).status,409);
+  const layout=await call("/api/admin/documents/layouts","POST",{
+   audience:"FORMAL",style:"FORMAL_TRADITIONAL",enabled:true,
+   options:{showSeal:true,showSignature:false,showCertificateNumber:true,
+    showCompletionDate:true,showCourseTitle:true,showInstructorLine:true}
+  },admin);
+  assert.equal(layout.status,200,JSON.stringify(layout.body));
+  const transLayout=await call("/api/admin/documents/layouts","POST",{
+   audience:"TRANSCRIPT",style:"FORMAL_TRADITIONAL",enabled:true,
+   options:{showSeal:true,showSignature:false}
+  },admin);
+  assert.equal(transLayout.status,200,JSON.stringify(transLayout.body));
+  assert.equal((await call("/api/admin/documents/layouts","POST",{
+   audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
+  },admin)).status,400,"Unverified QR codes must stay disabled");
+  const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
+   headers:{Origin:ORIGIN,Cookie:student}
+  });
+  assert.equal(pdfResponse.status,200);
+  assert.match(pdfResponse.headers.get("content-type"),/application\/pdf/);
+  assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  const premature=await fetch(ORIGIN+"/api/my/documents/"+pendingTranscript.body.grant.id+"/download",{
+   headers:{Origin:ORIGIN,Cookie:student}
+  });
+  assert.equal(premature.status,403,"Unsettled transcript must remain blocked");
+  const settlement=await call("/api/admin/documents/grants/"+pendingTranscript.body.grant.id+"/confirm-payment","POST",{
+   amountMinor:15000,reference:"TEST-RECEIPT-001",evidenceSha256:"a".repeat(64),
+   notes:"Synthetic test of independently attested outside payment"
+  },admin);
+  assert.equal(settlement.status,200,JSON.stringify(settlement.body));
+  const transcriptResponse=await fetch(ORIGIN+"/api/my/documents/"+pendingTranscript.body.grant.id+"/download",{
+   headers:{Origin:ORIGIN,Cookie:student}
+  });
+  assert.equal(transcriptResponse.status,200);
+  assert.equal(Buffer.from(await transcriptResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
+  assert.equal((await call("/api/admin/documents/grants/"+pendingTranscript.body.grant.id+"/revoke","POST",{
+   reason:"Synthetic test of revoking document printing access"
+  },admin)).status,200);
+  const afterRevoke=await fetch(ORIGIN+"/api/my/documents/"+pendingTranscript.body.grant.id+"/download",{
+   headers:{Origin:ORIGIN,Cookie:student}
+  });
+  assert.equal(afterRevoke.status,403);
+  assert.equal((await call("/api/my/documents","GET",undefined,student)).body.documents.length,2);
+
   assert.match(issued.body.serial,/^AGSA-COURSE-/);
   assert.equal((await call("/api/my/assessments","GET",undefined,student)).body.assessmentRecords.length,1);
   assert.equal((await call("/api/my/enrolments","GET",undefined,student)).body.enrolments.length,1);

@@ -9,6 +9,7 @@ import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEma
 import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,canRecordApprovedTraining,canRecordOfficialExam,canIssueApprovedCourseCompletion} from "./policy.mjs";
 import {handleFeesRoute} from "./fees-routes.mjs";
 import {handleSignatureRoute} from "./signature-routes.mjs";
+import {handleDocumentRoute} from "./document-routes.mjs";
 
 const httpPort=Number(process.env.PORT||8787);
 const baseOrigin=process.env.ACADEMY_ORIGIN;
@@ -80,7 +81,7 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
-  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/signature-portal.js","/portal.css"].includes(pathname)){
+  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/signature-portal.js","/document-portal.js","/portal.css"].includes(pathname)){
    const file=pathname==="/"? "portal.html":pathname.slice(1);
    const bytes=await readFile(new URL("./"+file,import.meta.url));
    const type=file.endsWith(".html")?"text/html; charset=utf-8":file.endsWith(".css")?"text/css; charset=utf-8":"text/javascript; charset=utf-8";
@@ -133,6 +134,7 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  if(await handleDocumentRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   if(await handleSignatureRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   // Financial access is a separate gate. Only accountable_manager may
   // price, waive, award scholarships, attest off-platform settlement or revoke.
