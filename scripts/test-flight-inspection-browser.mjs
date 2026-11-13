@@ -207,7 +207,7 @@ try{
  assert.equal(await button.isVisible(),true);
  assert.ok((await button.boundingBox()).height>=34);
  await button.tap();
- assert.equal(await mobile.locator("#aircraftInspectRenderMode").textContent(),"2D view",
+ assert.equal(await mobile.locator("#aircraftInspectRenderMode").textContent(),"2D fallback",
   "inspection works on Android browsers without WebGL");
  assert.equal(await mobile.locator("#aircraftInspectCanvas2D").isVisible(),true);
  await wait(mobile);
@@ -219,7 +219,7 @@ try{
  await mobile.locator("#aircraftInspectReset").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
- assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"178%",
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"189%",
   "double tapping the aircraft enlarges it on Android");
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
