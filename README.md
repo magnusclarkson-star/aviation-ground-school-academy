@@ -274,3 +274,7 @@ The immersive Chromium browser checks now verify the default frame, explicit off
 ## Install the flight simulator on Android
 
 Open the HTTPS GitHub Pages flight simulator in Chrome on Android and choose **Install app** from the browser menu when offered. The new web manifest provides a standalone home-screen entry with 192px and 512px application icons. The service worker caches only same-origin simulator files encountered on the first online visit; reopen the installed simulator online once to let the new worker cache flight assets before relying on offline replay. Some voice, vibration and browser/device integrations may remain unavailable offline. This is an installable progressive web app, not a compiled native APK or a certified aircraft trainer.
+
+## Expanded introductory Academy coursebook — November 2026
+
+Open [Full Ground-School Coursebook](academy-coursebook.html) for a structured 12-subject introductory course with 36 reading lessons, 36 locally scored practice questions, suggested study order for Scouts/Air Scouts and aspiring pilots, device speech narration, topic search, revision suggestions and optional unsigned export. The existing four beginner modules and their 24 questions remain available as an alternate practice page. The coursebook is an editorial draft requiring qualified subject-matter review, not an approved qualification, licensing syllabus or secure student-record system. See [Coursebook Acceptance](docs/ACADEMY-COURSEBOOK-ACCEPTANCE.md).
