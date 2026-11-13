@@ -6,6 +6,8 @@
  */
 (function(root){"use strict";
 const FILE="assets/aircraft/fa18e-licensed.glb";
+// Only the validated packaging tool enables the optional asset.
+const ACTIVE=false;
 const MAX_BYTES=24*1024*1024,MAX_TEXTURE_BYTES=4*1024*1024;
 const REQUIRED=["leftFlap","rightFlap","leftAileron","rightAileron",
  "elevatorLeft","elevatorRight","rudderLeft","rudderRight",
@@ -192,7 +194,7 @@ function ensureFa18(fetcher=root?.fetch?.bind(root)){
  }
  return pending;
 }
-const api={FILE,REQUIRED,parseFa18GLB,ensureFa18};
+const api={FILE,ACTIVE,REQUIRED,parseFa18GLB,ensureFa18};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFa18NativeAirframe=api;
 })(typeof window!=="undefined"?window:null);
