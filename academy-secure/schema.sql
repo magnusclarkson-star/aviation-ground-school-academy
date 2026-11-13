@@ -139,13 +139,19 @@ CREATE TABLE IF NOT EXISTS academy_audit_events (
   recorded_at timestamptz NOT NULL DEFAULT now()
 );
 -- Audit history cannot be edited or deleted via the application runtime or even by an ordinary table owner.
-CREATE OR REPLACE FUNCTION academy_block_audit_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN RAISE EXCEPTION 'audit events are append only'; END $$;
+CREATE OR REPLACE FUNCTION academy_block_audit_mutation() RETURNS trigger LANGUAGE plpgsql AS $audit_body$
+BEGIN
+ RAISE EXCEPTION 'audit events are append only';
+END;
+$audit_body$;
 DROP TRIGGER IF EXISTS academy_audit_immutable ON academy_audit_events;
 CREATE TRIGGER academy_audit_immutable BEFORE UPDATE OR DELETE ON academy_audit_events FOR EACH ROW EXECUTE FUNCTION academy_block_audit_mutation();
 
-CREATE OR REPLACE FUNCTION academy_block_training_mutation() RETURNS trigger LANGUAGE plpgsql AS $
-BEGIN RAISE EXCEPTION 'training and examination records are append only'; END $;
+CREATE OR REPLACE FUNCTION academy_block_training_mutation() RETURNS trigger LANGUAGE plpgsql AS $training_body$
+BEGIN
+ RAISE EXCEPTION 'training and examination records are append only';
+END;
+$training_body$;
 DROP TRIGGER IF EXISTS academy_stage_immutable ON academy_training_stages;
 CREATE TRIGGER academy_stage_immutable BEFORE UPDATE OR DELETE ON academy_training_stages FOR EACH ROW EXECUTE FUNCTION academy_block_training_mutation();
 DROP TRIGGER IF EXISTS academy_exam_immutable ON academy_assessment_records;
