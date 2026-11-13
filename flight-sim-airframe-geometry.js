@@ -702,7 +702,7 @@ function addFA18(m){
  // Carrier arresting-hook geometry is attached only once beneath the tail.
  curvedTube(m,[[0,-.59,-5.63],[0,-.84,-6.39],
   [0,-1.00,-7.11],[0,-1.14,-7.48]],.047,palette.metal,7);
- m.box(-.16,-1.18,-7.65,.32,.11,.25,palette.dark);
+ m.box(-.17,-1.19,-7.75,.34,.11,.25,palette.dark);
  m.box(-.08,-.14,8.05,.16,.17,.22,palette.dark);
  // This deliberately repaints only the muted main exterior palette, not
  // glass, lights or exhausts. The original model remains fully animatable.
