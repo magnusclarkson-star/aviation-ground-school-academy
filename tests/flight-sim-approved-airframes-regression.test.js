@@ -9,7 +9,7 @@ const sourceNotes=fs.readFileSync(path.join(root,'assets/aircraft/TEXTURED-360-S
 
 test('approved Cessna and Robinson 360 views cannot be silently swapped for third-party embeds',()=>{
   for(const id of ['c172','r44']){
-    assert.doesNotMatch(inspect,new RegExp(id+':\\\\{uid:'),'no external replacement for '+id);
+    assert.equal(inspect.includes(id+':{uid:'),false,'no external replacement for '+id);
   }
   assert.match(inspect,/id==="c172"\)phase=renderer\.realC172Status/);
   assert.match(inspect,/id==="r44"\)phase=renderer\.realR44Status/);
