@@ -2525,7 +2525,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};
- }catch{
+ }catch(error){
+  // Do not silently swallow shader/texture failures. The browser visual
+  // smoke test and an Android device need the actual WebGL2 error to
+  // distinguish a driver problem from a broken aircraft shader.
+  if(canvas.dataset)canvas.dataset.rendererError=String(error?.message||error).slice(0,220);
+  if(typeof console!=="undefined")
+   console.warn("Academy WebGL2 renderer initialization failed:",error);
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
    if(skyProgram)gl.deleteProgram(skyProgram);}catch{}
