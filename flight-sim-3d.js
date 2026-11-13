@@ -1666,7 +1666,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     partName:primitive.partName||null,
     partAxis:primitive.partAxis||0,
     partPivot:primitive.partPivot||[0,0,0],
-    gearDoorSide:primitive.gearDoorSide||0};
+    gearDoorSide:primitive.gearDoorSide||0,
+    sourceName:primitive.sourceName||null};
    objects.push(object);return object;
   };
   // A stalled asset request must not leave the cockpit or 360 viewer
@@ -1921,6 +1922,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uHasTexture,0);
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
+   gl.uniform1f(uni.uSkinFinish,0);
+   // Bind the original, generated microtexture only at unit 1. Imported
+   // licensed glTF images continue using TEXTURE0 and are never replaced.
+   gl.activeTexture(gl.TEXTURE1);
+   gl.bindTexture(gl.TEXTURE_2D,microTexture);
+   gl.activeTexture(gl.TEXTURE0);
    gl.uniform1i(uni.uC172Pass,0);
    gl.uniform1i(uni.uR44Skin,0);
    const realHelicopter=state.mode==="helicopter"&&realR44!==null;
@@ -2089,8 +2096,16 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
      "not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
+    const finishId={f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0;
+    const isSurface=part=>{
+     if(!part||!part.sourceName||(part.opacity??1)<.99||part.partAxis===4)
+      return false;
+     if(id==="su37")return /^(fuselage|wing|tail|WNG_|CNRD_|ELV_|TF_)/.test(part.sourceName);
+     return Boolean(root?.AGSANativeFighterLivery?.skinPart?.(id,part.sourceName));
+    };
     const drawCabin=()=>{
      if(!model.cabin)return;
+     gl.uniform1f(uni.uSkinFinish,0);
      gl.disable(gl.BLEND);gl.depthMask(true);
      gl.uniform1i(uni.uC172Pass,0);
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
@@ -2105,6 +2120,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }else if(realModel){
      gl.activeTexture(gl.TEXTURE0);
      const drawPrimitive=(part,alpha)=>{
+      gl.uniform1f(uni.uSkinFinish,isSurface(part)?finishId:0);
       const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
@@ -2225,9 +2241,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uOpacity,1);
      gl.uniform1f(uni.uAlphaCutoff,0);gl.uniform1i(uni.uC172Pass,0);
     }else if(!pendingSourceJet){
+     gl.uniform1f(uni.uSkinFinish,id==="fa18"?finishId:0);
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
+    // Keep special-purpose gear wells, rotors, lamps and transparent
+    // surfaces untextured even after the imported hull's last primitive.
+    gl.uniform1f(uni.uSkinFinish,0);
     if(realModel&&model.importedGear&&!(view==="inspect"&&orbit.interior===true)){
      // Restore non-textured, opaque source-metal rendering before placing
      // the wheel-well recesses and independently hinged left/right doors.
@@ -2301,6 +2321,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
     }
     for(const part of animatedParts){
+     const fa18Panel=id==="fa18"&&!part.gearName&&
+      /^(left|right)(Aileron|Flap)$|^(elevator|rudder)(Left|Right)$/.test(part.name);
+     gl.uniform1f(uni.uSkinFinish,fa18Panel?finishId:0);
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      // Procedural jet wheel doors follow the exact same retractable gear
@@ -2315,6 +2338,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,part.gpu.count);
     }
     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+    gl.uniform1f(uni.uSkinFinish,0);
     // Imported assets use fixtures mounted to their ACTUAL parsed surface
     // vertices; fallback models retain their own procedural light stations.
     const lightingModel=realModel?.positionLights?realModel:model;
