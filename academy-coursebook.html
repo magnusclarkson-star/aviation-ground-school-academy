@@ -4,7 +4,7 @@
 <script src="academy-coursebook-depth-b1.js" defer></script>
 <script src="academy-coursebook-depth-b2.js" defer></script>
 <script src="academy-coursebook-depth-model.js" defer></script>
-<script src="academy-coursebook-depth-ui.js" defer></script></head><body>
+<script src="academy-coursebook-depth-ui.js" defer></script><script type="module" src="academy-certificate-ui.mjs"></script></head><body>
 <header class="site-head"><a class="brand" href="index.html">✈ AVIATION GROUND SCHOOL ACADEMY<small>STRUCTURED LEARNING COURSEBOOK</small></a><nav aria-label="Academy navigation"><a href="index.html">Academy home</a><a href="ground-school-modules.html">Starter practice</a><a href="ai-instructor.html">Speaking lessons</a><a href="flight-sim.html">Flight simulator</a></nav></header>
 <main><section class="hero"><div class="eyebrow">12 MODULES · 72 LESSON SECTIONS · 72 PRACTICE QUESTIONS · 12 SCENARIOS</div><h1>Ground school: learn from foundations to flight planning</h1><p>Follow a complete introductory study sequence, study six teaching sections per module, practise the scenarios, take the topic checks and consolidate your knowledge in a cumulative review. Choose the Scouts/Air Scouts route or the aviation enthusiast/aspiring pilot route.</p></section>
 <div class="notice"><strong>Draft educational course.</strong> These lessons are not yet reviewed or approved by a qualified aviation instructor or a regulator. The practice results are local, editable and not examinations, training credits, licences or certificates. Use current approved references and supervision for real aviation.</div>
@@ -43,5 +43,31 @@
  <div id="capstoneFeedback" class="feedback" role="status" aria-live="polite">No cumulative review completed on this device.</div>
  <details id="capstoneExplanations" hidden><summary>Review answer explanations</summary><ol id="capstoneAnswerList"></ol></details>
  <div class="completion-celebration" id="completionCelebration" hidden aria-live="polite"><span aria-hidden="true">🎉</span><strong>All Academy self-study practice milestones reached!</strong><p>This is a personal, unverified study milestone on this device, not a qualification or official certificate.</p></div>
+</section>
+<section class="panel certificate-panel" id="certificatesPanel" aria-label="Academic achievement certificates">
+ <div class="eyebrow">ACADEMY ACHIEVEMENT · PRINT-READY A4 LANDSCAPE</div>
+ <h2>Download and print your course certificates</h2>
+ <p>Earn a distinctive Academy certificate for each subject after passing both its introductory and advanced checks. Complete all 12 subjects and the mixed review for a full Foundation Ground School self-study certificate. These are <strong>personal, unsigned independent-study achievements</strong>, not an SLCAA qualification or authorised examination award.</p>
+ <div class="toolbar">
+  <label for="certificateLearnerName">Name shown on the certificate</label>
+  <input id="certificateLearnerName" autocomplete="name" maxlength="90" placeholder="Your preferred display name (optional)" aria-describedby="certificatePrivacy">
+ </div>
+ <p class="meta" id="certificatePrivacy">Your entered name is only used on this device to create the PDF. It is not saved or uploaded. With no name entered, the certificate says “Academy Learner”.</p>
+ <div class="toolbar certificate-options">
+  <label class="certificate-checkbox"><input id="certificateAutoDownload" type="checkbox" checked> Automatically download a PDF when a course milestone is first achieved</label>
+  <label class="certificate-checkbox"><input id="certificateAutoPrint" type="checkbox"> Also open the print dialog on successful completion (may require browser permission)</label>
+ </div>
+ <p class="status" id="certificateProgress" role="status" aria-live="polite">Checking local self-study achievements…</p>
+ <div class="toolbar">
+  <label for="certificateModule">Completed module</label>
+  <select id="certificateModule" aria-label="Completed module certificate"></select>
+  <button type="button" id="downloadModuleCertificate">Download module PDF</button>
+  <button type="button" id="printModuleCertificate">Print module</button>
+ </div>
+ <div class="toolbar">
+  <button type="button" id="downloadProgrammeCertificate" class="primary">Download full-course PDF</button>
+  <button type="button" id="printProgrammeCertificate">Print full course</button>
+ </div>
+ <p id="certificateMessage" class="meta" role="status" aria-live="polite"></p>
 </section>
 <footer>Independent Academy draft coursebook. Not an approved syllabus, pilot licence, examination record, verified instructor assessment or operational flight reference. FAA handbook links are independent source pointers, not endorsement or qualification equivalence.</footer></main></body></html>
