@@ -13,6 +13,10 @@ on:
       - 'ground-school-modules.css'
       - 'ground-school-modules.js'
       - 'ground-school-modules-ui.js'
+      - 'academy-coursebook.html'
+      - 'academy-coursebook.css'
+      - 'academy-coursebook*.js'
+      - 'scripts/test-academy-coursebook-depth-browser.mjs'
       - 'scripts/test-ground-school-modules.mjs'
       - 'scripts/test-ground-school-modules-browser.mjs'
       - 'curriculum-review.html'
@@ -35,6 +39,10 @@ on:
       - 'ground-school-modules.css'
       - 'ground-school-modules.js'
       - 'ground-school-modules-ui.js'
+      - 'academy-coursebook.html'
+      - 'academy-coursebook.css'
+      - 'academy-coursebook*.js'
+      - 'scripts/test-academy-coursebook-depth-browser.mjs'
       - 'scripts/test-ground-school-modules.mjs'
       - 'scripts/test-ground-school-modules-browser.mjs'
       - 'curriculum-review.html'
@@ -73,3 +81,4 @@ jobs:
       - run: npx playwright install chromium
       - run: node scripts/test-ai-instructor-browser.mjs
       - run: node scripts/test-ground-school-modules-browser.mjs
+      - run: node scripts/test-academy-coursebook-depth-browser.mjs
