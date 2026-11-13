@@ -24,7 +24,7 @@ test('authorized model activation requires a pinned 64-digit lowercase SHA-256',
   assert.throws(()=>validateManifest({...authorized,sha256:value}),
    /verified SHA-256/);
  }
- assert.equal(validateManifest(cfg).controls.size,0);
+ assert.equal(validateManifest({...cfg,requireControls:false}).controls.size,0);
 });
 
 test('browser verifies exact downloaded binary before calling the GLB parser',async()=>{
