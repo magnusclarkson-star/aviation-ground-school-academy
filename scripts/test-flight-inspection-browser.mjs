@@ -29,6 +29,13 @@ const url="http://127.0.0.1:"+server.address().port+"/flight-sim.html";
 const browser=await chromium.launch({headless:true,args:["--no-sandbox",
  "--enable-webgl","--use-gl=angle","--use-angle=swiftshader-webgl",
  "--enable-unsafe-swiftshader"]});
+// Browser CI checks authored source URLs, credits and native gestures, not
+// Sketchfab's third-party artwork. Stub only external iframe navigation
+// to avoid unreliable network access slowing phone tests.
+const stubHostedPreview=page=>page.route(
+ /^https:\/\/(?:www\.)?sketchfab\.com\/.*$/,
+ route=>route.fulfill({status:200,contentType:"text/html",
+  body:"<!doctype html><title>Hosted 3D preview network stub</title>"}));
 const errors=[];
 const wait=page=>page.waitForTimeout(140);
 const activeCanvas=page=>page.locator("#aircraftInspectCanvas3D").isVisible().then(
@@ -38,6 +45,7 @@ try{
  fs.mkdirSync("artifacts",{recursive:true});
  const desktop=await browser.newPage({viewport:{width:1200,height:900},serviceWorkers:"block"});
  desktop.on("pageerror",e=>errors.push("desktop "+e.message));
+ await stubHostedPreview(desktop);
  await desktop.goto(url,{waitUntil:"load"});
  assert.equal(await desktop.locator("#aircraftInspectOpen").count(),1);
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
@@ -69,8 +77,8 @@ try{
  await desktop.locator("#aircraftInspectReset").click();
  assert.match(await desktop.locator("#aircraftInspectAngles").textContent(),/AZ 000/);
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
- assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"158%",
-  "double clicking the aircraft zooms in without adding a new control");
+ assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"189%",
+  "Su-37 fitted radius 17m to close radius 9m: double click must zoom precisely");
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
   "second double click restores fitted aircraft view");
@@ -129,6 +137,7 @@ try{
  const phone3d=await browser.newPage({viewport:{width:390,height:844},
   isMobile:true,hasTouch:true,serviceWorkers:"block"});
  phone3d.on("pageerror",e=>errors.push("phone 3D "+e.message));
+ await stubHostedPreview(phone3d);
  await phone3d.goto(url,{waitUntil:"load"});
  await phone3d.locator("#cockpitHelpToggle").tap();
  await phone3d.locator("#aircraftInspectOpen").tap();
@@ -164,7 +173,8 @@ try{
     await phone3d.waitForFunction(()=>{
      const v=document.getElementById("aircraftInspectViewport");
      const c=document.getElementById("aircraftInspectCanvas3D");
-     return v.dataset.modelLoading==="off"&&
+     // Match the visible new frame, not stale source metadata from portrait.
+     return v.dataset.modelLoading==="off"&&!c.hidden&&
       c.dataset.airframeId==="su37"&&c.dataset.airframeSource==="gpl-su37-fguk";
     },null,{timeout:25000});
     assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
@@ -180,6 +190,7 @@ try{
 
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:"block"});
  mobile.on("pageerror",e=>errors.push("phone "+e.message));
+ await stubHostedPreview(mobile);
  await mobile.addInitScript(()=>{
   const original=HTMLCanvasElement.prototype.getContext;
   HTMLCanvasElement.prototype.getContext=function(name,...args){
@@ -197,7 +208,7 @@ try{
  assert.equal(await button.isVisible(),true);
  assert.ok((await button.boundingBox()).height>=34);
  await button.tap();
- assert.equal(await mobile.locator("#aircraftInspectRenderMode").textContent(),"2D view",
+ assert.equal(await mobile.locator("#aircraftInspectRenderMode").textContent(),"2D fallback",
   "inspection works on Android browsers without WebGL");
  assert.equal(await mobile.locator("#aircraftInspectCanvas2D").isVisible(),true);
  await wait(mobile);
@@ -209,7 +220,7 @@ try{
  await mobile.locator("#aircraftInspectReset").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();
- assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"178%",
+ assert.equal(await mobile.locator("#aircraftInspectZoomValue").textContent(),"189%",
   "double tapping the aircraft enlarges it on Android");
  await mobile.locator("#aircraftInspectViewport").tap();
  await mobile.locator("#aircraftInspectViewport").tap();

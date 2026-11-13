@@ -93,7 +93,9 @@
  function paintInspection(ctx,{id="c172",width=960,height=540,orbit={},animation={}}={}){
   const azimuth=((Number(orbit.azimuth)||0)*RAD);
   const elevation=Math.max(-70,Math.min(78,Number(orbit.elevation??28)))*RAD;
-  const distance=Math.max(17,Math.min(70,Number(orbit.distance??29)));
+  // Keep Canvas 2D zoom aligned with the 360° inspector's 6.8m minimum.
+  // The former 17m floor silently cancelled Su-37 zoom on non-WebGL phones.
+  const distance=Math.max(6.8,Math.min(70,Number(orbit.distance??29)));
   const ca=Math.cos(azimuth),sa=Math.sin(azimuth),ce=Math.cos(elevation),se=Math.sin(elevation);
   const scale=Math.min(width/25,height/22)*(29/distance);
   const vertices=[];
