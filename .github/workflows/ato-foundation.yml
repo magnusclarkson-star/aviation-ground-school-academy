@@ -39,7 +39,7 @@ jobs:
       - run: node --check academy-secure/document-routes.mjs
       - run: node --check academy-secure/document-portal.js
       - run: node --check academy-secure/transcript-pdf.mjs
-      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/signature-vault.test.mjs
+      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/signature-vault.test.mjs academy-secure/tests/document.test.mjs
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12
