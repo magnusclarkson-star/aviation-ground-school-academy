@@ -84,6 +84,15 @@
   </form>
   <form id="docLayoutForm" class="panel finance-subsection">
    <h3>Choose certificate design and tick-box options</h3>
+   <p class="hint">You can print genuine PDF layout samples before switching on student issuance. Every preview is permanently marked SAMPLE · NOT ISSUED and never embeds your stored signature or a learner's identity.</p>
+   <div class="toolbar" aria-label="Private PDF sample previews">
+    <a href="/api/admin/documents/preview/FORMAL" target="_blank" rel="noopener">Preview formal PDF</a>
+    <a href="/api/admin/documents/preview/SCOUT" target="_blank" rel="noopener">Preview Air Scouts PDF</a>
+    <a href="/api/admin/documents/preview/ENTHUSIAST" target="_blank" rel="noopener">Preview enthusiast PDF</a>
+    <a href="/api/admin/documents/preview/TRANSCRIPT" target="_blank" rel="noopener">Preview transcript PDF</a>
+   </div>
+   <p class="hint">Public visual gallery: <a href="https://magnusclarkson-star.github.io/aviation-ground-school-academy/academy-certificate-gallery.html" target="_blank" rel="noopener noreferrer">all three Academy certificate examples</a>. Save design options before printing the private PDF sample.</p>
+
    <label>Document audience<select name="audience" id="docAudience"><option value="FORMAL">Formal courses - traditional academic</option><option value="SCOUT">Scouts / Air Scouts - modern aviation</option><option value="ENTHUSIAST">Enthusiasts - navy and gold</option><option value="TRANSCRIPT">Academic transcript</option></select></label>
    <label>Appearance<select name="style" id="docStyle"><option value="FORMAL_TRADITIONAL">Traditional academic</option><option value="SCOUT_MODERN">Modern blue and teal</option><option value="ENTHUSIAST_NAVY_GOLD">Navy and gold</option></select></label>
    <label class="check"><input type="checkbox" name="enabled"> Certificate / transcript printing enabled</label>
