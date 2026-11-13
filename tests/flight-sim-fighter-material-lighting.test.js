@@ -38,6 +38,8 @@ test('native shader uses view-dependent highlights with safe reset and no extra 
  assert.match(source,/out vec3 vWorldPosition;/);
  assert.match(source,/out vec3 vWorldNormal;/);
  assert.match(source,/uniform int uC172Pass,uR44Skin,uFighterMaterial;/);
+ assert.match(source,/uniform highp vec3 uEye;/,
+  "shared camera uniform must use vertex-compatible high precision in fragment shader");
  assert.match(source,/vec3 viewDir=normalize\(uEye-vWorldPosition\);/);
  assert.match(source,/if\(uFighterMaterial>0\)/);
  assert.match(source,/gl\.uniform1i\(uni\.uFighterMaterial,0\);/);
