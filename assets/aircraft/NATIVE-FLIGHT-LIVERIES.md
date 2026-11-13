@@ -34,6 +34,25 @@ new triangles are needed; existing material channels for cockpit, glass,
 wheels, intakes and gear are left intact. A corresponding source model
 and a live WebGL2 device are still required for detailed flight visuals.
 
+## Next layer: original panel-detail bitmap
+
+The WebGL2 native fighter renderer also generates **one 256×256 RGBA
+repeatable microtexture** (256 KiB before mip levels) for subtle sealed panel
+seams, fasteners and restrained grain. It is projected using each model's
+**local aircraft coordinates**, including moving fighter surfaces, rather
+than relying on missing or mismatched imported UV maps.
+
+The texture is original procedural work, not copied from a photograph or the
+third-party Sketchfab models. It is used on native F/A-18, F-22, F-35B,
+Typhoon and Su-37 painted exterior surfaces. Interior-only inspection,
+navigation lighting, wheels, landing gear, glass, Cessna and R44 are
+excluded. A pale-colour gate excludes the procedural F/A-18's darker canopy
+and gear wells, because those share one mesh with its fuselage.
+
+The layer is **optional**; failure to allocate its GPU texture falls back
+to the existing coloured 3D aircraft rather than disabling flight visuals.
+It adds no geometry and no extra network requests.
+
 ## Limitations
 
 On phones without WebGL2, the legacy 2D preview is used and does not have

@@ -1330,6 +1330,36 @@ function importedCameraFraming(camera,view,scale=1){
  return {...camera,eye:camera.eye.map((v,i)=>
   camera.craft[i]+(v-camera.craft[i])*factor)};
 }
+// Tiny original repeatable surface map for flying fighter aircraft.
+// RGBA: subtle paint grain, sealed panel seams, small fasteners, opaque.
+// Generated once per WebGL context (256px = 256 KiB), no downloads or UV
+// unwrap; the shader projects it across the actual licensed source geometry.
+function makeFighterSurfaceMap(size=256){
+ if(!Number.isInteger(size)||size<64||size>512||size%64!==0)
+  throw Error("Fighter texture size must be 64..512 in multiples of 64");
+ const data=new Uint8Array(size*size*4),step=size/4;
+ const hash=(x,y)=>{
+  let n=(Math.imul(x,73856093)^Math.imul(y,19349663))|0;
+  n=Math.imul(n^(n>>>13),1274126177);
+  return (n^(n>>>16))>>>0;
+ };
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const i=(y*size+x)*4,xx=x%step,yy=y%step;
+  const seamX=Math.min(xx,step-xx),seamY=Math.min(yy,step-yy);
+  // Two levels of panel lines: major sealed panels and fine seams.
+  const seam=(seamX<1||seamY<1)?160:
+   (seamX<2||seamY<2)?46:0;
+  const mark=(xx===4||xx===step-4)&&yy%16<2?114:
+   (yy===4||yy===step-4)&&xx%16<2?114:0;
+  const grain=(hash(x,y)&255)-127;
+  const grain2=(hash(x>>2,y>>2)&255)-127;
+  data[i]=Math.max(0,Math.min(255,128+Math.round(grain*.22+grain2*.14)));
+  data[i+1]=seam;
+  data[i+2]=mark;
+  data[i+3]=255;
+ }
+ return {size,data};
+}
 const VERTEX=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPosition;
@@ -1345,6 +1375,7 @@ uniform float uPartAngle;
 uniform int uPartAxis;
 out vec3 vColor;
 out vec3 vLocalPosition;
+out vec3 vLocalNormal;
 out vec2 vTexCoord;
 out float vDistance,vLight,vEmissive;
 // Surface illumination must follow the surface, including animated hinges,
@@ -1422,18 +1453,19 @@ void main(){
  float yy=side*sr+up*cr;
  gl_Position=vec4(xx*uFocal/uAspect,yy*uFocal,
    1.000080003*depth-2.000080003*uCameraNear,depth);
- vColor=aColor;vLocalPosition=aPosition;
+ vColor=aColor;vLocalPosition=aPosition;vLocalNormal=aNormal;
  vTexCoord=aTexCoord;vDistance=depth;
  vLight=.55+.45*max(0.,dot(normalize(normal),normalize(vec3(.28,1.,.36))));
  vEmissive=(uActor>2.5&&uActor<3.5)?1.:0.;
 }`;
 const FRAGMENT=`#version 300 es
 precision mediump float;
-in vec3 vColor,vLocalPosition;
+in vec3 vColor,vLocalPosition,vLocalNormal;
 in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
 uniform vec3 uFogColor,uLightColor;
-uniform float uOpacity,uHasTexture,uAlphaCutoff;
+uniform float uOpacity,uHasTexture,uAlphaCutoff,uSkinFinish;
+uniform sampler2D uSkinMicroTexture;
 uniform int uC172Pass,uR44Skin;
 uniform sampler2D uTexture;
 out vec4 outColor;
@@ -1443,6 +1475,26 @@ void main(){
  if(uHasTexture>.5 && texel.a<uAlphaCutoff)discard;
  vec3 albedo=vColor*texel.rgb;
  float alpha=uOpacity*texel.a;
+ // Imported and procedural fighter hulls share a small real bitmap
+ // pattern, projected by local surface direction. No detail is applied
+ // to aircraft wheels, glazing, cockpits or any runway/world geometry.
+ if(uSkinFinish>.5&&(
+  uSkinFinish<3.5||uSkinFinish>4.5||
+  (vColor.r>.39&&vColor.g>.43&&vColor.b>.47))){
+  // The procedural F/A-18 groups glass, dark wells and skin in one mesh.
+  // Color-gate only its pale painted panels; never mark the dark canopy.
+  vec3 axis=abs(normalize(vLocalNormal));
+  vec2 uv=axis.y>=axis.x&&axis.y>=axis.z?vLocalPosition.xz:
+   axis.x>=axis.z?vLocalPosition.yz:vLocalPosition.xy;
+  vec4 micro=texture(uSkinMicroTexture,uv*.40);
+  // Sealed panel seams are deliberately subtle on phone screens;
+  // coarse vertex colours remain the primary livery.
+  float strength=uSkinFinish<1.5?.47:uSkinFinish<2.5?.33:
+   uSkinFinish<3.5?.35:uSkinFinish<4.5?.43:.36;
+  float wear=(micro.r-.5)*.14;
+  float seal=.22*micro.g+.065*micro.b;
+  albedo=clamp(albedo*(1.+strength*(wear-seal)),0.,1.);
+ }
  if(uR44Skin==1){
   // Source-identified R44 painted skin, including the entire tailboom and
   // fin. Do not reintroduce checkerboard/old black patches from the source
@@ -1559,8 +1611,38 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   for(const name of ["uEye","uCraft","uYaw","uPitch","uRoll","uCraftYaw","uCraftPitch",
    "uCraftRoll","uActor","uAspect","uFocal","uCameraNear",
    "uPartPivot","uPartAngle","uPartAxis","uFogColor","uLightColor","uOpacity",
-    "uHasTexture","uAlphaCutoff","uTexture","uC172Pass","uR44Skin"])
+    "uHasTexture","uAlphaCutoff","uTexture","uC172Pass","uR44Skin",
+    "uSkinFinish","uSkinMicroTexture"])
    uni[name]=gl.getUniformLocation(program,name);
+  // Optional effect. A low-memory WebGL2 device must retain its complete
+  // working 3D aircraft renderer if this extra texture cannot be created.
+  let microTexture=null;
+  try{
+   const candidate=gl.createTexture();
+   if(candidate){
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D,candidate);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    const micro=makeFighterSurfaceMap(256);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,micro.size,micro.size,0,
+     gl.RGBA,gl.UNSIGNED_BYTE,micro.data);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    if(gl.getError()===gl.NO_ERROR){
+     microTexture=candidate;textures.push(candidate);
+    }else gl.deleteTexture(candidate);
+    gl.bindTexture(gl.TEXTURE_2D,null);
+   }
+  }catch(error){
+   if(typeof console!=="undefined")
+    console.warn("Optional fighter surface texture disabled:",error);
+  }finally{gl.activeTexture(gl.TEXTURE0);}
+  gl.useProgram(program);
+  gl.uniform1i(uni.uSkinMicroTexture,1);
+  gl.uniform1f(uni.uSkinFinish,0);
   const upload=mesh=>{
    const vao=gl.createVertexArray();gl.bindVertexArray(vao);
    [mesh.positions,mesh.colors,mesh.normals].forEach((array,i)=>{
@@ -1598,7 +1680,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     partName:primitive.partName||null,
     partAxis:primitive.partAxis||0,
     partPivot:primitive.partPivot||[0,0,0],
-    gearDoorSide:primitive.gearDoorSide||0};
+    gearDoorSide:primitive.gearDoorSide||0,
+    sourceName:primitive.sourceName||null};
    objects.push(object);return object;
   };
   // A stalled asset request must not leave the cockpit or 360 viewer
@@ -1853,6 +1936,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    gl.uniform1f(uni.uHasTexture,0);
    gl.uniform1f(uni.uAlphaCutoff,0);
    gl.uniform1i(uni.uTexture,0);
+   gl.uniform1f(uni.uSkinFinish,0);
+   // Bind the original, generated microtexture only at unit 1. Imported
+   // licensed glTF images continue using TEXTURE0 and are never replaced.
+   gl.activeTexture(gl.TEXTURE1);
+   gl.bindTexture(gl.TEXTURE_2D,microTexture);
+   gl.activeTexture(gl.TEXTURE0);
    gl.uniform1i(uni.uC172Pass,0);
    gl.uniform1i(uni.uR44Skin,0);
    const realHelicopter=state.mode==="helicopter"&&realR44!==null;
@@ -2021,8 +2110,16 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
      "not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
+    const finishId=microTexture?({f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0):0;
+    const isSurface=part=>{
+     if(!part||!part.sourceName||(part.opacity??1)<.99||part.partAxis===4)
+      return false;
+     if(id==="su37")return /^(fuselage|wing|tail|WNG_|CNRD_|ELV_|TF_)/.test(part.sourceName);
+     return Boolean(root?.AGSANativeFighterLivery?.skinPart?.(id,part.sourceName));
+    };
     const drawCabin=()=>{
      if(!model.cabin)return;
+     gl.uniform1f(uni.uSkinFinish,0);
      gl.disable(gl.BLEND);gl.depthMask(true);
      gl.uniform1i(uni.uC172Pass,0);
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uAlphaCutoff,0);
@@ -2037,6 +2134,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }else if(realModel){
      gl.activeTexture(gl.TEXTURE0);
      const drawPrimitive=(part,alpha)=>{
+      gl.uniform1f(uni.uSkinFinish,isSurface(part)?finishId:0);
       const img=part.imageId===null?null:realModel.images[part.imageId];
       gl.uniform1f(uni.uHasTexture,img?1:0);
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
@@ -2157,9 +2255,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uHasTexture,0);gl.uniform1f(uni.uOpacity,1);
      gl.uniform1f(uni.uAlphaCutoff,0);gl.uniform1i(uni.uC172Pass,0);
     }else if(!pendingSourceJet){
+     gl.uniform1f(uni.uSkinFinish,id==="fa18"?finishId:0);
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
+    // Keep special-purpose gear wells, rotors, lamps and transparent
+    // surfaces untextured even after the imported hull's last primitive.
+    gl.uniform1f(uni.uSkinFinish,0);
     if(realModel&&model.importedGear&&!(view==="inspect"&&orbit.interior===true)){
      // Restore non-textured, opaque source-metal rendering before placing
      // the wheel-well recesses and independently hinged left/right doors.
@@ -2233,6 +2335,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.depthMask(true);gl.disable(gl.BLEND);gl.uniform1f(uni.uOpacity,1);
     }
     for(const part of animatedParts){
+     const fa18Panel=id==="fa18"&&!part.gearName&&
+      /^(left|right)(Aileron|Flap)$|^(elevator|rudder)(Left|Right)$/.test(part.name);
+     gl.uniform1f(uni.uSkinFinish,fa18Panel?finishId:0);
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      // Procedural jet wheel doors follow the exact same retractable gear
@@ -2247,6 +2352,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.drawArrays(gl.TRIANGLES,0,part.gpu.count);
     }
     gl.uniform1i(uni.uPartAxis,0);gl.uniform1f(uni.uPartAngle,0);
+    gl.uniform1f(uni.uSkinFinish,0);
     // Imported assets use fixtures mounted to their ACTUAL parsed surface
     // vertices; fallback models retain their own procedural light stations.
     const lightingModel=realModel?.positionLights?realModel:model;
@@ -2309,7 +2415,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   return null;
  }
 }
-const api={Mesh,IMPORTED_CABIN_LAYOUT,FIGHTER_INTERIOR_STATIONS,buildFighterInterior,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,exteriorLightStations,exteriorStrobeStation,
+const api={Mesh,makeFighterSurfaceMap,IMPORTED_CABIN_LAYOUT,FIGHTER_INTERIOR_STATIONS,buildFighterInterior,buildCleanR44Rotors,buildImportedCabin,buildImportedC172Shell,buildCloudLayer,exteriorLightStations,exteriorStrobeStation,
  buildExteriorPositionLights,buildExteriorStrobe,exteriorStrobePulse,importedCameraFraming,REAL_R44_HARDWARE_ANCHORS,alignRealR44HardwarePoint,alignRealR44Hardware,alignRealR44MovingPart,exteriorAnimatedParts,buildWorld,buildGroundVehicle,buildWindsockFabric,airportDetails,buildVehicle,buildShadow,buildRotorSweep,buildTailRotorSweep,buildPropellerSweep,buildMovingParts,cameraPose,createRenderer,airframeIds:Exterior.IDS};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFlight3D=api;
