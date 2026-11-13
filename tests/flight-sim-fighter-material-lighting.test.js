@@ -41,6 +41,7 @@ test('native shader uses view-dependent highlights with safe reset and no extra 
  assert.match(source,/vec3 viewDir=normalize\(uEye-vWorldPosition\);/);
  assert.match(source,/if\(uFighterMaterial>0\)/);
  assert.match(source,/gl\.uniform1i\(uni\.uFighterMaterial,0\);/);
+ assert.match(source,/float painted=uFighterMaterial==4\?/);
  assert.match(source,/gl\.uniform1i\(uni\.uFighterMaterial,fighterMaterialFor\(id,/);
- assert.match(source,/gl\.uniform1i\(uni\.uFighterMaterial,fa18Panel\?1:0\)/);
+ assert.match(source,/gl\.uniform1i\(uni\.uFighterMaterial,fa18Panel\?4:0\)/);
 });
