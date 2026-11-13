@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "enabled": false,
+  "modelId": "fa18",
+  "sourceModelId": "9e852037bf2141dcb3fda17013958131",
+  "sourceUrl": "https://sketchfab.com/3d-models/boeing-fa-18e-super-hornet-9e852037bf2141dcb3fda17013958131",
+  "author": "KOG_THORNS",
+  "license": "CC-BY-4.0",
+  "path": "assets/aircraft/fa18e-native.glb",
+  "upAxis": "Y",
+  "noseAxis": "+Z",
+  "lengthMetres": 18.31,
+  "verticalOffsetMetres": 0,
+  "requireControls": true,
+  "controls": []
+}
