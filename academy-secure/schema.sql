@@ -237,8 +237,7 @@ CREATE TABLE IF NOT EXISTS academy_admin_signatures (
  encrypted_png bytea NOT NULL CHECK(octet_length(encrypted_png) BETWEEN 50 AND 145016),
  nonce bytea NOT NULL CHECK(octet_length(nonce)=12),
  auth_tag bytea NOT NULL CHECK(octet_length(auth_tag)=16),
- sha256 char(64) NOT NULL CHECK(sha256 ~ '^[a-f0-9]{64}
-),
+ sha256 char(64) NOT NULL CHECK(sha256 !~ '[^a-f0-9]'),
  image_width integer NOT NULL CHECK(image_width BETWEEN 240 AND 1600),
  image_height integer NOT NULL CHECK(image_height BETWEEN 70 AND 800),
  preferences jsonb NOT NULL DEFAULT '{"formalCertificates":false,"scoutCertificates":false,"enthusiastCertificates":false,"transcripts":false,"academySeal":false}'::jsonb,
