@@ -9,7 +9,7 @@ for(const name of names){
  assert.ok(!name.startsWith("."),"Hidden source published: "+name);
  assert.ok(!["services","docs","scripts","node_modules","tests",".github",".git"].includes(name),"Private or internal directory leaked: "+name);
 }
-for(const expected of ["index.html","cockpit-v3.html","instructor-review.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","flight-sim.html","accreditation"]){
+for(const expected of ["index.html","cockpit-v3.html","instructor-review.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","flight-sim.html","accreditation"]){
  const f=await stat(path.join(output,expected));assert.ok(f.isFile()||f.isDirectory(),expected+" missing");
 }
 // A successful GitHub Pages job must actually include the high-fidelity
