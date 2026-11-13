@@ -1,0 +1,41 @@
+name: Verify F-A-18E native model
+on:
+  pull_request:
+    paths:
+      - 'flight-sim-fa18-airframe.js'
+      - 'flight-sim-3d.js'
+      - 'assets/aircraft/fa18e-native-manifest.json'
+      - 'assets/aircraft/fa18e-native.glb'
+      - 'tests/flight-sim-fa18-*.test.js'
+      - 'scripts/validate-fa18-native.js'
+      - '.github/workflows/fa18e-source-verification.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'flight-sim-fa18-airframe.js'
+      - 'assets/aircraft/fa18e-native-manifest.json'
+      - 'assets/aircraft/fa18e-native.glb'
+      - 'tests/flight-sim-fa18-*.test.js'
+      - 'scripts/validate-fa18-native.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-fa18:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check flight-sim-fa18-airframe.js
+          node --check flight-sim-3d.js
+          node --check scripts/validate-fa18-native.js
+      - name: Test source GLB parser, integrity, and original fallback
+        run: |
+          node --test tests/flight-sim-fa18-source-import.test.js tests/flight-sim-fa18-native-switch.test.js tests/flight-sim-fa18-verified-asset.test.js tests/flight-sim-fa18-detailed-hull.test.js tests/flight-sim-fa18-v3.test.js tests/flight-sim-fa18-licensed-view.test.js
+      - name: Verify authorized original aircraft if enabled
+        run: node scripts/validate-fa18-native.js
