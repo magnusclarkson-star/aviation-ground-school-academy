@@ -1,6 +1,6 @@
 // Static simulator shell and its local flight assets only. No credentials,
 // payment data, location, or remote services are cached.
-const CACHE="agsa-flight-sim-v2-20261113-hornet-hull-detail1";
+const CACHE="agsa-flight-sim-v2-20261113-native-fa18-source1";
 const ROOT=new URL("./",self.location.href);
 const SHELL=[
  new URL("flight-sim.html",ROOT).href,
@@ -10,6 +10,7 @@ const SHELL=[
 // Imported aircraft are fetched asynchronously after the page starts and
 // might not otherwise be cached on the very first (uncontrolled) visit.
 const IMPORTED_AIRCRAFT=[
+ "assets/aircraft/fa18e-native-manifest.json",
  "assets/aircraft/c172-molen-skyhawk.glb",
  "assets/aircraft/r44-molen-raven-ii.glb",
  "assets/aircraft/c172-e737-optimized.glb",
