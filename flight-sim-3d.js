@@ -1481,7 +1481,8 @@ precision mediump float;
 in vec3 vColor,vLocalPosition,vLocalNormal,vWorldPosition,vWorldNormal;
 in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
-uniform vec3 uFogColor,uLightColor,uEye;
+uniform vec3 uFogColor,uLightColor;
+uniform highp vec3 uEye;
 uniform float uOpacity,uHasTexture,uAlphaCutoff,uSkinFinish;
 uniform sampler2D uSkinMicroTexture;
 uniform int uC172Pass,uR44Skin,uFighterMaterial;
@@ -1634,8 +1635,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let gl;
  try{gl=canvas.getContext("webgl2",{alpha:false,depth:true,antialias:true,
   powerPreference:"low-power",preserveDrawingBuffer:true,failIfMajorPerformanceCaveat:false});}
- catch{return null}
- if(!gl)return null;
+ catch(error){
+  if(canvas.dataset)canvas.dataset.rendererError="WebGL2 context error: "+String(error?.message||error);
+  return null;
+ }
+ if(!gl){
+  if(canvas.dataset)canvas.dataset.rendererError="WebGL2 context unavailable";
+  return null;
+ }
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
@@ -2212,8 +2219,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
       pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
       id==="fa18"?"superhornet-dedicated-v3":"procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
-     "not-rendered":id==="c172"||id==="r44"?
+    // Source GLBs have their own real seats/panels. The inspector must
+    // distinguish that approved source hardware from procedural lessons.
+    if(canvas.dataset)canvas.dataset.airframeInterior=
+     isMolenC172||isMolen?"source-cabin-and-panel":
+     !model.cabin?"not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
     const finishId=microTexture?({f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0):0;
     const isSurface=part=>{
@@ -2525,7 +2535,13 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};
- }catch{
+ }catch(error){
+  // Do not silently swallow shader/texture failures. The browser visual
+  // smoke test and an Android device need the actual WebGL2 error to
+  // distinguish a driver problem from a broken aircraft shader.
+  if(canvas.dataset)canvas.dataset.rendererError=String(error?.message||error).slice(0,220);
+  if(typeof console!=="undefined")
+   console.warn("Academy WebGL2 renderer initialization failed:",error);
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
    if(skyProgram)gl.deleteProgram(skyProgram);}catch{}

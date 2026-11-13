@@ -1,6 +1,6 @@
 /* Reproduce slow genuine F-22/F-35B downloads on a phone-sized viewport.
  * The old procedural model and the previously selected aircraft must never
- * appear during 360-degree loading, even when download is deliberately held.
+ * appear in the native renderer while hosted 360° views change aircraft.
  */
 import assert from "node:assert/strict";
 import http from "node:http";
@@ -50,59 +50,75 @@ try{
  });
  await page.goto("http://127.0.0.1:"+server.address().port+"/flight-sim.html",
   {waitUntil:"load"});
+ // The external 360° viewers no longer wait for FlightGear JSON. To
+ // exercise slow downloads, use an independent native render canvas while
+ // asserting that the hosted inspector never flashes that old aircraft.
+ const ready=await page.evaluate(()=>{
+  const c=document.createElement("canvas");
+  c.width=350;c.height=240;document.body.appendChild(c);
+  const r=window.AGSAFlight3D.createRenderer(c,{inspectionOnly:true});
+  window.__fighterNativeProof={r,c,state:{mode:"airplane",xM:0,zM:0,
+   altitudeM:120,headingDeg:0,pitchDeg:0,rollDeg:0,speedKt:150}};
+  return Boolean(r);
+ });
+ assert.ok(ready,"native fighter renderer must initialize");
+ const draw=async id=>page.evaluate(id=>{
+  const {r,c,state}=window.__fighterNativeProof;
+  r.draw(state,{view:"inspect",airframeId:id,
+   orbit:{azimuth:40,elevation:15,distance:26}});
+  return c.dataset.airframeSource;
+ },id);
  await page.locator("#cockpitAircraftSelect").selectOption("f22");
+ await draw("f22");
+ await page.waitForFunction(()=>typeof window.__releaseModels.f22==="function",
+  null,{timeout:12000});
+ assert.equal(await draw("f22"),"loading",
+  "native F-22 must not show a legacy plane while the source is held");
  if(!(await page.locator("#aircraftInspectOpen").isVisible()))
   await page.locator("#cockpitHelpToggle").tap();
  await page.locator("#aircraftInspectOpen").tap();
- await page.waitForFunction(()=>typeof window.__releaseModels.f22==="function",
-  null,{timeout:12000});
- assert.equal(await page.locator("#aircraftInspectViewport").getAttribute(
-  "data-model-loading"),"on");
- assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),false,
-  "the old F-22 procedural model must not show during source loading");
- assert.equal(await page.locator("#aircraftInspectCanvas2D").isVisible(),false,
-  "no older 2D fighter silhouette may flash while loading");
- assert.match(await page.locator("#aircraftInspectLoading").textContent(),/Loading.*F-22/);
- // Hold the source download across several frames. Loading must stay visible.
+ assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),false);
+ assert.equal(await page.locator("#aircraftInspectCanvas2D").isVisible(),false);
+ assert.equal(await page.locator("#aircraftInspectSuperHornet").isVisible(),true);
+ const f22Embed=await page.locator("#aircraftInspectSuperHornetFrame").getAttribute("src");
+ assert.ok(f22Embed?.includes("/embed"),"licensed F-22 360° viewer must load");
  await page.waitForTimeout(350);
- assert.equal(await page.locator("#aircraftInspectViewport").getAttribute(
-  "data-model-loading"),"on");
+ assert.equal(await draw("f22"),"loading","source loading remains visually isolated");
  await page.evaluate(()=>window.__releaseModels.f22());
- await page.waitForFunction(()=>document.querySelector(
-  "#aircraftInspectCanvas3D").dataset.airframeSource==="gpl-f22-fguk"&&
-  document.querySelector("#aircraftInspectViewport").dataset.modelLoading==="off",
-  null,{timeout:25000});
- assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),true);
+ await page.waitForFunction(()=>
+  window.__fighterNativeProof.r.realF22Status==="imported",null,{timeout:25000});
+ assert.equal(await draw("f22"),"gpl-f22-fguk");
+ assert.equal(await page.locator("#aircraftInspectSuperHornet").isVisible(),true,
+  "licensed 360° viewer stays active after native mesh finishes");
  await page.locator("#aircraftInspectModelSelect").selectOption("f35");
+ await draw("f35");
  await page.waitForFunction(()=>typeof window.__releaseModels.f35==="function",
   null,{timeout:12000});
- assert.equal(await page.locator("#aircraftInspectViewport").getAttribute(
-  "data-model-loading"),"on");
- assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),false,
-  "the F-22 frame must not remain onscreen when switching to F-35B");
- assert.equal(await page.locator("#aircraftInspectCanvas2D").isVisible(),false);
- assert.match(await page.locator("#aircraftInspectLoading").textContent(),/Loading.*F-35/);
+ assert.equal(await draw("f35"),"loading");
+ assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),false);
+ assert.equal(await page.locator("#aircraftInspectSuperHornet").isVisible(),true);
+ const f35Embed=await page.locator("#aircraftInspectSuperHornetFrame").getAttribute("src");
+ assert.ok(f35Embed?.includes("/embed")&&f35Embed!==f22Embed,
+  "F-35 viewer replaces F-22 source without showing the old aircraft");
  await page.waitForTimeout(350);
- assert.equal(await page.locator("#aircraftInspectViewport").getAttribute(
-  "data-model-loading"),"on");
+ assert.equal(await draw("f35"),"loading");
  await page.evaluate(()=>window.__releaseModels.f35());
- await page.waitForFunction(()=>document.querySelector(
-  "#aircraftInspectCanvas3D").dataset.airframeSource==="gpl-f35b-flightgear"&&
-  document.querySelector("#aircraftInspectViewport").dataset.modelLoading==="off",
-  null,{timeout:25000});
- assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),true);
- // Both imports remain ready when switching back and forth.
- for(const [id,source] of [["f22","gpl-f22-fguk"],["f35","gpl-f35b-flightgear"]]){
+ await page.waitForFunction(()=>
+  window.__fighterNativeProof.r.realF35Status==="imported",null,{timeout:25000});
+ assert.equal(await draw("f35"),"gpl-f35b-flightgear");
+ // Both source meshes remain cached, and the source-hosted 360 viewer
+ // changes identity immediately without introducing a stale 2D canvas.
+ for(const [id,expected] of [
+  ["f22",f22Embed],["f35",f35Embed]
+ ]){
   await page.locator("#aircraftInspectModelSelect").selectOption(id);
-  await page.waitForFunction(expected=>document.querySelector(
-   "#aircraftInspectCanvas3D").dataset.airframeSource===expected&&
-   document.querySelector("#aircraftInspectViewport").dataset.modelLoading==="off",
-   source,{timeout:10000});
-  assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),true);
+  assert.equal(await page.locator("#aircraftInspectSuperHornetFrame").getAttribute("src"),expected);
+  assert.equal(await page.locator("#aircraftInspectCanvas3D").isVisible(),false);
+  assert.equal(await draw(id),id==="f22"?"gpl-f22-fguk":"gpl-f35b-flightgear");
  }
  assert.deepEqual(errors,[],"mobile fighter inspection must not throw JS errors");
  await context.close();
- console.log("No obsolete F-22/F-35B 360 image flash during slow loading, switching or repeat selection");
+ console.log("F-22/F-35B source downloads and licensed 360 viewers remain isolated without old-aircraft flash");
 }finally{
  if(browser)await browser.close();
  await new Promise(resolve=>server.close(resolve));

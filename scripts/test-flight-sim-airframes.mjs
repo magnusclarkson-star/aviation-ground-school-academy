@@ -19,7 +19,10 @@ assert.deepEqual(Array.from(T.buildVehicle("helicopter").positions),
 const signature=[],metrics=[];
 for(const id of A.IDS){
  const model=T.buildVehicle(id),coordinates=model.positions;
- assert.ok(model.vertices>=50&&model.vertices<4000,id+" is a full, mobile-friendly 3D mesh");
+ // The refined F/A-18E has 1,748 triangles (5,244 expanded vertices).
+ // Other baseline aircraft remain within their original 4,000-vertex cap.
+ const budget=id==="fa18"?10000:4000;
+ assert.ok(model.vertices>=50&&model.vertices<budget,id+" is a full, mobile-friendly 3D mesh");
  assert.equal(model.positions.length,model.vertices*3);
  assert.equal(model.colors.length,model.positions.length);
  assert.equal(model.normals.length,model.positions.length);
@@ -98,15 +101,31 @@ assert.ok(nearVertex(c172P,-.075*cScale[0],2.39,-6.32*cScale[2]),
 // engine, with exactly one nacelle for F-35 and pairs for the other jets.
 for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const mesh=T.buildVehicle(id),p=mesh.positions,c=mesh.colors;
- const twin=id!=="f35",exhaustZ=((twin?-5.7:-5.85)-1.64)*A.SCALE[id][2];
- let rimVertices=0;
+ // The dedicated Super Hornet uses -5.74m nozzle stations rather than
+ // the shared generic jet's older -5.70m station.
+ const twin=id!=="f35",mountZ=id==="fa18"?-5.74:twin?-5.7:-5.85;
+ const exhaustZ=(mountZ-1.64)*A.SCALE[id][2];
+ let rimVertices=0,port=0,starboard=0;
  for(let i=0;i<p.length;i+=3){
   if(Math.abs(p[i+2]-exhaustZ)>.008)continue;
-  if(Math.abs(c[i]-151/255)<.005&&Math.abs(c[i+1]-162/255)<.005&&
-   Math.abs(c[i+2]-172/255)<.005)rimVertices++;
+  if(id==="fa18"){
+   // The native Super Hornet now has individually shaded exhaust petals.
+   // Test both distinct nozzle rings, not only the old unshaded metal RGB.
+   if(c[i]>.47&&c[i]<.86&&c[i+1]>.49&&c[i+2]>.50){
+    if(p[i]<-.15)port++;
+    if(p[i]>.15)starboard++;
+   }
+  }else if(Math.abs(c[i]-151/255)<.005&&
+           Math.abs(c[i+1]-162/255)<.005&&
+           Math.abs(c[i+2]-172/255)<.005)rimVertices++;
  }
- assert.ok(rimVertices>=(twin?60:30),
-  id+" has "+(twin?"two recessed turbine nozzles":"one turbine nozzle")+" visible from rear");
+ if(id==="fa18"){
+  assert.ok(port>=24&&starboard>=24,
+   "Super Hornet must show separate left and right recessed nozzle rings");
+ }else{
+  assert.ok(rimVertices>=(twin?60:30),
+   id+" has "+(twin?"two recessed turbine nozzles":"one turbine nozzle")+" visible from rear");
+ }
 }
 
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,

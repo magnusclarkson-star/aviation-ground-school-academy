@@ -78,8 +78,16 @@ try{
   }
   return {source:c.dataset.airframeSource,hash,detail};
  },id);
+ // The F/A-18 is the only fighter with an intentionally disabled
+ // high-detail source manifest. Wait for its explicit fallback, so this
+ // comparison never mistakes the brief download-check frame for a jet.
+ await render("fa18");
+ await page.waitForFunction(()=>
+  window.__loadingRenderer?.realFA18Status==="fallback",
+  null,{timeout:15000});
  const baseline=await render("fa18");
- assert.equal(baseline.source,"procedural","F/A-18 remains available during source loads");
+ assert.equal(baseline.source,"superhornet-dedicated-v3",
+  "F/A-18 dedicated geometry remains available after manifest check");
  let pendingHash=null;
  for(const [id,source] of [
   ["f22","gpl-f22-fguk"],["f35","gpl-f35b-flightgear"],

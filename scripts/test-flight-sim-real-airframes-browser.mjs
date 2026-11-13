@@ -48,6 +48,10 @@ try{
   window.__c172TestRenderer=window.AGSAFlight3D.createRenderer(canvas,{inspectionOnly:true});
   return !!window.__c172TestRenderer;
  });
+ if(!created){
+  const reason=await page.evaluate(()=>window.__c172TestCanvas?.dataset?.rendererError||"no renderer diagnostics");
+  console.error("WebGL2 diagnostic:",reason,"page errors:",errors.slice(-6));
+ }
  assert.ok(created,"WebGL2 inspection renderer must initialize");
  await page.waitForFunction(()=>window.__c172TestRenderer?.realC172Status==="imported",null,
   {timeout:20000});

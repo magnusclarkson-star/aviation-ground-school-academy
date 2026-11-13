@@ -41,11 +41,15 @@ try{
  await desktop.goto(url,{waitUntil:"load"});
  assert.equal(await desktop.locator("#aircraftInspectOpen").count(),1);
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
+ // The Su-37 is the Academy's native 360° renderer. Licensed aircraft
+ // use their author-hosted model viewer with separate touch gestures.
+ await desktop.locator("#cockpitAircraftSelect").selectOption("su37");
  const yoke=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectOpen").click();
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),true);
  assert.equal(await desktop.locator("#aircraftInspectOpen").getAttribute("aria-expanded"),"true");
- assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),"Cessna 172");
+ assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),
+  await desktop.evaluate(()=>window.AGSAExteriorAirframes.LABELS.su37));
  await desktop.waitForFunction(()=>document.getElementById(
   "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
  await wait(desktop);
@@ -71,26 +75,41 @@ try{
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
   "second double click restores fitted aircraft view");
  const frames=new Set();
+ const hosted=new Set(["c172","r44","fa18","f22","f35","typhoon"]);
  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
   await desktop.locator("#aircraftInspectModelSelect").selectOption(id);
-  assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,"inspector switches the flight simulator model");
+  assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,
+   "inspector switches the flight simulator model");
   assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),
    (await desktop.evaluate(id=>window.AGSAExteriorAirframes.LABELS[id],id)));
-  await desktop.waitForFunction(()=>document.getElementById(
-   "aircraftInspectViewport").dataset.modelLoading==="off",null,{timeout:25000});
-  if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon")assert.equal(await desktop.evaluate(()=>
-   document.querySelector("#aircraftInspectCanvas3D").dataset.airframeSource),
-   id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":
-   id==="su37"?"gpl-su37-fguk":"gpl-typhoon-fg",
-   "the 360 inspector must display authentic imported "+id+" geometry");
-  await wait(desktop);
-  const png=await shot(desktop);
-  assert.ok(png.length>1000,"model rendered in inspector: "+id);
-  frames.add(png);
+  if(hosted.has(id)){
+   await desktop.waitForFunction(id=>{
+    const view=document.getElementById("aircraftInspectSuperHornet");
+    const src=document.getElementById("aircraftInspectSuperHornetFrame")?.src||"";
+    return !view.hidden&&src.includes("/embed")&&
+     document.getElementById("aircraftInspectViewport").dataset.modelLoading==="off";
+   },id,{timeout:12000});
+   assert.equal(await desktop.locator("#aircraftInspectCanvas3D").isVisible(),false);
+   assert.equal(await desktop.locator("#aircraftInspectSpin").isDisabled(),true);
+   const src=await desktop.locator("#aircraftInspectSuperHornetFrame").getAttribute("src");
+   const credit=await desktop.locator("#aircraftInspectTexturedCredit").textContent();
+   assert.match(credit,/CC BY/);
+   frames.add(src);
+  }else{
+   await desktop.waitForFunction(()=>document.getElementById(
+    "aircraftInspectViewport").dataset.modelLoading==="off"&&
+    document.getElementById("aircraftInspectCanvas3D").dataset.airframeSource==="gpl-su37-fguk",
+    null,{timeout:25000});
+   assert.equal(await desktop.locator("#aircraftInspectSpin").isEnabled(),true);
+   await wait(desktop);
+   const png=await shot(desktop);
+   assert.ok(png.length>1000,"native model rendered: "+id);
+   frames.add(png);
+  }
  }
- assert.equal(frames.size,7,"all seven aircraft have distinct 360-degree renders");
- await desktop.locator("#aircraftInspectModelSelect").selectOption("r44");
- const rotorControlsBefore=await desktop.locator("#controlPad").boundingBox();
+ assert.equal(frames.size,7,"six licensed 360 sources and genuine native Su-37 remain distinct");
+ await desktop.locator("#aircraftInspectModelSelect").selectOption("su37");
+ const nativeControlsBefore=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectSpin").click();
  assert.equal(await desktop.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
  await desktop.waitForTimeout(250);
@@ -99,9 +118,9 @@ try{
  await desktop.keyboard.press("Escape");
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),false);
  assert.equal(await desktop.locator("#aircraftInspectOpen").getAttribute("aria-expanded"),"false");
- const rotorControlsAfter=await desktop.locator("#controlPad").boundingBox();
- assert.ok(Math.abs(rotorControlsAfter.height-rotorControlsBefore.height)<1,
-  "the inspector cannot resize the selected R44 flight control");
+ const nativeControlsAfter=await desktop.locator("#controlPad").boundingBox();
+ assert.ok(Math.abs(nativeControlsAfter.height-nativeControlsBefore.height)<1,
+  "the inspector cannot resize the selected aircraft flight controls");
  await desktop.close();
 
  // Capture each true aircraft mesh (not a photo or procedural placeholder)
@@ -126,31 +145,31 @@ try{
     const canvas=document.querySelector("#aircraftInspectCanvas3D");
     return {prev,loading:vp.dataset.modelLoading,hidden:canvas.hidden};
    },id);
-   if(changed.prev!==id){
-    assert.equal(changed.loading,"on",
-     "switching to "+id+" must hide the previous airplane immediately");
-    assert.equal(changed.hidden,true,
-     "no stale 360 airframe image can appear during model selection");
+   if(id!=="su37"){
+    // All six licensed aircraft have a hosted 3D exterior. The old
+    // canvas must remain hidden, and the correct source URL must replace
+    // the previous aircraft's view without a stale geometry flash.
+    await phone3d.waitForFunction(()=>{
+     const v=document.getElementById("aircraftInspectSuperHornet");
+     return v&&!v.hidden&&document.getElementById(
+      "aircraftInspectViewport").dataset.modelLoading==="off";
+    },null,{timeout:12000});
+    assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),false);
+    assert.equal(await phone3d.locator("#aircraftInspectSpin").isDisabled(),true);
+    const identity=await phone3d.locator("#aircraftInspectSuperHornetFrame").getAttribute("src");
+    assert.ok(identity?.includes("/embed"),"hosted model selected for "+id);
+   }else{
+    if(changed.prev!==id)assert.equal(changed.hidden,true,
+     "native Su-37 must not briefly show prior aircraft");
+    await phone3d.waitForFunction(()=>{
+     const v=document.getElementById("aircraftInspectViewport");
+     const c=document.getElementById("aircraftInspectCanvas3D");
+     return v.dataset.modelLoading==="off"&&
+      c.dataset.airframeId==="su37"&&c.dataset.airframeSource==="gpl-su37-fguk";
+    },null,{timeout:25000});
+    assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
+     "real Su-37 WebGL mesh visible in "+layout.name);
    }
-   await phone3d.waitForFunction(target=>{
-    const vp=document.querySelector("#aircraftInspectViewport");
-    const canvas=document.querySelector("#aircraftInspectCanvas3D");
-    if(vp.dataset.modelLoading!=="off"||
-       canvas.dataset.airframeId!==target||!canvas.dataset.airframeSource)
-     return false;
-    if(target==="f22")return canvas.dataset.airframeSource==="gpl-f22-fguk";
-    if(target==="f35")return canvas.dataset.airframeSource==="gpl-f35b-flightgear";
-    if(target==="su37")return canvas.dataset.airframeSource==="gpl-su37-fguk";
-    if(target==="typhoon")return canvas.dataset.airframeSource==="gpl-typhoon-fg";
-    if(target==="c172"||target==="r44")
-     return canvas.dataset.airframeSource!=="procedural";
-    return canvas.dataset.airframeSource==="procedural";
-   },id,{timeout:25000});
-   assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
-    id+" genuine 360 mesh must be visible at "+layout.name);
-   assert.equal(await phone3d.evaluate(()=>document.querySelector(
-    "#aircraftInspectCanvas3D").dataset.airframeId),id,
-    "360 cannot mistake an earlier aircraft for another procedural fighter");
    assert.ok(await phone3d.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
     id+" inspection must fit without horizontal scrolling");
    await phone3d.locator("#aircraftInspectViewport").screenshot({
@@ -169,7 +188,9 @@ try{
   };
  });
  await mobile.goto(url,{waitUntil:"load"});
- await mobile.locator("#cockpitAircraftSelect").selectOption("r44");
+ // Su-37 still exercises the app-owned Canvas 2D fallback if WebGL
+ // is absent. The R44 now uses its source-hosted 360° iframe.
+ await mobile.locator("#cockpitAircraftSelect").selectOption("su37");
  const button=mobile.locator("#aircraftInspectOpen");
  assert.equal(await button.isVisible(),false,"360° inspection starts in compact More menu");
  await mobile.locator("#cockpitHelpToggle").tap();
@@ -181,7 +202,7 @@ try{
  assert.equal(await mobile.locator("#aircraftInspectCanvas2D").isVisible(),true);
  await wait(mobile);
  const initial=await shot(mobile);
- assert.ok(initial.length>1000,"phone fallback draws helicopter with rotor");
+ assert.ok(initial.length>1000,"phone fallback draws native Su-37");
  await mobile.locator("#aircraftInspectZoomIn").tap();
  await wait(mobile);
  assert.notEqual(await shot(mobile),initial,"phone zoom changes actual fallback model rendering");
@@ -226,5 +247,5 @@ try{
   "touching Close after a pinch dismisses the inspector");
  assert.ok(await mobile.locator("#controlPad").isVisible());
  assert.deepEqual(errors,[],"no crashes on desktop, phone or 2D fallback");
- console.log("Aircraft inspection browser checks passed: seven distinct orbit renders, drag, zoom, auto-spin, Escape, phone layout and rotorcraft 2D fallback.");
+ console.log("Aircraft inspection browser checks passed: six licensed 360 viewers, native Su-37 drag/zoom/auto-spin, Escape, phone layout and Su-37 2D fallback.");
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
