@@ -11,8 +11,10 @@ photographic textures, UV images, nor complete PBR material sets.
   licensed GPL-2.0 FlightGear source geometry. Applied to fixed fuselage,
   wings and the animated control surfaces at aircraft-local coordinates.
   The supplemental landing-gear doors now have a matched dark underside
-  finish instead of standing out as bright white rectangles when retracted;
-  door hinges, wheels and source geometry are unchanged.
+  finish instead of standing out as bright white rectangles when retracted.
+  Darker source-vertex colour is also applied only to the lower F-22 fuselage
+  to blend pale original wheel-well shoulders into the surrounding belly;
+  door hinges, wheels, upper wing livery and source geometry are unchanged.
 - **F-35B:** More subtle low-contrast grey RAM-inspired surface variation
   on the existing GPL-3.0 F-35B hull, tail and animated panels. Does not
   affect STOVL physics, hatches, canopy or landing gear.
