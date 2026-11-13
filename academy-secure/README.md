@@ -49,3 +49,22 @@ https://slcaa.gov.sl/wp-content/uploads/2024/01/SLCAA-AC-PEL048-Rev-00-CERTIFICA
 - The intended SLCAA application is a **separate legal/organisational process** with facilities, staff, fees, certification and course-specific ratings. See [certification dossier](../docs/SLCAA-ATO-CERTIFICATION-DOSSIER.md).
 
 This component deliberately fails closed and cannot be considered a production accredited training platform until these independent requirements are met.
+
+
+## Private administrator signature capture (new, not yet deployed)
+
+The signed-in **accountable manager** can use the private portal's **My electronic signature and certificate seal** panel to:
+
+- Sign directly in the large white pad using a finger, stylus or mouse, or load a PNG/JPEG of *their own* existing signature; the portal converts it to a bounded PNG on the device.
+- Independently tick intended use categories: formal course certificates, Scouts/Air Scouts achievements, enthusiast certificates, academic transcripts, and the optional Academy seal.
+- Re-enter their current account password and explicitly confirm ownership before upload. Password confirmation is rate-limited and never saved by the browser application.
+- Save or replace the signature image, view a private preview, change the checkbox preferences independently, and remove the encrypted active image. Removal retains only audit metadata, not signature pixels, in the active database.
+- Keep unsigned documents unsigned by default. Saving and ticking a preference **never signs a document automatically**, grants a qualification, bypasses a fee or substitutes for academic/regulatory release authorisation.
+
+**Encryption:** The private server encrypts PNG bytes before PostgreSQL storage using AES-256-GCM, a fresh 96-bit nonce and authenticated associated data bound to the account UUID. A SHA-256 fingerprint is recorded for integrity. The ciphertext is not stored in the public GitHub repository; only the owner role can retrieve a preview. The API sends `Cache-Control: no-store` and the browser revokes the private image preview when signing out.
+
+**Required host configuration:** Supply `ACADEMY_SIGNATURE_ENCRYPTION_KEY` from a suitable secret manager as a freshly generated, dedicated, random **32-byte key encoded as base64**. For example, generate a local key with `openssl rand -base64 32` on a trusted workstation, then store the result in the hosting platform secret manager; **do not commit the value** to files or send it to the chat. Do not re-use database passwords or JWT keys. The API refuses to save signatures without a valid configured key. Safeguard encryption-key backup and recovery: losing the key makes stored signatures unreadable; rotating it requires a planned encrypted migration. Keep the private database, backups, HTTPS credentials and access logs secured.
+
+**Privacy:** Do not upload scanned signatures of others. Store only the administrator's actual voluntarily supplied signature. Use of a signature on a formal document must require a separate, auditable document release, a verified existing course-completion record and correct authorisation; the checkboxes configure only the *possible* categories. An original Academy seal is not an SLCAA official stamp, and signing an Academy record does not establish accreditation.
+
+**Important deployment limitation:** The repository contains the private server and signature-capture UI, but this service is **not hosted on public GitHub Pages** and the owner has **not yet supplied a signature**. Until the private server and PostgreSQL database are deployed with the encryption secret, no signature can be stored in the live Academy admin panel. Test with `node --test tests/signature-vault.test.mjs` plus the PostgreSQL integration suite before production work.
