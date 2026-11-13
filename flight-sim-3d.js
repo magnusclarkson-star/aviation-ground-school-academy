@@ -1614,22 +1614,32 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     "uHasTexture","uAlphaCutoff","uTexture","uC172Pass","uR44Skin",
     "uSkinFinish","uSkinMicroTexture"])
    uni[name]=gl.getUniformLocation(program,name);
-  const micro=makeFighterSurfaceMap(256);
-  const microTexture=gl.createTexture();
-  if(!microTexture)throw Error("Aircraft paint texture unavailable");
-  textures.push(microTexture);
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D,microTexture);
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,micro.size,micro.size,0,
-   gl.RGBA,gl.UNSIGNED_BYTE,micro.data);
-  gl.generateMipmap(gl.TEXTURE_2D);
-  gl.bindTexture(gl.TEXTURE_2D,null);
-  gl.activeTexture(gl.TEXTURE0);
+  // Optional effect. A low-memory WebGL2 device must retain its complete
+  // working 3D aircraft renderer if this extra texture cannot be created.
+  let microTexture=null;
+  try{
+   const candidate=gl.createTexture();
+   if(candidate){
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D,candidate);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    const micro=makeFighterSurfaceMap(256);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,micro.size,micro.size,0,
+     gl.RGBA,gl.UNSIGNED_BYTE,micro.data);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    if(gl.getError()===gl.NO_ERROR){
+     microTexture=candidate;textures.push(candidate);
+    }else gl.deleteTexture(candidate);
+    gl.bindTexture(gl.TEXTURE_2D,null);
+   }
+  }catch(error){
+   if(typeof console!=="undefined")
+    console.warn("Optional fighter surface texture disabled:",error);
+  }finally{gl.activeTexture(gl.TEXTURE0);}
   gl.useProgram(program);
   gl.uniform1i(uni.uSkinMicroTexture,1);
   gl.uniform1f(uni.uSkinFinish,0);
@@ -2100,7 +2110,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
      "not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
-    const finishId={f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0;
+    const finishId=microTexture?({f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0):0;
     const isSurface=part=>{
      if(!part||!part.sourceName||(part.opacity??1)<.99||part.partAxis===4)
       return false;
