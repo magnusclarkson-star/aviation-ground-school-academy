@@ -111,7 +111,7 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
    WHERE g.student_id=$1 ORDER BY g.created_at DESC LIMIT 100`,[actor.id]);
   send(res,200,{documents:rows,warning:"Document access is separate from training qualification and SLCAA approval."});return true;
  }
- const download=/^\/api\/my\/documents\/([a-f0-9-]{36})\/download$/.exec(pathname);
+ const download=/^\/api\/my\/documents\/([a-f0-9-]{36})\/(download|print)$/.exec(pathname);
  if(method==="GET"&&download){
   if(actor.role!=="student")fail(403,"Only the student can download their formal documents");
   const grantId=uuid(download[1],fail);
@@ -155,7 +155,7 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
   }catch(e){if(e?.status)throw e;fail(409,"Document cannot be printed: "+String(e.message).slice(0,160))}
   finally{if(png)png.fill(0)}
   await transaction(tx=>audit(tx,actor.id,"DOCUMENT_PDF_DOWNLOADED","DOCUMENT_RELEASE",grant.id,{kind:grant.kind}));
-  binaryPdf(res,document,"agsa-"+grant.kind.toLowerCase()+"-"+grant.id.slice(0,8)+".pdf");
+  binaryPdf(res,document,"agsa-"+grant.kind.toLowerCase()+"-"+grant.id.slice(0,8)+".pdf",download[2]==="print"?"inline":"attachment");
   return true;
  }
  if(method==="GET"&&pathname==="/api/admin/documents/identity-pending"){
