@@ -61,6 +61,9 @@ jobs:
       - run: node --check academy-coursebook-depth-model.js
       - run: node --check academy-coursebook-depth-ui.js
       - run: node scripts/test-academy-coursebook-depth.mjs
+      - run: node --check academy-coursebook-illustrations.js
+      - run: node --check academy-coursebook-pictorial-ui.js
+      - run: node scripts/test-academy-coursebook-illustrations.mjs
       - run: node --check academy-specialist-courses-data.js
       - run: node --check academy-specialist-courses.js
       - run: node scripts/test-academy-specialist-courses.mjs
