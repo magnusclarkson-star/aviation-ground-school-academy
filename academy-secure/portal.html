@@ -69,6 +69,27 @@
 <section id="adminDocumentSettings" class="panel" hidden aria-label="Certificate and transcript release administration">
  <div class="eyebrow">ACADEMY ADMINISTRATOR · CERTIFICATE AND TRANSCRIPT CONTROL</div>
  <h2>Certificate designs, stamps and separate release fees</h2>
+ <section class="panel" id="originalMasterUpload" aria-label="Original owner-selected certificate artwork">
+  <h3>Install the three original approved certificate images</h3>
+  <p class="hint">The previous gallery used simplified redraws. This secure uploader accepts only the <strong>exact original PNG files</strong> that you selected. An automated SHA-256 check rejects substitutes, recreations and altered images. The originals remain unchanged, while names, course titles, dates, signatures and reference numbers are printed on top.</p>
+  <div class="cols">
+   <label>Traditional academic (burgundy investigation design)
+    <input id="artworkFormal" type="file" accept=".png,image/png">
+    <button type="button" data-artwork-upload="FORMAL_TRADITIONAL">Install original formal design</button>
+   </label>
+   <label>Scouts / Air Scouts (teal aviation design)
+    <input id="artworkScout" type="file" accept=".png,image/png">
+    <button type="button" data-artwork-upload="SCOUT_MODERN">Install original Air Scouts design</button>
+   </label>
+   <label>Enthusiasts (navy and gold avionics design)
+    <input id="artworkEnthusiast" type="file" accept=".png,image/png">
+    <button type="button" data-artwork-upload="ENTHUSIAST_NAVY_GOLD">Install original navy and gold design</button>
+   </label>
+  </div>
+  <p id="masterArtworkStatus" role="status" aria-live="polite">Checking original certificate artwork availability…</p>
+  <button id="refreshMasterArtwork" type="button">Refresh original artwork status</button>
+  <p class="hint">Original decorative medallions and the original printed signature lines are part of these images; they cannot be removed using a checkbox. The seal checkbox adds a separate Academy mark. The stored administrator signature will only be added when you authorise it. Formal certificate printing remains blocked until its original image is installed and the academic and fee requirements are met.</p>
+ </section>
  <p class="hint">Configure prices and release permission separately from tuition. An Academy academic certificate can only represent an existing staff-attested course. A transcript reports existing records and cannot change them.</p>
  <div class="toolbar"><button id="refreshDocumentAdmin" type="button">Refresh document settings and grants</button></div>
  <div class="cols">
