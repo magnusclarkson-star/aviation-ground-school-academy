@@ -647,6 +647,8 @@ function addFA18(m){
   [0,-1.00,-7.11],[0,-1.14,-7.48]],.047,palette.metal,7);
  m.box(-.16,-1.18,-7.65,.32,.11,.25,palette.dark);
  m.box(-.08,-.14,8.05,.16,.17,.22,palette.dark);
+ // Aft white position lens faces backwards, separate from the wingtip lamps.
+ m.box(-.08,.10,-7.86,.16,.11,.13,palette.navWhite);
  // This deliberately repaints only the muted main exterior palette, not
  // glass, lights or exhausts. The original model remains fully animatable.
  if(Livery)Livery.paintMesh("fa18",m);
