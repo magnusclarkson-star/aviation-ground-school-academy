@@ -53,6 +53,26 @@ The layer is **optional**; failure to allocate its GPU texture falls back
 to the existing coloured 3D aircraft rather than disabling flight visuals.
 It adds no geometry and no extra network requests.
 
+## Fighter-only reflective material response
+
+The in-flight WebGL2 renderer now distinguishes **painted hulls, tinted canopy
+glass and exposed metallic fittings** on its native fighter models. A single
+sun direction and camera-relative highlight provide restrained reflective
+behaviour over the existing vertex paint and lightweight panel map. This
+corrects the same flat-matte appearance across every original material;
+the canopy receives a separate edge tint, while painted metal remains subtle.
+
+Material classification uses the imported source part name, opacity and gear
+hinge, instead of applying shine to everything. This protects the cockpit,
+landing wheels, struts and bay doors. The F/A-18 procedural mesh uses a
+separate pale-colour mask because its canopy and skin share one geometry
+buffer. Both C172 and R44 retain their existing rendering and cockpits.
+
+This is a **basic view-dependent lighting model**, not a measured
+metallic/roughness PBR shader or a substitute for downloadable
+high-resolution aircraft texture maps. Device-level WebGL testing is still
+needed to validate appearance and frame rate.
+
 ## Limitations
 
 On phones without WebGL2, the legacy 2D preview is used and does not have
