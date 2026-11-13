@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><title>Private Academy Records Portal</title><link rel="stylesheet" href="/portal.css"><script defer src="/portal.js"></script><script defer src="/fees-portal.js"></script><script defer src="/signature-portal.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><title>Private Academy Records Portal</title><link rel="stylesheet" href="/portal.css"><script defer src="/portal.js"></script><script defer src="/fees-portal.js"></script><script defer src="/signature-portal.js"></script><script defer src="/document-portal.js"></script></head>
 <body><header><div><strong>✈ AVIATION GROUND SCHOOL ACADEMY</strong><small>PRIVATE TRAINING RECORDS · CONTROLLED ACCESS</small></div><div id="sessionBadge">Not signed in</div></header>
 <main><section class="hero"><h1>Academy Training Records</h1><p>This restricted portal manages invited adult student accounts, staff evidence, course review and controlled training records. It is <strong>not proof of ATO accreditation</strong>. Only authority-issued approvals are valid.</p><p class="status" id="authorityStatus" role="status">Checking authority-record status…</p></section>
 <div id="flash" role="status" aria-live="polite"></div>
@@ -59,6 +59,92 @@
   </div>
   <p class="hint">The Academy cannot copy a signature without your drawing or image upload. Removing it deletes the encrypted active image; separately retained backups may follow the host's retention policy.</p>
  </div>
+</section>
+<section id="studentDocuments" class="panel" hidden aria-label="Printable academic documents">
+ <h3>My certificates and transcripts</h3>
+ <p class="hint">Raw academic results remain visible above without a document-release fee. Formal PDF downloads need a separately authorised issue or waiver, plus identity review and any applicable regulatory course authority. A PDF never grants a pilot licence.</p>
+ <div class="toolbar"><button id="refreshStudentDocuments" type="button">Refresh printable documents</button></div>
+ <div id="studentDocumentList" role="status">No released document yet.</div>
+</section>
+<section id="adminDocumentSettings" class="panel" hidden aria-label="Certificate and transcript release administration">
+ <div class="eyebrow">ACADEMY ADMINISTRATOR · CERTIFICATE AND TRANSCRIPT CONTROL</div>
+ <h2>Certificate designs, stamps and separate release fees</h2>
+ <p class="hint">Configure prices and release permission separately from tuition. An Academy academic certificate can only represent an existing staff-attested course. A transcript reports existing records and cannot change them.</p>
+ <div class="toolbar"><button id="refreshDocumentAdmin" type="button">Refresh document settings and grants</button></div>
+ <div class="cols">
+  <form id="docFeeForm" class="panel finance-subsection">
+   <h3>Set a document-release fee</h3>
+   <label>Document<select name="kind"><option value="CERTIFICATE">Formal certificate</option><option value="TRANSCRIPT">Student transcript</option></select></label>
+   <label>Course key (certificates only)<input name="courseId" placeholder="ppl-theory"></label>
+   <label>Country ISO code<input name="countryCode" value="SL" minlength="2" maxlength="2" pattern="[A-Za-z]{2}" required></label>
+   <label>Currency<select name="currency"><option>SLE</option><option>USD</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option></select></label>
+   <label>Fee in currency units<input name="majorAmount" required inputmode="decimal" pattern="(?:0|[0-9]+)(?:\\.[0-9]{1,2})?" value="0.00"></label>
+   <button class="primary" type="submit">Save separate PDF release fee</button>
+   <p class="hint">Zero-priced documents still need an explicit administrator grant. Tuition prices are not changed.</p>
+  </form>
+  <form id="docLayoutForm" class="panel finance-subsection">
+   <h3>Choose certificate design and tick-box options</h3>
+   <label>Document audience<select name="audience" id="docAudience"><option value="FORMAL">Formal courses - traditional academic</option><option value="SCOUT">Scouts / Air Scouts - modern aviation</option><option value="ENTHUSIAST">Enthusiasts - navy and gold</option><option value="TRANSCRIPT">Academic transcript</option></select></label>
+   <label>Appearance<select name="style" id="docStyle"><option value="FORMAL_TRADITIONAL">Traditional academic</option><option value="SCOUT_MODERN">Modern blue and teal</option><option value="ENTHUSIAST_NAVY_GOLD">Navy and gold</option></select></label>
+   <label class="check"><input type="checkbox" name="enabled"> Certificate / transcript printing enabled</label>
+   <label class="check"><input type="checkbox" name="showSeal"> Place Academy seal / stamp</label>
+   <label class="check"><input type="checkbox" name="showSignature"> Include my stored electronic signature (when authorised)</label>
+   <label class="check"><input type="checkbox" name="showCertificateNumber" checked> Show document reference number</label>
+   <label class="check"><input type="checkbox" name="showCompletionDate" checked> Show completion / issue date</label>
+   <label class="check"><input type="checkbox" name="showCourseTitle" checked> Show course title</label>
+   <label class="check"><input type="checkbox" name="showInstructorLine"> Show instructor sign-off line (unsigned)</label>
+   <label class="check"><input type="checkbox" name="autoDownload"> Prefer automatic download on eligible release (subject to browser permissions)</label>
+   <label class="check"><input type="checkbox" name="autoPrint"> Prefer print-dialog prompt (subject to browser permissions)</label>
+   <p class="hint">A QR verification code is disabled until the Academy operates a trustworthy public verification registry. These design ticks never override academic and payment checks.</p>
+   <button type="submit" class="primary">Save document design and checkboxes</button>
+  </form>
+ </div>
+ <form id="docAudienceForm" class="panel finance-subsection">
+  <h3>Assign a course's certificate category</h3>
+  <div class="toolbar"><label>Course key <input name="courseId" required placeholder="avionics-engineering"></label><label>Certificate category <select name="audience"><option>FORMAL</option><option>SCOUT</option><option>ENTHUSIAST</option></select></label><button type="submit">Assign design</button></div>
+ </form>
+ <div class="cols">
+  <form id="docGrantForm" class="panel finance-subsection">
+   <h3>Authorise certificate or transcript release</h3>
+   <label>Adult student ID<input name="studentId" required placeholder="Student UUID"></label>
+   <label>Document kind<select name="kind"><option>CERTIFICATE</option><option>TRANSCRIPT</option></select></label>
+   <label>Active document fee plan ID<input name="feePlanId" required placeholder="Plan UUID"></label>
+   <label>Staff-approved completion ID (certificate only)<input name="completionId" placeholder="Completion UUID"></label>
+   <label>Release type<select name="grantType"><option value="PAID">Paid document</option><option value="SCHOLARSHIP">Scholarship</option><option value="WAIVER">Waive issue fee</option><option value="PROMOTION">Promotional discount</option><option value="FREE">Zero-priced document</option></select></label>
+   <label>Discount percent<input name="discountPercent" value="0" min="0" max="100" step=".01" type="number" required></label>
+   <label>Reason for release<textarea name="reason" minlength="8" required></textarea></label>
+   <button type="submit" class="primary">Create document entitlement</button>
+   <p class="hint">Full waivers activate immediately. Any remaining balance must be confirmed as paid before download.</p>
+  </form>
+  <form id="docPaymentForm" class="panel finance-subsection">
+   <h3>Confirm external document payment</h3>
+   <label>Pending release ID<input name="grantId" required></label>
+   <label>Confirmed amount in currency units<input name="majorAmount" required inputmode="decimal" pattern="(?:0|[0-9]+)(?:\\.[0-9]{1,2})?"></label>
+   <label>Receipt reference<input name="reference" required minlength="6"></label>
+   <label>Document fingerprint SHA-256<input name="evidenceSha256" required minlength="64" maxlength="64" pattern="[A-Fa-f0-9]{64}"></label>
+   <label>Settlement verification notes<textarea name="notes" required minlength="12"></textarea></label>
+   <button type="submit">Confirm payment and release document</button>
+   <p class="hint">No transaction is processed here. Confirm funds independently before attesting settlement.</p>
+  </form>
+ </div>
+ <form id="docRevokeForm" class="panel finance-subsection">
+  <h3>Hold or revoke document release</h3>
+  <div class="toolbar"><label>Release grant ID <input name="grantId" required></label><label>Reason <input name="reason" required minlength="8"></label><button type="submit">Revoke PDF download access</button></div>
+ </form>
+ <div class="cols">
+  <section class="panel finance-subsection"><h3>Fee plan register</h3><pre id="docFeeRegister">No document fees loaded.</pre></section>
+  <section class="panel finance-subsection"><h3>Release-grant register</h3><pre id="docGrantRegister">No document releases loaded.</pre></section>
+ </div>
+</section>
+<section id="docQualityIdentity" class="panel" hidden aria-label="Independent learner identity review">
+ <h3>Quality manager — verify identity for formal documents</h3>
+ <p class="hint">Verify identity against private authorised evidence. The student name shown on formal documents is not taken from a public self-study form. Do not publish identity evidence in GitHub.</p>
+ <form id="docIdentityForm">
+  <label>Student account ID<input name="studentId" required></label>
+  <label>Verified legal name<input name="legalName" required minlength="3"></label>
+  <label>Secure identity-evidence fingerprint (SHA-256)<input name="evidenceSha256" required pattern="[A-Fa-f0-9]{64}"></label>
+  <button type="submit">Record independent identity review</button>
+ </form>
 </section>
 <section id="ownerFinance" class="panel" hidden aria-label="Administrator tuition, scholarships and access">
  <div class="eyebrow">ACADEMY ADMINISTRATOR · EXCLUSIVE CONTROL</div>
