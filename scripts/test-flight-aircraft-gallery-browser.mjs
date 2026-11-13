@@ -48,6 +48,18 @@ try{
  assert.equal(await desktop.locator("#cockpitAircraftGallery").isVisible(),false);
  assert.equal(await desktop.locator("#aircraftInspectDialog").isVisible(),true);
  assert.equal(await desktop.locator("#aircraftInspectModel").textContent(),"Cessna 172");
+ // Hosted, licensed 360° aircraft own their touch rotation controls.
+ // The old native auto-spin button must be disabled, not clicked.
+ assert.equal(await desktop.locator("#aircraftInspectSpin").isDisabled(),true);
+ assert.equal(await desktop.locator("#aircraftInspectTexturedTitle").textContent(),"Cessna 172SP");
+ assert.equal(await desktop.locator("#aircraftInspectTexturedSource").getAttribute("href"),
+  "https://sketchfab.com/3d-models/free-cessna-172sp-be55bf96a63b41fdb953b6829ff0d4bf");
+ // The Su-37 remains native WebGL and must retain manual/auto orbit controls.
+ await desktop.locator("#aircraftInspectClose").click();
+ await desktop.locator("#cockpitAircraftSelect").selectOption("su37");
+ await desktop.locator("#cockpitAircraftPhotoButton").click();
+ await desktop.locator("#cockpitAircraftGalleryImage").click();
+ assert.equal(await desktop.locator("#aircraftInspectSpin").isEnabled(),true);
  await desktop.locator("#aircraftInspectSpin").click();
  assert.equal(await desktop.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
  await desktop.locator("#aircraftInspectClose").click();
@@ -86,8 +98,11 @@ try{
  assert.equal(await phone.locator("#aircraftInspectDialog").isVisible(),true,
   "360 degree inspection is reachable directly from aircraft picture on a phone");
  assert.equal(await phone.locator("#aircraftInspectModel").textContent(),"F-22 Raptor");
- await phone.locator("#aircraftInspectSpin").tap();
- assert.equal(await phone.locator("#aircraftInspectSpin").getAttribute("aria-pressed"),"true");
+ // F-22 uses a creator-hosted 360° iframe, so its built-in rotation
+ // replaces the local button. Verify source attribution and touch access.
+ assert.equal(await phone.locator("#aircraftInspectSpin").isDisabled(),true);
+ assert.equal(await phone.locator("#aircraftInspectTexturedTitle").textContent(),"F-22 Raptor");
+ assert.equal(await phone.locator("#aircraftInspectSuperHornetFrame").isVisible(),true);
  await phone.locator("#aircraftInspectClose").tap();
  assert.equal(await phone.locator("#aircraftInspectDialog").isVisible(),false);
  await thumb.tap();
