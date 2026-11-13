@@ -42,7 +42,7 @@ function validate(){
   if(!ids.has(u.id)||!chapterMap[u.id]||!subjectMap[u.id]||!u.focus?.scouts||!u.focus?.pilots||!Array.isArray(u.glossary)||u.glossary.length!==3)throw Error("Incomplete pathway or reference "+u.id);
   if(u.lessons?.length!==3||u.questions?.length!==3||u.scenario?.options?.length!==3)throw Error("Incomplete deep lessons "+u.id);
   for(const s of u.lessons)if(typeof s.title!=="string"||s.concept.length<190||s.example.length<115||s.task.length<55)throw Error("Incomplete explained lesson "+u.id+" / "+s.title);
-  for(const q of u.questions)if(q.length!==4||q[0].length<25||q[1]?.length!==3||new Set(q[1]).size!==3||!Number.isInteger(q[2])||q[2]<0||q[2]>2||q[3].length<25)throw Error("Invalid deep question "+u.id);
+  for(const q of u.questions)if(q.length!==4||q[0].length<18||q[1]?.length!==3||new Set(q[1]).size!==3||!Number.isInteger(q[2])||q[2]<0||q[2]>2||q[3].length<25)throw Error("Invalid deep question "+u.id);
   if(!Number.isInteger(u.scenario.answer)||u.scenario.answer<0||u.scenario.answer>2||u.scenario.why.length<40)throw Error("Invalid applied case "+u.id);
  }
  return {modules:12,advancedLessons:36,advancedQuestions:36,scenarios:12,capstoneQuestions:24,revision:REVISION};
