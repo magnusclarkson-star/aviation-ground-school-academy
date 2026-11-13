@@ -42,6 +42,9 @@ function validateManifest(cfg){
    throw Error("F/A-18E motion mapping invalid");
   controls.set(c.node,c);bound.add(c.name);
  }
+ if(cfg.enabled===true&&
+    !/^[a-f0-9]{64}$/.test(cfg.sha256||""))
+  throw Error("F/A-18E enabled source requires verified SHA-256");
  if(cfg.requireControls===true||cfg.enabled===true){
   // Never replace the animated flight model with a static mesh merely
   // because a higher-resolution exterior is available.
@@ -269,6 +272,21 @@ function parseFA18GLB(buffer,cfg){
    (rawBounds[3]-centreY)*scale+cfg.verticalOffsetMetres,
    -cfg.lengthMetres/2,cfg.lengthMetres/2]};
 }
+// Confirm downloaded geometry is *exactly* the authorized inspected file,
+// not an unrelated Hornet, modified binary or accidentally wrong export.
+// The browser Web Crypto API is available on secure GitHub Pages contexts.
+async function verifyFA18Digest(buffer,cfg,cryptoProvider=root?.crypto){
+ if(!(buffer instanceof ArrayBuffer)||
+    !/^[a-f0-9]{64}$/.test(cfg?.sha256||""))
+  throw Error("F/A-18E source integrity configuration missing");
+ if(!cryptoProvider?.subtle?.digest)
+  throw Error("F/A-18E source integrity API unavailable");
+ const digest=await cryptoProvider.subtle.digest("SHA-256",buffer);
+ const actual=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
+ if(actual!==cfg.sha256)
+  throw Error("F/A-18E downloaded GLB SHA-256 mismatch");
+ return true;
+}
 function ensureFA18(fetcher=root?.fetch?.bind(root)){
  if(cached)return Promise.resolve(cached);
  if(checked)return Promise.resolve(null);
@@ -284,7 +302,11 @@ function ensureFA18(fetcher=root?.fetch?.bind(root)){
   validateManifest(cfg);
   const file=await fetcher(cfg.path);
   if(!file.ok)throw Error("F/A-18E GLB unavailable: "+file.status);
-  return parseFA18GLB(await file.arrayBuffer(),cfg);
+  const bytes=await file.arrayBuffer();
+  if(bytes.byteLength>MAX_GLB_BYTES)
+   throw Error("F/A-18E source file exceeds mobile memory budget");
+  await verifyFA18Digest(bytes,cfg);
+  return parseFA18GLB(bytes,cfg);
  }).then(value=>{checked=true;cached=value;return value}).catch(error=>{
   checked=true;
   if(typeof console!=="undefined")console.warn("F/A-18E GLB disabled:",error);
@@ -292,7 +314,8 @@ function ensureFA18(fetcher=root?.fetch?.bind(root)){
  }).finally(()=>{pending=null});
  return pending;
 }
-const api={MANIFEST,MAX_GLB_BYTES,validateManifest,parseFA18GLB,ensureFA18};
+const api={MANIFEST,MAX_GLB_BYTES,validateManifest,parseFA18GLB,
+ verifyFA18Digest,ensureFA18};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSAFA18Airframe=api;
 })(typeof window!=="undefined"?window:null);
