@@ -42,7 +42,9 @@ export function validateCertificate(record){
 }
 export function buildCertificatePdf(record){
  const c=validateCertificate(record),parts=[];
- const navy="#122B42",blue="#176784",gold="#CBA85C",ink="#203449",muted="#496176",paper="#FBF9F2";
+ const scout=record.style==="SCOUT_MODERN";
+ const navy=scout?"#125B80":"#122B42",blue=scout?"#188F9E":"#176784",
+   gold=scout?"#50C5C9":"#CBA85C",ink="#203449",muted="#496176",paper=scout?"#F0FAFB":"#FBF9F2";
  const cmd=x=>parts.push(x);
  const rect=(x,y,w,h,hex)=>cmd(colour(hex)+" rg "+x+" "+y+" "+w+" "+h+" re f");
  const stroke=(x,y,w,h,hex,width=1)=>cmd(colour(hex)+" RG "+width+" w "+x+" "+y+" "+w+" "+h+" re S");
@@ -59,6 +61,7 @@ export function buildCertificatePdf(record){
  }
  rect(0,0,PAGE_W,PAGE_H,paper);
  rect(0,0,12,PAGE_H,navy);rect(PAGE_W-12,0,12,PAGE_H,navy);
+ if(scout){rect(0,0,PAGE_W,13,blue);rect(0,PAGE_H-13,PAGE_W,13,blue);rect(0,PAGE_H-22,PAGE_W,5,gold)}
  stroke(25,23,792,549,navy,3);
  stroke(33,31,776,533,gold,1.4);
  line(48,544,135,544,gold,1.8);line(707,544,794,544,gold,1.8);
@@ -71,7 +74,7 @@ export function buildCertificatePdf(record){
  }
  line(421,501,421,525,blue,1.5);line(409,513,433,513,blue,1.5);
  text("AVIATION GROUND SCHOOL ACADEMY",468,19,"F2",navy);
- text("KNOWLEDGE   -   DISCIPLINE   -   SAFETY",448,9.5,"F1",blue);
+ text(scout?"AIR SCOUTS   -   FLIGHT   -   DISCOVERY":"KNOWLEDGE   -   DISCIPLINE   -   SAFETY",448,9.5,"F1",blue);
  line(181,433,661,433,gold,1.2);
  const kindTitle=c.kind==="ACADEMY_COURSE_COMPLETION"?"CERTIFICATE OF COURSE COMPLETION":
   c.kind==="SELF_STUDY_PROGRAMME"?"CERTIFICATE OF INDEPENDENT STUDY":"CERTIFICATE OF MODULE ACHIEVEMENT";
