@@ -43,7 +43,10 @@ test("both imported aircraft have four separate seats and a visible instrument b
   assert.ok(extrema[3]>-.3&&extrema[2]<-.6,"seat backs and bases span usable cabin height");
   assert.ok(extrema[1]-extrema[0]>.8,id+" has two separated seat columns");
  }
- assert.equal(Three.buildImportedCabin("fa18"),null);
+ // Fighter interiors now have a dedicated training cockpit as well.
+ // Do not regress to the previous missing-cockpit behaviour.
+ const hornetCabin=Three.buildImportedCabin("fa18");
+ assert.ok(hornetCabin?.triangles>50,"Super Hornet interior training mesh exists");
 });
 test("both cabins, cockpit panels and glazing sit forward in the real airframes",()=>{
  const layout=Three.IMPORTED_CABIN_LAYOUT;
