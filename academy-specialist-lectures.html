@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b2942"><meta name="description" content="Read richly illustrated avionics and aircraft accident investigation sample lessons. Original technical diagrams, fictional case studies and self-checks, separate from Academy certification.">
+<title>Specialist Aviation Illustrated Lectures | Aviation Ground School Academy</title>
+<link rel="stylesheet" href="academy-specialist-lectures.css">
+<script defer src="academy-specialist-courses-data.js"></script>
+<script defer src="academy-specialist-lesson-data.js"></script>
+<script defer src="academy-specialist-technical-plates.js"></script>
+<script defer src="academy-specialist-lectures.js"></script>
+</head>
+<body>
+<header class="topbar">
+ <a class="brand" href="index.html">✈ AVIATION GROUND SCHOOL ACADEMY <small>SPECIALIST LEARNING LAB</small></a>
+ <nav aria-label="Academy navigation"><a href="academy-coursebook.html">Foundation Ground School</a><a href="academy-specialist-courses.html">All Specialist Courses</a><a href="standards-readiness.html">Accreditation Status</a></nav>
+</header>
+<main>
+ <section class="hero">
+  <p class="eyebrow">SPECIALIST COURSES · ILLUSTRATED LECTURE PREVIEWS</p>
+  <h1>Learn the systems. Understand the evidence.</h1>
+  <p class="hero-copy">Explore original professional technical plates, detailed explanations, fictional practical casework and answer-by-answer knowledge checks in the Academy's first two flagship specialist pathways.</p>
+  <p class="disclosure"><strong>Free public sample lessons — not official enrolment.</strong> These two lessons per pathway are sample teaching material. The other six planned subject units in each proposed course are not yet published as lectures. There are no fees, grades, formal exams, course certificates or transcripts issued from this page. Full enrolment, tuition and scholarship access will be controlled by the private Academy administrator service when it is securely deployed.</p>
+ </section>
+ <section class="course-selector" aria-label="Choose specialist programme">
+  <h2>Choose a specialist subject</h2>
+  <div role="group" aria-label="Specialist pathway">
+   <button id="chooseAvionics" type="button" aria-pressed="true" data-course="avionics-engineering">Avionics Engineering</button>
+   <button id="chooseInvestigation" type="button" aria-pressed="false" data-course="aircraft-accident-investigation">Aircraft Accident Investigation</button>
+  </div>
+  <p id="courseTagline" class="course-tagline" aria-live="polite"></p>
+ </section>
+ <div class="workspace">
+  <aside class="lesson-navigation" aria-label="Specialist lesson navigation">
+   <p class="eyebrow">SAMPLE LECTURE SERIES</p>
+   <h2 id="courseHeading">Choose a course</h2>
+   <div id="moduleButtons" class="module-buttons" role="group" aria-label="Select a lecture"></div>
+   <div id="upcomingModules" class="upcoming">
+    <h3>Coming later · planned topics</h3><ol id="upcomingList"></ol>
+   </div>
+  </aside>
+  <article class="lecture" aria-labelledby="lessonHeading">
+   <div class="eyebrow">ORIGINAL ACADEMY TRAINING MATERIAL · REVISION 2026.11</div>
+   <h2 id="lessonHeading">Illustrated specialist lecture</h2>
+   <p id="lessonObjective" class="objective"></p>
+   <div id="lectureSections"></div>
+   <section class="key-points" aria-label="Key learning points">
+    <h3>Remember these principles</h3><ul id="keyPoints"></ul>
+   </section>
+   <section class="case-study" aria-label="Fictional practice case">
+    <p class="eyebrow">FICTIONAL PRACTICAL CASE</p>
+    <h3 id="caseTitle"></h3>
+    <p id="caseText"></p>
+    <div class="case-focus"><strong>What to consider:</strong> <span id="caseFocus"></span></div>
+   </section>
+   <section class="quiz-panel" aria-label="Self-check questions">
+    <h3>Knowledge check — practice only</h3>
+    <p>This is an informal self-check. Your answers remain on this screen; no grade, exam record or certificate is issued.</p>
+    <form id="quizForm"><div id="questionList"></div><button type="submit" class="action">Check my answers</button></form>
+    <p id="quizResult" role="status" aria-live="polite"></p>
+   </section>
+   <section class="reference-panel">
+    <h3>Authoritative reference families</h3>
+    <p>Read the relevant official handbooks or national procedures for the subject. The Academy notes are independent educational summaries, not reproduction of protected publications.</p>
+    <ul id="referenceLinks"></ul>
+   </section>
+   <div class="next-controls">
+    <button id="previousLesson" type="button">Previous sample</button>
+    <button id="nextLesson" type="button" class="action">Next sample</button>
+   </div>
+  </article>
+ </div>
+ <section class="footer-note">
+  <h2>Professional training, safely separated</h2>
+  <p>Aircraft maintenance licensing, approval of engineering programmes and State aircraft accident investigation authority are distinct from online educational lessons. The two flagship outlines cover eight proposed units each; the public page teaches only the first two subjects per pathway as a preview. Formal course access, student identity, records, fee waivers and authority-controlled exams belong in the separately secured Academy system.</p>
+  <p><a href="academy-specialist-courses.html">View the complete 16-course specialist roadmap</a> · <a href="academy-coursebook.html">Return to illustrated Foundation Ground School</a></p>
+ </section>
+</main>
+<dialog id="technicalZoom" class="technical-zoom" aria-labelledby="technicalZoomTitle"><h2 id="technicalZoomTitle"></h2><img id="technicalZoomImage" alt=""><p id="technicalZoomCaption"></p><button type="button" id="closeTechnicalZoom">Close illustration</button></dialog>
+<footer>Aviation Ground School Academy · Non-accredited sample teaching material · No official examination or signed credential issued.</footer>
+</body></html>
