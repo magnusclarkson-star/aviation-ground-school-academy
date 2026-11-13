@@ -9,6 +9,7 @@ import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEma
 import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,canRecordApprovedTraining,canRecordOfficialExam,canIssueApprovedCourseCompletion} from "./policy.mjs";
 import {handleFeesRoute} from "./fees-routes.mjs";
 import {handleSignatureRoute} from "./signature-routes.mjs";
+import {handleDocumentRoute} from "./document-routes.mjs";
 
 const httpPort=Number(process.env.PORT||8787);
 const baseOrigin=process.env.ACADEMY_ORIGIN;
