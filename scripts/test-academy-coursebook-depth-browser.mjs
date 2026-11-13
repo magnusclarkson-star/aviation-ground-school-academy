@@ -50,6 +50,8 @@ try{
  assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/instructor/i);
  assert.match(await desktop.locator(".academy-photo-source a").first().getAttribute("href"),/creativecommons\.org/);
  const firstImage=desktop.locator(".academy-reference-zoom img").first();
+ await firstImage.scrollIntoViewIfNeeded();
+ await firstImage.evaluate(img=>img.decode().catch(()=>null));
  assert.equal(await firstImage.evaluate(img=>img.complete&&img.naturalWidth>0),true);
  await desktop.locator(".academy-reference-zoom").first().click();
  assert.equal(await desktop.locator("#academyPhotoDialog").isVisible(),true);
@@ -85,7 +87,8 @@ try{
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/weather hazards/i);
- assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),2);
+ assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),1);
+ assert.equal(await desktop.locator("#deepReading .academy-reference-photo").count(),1);
  assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/cumulonimbus/i);
 
  assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
@@ -133,8 +136,11 @@ try{
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
  assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
- assert.equal(await phone.locator("#lessonReading .academy-reference-photo").count(),2);
+ assert.equal(await phone.locator("#lessonReading .academy-reference-photo").count(),1);
+ assert.equal(await phone.locator("#deepReading .academy-reference-photo").count(),1);
  assert.match(await phone.locator(".academy-reference-head h4").first().textContent(),/Robinson/i);
+ await phone.locator(".academy-reference-zoom img").first().scrollIntoViewIfNeeded();
+ await phone.locator(".academy-reference-zoom img").first().evaluate(img=>img.decode().catch(()=>null));
  assert.equal(await phone.locator(".academy-reference-zoom img").first().evaluate(img=>img.complete&&img.naturalWidth>0),true);
  await phone.locator(".academy-reference-zoom").first().tap();
  assert.equal(await phone.locator("#academyPhotoDialog").isVisible(),true);
