@@ -79,7 +79,7 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
-  if(method==="GET"&&["/","/portal.js","/portal.css"].includes(pathname)){
+  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/portal.css"].includes(pathname)){
    const file=pathname==="/"? "portal.html":pathname.slice(1);
    const bytes=await readFile(new URL("./"+file,import.meta.url));
    const type=file.endsWith(".html")?"text/html; charset=utf-8":file.endsWith(".css")?"text/css; charset=utf-8":"text/javascript; charset=utf-8";
