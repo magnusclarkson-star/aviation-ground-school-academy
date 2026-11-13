@@ -9,6 +9,8 @@ const SOURCE="https://github.com/FGMEMBERS/F-22/blob/master/Models/F-22.ac";
 const MAX_BYTES=1600000,MAX_TRIANGLES=42000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
+const Livery=root?.AGSANativeFighterLivery||
+ (typeof module!=="undefined"&&module.exports?require("./flight-sim-native-livery.js"):null);
 function partMotion(name,coords){
  // Authentic F-22 wheels and hydraulic links use source mesh sections. They
  // now follow the simulated gear cycle, without illustrated gear overlays.
@@ -101,7 +103,11 @@ function parseF22(text){
     normals[j]/=len;normals[j+1]/=len;normals[j+2]/=len;
    }
    const colors=new Float32Array(positions.length),color=colorFor(part.name,group[0],data.materials);
-   for(let j=0;j<colors.length;j+=3)colors.set(color,j);
+   for(let j=0;j<colors.length;j+=3){
+    const tone=Livery?Livery.paint("f22",part.name,
+     positions[j],positions[j+1],positions[j+2],color):color;
+    colors.set(tone,j);
+   }
    const opacity=part.name==="canopy"?.42:Math.min(1,sourceMat[3]);
    primitives.push({positions,indices,normals,colors,uvs:new Float32Array(n*2),
     imageId:null,opacity,alphaMask:false,alphaCutoff:0,

@@ -37,6 +37,16 @@ a link back to its source. If a hosted model cannot load due to the user's
 browser, connection, provider settings or later removal, this does not
 affect cockpit instruments or flight training.
 
+## Native flight model materials
+
+Separate from the hosted, photorealistic 360° embeds, the local in-flight
+renderer now uses original deterministic vertex-colour finishes for F/A-18,
+F-22, F-35B and Typhoon as well as the previously upgraded Su-37. These
+are **native** WebGL2 aircraft paints and do not copy or pretend to embed
+the third-party hosted textures in the flight scene. See
+[Native Fighter Liveries](NATIVE-FLIGHT-LIVERIES.md) for implementation
+details and source-licensing boundaries.
+
 ## Later full integration
 
 To make skins/textures appear in the **actual flying models**, acquire proper

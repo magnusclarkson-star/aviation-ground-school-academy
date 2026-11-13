@@ -9,6 +9,8 @@ const SOURCE="https://github.com/FGMEMBERS/F-35B/blob/master/Models/F-35B.ac";
 const MAX_BYTES=1200000,MAX_TRIANGLES=32000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
+const Livery=root?.AGSANativeFighterLivery||
+ (typeof module!=="undefined"&&module.exports?require("./flight-sim-native-livery.js"):null);
 function partMotion(name,coords){
  // FlightGear wheel and strut meshes were previously static even though the
  // flight-system model reports a retracting undercarriage. Fold each original
@@ -111,7 +113,11 @@ function parseF35(text){
     normals[j]/=len;normals[j+1]/=len;normals[j+2]/=len;
    }
    const colors=new Float32Array(positions.length),color=colorFor(part.name,group[0],data.materials);
-   for(let j=0;j<colors.length;j+=3)colors.set(color,j);
+   for(let j=0;j<colors.length;j+=3){
+    const tone=Livery?Livery.paint("f35",part.name,
+     positions[j],positions[j+1],positions[j+2],color):color;
+    colors.set(tone,j);
+   }
    const opacity=part.name==="canopy"?.42:Math.min(1,sourceMat[3]);
    primitives.push({positions,indices,normals,colors,uvs:new Float32Array(n*2),
     imageId:null,opacity,alphaMask:false,alphaCutoff:0,
