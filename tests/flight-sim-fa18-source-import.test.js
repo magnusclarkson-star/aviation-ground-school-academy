@@ -65,6 +65,9 @@ test('disabled official asset never fetches unverified binary',async()=>{
 test('native model requires documented license, axes and moving parts',()=>{
  assert.ok(Airframe.validateManifest({...manifest,requireControls:false}));
  assert.throws(()=>Airframe.validateManifest({...manifest,enabled:true}),
+  /requires verified SHA-256/);
+ assert.throws(()=>Airframe.validateManifest({
+  ...manifest,enabled:true,sha256:'a'.repeat(64)}),
   /requires verified moving part/);
  assert.throws(()=>Airframe.validateManifest({...manifest,license:'unknown',requireControls:false}));
  assert.throws(()=>Airframe.validateManifest({...manifest,noseAxis:'+Y',requireControls:false}),
