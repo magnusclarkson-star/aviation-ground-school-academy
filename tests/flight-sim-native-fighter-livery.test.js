@@ -24,6 +24,15 @@ test('Livery painter remains finite, deterministic and leaves non-skin parts unc
    assert.deepEqual(Paint.paint(id,name,2,.35,1,base),base);
  }
 });
+test('F-22 lower fuselage stays matte while upper camouflage and other fighters stay intact',()=>{
+ const base=[.66,.73,.77];
+ const low=Paint.paint('f22','Fuselage_2',1.5,-1.70,-2.4,base);
+ assert.ok(low.every((c,i)=>c<base[i]-.16),
+  'source Raptor underside and wheel-well shoulders must not look white');
+ assert.deepEqual(Paint.paint('f22','Fuselage_2',1.5,-1.35,-2.4,base),base);
+ assert.deepEqual(Paint.paint('f35','fuselage',1.5,-1.70,-2.4,base),base);
+ assert.deepEqual(Paint.paint('f22','Left_Wing_0',1.5,-1.70,-2.4,base),base);
+});
 test('Imported fighter paint maintains real licensed geometry and creates multiple tones',()=>{
  for(const [id,parse,file,primary,minTriangles] of imported){
   const model=parse(fs.readFileSync(path.join(root,'assets/aircraft',file),'utf8'));
