@@ -83,7 +83,7 @@ try{
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
   "second double click restores fitted aircraft view");
  const frames=new Set();
- const hosted=new Set(["c172","r44","fa18","f22","f35","typhoon"]);
+ const hosted=new Set(["fa18","f22","f35","typhoon"]);
  for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
   await desktop.locator("#aircraftInspectModelSelect").selectOption(id);
   assert.equal(await desktop.locator("#cockpitAircraftSelect").inputValue(),id,
@@ -104,10 +104,14 @@ try{
    assert.match(credit,/CC BY/);
    frames.add(src);
   }else{
-   await desktop.waitForFunction(()=>document.getElementById(
-    "aircraftInspectViewport").dataset.modelLoading==="off"&&
-    document.getElementById("aircraftInspectCanvas3D").dataset.airframeSource==="gpl-su37-fguk",
-    null,{timeout:25000});
+   await desktop.waitForFunction(id=>{
+    const v=document.getElementById("aircraftInspectViewport");
+    const c=document.getElementById("aircraftInspectCanvas3D");
+    const sources=id==="c172"?["mit-c172s-glb","licensed-c172-glb"]:
+     id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:["gpl-su37-fguk"];
+    return v.dataset.modelLoading==="off"&&!c.hidden&&
+     c.dataset.airframeId===id&&sources.includes(c.dataset.airframeSource);
+   },id,{timeout:25000});
    assert.equal(await desktop.locator("#aircraftInspectSpin").isEnabled(),true);
    await wait(desktop);
    const png=await shot(desktop);
@@ -115,7 +119,7 @@ try{
    frames.add(png);
   }
  }
- assert.equal(frames.size,7,"six licensed 360 sources and genuine native Su-37 remain distinct");
+ assert.equal(frames.size,7,"four fighter viewers and three native aircraft models remain distinct");
  await desktop.locator("#aircraftInspectModelSelect").selectOption("su37");
  const nativeControlsBefore=await desktop.locator("#controlPad").boundingBox();
  await desktop.locator("#aircraftInspectSpin").click();
@@ -154,10 +158,9 @@ try{
     const canvas=document.querySelector("#aircraftInspectCanvas3D");
     return {prev,loading:vp.dataset.modelLoading,hidden:canvas.hidden};
    },id);
-   if(id!=="su37"){
-    // All six licensed aircraft have a hosted 3D exterior. The old
-    // canvas must remain hidden, and the correct source URL must replace
-    // the previous aircraft's view without a stale geometry flash.
+   if(["fa18","f22","f35","typhoon"].includes(id)){
+    // Fighter exterior viewers use licensed external models. Trainers
+    // retain their approved native 3D geometry and working 360° controls.
     await phone3d.waitForFunction(()=>{
      const v=document.getElementById("aircraftInspectSuperHornet");
      return v&&!v.hidden&&document.getElementById(
@@ -170,15 +173,17 @@ try{
    }else{
     if(changed.prev!==id)assert.equal(changed.hidden,true,
      "native Su-37 must not briefly show prior aircraft");
-    await phone3d.waitForFunction(()=>{
+    await phone3d.waitForFunction(id=>{
      const v=document.getElementById("aircraftInspectViewport");
      const c=document.getElementById("aircraftInspectCanvas3D");
-     // Match the visible new frame, not stale source metadata from portrait.
+     const sources=id==="c172"?["mit-c172s-glb","licensed-c172-glb"]:
+      id==="r44"?["mit-r44-glb","licensed-r44-ac3d"]:["gpl-su37-fguk"];
+     // Match the newly visible native mesh rather than an old aircraft.
      return v.dataset.modelLoading==="off"&&!c.hidden&&
-      c.dataset.airframeId==="su37"&&c.dataset.airframeSource==="gpl-su37-fguk";
-    },null,{timeout:25000});
+      c.dataset.airframeId===id&&sources.includes(c.dataset.airframeSource);
+    },id,{timeout:25000});
     assert.equal(await phone3d.locator("#aircraftInspectCanvas3D").isVisible(),true,
-     "real Su-37 WebGL mesh visible in "+layout.name);
+     "approved native "+id+" WebGL mesh visible in "+layout.name);
    }
    assert.ok(await phone3d.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
     id+" inspection must fit without horizontal scrolling");
@@ -199,8 +204,8 @@ try{
   };
  });
  await mobile.goto(url,{waitUntil:"load"});
- // Su-37 still exercises the app-owned Canvas 2D fallback if WebGL
- // is absent. The R44 now uses its source-hosted 360° iframe.
+ // The C172, R44 and Su-37 retain native local 360° viewing.
+ // Su-37 also exercises the Canvas 2D fallback without WebGL.
  await mobile.locator("#cockpitAircraftSelect").selectOption("su37");
  const button=mobile.locator("#aircraftInspectOpen");
  assert.equal(await button.isVisible(),false,"360° inspection starts in compact More menu");

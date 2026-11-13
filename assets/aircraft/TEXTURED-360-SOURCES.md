@@ -1,6 +1,6 @@
 # Textured Exterior 360° Aircraft — Sources and Scope
 
-The optional Exterior 360° tab embeds creator-hosted Sketchfab models. These
+The optional fighter Exterior 360° tab embeds creator-hosted Sketchfab models. These
 models are **not** bundled, reuploaded, or substituted into the live flight
 simulation, so the original training controls and cockpit layouts are unchanged.
 All embeds need an internet connection and third-party access.
@@ -11,8 +11,8 @@ All embeds need an internet connection and third-party access.
 | F-22 | https://sketchfab.com/3d-models/f22-raptor-free-2a64abf0866a405c865466c7642ca689 | NLM | CC BY |
 | F-35B tab | https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6 | andertan | CC BY |
 | Eurofighter | https://sketchfab.com/3d-models/eurofighter-typhoon-3d-b3ede3f4280f4bf99ebbd4ebc7f5480d | Chenzoss | CC BY |
-| Cessna 172 | https://sketchfab.com/3d-models/free-cessna-172sp-be55bf96a63b41fdb953b6829ff0d4bf | NLM | CC BY |
-| Robinson R44 | https://sketchfab.com/3d-models/robinson-r44-36e3498a5dc54d16a6d964f9b525deb8 | syarifudinirfan701 | CC BY |
+| Cessna 172 | Approved local Academy native model | Academy flight simulator | No third-party 360 embed |
+| Robinson R44 | Approved local Academy native model | Academy flight simulator | No third-party 360 embed |
 
 **F-35B variant caveat:** The external reference is labelled as an F-35 Lightning
 II family model. It has **not** been verified as a B-variant, so the app

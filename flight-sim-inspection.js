@@ -65,9 +65,9 @@
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   const interiorButton=$("aircraftInspectInterior");
   const exteriorButton=$("aircraftInspectExterior");
-  // Author-hosted 360° textured exteriors. Interior mode and all active
-  // flight physics stay on the existing local meshes. Only one iframe is
-  // mounted at any time to avoid exhausting mobile GPU resources.
+  // C172 and R44 always use approved local Academy 360° models with
+  // mobile 2D fallback. External textured viewers are for fighters ONLY;
+  // never replace completed training aircraft without an explicit request.
   const texturedViewer=$("aircraftInspectSuperHornet");
   const texturedFrame=$("aircraftInspectSuperHornetFrame");
   const texturedTitle=$("aircraftInspectTexturedTitle");
@@ -87,12 +87,7 @@
    typhoon:{uid:"b3ede3f4280f4bf99ebbd4ebc7f5480d",
     name:"Eurofighter Typhoon",author:"Chenzoss",license:"CC BY",
     page:"https://sketchfab.com/3d-models/eurofighter-typhoon-3d-b3ede3f4280f4bf99ebbd4ebc7f5480d"},
-   c172:{uid:"be55bf96a63b41fdb953b6829ff0d4bf",
-    name:"Cessna 172SP",author:"NLM",license:"CC BY",
-    page:"https://sketchfab.com/3d-models/free-cessna-172sp-be55bf96a63b41fdb953b6829ff0d4bf"},
-   r44:{uid:"36e3498a5dc54d16a6d964f9b525deb8",
-    name:"Robinson R44",author:"syarifudinirfan701",license:"CC BY",
-    page:"https://sketchfab.com/3d-models/robinson-r44-36e3498a5dc54d16a6d964f9b525deb8"}
+   // Approved C172/R44 intentionally absent: native 360° is preserved.
    // Su-37 retains its local viewer until a source-authentic and clearly
    // licensed Su-37 model is verified; Su-35 is not interchangeable.
   });
