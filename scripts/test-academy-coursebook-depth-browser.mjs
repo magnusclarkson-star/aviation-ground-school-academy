@@ -5,13 +5,13 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
  try{
   const bytes=await readFile(path.join(root,name));
-  res.writeHead(200,{"Content-Type":(name.endsWith(".js")||name.endsWith(".mjs"))?"text/javascript":name.endsWith(".css")?"text/css":"text/html"});
+  res.writeHead(200,{"Content-Type":(name.endsWith(".js")||name.endsWith(".mjs"))?"text/javascript":name.endsWith(".css")?"text/css":name.endsWith(".webp")?"image/webp":"text/html"});
   res.end(bytes);
  }catch{res.writeHead(404);res.end()}
 });
@@ -40,25 +40,22 @@ try{
  const desktop=await browser.newPage({viewport:{width:1280,height:900},acceptDownloads:true});
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
 
- // Fixture image: tests can verify image rendering without requiring Wikipedia access.
- const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGOUqlvwn4GBgYGJAQoAISICOyA5b1QAAAAASUVORK5CYII=","base64");
- await desktop.route("https://upload.wikimedia.org/**",req=>req.fulfill({status:200,contentType:"image/png",body:png}));
  await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
- assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),1);
- assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/instructor/i);
- assert.match(await desktop.locator(".academy-photo-source a").first().getAttribute("href"),/creativecommons\.org/);
- const firstImage=desktop.locator(".academy-reference-zoom img").first();
- await firstImage.scrollIntoViewIfNeeded();
- await firstImage.evaluate(img=>img.decode().catch(()=>null));
- assert.equal(await firstImage.evaluate(img=>img.complete&&img.naturalWidth>0),true);
- await desktop.locator(".academy-reference-zoom").first().click();
- assert.equal(await desktop.locator("#academyPhotoDialog").isVisible(),true);
- await desktop.locator("#academyPhotoDialog button").click();
- assert.equal(await desktop.locator("#academyPhotoDialog").isVisible(),false);
-
- assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
+ assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.match(await desktop.locator(".approved-visual-heading h4").first().textContent(),/original illustrated aviation/i);
+ assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),0);
+ const displayed=desktop.locator(".approved-picture-trigger img").first();
+ await displayed.scrollIntoViewIfNeeded();
+ await displayed.evaluate(img=>img.decode());
+ assert.equal(await displayed.evaluate(img=>img.complete&&img.naturalWidth>=1000),true);
+ assert.match(await displayed.getAttribute("src"),/ground-school-visuals-12-topic\.webp$/);
+ await desktop.locator(".approved-picture-trigger").first().click();
+ assert.equal(await desktop.locator("#approvedVisualLightbox").isVisible(),true);
+ await desktop.locator("#approvedVisualLightbox button").click();
+ assert.equal(await desktop.locator("#approvedVisualLightbox").isVisible(),false);
+  assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/learning pathway/i);
  assert.equal(await desktop.locator(".lesson-pictorial img").evaluate(img=>img.complete&&img.naturalWidth>0),true);
  await desktop.locator(".diagram-trigger").click();
@@ -87,11 +84,11 @@ try{
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/weather hazards/i);
- assert.equal(await desktop.locator("#lessonReading .academy-reference-photo").count(),1);
- assert.equal(await desktop.locator("#deepReading .academy-reference-photo").count(),1);
- assert.match(await desktop.locator(".academy-reference-head h4").first().textContent(),/cumulonimbus/i);
-
- assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
+ assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.match(await desktop.locator(".approved-visual-heading h4").first().textContent(),/weather illustration/i);
+ assert.match(await desktop.locator(".approved-cropped-picture").first().evaluate(x=>getComputedStyle(x).backgroundImage),/aviation-learning-overview\.webp/);
+ assert.equal(await desktop.locator("#deepReading .academy-reference-photo").count(),0);
+  assert.equal(await desktop.locator("#deepReading .pictorial-deep-link").count(),1);
  assert.match(await desktop.locator("#deepReading .deep-lesson").nth(0).textContent(),/density/i);
  await desktop.locator("#startCapstone").click();
  assert.equal(await desktop.locator("#capstoneQuestions fieldset").count(),24);
@@ -132,23 +129,18 @@ try{
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
- await phone.route("https://upload.wikimedia.org/**",req=>req.fulfill({status:200,contentType:"image/png",body:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGOUqlvwn4GBgYGJAQoAISICOyA5b1QAAAAASUVORK5CYII=","base64")}));
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
  assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
- assert.equal(await phone.locator("#lessonReading .academy-reference-photo").count(),1);
- assert.equal(await phone.locator("#deepReading .academy-reference-photo").count(),1);
- assert.match(await phone.locator(".academy-reference-head h4").first().textContent(),/Robinson/i);
- await phone.locator(".academy-reference-zoom img").first().scrollIntoViewIfNeeded();
- await phone.locator(".academy-reference-zoom img").first().evaluate(img=>img.decode().catch(()=>null));
- assert.equal(await phone.locator(".academy-reference-zoom img").first().evaluate(img=>img.complete&&img.naturalWidth>0),true);
- await phone.locator(".academy-reference-zoom").first().tap();
- assert.equal(await phone.locator("#academyPhotoDialog").isVisible(),true);
- await phone.locator("#academyPhotoDialog button").tap();
+ assert.equal(await phone.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.match(await phone.locator(".approved-visual-heading h4").first().textContent(),/helicopter/i);
+ assert.match(await phone.locator(".approved-cropped-picture").first().evaluate(x=>getComputedStyle(x).backgroundImage),/aviation-learning-overview\.webp/);
+ await phone.locator(".approved-picture-trigger").first().tap();
+ assert.equal(await phone.locator("#approvedVisualLightbox").isVisible(),true);
+ await phone.locator("#approvedVisualLightbox button").tap();
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
-  "Real aviation photo/lightbox must not cause horizontal phone overflow");
-
- assert.match(await phone.locator(".lesson-pictorial h4").textContent(),/helicopter/i);
+  "Previously shown aviation artwork must not cause horizontal phone overflow");
+  assert.match(await phone.locator(".lesson-pictorial h4").textContent(),/helicopter/i);
  await phone.locator(".diagram-trigger").tap();
  assert.equal(await phone.locator("#academyDiagramDialog").isVisible(),true);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
