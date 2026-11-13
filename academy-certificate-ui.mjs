@@ -80,11 +80,11 @@ if(Core&&Deep&&$("certificatesPanel")){
   // Never generate more than one automatic download at a time, especially on mobile.
   const first=pending[0];downloading=true;
   try{
-   download(first==="programme"?prep(true):prep(false,first.slice(7)));
+   const awarded=first==="programme"?prep(true):prep(false,first.slice(7));
+   download(awarded);
    const next=[...new Set([...previous,first])].slice(-100);
    try{localStorage.setItem(PROCESSED,JSON.stringify(next))}catch{}
-   if($("certificateAutoPrint").checked)
-    message("Certificate download requested. For reliable mobile printing, use the Print button on the certificate panel.");
+   if($("certificateAutoPrint").checked)print(awarded);
   }catch(e){message("Certificate not generated: "+e.message)}
   finally{downloading=false}
  }
