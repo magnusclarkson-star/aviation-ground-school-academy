@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><title>Private Academy Records Portal</title><link rel="stylesheet" href="/portal.css"><script defer src="/portal.js"></script><script defer src="/fees-portal.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071827"><title>Private Academy Records Portal</title><link rel="stylesheet" href="/portal.css"><script defer src="/portal.js"></script><script defer src="/fees-portal.js"></script><script defer src="/signature-portal.js"></script></head>
 <body><header><div><strong>✈ AVIATION GROUND SCHOOL ACADEMY</strong><small>PRIVATE TRAINING RECORDS · CONTROLLED ACCESS</small></div><div id="sessionBadge">Not signed in</div></header>
 <main><section class="hero"><h1>Academy Training Records</h1><p>This restricted portal manages invited adult student accounts, staff evidence, course review and controlled training records. It is <strong>not proof of ATO accreditation</strong>. Only authority-issued approvals are valid.</p><p class="status" id="authorityStatus" role="status">Checking authority-record status…</p></section>
 <div id="flash" role="status" aria-live="polite"></div>
@@ -15,6 +15,50 @@
  <div id="myAccessStatus" class="status">No access record loaded.</div>
  <div id="myAccessList" aria-live="polite"></div>
  <button type="button" id="refreshMyAccess">Refresh access</button>
+</section>
+<section id="adminSignaturePanel" class="panel admin-signature-panel" hidden aria-label="Private administrator signature">
+ <div class="eyebrow">ADMINISTRATOR ONLY · PRIVATE SIGNATURE VAULT</div>
+ <h2>My electronic signature and certificate seal</h2>
+ <p class="hint">Sign using your finger or stylus below, or upload an image of your own handwritten signature. The image is stored encrypted in the private Academy database after you confirm with your password. It is <strong>never saved in the public website or GitHub</strong>.</p>
+ <p id="signatureStatus" class="status" role="status" aria-live="polite">Checking private signature storage…</p>
+ <div class="signature-layout">
+  <div class="signature-drawing">
+   <label for="signaturePad" class="signature-label">Draw your signature here</label>
+   <canvas id="signaturePad" width="1000" height="260" role="img" aria-label="Signature drawing pad. Use a finger, touchscreen stylus or mouse to sign." aria-describedby="signaturePadHelp"></canvas>
+   <p id="signaturePadHelp" class="hint">Draw across the white area. Only save a signature that belongs to you. You can clear it and try again.</p>
+   <div class="toolbar">
+    <button type="button" id="clearSignaturePad">Clear drawing</button>
+    <label class="signature-file-label" for="signatureUpload">Or upload your signature image</label>
+    <input id="signatureUpload" type="file" accept="image/png,image/jpeg" aria-label="Choose your own signature PNG or JPEG image">
+   </div>
+  </div>
+  <div class="signature-preview">
+   <h3>Current private record</h3>
+   <div class="signature-preview-surface"><img id="savedSignaturePreview" alt="Previously saved administrator signature, displayed only to the signed-in owner" hidden><p id="savedSignatureEmpty">Saved signature not displayed.</p></div>
+   <div class="toolbar">
+    <button type="button" id="previewSignature">View saved signature</button>
+    <button type="button" id="refreshSignature">Refresh status</button>
+   </div>
+  </div>
+ </div>
+ <div class="signature-checks">
+  <h3>Tick the documents that may offer your signature</h3>
+  <p class="hint">These are <strong>layout preferences only</strong>. A formal certificate or transcript still requires its own authorisation and release checks. No existing document is signed by ticking a box.</p>
+  <label class="check"><input type="checkbox" id="sigFormal"> Signature on authorised formal-course certificates</label>
+  <label class="check"><input type="checkbox" id="sigScouts"> Signature on Scouts / Air Scouts achievement certificates</label>
+  <label class="check"><input type="checkbox" id="sigEnthusiast"> Signature on enthusiast / navy-and-gold certificates</label>
+  <label class="check"><input type="checkbox" id="sigTranscript"> Signature on approved academic transcripts</label>
+  <label class="check"><input type="checkbox" id="sigSeal"> Offer the original Academy stamp / seal on selected documents</label>
+  <label class="check signature-consent"><input type="checkbox" id="signatureOwnerConsent"> I confirm this is my own genuine signature and authorise encrypted storage for the selected Academy document categories.</label>
+  <label for="signatureConfirmPassword">Re-enter your administrator password to save or change it</label>
+  <input id="signatureConfirmPassword" type="password" autocomplete="current-password" placeholder="Administrator password" minlength="12" maxlength="200">
+  <div class="toolbar signature-actions">
+   <button type="button" class="primary" id="saveSignature">Save / replace signature</button>
+   <button type="button" id="saveSignaturePreferences">Save tick-box preferences only</button>
+   <button type="button" id="removeSignature">Remove saved signature</button>
+  </div>
+  <p class="hint">The Academy cannot copy a signature without your drawing or image upload. Removing it deletes the encrypted active image; separately retained backups may follow the host's retention policy.</p>
+ </div>
 </section>
 <section id="ownerFinance" class="panel" hidden aria-label="Administrator tuition, scholarships and access">
  <div class="eyebrow">ACADEMY ADMINISTRATOR · EXCLUSIVE CONTROL</div>
