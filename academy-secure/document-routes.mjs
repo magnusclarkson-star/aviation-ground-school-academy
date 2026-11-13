@@ -94,7 +94,9 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
    },{options,sample:true});
   }else{
    const selected=stored?.style||defaults[audience];
-   const master=await originalArtworkFor(db,selected);
+   let master;
+   try{master=await originalArtworkFor(db,selected)}
+   catch(e){fail(409,"Original certificate artwork is not installed: "+String(e.message).slice(0,120))}
    bytes=await renderOriginalCertificate({
     name:"Example Academy Learner",serial:"AGSA-COURSE-"+"0".repeat(24),
     courseTitle:audience==="FORMAL"?"Aircraft Accident & Incident Investigation":
