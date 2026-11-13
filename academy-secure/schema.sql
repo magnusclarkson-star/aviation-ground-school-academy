@@ -229,4 +229,93 @@ DROP TRIGGER IF EXISTS academy_payment_immutable ON academy_manual_payment_attes
 CREATE TRIGGER academy_payment_immutable BEFORE UPDATE OR DELETE ON academy_manual_payment_attestations
  FOR EACH ROW EXECUTE FUNCTION academy_protect_fee_history();
 
+-- Administrator-priced academic PDF release services. Existing student records
+-- remain visible free of charge; a fee applies to issuing a printable document.
+-- No diploma, examination pass, course credit or SLCAA licence is sold here.
+CREATE TABLE IF NOT EXISTS academy_document_fee_plans (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ kind text NOT NULL CHECK (kind IN ('CERTIFICATE','TRANSCRIPT')),
+ course_id text REFERENCES academy_courses(id),
+ country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}
+),
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ amount_minor bigint NOT NULL CHECK(amount_minor BETWEEN 0 AND 100000000000),
+ status text NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','ARCHIVED')),
+ created_by uuid NOT NULL REFERENCES academy_users(id),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ archived_at timestamptz,
+ CHECK ((kind='CERTIFICATE' AND course_id IS NOT NULL) OR
+        (kind='TRANSCRIPT' AND course_id IS NULL))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS academy_document_active_fee_idx
+ ON academy_document_fee_plans(kind,coalesce(course_id,'ALL'),country_code,currency)
+ WHERE status='ACTIVE';
+
+-- The legal name is quality-manager verified separately from payments.
+-- Do not treat a self-entered browser display name as a formal record identity.
+CREATE TABLE IF NOT EXISTS academy_student_document_identity (
+ student_id uuid PRIMARY KEY REFERENCES academy_users(id),
+ legal_name text NOT NULL CHECK(length(legal_name) BETWEEN 3 AND 160),
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
+),
+ verified_by uuid NOT NULL REFERENCES academy_users(id),
+ verified_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- An activation fixes a snapshot date. Future grades are never included in a
+-- transcript already paid for; a later version requires a separate release.
+CREATE TABLE IF NOT EXISTS academy_document_release_grants (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ kind text NOT NULL CHECK(kind IN ('CERTIFICATE','TRANSCRIPT')),
+ student_id uuid NOT NULL REFERENCES academy_users(id),
+ course_id text REFERENCES academy_courses(id),
+ completion_id uuid REFERENCES academy_completion_requests(id),
+ fee_plan_id uuid NOT NULL REFERENCES academy_document_fee_plans(id),
+ grant_type text NOT NULL CHECK(grant_type IN ('PAID','SCHOLARSHIP','WAIVER','PROMOTION','FREE')),
+ discount_bps integer NOT NULL CHECK(discount_bps BETWEEN 0 AND 10000),
+ gross_minor bigint NOT NULL CHECK(gross_minor BETWEEN 0 AND 100000000000),
+ discount_minor bigint NOT NULL CHECK(discount_minor BETWEEN 0 AND gross_minor),
+ payable_minor bigint NOT NULL CHECK(payable_minor=gross_minor-discount_minor),
+ country_code char(2) NOT NULL,
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ status text NOT NULL CHECK(status IN ('ACTIVE','PENDING_PAYMENT','REVOKED')),
+ reason text NOT NULL CHECK(length(reason) BETWEEN 8 AND 1000),
+ created_by uuid NOT NULL REFERENCES academy_users(id),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ activated_at timestamptz,
+ revoked_by uuid REFERENCES academy_users(id),
+ revoked_at timestamptz,
+ revoked_reason text,
+ CHECK ((kind='CERTIFICATE' AND course_id IS NOT NULL AND completion_id IS NOT NULL) OR
+        (kind='TRANSCRIPT' AND course_id IS NULL AND completion_id IS NULL)),
+ CHECK (status<>'ACTIVE' OR activated_at IS NOT NULL),
+ CHECK (status<>'REVOKED' OR (revoked_by IS NOT NULL AND revoked_at IS NOT NULL AND length(revoked_reason)>=8)),
+ CHECK (grant_type<>'PAID' OR discount_bps=0),
+ CHECK (grant_type<>'WAIVER' OR discount_bps=10000),
+ CHECK (grant_type<>'FREE' OR (discount_bps=10000 AND gross_minor=0)),
+ CHECK (grant_type NOT IN ('SCHOLARSHIP','PROMOTION') OR discount_bps>0)
+);
+CREATE INDEX IF NOT EXISTS document_release_student_idx
+ ON academy_document_release_grants(student_id,kind,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS active_certificate_release_idx
+ ON academy_document_release_grants(completion_id)
+ WHERE kind='CERTIFICATE' AND status IN ('ACTIVE','PENDING_PAYMENT');
+
+CREATE TABLE IF NOT EXISTS academy_document_manual_settlements (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ grant_id uuid NOT NULL UNIQUE REFERENCES academy_document_release_grants(id),
+ amount_minor bigint NOT NULL CHECK(amount_minor>0),
+ currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
+ payment_reference text NOT NULL CHECK(length(payment_reference) BETWEEN 6 AND 250),
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
+),
+ notes text NOT NULL CHECK(length(notes) BETWEEN 12 AND 1000),
+ attested_by uuid NOT NULL REFERENCES academy_users(id),
+ attested_at timestamptz NOT NULL DEFAULT now()
+);
+DROP TRIGGER IF EXISTS academy_document_payment_immutable ON academy_document_manual_settlements;
+CREATE TRIGGER academy_document_payment_immutable
+ BEFORE UPDATE OR DELETE ON academy_document_manual_settlements
+ FOR EACH ROW EXECUTE FUNCTION academy_protect_fee_history();
+
 COMMIT;
