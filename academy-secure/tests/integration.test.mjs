@@ -126,6 +126,26 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal(audit.status,200);
   assert.ok(audit.body.events.some(event=>event.action==="COURSE_COMPLETION_ATTESTED"));
   assert.equal((await call("/api/audit","GET",undefined,student)).status,403);
+  // A later SLCAA suspension, evidence rejection or credential withdrawal
+  // must close the gate without rewriting historic assessments.
+  const revoked=await call("/api/authority/evidence/"+firstDocId+"/revoke","POST",{
+   reason:"SYNTHETIC TEST: external approval removed from active scope"
+  },qa);
+  assert.equal(revoked.status,200,JSON.stringify(revoked.body));
+  assert.equal((await call("/api/public/approval")).body.authorityStatus,"NOT_AN_APPROVED_TRAINING_ORGANISATION");
+  const afterRevocation=await call("/api/assessments","POST",{
+   enrolmentId,status:"PASS",assessmentDate:"2026-11-13",
+   blueprintRevision:"test-private-bank-v1",resultReference:"TEST-EXAM-REPORT-0002",resultSha256:"d".repeat(64)
+  },examiner);
+  assert.equal(afterRevocation.status,403,"Revoked authority must block new exam records");
+  assert.equal((await call("/api/admin/users/"+users.admin.id+"/disable","POST",{
+   reason:"A manager should not disable their own authenticated account"
+  },admin)).status,403);
+  assert.equal((await call("/api/admin/users/"+users.instructor.id+"/disable","POST",{
+   reason:"SYNTHETIC TEST: instructor credentials no longer valid"
+  },admin)).status,200);
+  assert.equal((await call("/api/me","GET",undefined,instructor)).status,401,"Disabled instructor session must be invalidated");
+
   await assert.rejects(()=>pool.query("UPDATE academy_audit_events SET action='tampered' WHERE 1=1"),/audit events are append only/);
   await assert.rejects(()=>pool.query("DELETE FROM academy_assessment_records WHERE id=$1",[exam.body.assessment.id]),/append only/);
   assert.equal((await call("/api/logout","POST",{},student)).status,200);
