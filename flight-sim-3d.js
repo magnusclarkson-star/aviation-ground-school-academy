@@ -1844,7 +1844,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
   // authorised source is bundled, keep the existing flyable geometry.
   function importFa18(){
    if(realFa18Status!=="idle")return;
-   if(!Fa18Native){realFa18Status="fallback";return;}
+   if(!Fa18Native?.ACTIVE){realFa18Status="fallback";return;}
    realFa18Status="loading";
    void boundedModelLoad(Fa18Native.ensureFa18()).then(async model=>{
     if(disposed||lost)return;
@@ -2186,10 +2186,12 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // procedural jets while their genuine exterior assets load. This applies
     // to chase/3D exterior views as well as the already guarded 360 inspector.
     // Keep the scenery and flight controls live while the source is pending.
-    const sourceJet=id==="f22"||id==="f35"||
+    const sourceJet=(id==="fa18"&&realFa18Status==="loading")||
+     id==="f22"||id==="f35"||
      id==="su37"||id==="typhoon";
     const pendingSourceJet=sourceJet&&!realModel;
-    const sourceJetStatus=id==="f22"?realF22Status:
+    const sourceJetStatus=id==="fa18"?realFa18Status:
+     id==="f22"?realF22Status:
      id==="f35"?realF35Status:id==="su37"?realSu37Status:
      id==="typhoon"?realTyphoonStatus:null;
     const isMolen=id==="r44"&&realModel?.kind==="molen";
