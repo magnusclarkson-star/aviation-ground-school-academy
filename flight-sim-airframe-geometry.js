@@ -703,6 +703,9 @@ function addFA18(m){
  curvedTube(m,[[0,-.59,-5.63],[0,-.84,-6.39],
   [0,-1.00,-7.11],[0,-1.14,-7.48]],.047,palette.metal,7);
  m.box(-.17,-1.19,-7.75,.34,.11,.25,palette.dark);
+ // Stern white position lamp remains distinct from port/starboard wing lamps.
+ // It is attached to the single native fuselage, not a ghost second hull.
+ m.box(-.085,.20,-8.05,.17,.16,.17,palette.navWhite);
  m.box(-.08,-.14,8.05,.16,.17,.22,palette.dark);
  // This deliberately repaints only the muted main exterior palette, not
  // glass, lights or exhausts. The original model remains fully animatable.
