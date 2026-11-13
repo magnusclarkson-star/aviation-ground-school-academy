@@ -99,7 +99,9 @@ assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"r44"),null,
  "source fighter doors must not alter the approved R44 layout");
 assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"typhoon"),null,
  "Typhoon uses its own GPL aircraft gear doors, never duplicated rectangles");
-for(const id of ["f22","f35","su37"]){
+assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"f35"),null,
+ "F-35B source already includes six real nose and main-bay doors");
+for(const id of ["f22","su37"]){
  const plan=Exterior.buildImportedGearDoors(Three.Mesh,id);
  assert.ok(plan&&plan.wells.triangles>=36,
   id+" needs three dark underside recesses");
@@ -134,8 +136,8 @@ for(const id of ["f22","f35","su37"]){
     lowestOpen=Math.min(lowestOpen,deployedY);
     lowestClosed=Math.min(lowestClosed,y);
     assert.ok(Number.isFinite(z)&&Number.isFinite(deployedY));
-    if(id==="f35")assert.ok(deployedY<-.65,
-     "F-35B doors cannot cross the dorsal-gear clearance plane");
+    assert.ok(deployedY<.3,
+     "auxiliary gear doors stay below the wing upper surface");
    }
    assert.ok(lowestOpen<lowestClosed-.15,
     id+" door must visibly swing below its stowed position");
@@ -150,4 +152,23 @@ assert.match(shader,/if\(realModel&&model\.importedGear&&/,
 assert.match(shader,/Exterior\.importedGearDoorAngle\(/,
  "renderer must link gear-door angle to the same system gear input");
 
-console.log("Rigid source F-22/F-35B gear folds inward, keeps tyre size and stays below F-35B dorsal surface");
+const f35Source=F35.parseF35(readFileSync(new URL("../assets/aircraft/f35b-fg-exterior.json",import.meta.url),"utf8"));
+const doors=f35Source.primitives.filter(p=>p.partAxis===3&&p.gearDoorSide);
+assert.equal(doors.length,6,"F-35B uses six genuine animated door parts");
+for(const door of doors){
+ const angle=Exterior.importedGearDoorAngle(0,door.gearDoorSide);
+ assert.ok(Math.abs(angle)>1,"original F-35B bay panels open with landing gear");
+ assert.ok(Math.abs(Exterior.importedGearDoorAngle(1.53,door.gearDoorSide))<1e-6,
+  "F-35B bay panels close with landing gear retracted");
+ const yMin=Math.min(...Array.from(door.positions).filter((_,i)=>i%3===1));
+ let openMin=Infinity;
+ for(let i=0;i<door.positions.length;i+=3){
+  const x=door.positions[i],y=door.positions[i+1];
+  const dx=x-door.partPivot[0],dy=y-door.partPivot[1];
+  const moved=door.partPivot[1]+dx*Math.sin(angle)+dy*Math.cos(angle);
+  openMin=Math.min(openMin,moved);
+ }
+ assert.ok(openMin<yMin-.10,
+  "F-35B source panel must swing downward rather than remain static: "+door.sourceName);
+}
+console.log("Source F-22/F-35B gear folds inward; F-35B uses its original six bay-door meshes without duplicate rectangles");
