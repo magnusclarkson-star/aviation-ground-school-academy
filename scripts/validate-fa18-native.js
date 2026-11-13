@@ -10,7 +10,9 @@ const {validateManifest,parseFA18GLB,MAX_GLB_BYTES}=
 const root=path.resolve(__dirname,'..');
 const cfg=JSON.parse(fs.readFileSync(path.join(root,
  'assets/aircraft/fa18e-native-manifest.json'),'utf8'));
-const out=validateManifest(cfg);
+// Disabled manifest can be incomplete; require full control bindings only
+// when enabling a source after inspection and licensing checks.
+const out=validateManifest(cfg.enabled?cfg:{...cfg,requireControls:false});
 const assetPath=path.join(root,cfg.path);
 const exists=fs.existsSync(assetPath);
 if(!cfg.enabled){
