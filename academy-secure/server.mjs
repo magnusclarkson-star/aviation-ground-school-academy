@@ -134,6 +134,7 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  if(await handleDocumentRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   if(await handleSignatureRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   // Financial access is a separate gate. Only accountable_manager may
   // price, waive, award scholarships, attest off-platform settlement or revoke.
