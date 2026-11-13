@@ -71,7 +71,7 @@ for(const [asset,minBytes] of [
  const details=await stat(path.join(output,asset));
  if(!details.isFile()||details.size<minBytes)throw Error("Missing imported aircraft asset: "+asset);
 }
-for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","flight-sim.html"]){
+for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","flight-sim.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
 }
 for(const id of ["c172","r44","fa18","f22","f35","typhoon","su37"]){
