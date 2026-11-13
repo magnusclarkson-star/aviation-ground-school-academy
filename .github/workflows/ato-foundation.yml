@@ -35,7 +35,7 @@ jobs:
       - run: node --check academy-secure/signature-vault.mjs
       - run: node --check academy-secure/signature-routes.mjs
       - run: node --check academy-secure/signature-portal.js
-      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs
+      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/signature-vault.test.mjs
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12
