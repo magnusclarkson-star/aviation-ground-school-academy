@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS academy_authority_evidence (
   review_notes text,
   CHECK(effective_until IS NULL OR effective_until>effective_from),
   CHECK(verified_by IS NULL OR verified_by<>submitted_by),
-  CHECK((status='VERIFIED')=(verified_by IS NOT NULL AND verified_at IS NOT NULL))
+  CHECK(status<>'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
 );
 CREATE INDEX IF NOT EXISTS evidence_lookup_idx ON academy_authority_evidence(type,scope,status);
 CREATE TABLE IF NOT EXISTS academy_courses (
@@ -71,6 +71,15 @@ CREATE TABLE IF NOT EXISTS academy_courses (
   qa_reviewed_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   CHECK(qa_reviewed_by IS NULL OR qa_reviewed_by<>prepared_by)
+);
+CREATE TABLE IF NOT EXISTS academy_course_stage_requirements (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ course_id text NOT NULL REFERENCES academy_courses(id),
+ stage_key text NOT NULL CHECK(length(stage_key)>0 AND length(stage_key)<100),
+ standard text NOT NULL CHECK(length(standard)>=25 AND length(standard)<2500),
+ planned_minutes integer CHECK(planned_minutes>0),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE(course_id,stage_key)
 );
 CREATE TABLE IF NOT EXISTS academy_enrolments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -90,8 +99,9 @@ CREATE TABLE IF NOT EXISTS academy_training_stages (
   instructor_id uuid NOT NULL REFERENCES academy_users(id),
   review_notes text NOT NULL CHECK(length(review_notes)>=10 AND length(review_notes)<3000),
   recorded_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(enrolment_id,stage_key)
+  CHECK(length(stage_key)>0)
 );
+CREATE INDEX IF NOT EXISTS training_stage_history_idx ON academy_training_stages(enrolment_id,stage_key,recorded_at DESC);
 CREATE TABLE IF NOT EXISTS academy_assessment_records (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   enrolment_id uuid NOT NULL REFERENCES academy_enrolments(id),
@@ -116,7 +126,7 @@ CREATE TABLE IF NOT EXISTS academy_completion_requests (
   attested_by uuid REFERENCES academy_users(id),
   attested_at timestamptz,
   serial text UNIQUE,
-  CHECK((status='ISSUED')=(serial IS NOT NULL AND attested_by IS NOT NULL AND attested_at IS NOT NULL)),
+  CHECK(status<>'ISSUED' OR (serial IS NOT NULL AND attested_by IS NOT NULL AND attested_at IS NOT NULL)),
   CHECK(attested_by IS NULL OR attested_by<>requested_by)
 );
 CREATE TABLE IF NOT EXISTS academy_audit_events (
@@ -134,4 +144,10 @@ BEGIN RAISE EXCEPTION 'audit events are append only'; END $$;
 DROP TRIGGER IF EXISTS academy_audit_immutable ON academy_audit_events;
 CREATE TRIGGER academy_audit_immutable BEFORE UPDATE OR DELETE ON academy_audit_events FOR EACH ROW EXECUTE FUNCTION academy_block_audit_mutation();
 
+CREATE OR REPLACE FUNCTION academy_block_training_mutation() RETURNS trigger LANGUAGE plpgsql AS $
+BEGIN RAISE EXCEPTION 'training and examination records are append only'; END $;
+DROP TRIGGER IF EXISTS academy_stage_immutable ON academy_training_stages;
+CREATE TRIGGER academy_stage_immutable BEFORE UPDATE OR DELETE ON academy_training_stages FOR EACH ROW EXECUTE FUNCTION academy_block_training_mutation();
+DROP TRIGGER IF EXISTS academy_exam_immutable ON academy_assessment_records;
+CREATE TRIGGER academy_exam_immutable BEFORE UPDATE OR DELETE ON academy_assessment_records FOR EACH ROW EXECUTE FUNCTION academy_block_training_mutation();
 COMMIT;
