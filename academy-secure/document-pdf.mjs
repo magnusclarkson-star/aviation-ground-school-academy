@@ -1,6 +1,6 @@
 // Original print layouts for Academy records. pdf-lib is bundled in private Node server.
 // IMPORTANT: image signature is an optional visual reproduction, NOT cryptographic signing.
-import {PDFDocument,StandardFonts,rgb} from "pdf-lib";
+import {PDFDocument,StandardFonts,rgb,degrees} from "pdf-lib";
 import {buildTranscriptPdf} from "./transcript-pdf.mjs";
 export const STYLES=Object.freeze({
  FORMAL_TRADITIONAL:"Formal academic ivory and burgundy",
@@ -48,7 +48,7 @@ function seal(page,x,y,ink=C.gold){
  rays.forEach(([dx,dy])=>rule(page,x,y,x+dx,y+dy,ink,.95));
  page.drawText("AGSA",{x:x-15,y:y-5,size:10,color:ink});
 }
-export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL",options={},signaturePng=null}={}){
+export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL",options={},signaturePng=null,sample=false}={}){
  if(!STYLES[style])throw Error("Unrecognised Academy certificate design");
  const opts=validateOptions(options);
  if(!record||typeof record.name!=="string"||record.name.trim().length<3||
@@ -98,6 +98,17 @@ export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL"
  if(left)page.drawText(left,{x:69,y:73,size:9,font:ser,color:theme.body});
  if(opts.showCertificateNumber)page.drawText("Academy reference: "+clean(record.serial,55),{x:470,y:73,size:9,font:ser,color:theme.body});
  centered(page,"ACADEMY RECORD ONLY - ANY REGULATORY STATUS REQUIRES INDEPENDENT VERIFICATION",41,8,ser,theme.body);
+ if(sample){
+  // Rendered after all document art so the watermark can never be covered by
+  // seal, decorative text, or a sample signature. Not an issued credential.
+  page.drawText("SAMPLE - NOT ISSUED",{
+   x:116,y:283,size:53,font:bold,color:C.burgundy,rotate:degrees(18),opacity:.36
+  });
+  page.drawRectangle({x:190,y:15,width:460,height:24,color:C.burgundy,opacity:.92});
+  page.drawText("SPECIMEN ONLY - NOT A STUDENT CERTIFICATE",{
+   x:236,y:22,size:12,font:bold,color:C.white
+  });
+ }
  return doc.save({useObjectStreams:false});
 }
 export async function renderAcademicTranscript(record,{options={},signaturePng=null}={}){
