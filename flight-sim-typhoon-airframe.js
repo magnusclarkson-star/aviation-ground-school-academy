@@ -9,6 +9,8 @@ const SOURCE="https://github.com/IAHM-COL/EF-Typhoon/blob/827020be8072fc348deb7c
 const MAX_BYTES=800000,MAX_TRIANGLES=28000;
 let cached=null,pending=null;
 const finite=Number.isFinite;
+const Livery=root?.AGSANativeFighterLivery||
+ (typeof module!=="undefined"&&module.exports?require("./flight-sim-native-livery.js"):null);
 function partMotion(name){
  // This licensed Typhoon includes four ORIGINAL main-wheel bay doors.
  // Rotate the source panels, rather than overlaying invented rectangle doors.
@@ -115,8 +117,10 @@ function parseTyphoon(text){
      let value=part.v[offset+a]/1000;
      if(motion.partAxis===4&&a===1)value=Math.min(value,-.45);
      positions[j*3+a]=value;
-     colors[j*3+a]=shade[a];
     }
+    const tone=Livery?Livery.paint("typhoon",part.name,
+     positions[j*3],positions[j*3+1],positions[j*3+2],shade):shade;
+    colors.set(tone,j*3);
    }
    for(let j=0;j<indices.length;j+=3){
     const a=indices[j]*3,b=indices[j+1]*3,c=indices[j+2]*3;
