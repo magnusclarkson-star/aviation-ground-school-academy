@@ -8,6 +8,7 @@ import {randomUUID,randomBytes} from "node:crypto";
 import {sha256,newToken,hashPassword,verifyPassword,validatePassword,validateEmail,cookieToken,sessionCookie,clearSessionCookie,checkOrigin,SESSION_HOURS} from "./auth.mjs";
 import {permission,authorizedRole,EVIDENCE_TYPES,schoolApproved,courseApproved,canRecordApprovedTraining,canRecordOfficialExam,canIssueApprovedCourseCompletion} from "./policy.mjs";
 import {handleFeesRoute} from "./fees-routes.mjs";
+import {handleSignatureRoute} from "./signature-routes.mjs";
 
 const httpPort=Number(process.env.PORT||8787);
 const baseOrigin=process.env.ACADEMY_ORIGIN;
@@ -35,10 +36,10 @@ function send(res,status,body,extra={}){res.writeHead(status,{"Content-Type":"ap
 function requiredString(body,key,min=1,max=250){const v=body?.[key];if(typeof v!=="string"||v.trim().length<min||v.length>max)fail(400,"Invalid "+key);return v.trim()}
 function iso(value){const n=Date.parse(value);if(typeof value!=="string"||!Number.isFinite(n))fail(400,"Invalid date/time");return new Date(n).toISOString()}
 function clientIp(req){return String(req.socket.remoteAddress||"unknown").slice(0,120)} // Do not trust X-Forwarded-For from clients
-async function json(req){
+async function json(req,limit=maxBody){
  if(!String(req.headers["content-type"]||"").toLowerCase().startsWith("application/json"))fail(415,"JSON content type required");
  let size=0,chunks=[];
- for await(const chunk of req){size+=chunk.length;if(size>maxBody)fail(413,"Request too large");chunks.push(chunk)}
+ for await(const chunk of req){size+=chunk.length;if(size>limit)fail(413,"Request too large");chunks.push(chunk)}
  try{const value=JSON.parse(Buffer.concat(chunks).toString("utf8"));if(!value||typeof value!=="object"||Array.isArray(value))fail(400,"JSON object required");return value}catch(e){if(e instanceof RequestError)throw e;fail(400,"Invalid JSON")}
 }
 async function transaction(callback){
@@ -79,7 +80,7 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
-  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/portal.css"].includes(pathname)){
+  if(method==="GET"&&["/","/portal.js","/fees-portal.js","/signature-portal.js","/portal.css"].includes(pathname)){
    const file=pathname==="/"? "portal.html":pathname.slice(1);
    const bytes=await readFile(new URL("./"+file,import.meta.url));
    const type=file.endsWith(".html")?"text/html; charset=utf-8":file.endsWith(".css")?"text/css; charset=utf-8":"text/javascript; charset=utf-8";
@@ -132,6 +133,7 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  if(await handleSignatureRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   // Financial access is a separate gate. Only accountable_manager may
   // price, waive, award scholarships, attest off-platform settlement or revoke.
   if(await handleFeesRoute({req,res,method,pathname,actor,db:pool,transaction,

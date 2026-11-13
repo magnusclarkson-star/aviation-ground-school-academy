@@ -5,6 +5,30 @@ import {readFile} from "node:fs/promises";
 import pg from "pg";
 const {Pool}=pg;
 import {hashPassword} from "../auth.mjs";
+import {deflateSync} from "node:zlib";
+function pngChunk(type,payload){
+ const body=Buffer.concat([Buffer.from(type),payload]),length=Buffer.alloc(4);
+ length.writeUInt32BE(payload.length);
+ let crc=0xffffffff;
+ for(const b of body){crc^=b;for(let i=0;i<8;i++)crc=(crc>>>1)^(crc&1?0xedb88320:0)}
+ const checksum=Buffer.alloc(4);checksum.writeUInt32BE((crc^0xffffffff)>>>0);
+ return Buffer.concat([length,body,checksum]);
+}
+function sampleSignaturePng(){
+ const w=600,h=150,ihdr=Buffer.alloc(13);ihdr.writeUInt32BE(w,0);ihdr.writeUInt32BE(h,4);
+ ihdr[8]=8;ihdr[9]=6;
+ const scan=Buffer.alloc(h*(w*4+1));
+ for(let x=20;x<540;x++){
+  const y=30+Math.round(30*Math.sin(x/35));
+  for(let dy=0;dy<4;dy++){
+   const pos=(y+dy)*(w*4+1)+1+x*4;
+   scan[pos]=17;scan[pos+1]=60;scan[pos+2]=88;scan[pos+3]=255;
+  }
+ }
+ return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),
+  pngChunk("IHDR",ihdr),pngChunk("IDAT",deflateSync(scan)),pngChunk("IEND",Buffer.alloc(0))]);
+}
+
 
 const PORT=8871,ORIGIN="http://127.0.0.1:"+PORT;
 const DATABASE_URL=process.env.DATABASE_URL;
@@ -26,7 +50,8 @@ test("private ATO roles, verified-source gates and independent completion record
   }
   child=spawn(process.execPath,[new URL("../server.mjs",import.meta.url).pathname],{
    cwd:new URL("..",import.meta.url).pathname,
-   env:{...process.env,ACADEMY_ORIGIN:ORIGIN,PORT:String(PORT),HOST:"127.0.0.1",DATABASE_URL},
+   env:{...process.env,ACADEMY_ORIGIN:ORIGIN,PORT:String(PORT),HOST:"127.0.0.1",DATABASE_URL,
+    ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,73).toString("base64")},
    stdio:["ignore","pipe","pipe"]
   });
   let errOutput="";
@@ -58,6 +83,69 @@ test("private ATO roles, verified-source gates and independent completion record
   const student=await login("student"),head=await login("head"),qa=await login("qa"),admin=await login("admin"),
    instructor=await login("instructor"),examiner=await login("examiner");
   assert.equal((await call("/api/authority/evidence","POST",{},student)).status,403);
+
+  // Owner-only signature capture, at-rest encryption and explicit tick boxes.
+  const image=sampleSignaturePng(),preferences={
+   formalCertificates:true,scoutCertificates:true,
+   enthusiastCertificates:true,transcripts:false,academySeal:true
+  };
+  const emptySig=await call("/api/admin/signature","GET",undefined,admin);
+  assert.equal(emptySig.status,200);
+  assert.equal(emptySig.body.stored,false);
+  assert.equal((await call("/api/admin/signature","GET",undefined,student)).status,403);
+  assert.equal((await call("/api/admin/signature","GET",undefined,head)).status,403);
+  const invalidSave=await call("/api/admin/signature","POST",{
+   pngBase64:image.toString("base64"),preferences,confirmPassword:"WrongButStrongPassword!22",
+   confirmOwnSignature:true
+  },admin);
+  assert.equal(invalidSave.status,403);
+  assert.equal((await call("/api/admin/signature","GET",undefined,admin)).body.stored,false);
+  const deniedOwner=await call("/api/admin/signature","POST",{
+   pngBase64:image.toString("base64"),preferences,confirmPassword:pass,
+   confirmOwnSignature:true
+  },head);
+  assert.equal(deniedOwner.status,403);
+  const savedSig=await call("/api/admin/signature","POST",{
+   pngBase64:image.toString("base64"),preferences,confirmPassword:pass,
+   confirmOwnSignature:true
+  },admin);
+  assert.equal(savedSig.status,200,JSON.stringify(savedSig.body));
+  assert.equal(savedSig.body.stored,true);
+  assert.equal(savedSig.body.preferences.scoutCertificates,true);
+  const {rows:storedSignature}=await pool.query(
+   "SELECT encrypted_png,nonce,auth_tag,sha256,preferences FROM academy_admin_signatures WHERE owner_id=$1",
+   [users.admin.id]
+  );
+  assert.equal(storedSignature.length,1);
+  assert.equal(storedSignature[0].encrypted_png.equals(image),false,"Private DB must not contain plaintext PNG");
+  assert.equal(storedSignature[0].nonce.length,12);
+  assert.equal(storedSignature[0].auth_tag.length,16);
+  const preview=await fetch(ORIGIN+"/api/admin/signature/preview",{headers:{Cookie:admin}});
+  assert.equal(preview.status,200);
+  assert.equal(preview.headers.get("content-type"),"image/png");
+  assert.equal(preview.headers.get("cache-control"),"no-store, private");
+  assert.deepEqual(Buffer.from(await preview.arrayBuffer()),image);
+  assert.equal((await call("/api/admin/signature/preview","GET",undefined,student)).status,403);
+  const nextPrefs={...preferences,formalCertificates:false,transcripts:true};
+  const changed=await call("/api/admin/signature/preferences","POST",{
+   confirmPassword:pass,preferences:nextPrefs
+  },admin);
+  assert.equal(changed.status,200,JSON.stringify(changed.body));
+  assert.equal((await call("/api/admin/signature","GET",undefined,admin)).body.preferences.transcripts,true);
+  assert.equal((await call("/api/admin/signature","DELETE",{
+   confirmPassword:"WrongButStrongPassword!22",confirmRemove:true
+  },admin)).status,403);
+  assert.equal((await call("/api/admin/signature","GET",undefined,admin)).body.stored,true);
+  const removeSig=await call("/api/admin/signature","DELETE",{
+   confirmPassword:pass,confirmRemove:true
+  },admin);
+  assert.equal(removeSig.status,200);
+  assert.equal(removeSig.body.stored,false);
+  assert.equal((await call("/api/admin/signature","GET",undefined,admin)).body.stored,false);
+  const {rows:signatureAfterDelete}=await pool.query(
+   "SELECT owner_id FROM academy_admin_signatures WHERE owner_id=$1",[users.admin.id]);
+  assert.equal(signatureAfterDelete.length,0);
+
   assert.equal((await call("/api/me","GET",undefined,student)).body.user.role,"student");
   assert.equal((await call("/api/invitations","POST",{email:"nonadult@academy.test",role:"student"},head)).status,400);
   const invite=await call("/api/invitations","POST",{email:"invitee@academy.test",role:"student",adultOnly:true},head);

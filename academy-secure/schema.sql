@@ -229,4 +229,21 @@ DROP TRIGGER IF EXISTS academy_payment_immutable ON academy_manual_payment_attes
 CREATE TRIGGER academy_payment_immutable BEFORE UPDATE OR DELETE ON academy_manual_payment_attestations
  FOR EACH ROW EXECUTE FUNCTION academy_protect_fee_history();
 
+-- One private, encrypted signature sample per accountable-manager account.
+-- Never put the signature image or its decryption key in the GitHub repository
+-- or a public Academy asset. Revocation deletes encrypted image bytes.
+CREATE TABLE IF NOT EXISTS academy_admin_signatures (
+ owner_id uuid PRIMARY KEY REFERENCES academy_users(id),
+ encrypted_png bytea NOT NULL CHECK(octet_length(encrypted_png) BETWEEN 50 AND 145016),
+ nonce bytea NOT NULL CHECK(octet_length(nonce)=12),
+ auth_tag bytea NOT NULL CHECK(octet_length(auth_tag)=16),
+ sha256 char(64) NOT NULL CHECK(sha256 !~ '[^a-f0-9]'),
+ image_width integer NOT NULL CHECK(image_width BETWEEN 240 AND 1600),
+ image_height integer NOT NULL CHECK(image_height BETWEEN 70 AND 800),
+ preferences jsonb NOT NULL DEFAULT '{"formalCertificates":false,"scoutCertificates":false,"enthusiastCertificates":false,"transcripts":false,"academySeal":false}'::jsonb,
+ uploaded_at timestamptz NOT NULL DEFAULT now(),
+ changed_at timestamptz NOT NULL DEFAULT now(),
+ CHECK(jsonb_typeof(preferences)='object')
+);
+
 COMMIT;
