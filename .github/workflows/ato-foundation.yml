@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install isolated private PDF and PostgreSQL dependencies
+        run: npm install --prefix academy-secure --ignore-scripts --no-audit --no-fund
       - run: node --check academy-secure/policy.mjs
       - run: node --check academy-secure/auth.mjs
       - run: node --check academy-secure/server.mjs
