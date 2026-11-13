@@ -162,8 +162,7 @@ CREATE TRIGGER academy_exam_immutable BEFORE UPDATE OR DELETE ON academy_assessm
 CREATE TABLE IF NOT EXISTS academy_fee_plans (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  course_id text NOT NULL REFERENCES academy_courses(id),
- country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}
-),
+ country_code char(2) NOT NULL CHECK(country_code ~ '^[A-Z]{2}$'),
  currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
  billing_period text NOT NULL CHECK(billing_period IN ('ONE_TIME','MONTHLY','QUARTERLY','YEARLY')),
  amount_minor bigint NOT NULL CHECK(amount_minor BETWEEN 0 AND 100000000000),
@@ -214,8 +213,7 @@ CREATE TABLE IF NOT EXISTS academy_manual_payment_attestations (
  amount_minor bigint NOT NULL CHECK(amount_minor>0),
  currency char(3) NOT NULL CHECK(currency IN ('SLE','USD','GBP','EUR','CAD','AUD')),
  reference text NOT NULL CHECK(length(reference) BETWEEN 6 AND 250),
- evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}
-),
+ evidence_sha256 char(64) NOT NULL CHECK(evidence_sha256 ~ '^[a-fA-F0-9]{64}$'),
  notes text NOT NULL CHECK(length(notes) BETWEEN 12 AND 1000),
  attested_by uuid NOT NULL REFERENCES academy_users(id),
  attested_at timestamptz NOT NULL DEFAULT now()
