@@ -26,7 +26,7 @@ test('imported aircraft overlays no obsolete procedural aircraft',()=>{
  assert.match(renderer,/pendingSourceJet\)\{/);
  assert.match(renderer,/sourceJet&&!realModel/);
  assert.match(renderer,/licensed-fa18e-native-glb/);
- assert.match(renderer,/id==="fa18"\)importFA18\(\)/);
+ assert.match(renderer,/selectedJet==="fa18"\)importFA18\(\)/);
 });
 test('source gear and flight controls animate through imported primitive path',()=>{
  const pattern=/\(isMolen\|\|isMolenC172\|\|id==="fa18"\|\|id==="f22"/g;
