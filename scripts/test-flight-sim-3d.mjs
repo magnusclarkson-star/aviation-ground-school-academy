@@ -64,8 +64,12 @@ const hasTyphoonVertex=(x,y,z)=>{
      Math.abs(p[i+2]-z)<.015)return true;
  return false;
 };
-assert.ok(hasTyphoonVertex(-.055*typhoonX,-.68,1.04*typhoonZ),
- "Typhoon single chin intake must include its centre splitter");
+assert.ok(hasTyphoonVertex(-.052*typhoonX,-.75,1.13*typhoonZ),
+ "Typhoon two-duct chin intake must retain its centre splitter");
+assert.ok(hasTyphoonVertex(.075*typhoonX,-.62,2.41*typhoonZ),
+ "Typhoon right chin intake mouth must be present");
+assert.ok(hasTyphoonVertex(-.075*typhoonX,-.62,2.41*typhoonZ),
+ "Typhoon left chin intake mouth must be present");
 assert.ok(hasTyphoonVertex(0,3.12,-7.35*typhoonZ),
  "Typhoon must retain a distinct single-fin upper profile");
 assert.ok(typhoonIntake.vertices<30000,
