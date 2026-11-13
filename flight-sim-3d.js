@@ -1634,8 +1634,14 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  let gl;
  try{gl=canvas.getContext("webgl2",{alpha:false,depth:true,antialias:true,
   powerPreference:"low-power",preserveDrawingBuffer:true,failIfMajorPerformanceCaveat:false});}
- catch{return null}
- if(!gl)return null;
+ catch(error){
+  if(canvas.dataset)canvas.dataset.rendererError="WebGL2 context error: "+String(error?.message||error);
+  return null;
+ }
+ if(!gl){
+  if(canvas.dataset)canvas.dataset.rendererError="WebGL2 context unavailable";
+  return null;
+ }
  let lost=false,disposed=false,program,skyProgram;
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
