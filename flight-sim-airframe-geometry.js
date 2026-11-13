@@ -20,6 +20,8 @@ const SCALE=Object.freeze({
 });
 const rgb=(r,g,b)=>[r/255,g/255,b/255];
 const tint=(c,m)=>c.map(n=>Math.max(0,Math.min(1,n*m)));
+const Livery=root?.AGSANativeFighterLivery||
+ (typeof module!=="undefined"&&module.exports?require("./flight-sim-native-livery.js"):null);
 const palette=Object.freeze({
  white:rgb(218,229,230),ivory:rgb(245,237,216),navy:rgb(33,94,141),
  blue:rgb(71,127,155),window:rgb(37,86,113),metal:rgb(151,162,172),
@@ -645,6 +647,9 @@ function addFA18(m){
   [0,-1.00,-7.11],[0,-1.14,-7.48]],.047,palette.metal,7);
  m.box(-.16,-1.18,-7.65,.32,.11,.25,palette.dark);
  m.box(-.08,-.14,8.05,.16,.17,.22,palette.dark);
+ // This deliberately repaints only the muted main exterior palette, not
+ // glass, lights or exhausts. The original model remains fully animatable.
+ if(Livery)Livery.paintMesh("fa18",m);
 }
 function populate(mesh,variant){
  const id=normalize(variant);
