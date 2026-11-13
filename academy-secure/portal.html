@@ -9,6 +9,66 @@
 </section>
 <section id="dashboard" hidden><div class="toolbar"><h2>Secure dashboard</h2><span id="myRole"></span><button id="logout">Sign out</button></div>
 <section class="panel"><h3>Your training and assessment records</h3><p class="hint">These records are retained on the Academy's private database and are not the public browser practice scores.</p><div class="records"><section><h4>Enrolments</h4><pre id="myEnrolments">None loaded</pre></section><section><h4>Assessments</h4><pre id="myAssessments">None loaded</pre></section><section><h4>Completion records</h4><pre id="myCompletions">None loaded</pre></section></div><button id="refreshRecords">Refresh records</button></section>
+<section class="panel" id="myAccessPanel" hidden>
+ <h3>Your course access and scholarships</h3>
+ <p class="hint">Only an Academy administrator can grant or remove private course access. A scholarship or payment does not award a qualification. Current access can end when its period expires.</p>
+ <div id="myAccessStatus" class="status">No access record loaded.</div>
+ <div id="myAccessList" aria-live="polite"></div>
+ <button type="button" id="refreshMyAccess">Refresh access</button>
+</section>
+<section id="ownerFinance" class="panel" hidden aria-label="Administrator tuition, scholarships and access">
+ <div class="eyebrow">ACADEMY ADMINISTRATOR · EXCLUSIVE CONTROL</div>
+ <h2>Course fees, scholarships and access</h2>
+ <p class="hint">You set prices by course, country, currency and payment period. Award full or partial scholarships, make a course free, grant promotional access, confirm previously received payments, or revoke access. No payment gateway or automatic billing is connected.</p>
+ <div class="toolbar"><button type="button" id="refreshFinance" class="primary">Refresh fee and access register</button></div>
+ <div class="cols">
+  <section class="panel finance-subsection"><h3>Current fee plans</h3><div id="feePlanList" class="finance-register" aria-live="polite"></div></section>
+  <section class="panel finance-subsection"><h3>Student access grants</h3><div id="grantList" class="finance-register" aria-live="polite"></div></section>
+ </div>
+ <div class="cols">
+  <form id="feeForm" class="panel finance-subsection">
+   <h3>Set or change a course fee</h3>
+   <label>Course key<input name="courseId" required pattern="[a-z][a-z0-9_-]{2,63}" placeholder="ppl-theory"></label>
+   <label>Country (two-letter ISO code)<input name="countryCode" maxlength="2" minlength="2" pattern="[A-Za-z]{2}" value="SL" required></label>
+   <label>Currency<select name="currency" required><option>SLE</option><option>USD</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option></select></label>
+   <label>Access period<select name="billingPeriod"><option value="ONE_TIME">One-time, no automatic expiry</option><option value="MONTHLY">One month</option><option value="QUARTERLY">Three months</option><option value="YEARLY">One year</option></select></label>
+   <label>Course fee in currency units<input name="amountMajor" inputmode="decimal" type="text" pattern="(?:0|[0-9]+)(?:\\.[0-9]{1,2})?" value="0.00" required></label>
+   <button type="submit" class="primary">Publish fee</button><p class="hint">Enter 1500.00 for Le 1,500.00. Zero is permitted but learner access remains administrator-controlled. Existing awards retain their original price.</p>
+  </form>
+  <form id="grantForm" class="panel finance-subsection">
+   <h3>Grant access or scholarship</h3>
+   <label>Eligible adult student<select name="studentId" id="grantStudentSelect" required></select></label>
+   <label>Active fee plan<select name="planId" id="grantPlanSelect" required></select></label>
+   <label>Grant type<select name="grantType" id="grantType"><option value="PAID">Paid place — confirm manual settlement</option><option value="SCHOLARSHIP">Scholarship — full or partial</option><option value="WAIVER">Fee waived by administrator</option><option value="PROMOTION">Promotional discount or free place</option><option value="FREE">Free zero-priced place</option></select></label>
+   <label>Discount percentage<input type="number" name="discountPercent" id="grantPercent" min="0" max="100" step="0.01" value="0" required></label>
+   <p class="status" id="grantPreview">Select a plan and scholarship level.</p>
+   <label>Reason or scholarship reference<textarea name="reason" minlength="8" maxlength="1000" required></textarea></label>
+   <button type="submit" class="primary">Award place / scholarship</button>
+   <p class="hint">Full scholarships and waivers activate access immediately. Partial scholarships and paid places remain pending until you confirm the outstanding payment.</p>
+  </form>
+ </div>
+ <div class="cols">
+  <form id="confirmPaymentForm" class="panel finance-subsection">
+   <h3>Confirm an off-platform payment</h3>
+   <p class="hint">Only use this after independently checking that funds have actually settled. This form does not collect money or contact a bank.</p>
+   <label>Pending grant<select name="grantId" id="pendingGrantSelect" required></select></label>
+   <label>Confirmed amount in selected currency units<input name="amountMajor" inputmode="decimal" pattern="(?:0|[0-9]+)(?:\\.[0-9]{1,2})?" required placeholder="100.00"></label>
+   <label>Manual receipt or transfer reference<input name="reference" minlength="6" maxlength="250" required></label>
+   <label>Receipt document fingerprint (SHA-256)<input name="evidenceSha256" minlength="64" maxlength="64" pattern="[A-Fa-f0-9]{64}" placeholder="64 hex characters"></label>
+   <label>Or select local receipt to calculate fingerprint<input id="paymentReceiptFile" type="file" accept=".pdf,.png,.jpg,.jpeg"></label>
+   <label>Settlement verification notes<textarea name="notes" minlength="12" maxlength="1000" required></textarea></label>
+   <button type="submit">Confirm settlement and activate access</button>
+   <p class="hint">Only the receipt fingerprint is transmitted; keep the actual evidence in a separately controlled records vault. The Academy does not verify a bank transaction automatically.</p>
+  </form>
+  <form id="revokeGrantForm" class="panel finance-subsection">
+   <h3>Revoke or end course access</h3>
+   <label>Current grant<select name="grantId" id="revokeGrantSelect" required></select></label>
+   <label>Documented reason<textarea name="reason" minlength="8" maxlength="1000" required></textarea></label>
+   <button type="submit">Revoke selected grant</button>
+   <p class="hint">Revocation takes effect for protected course access immediately, while historical academic and financial records remain preserved.</p>
+  </form>
+ </div>
+</section>
 <section id="staffDashboard" hidden>
  <section class="panel"><h3>Compliance readiness and control register</h3><div id="readiness" class="status"></div><button id="refreshReadiness">Refresh compliance register</button><div id="evidenceList"></div></section>
  <div class="cols">
