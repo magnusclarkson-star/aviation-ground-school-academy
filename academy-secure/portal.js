@@ -54,6 +54,8 @@ function activeUi(){
   inviteForm:["accountable_manager","head_of_training"],
   evidenceForm:["accountable_manager","head_of_training"],
   reviewEvidenceForm:["quality_manager"],
+  revokeEvidenceForm:["quality_manager"],
+  disableAccountForm:["accountable_manager"],
   courseForm:["accountable_manager","head_of_training"],
   stageForm:["head_of_training"],
   courseReviewForm:["quality_manager"],
@@ -116,6 +118,10 @@ wireForm("evidenceForm","/api/authority/evidence",fd=>({...fd,effectiveFrom:fd.e
  effectiveUntil:fd.effectiveUntil?fd.effectiveUntil+"T00:00:00Z":null}));
 wireForm("reviewEvidenceForm",fd=>"/api/authority/evidence/"+encodeURIComponent(fd.id)+"/review",
  fd=>({decision:fd.decision,reviewNotes:fd.reviewNotes,id:fd.id}));
+wireForm("revokeEvidenceForm",fd=>"/api/authority/evidence/"+encodeURIComponent(fd.id)+"/revoke",
+ fd=>({id:fd.id,reason:fd.reason}));
+wireForm("disableAccountForm",fd=>"/api/admin/users/"+encodeURIComponent(fd.id)+"/disable",
+ fd=>({id:fd.id,reason:fd.reason}));
 wireForm("courseForm","/api/courses",fd=>({...fd,minutesPlanned:Number(fd.minutesPlanned)}));
 wireForm("stageForm",fd=>"/api/courses/"+encodeURIComponent(fd.courseId)+"/stages",
  fd=>({courseId:fd.courseId,stageKey:fd.stageKey,standard:fd.standard}));
