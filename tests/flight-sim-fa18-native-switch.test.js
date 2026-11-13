@@ -41,5 +41,6 @@ test('only published assets are precached; missing GLB is not requested offline'
   page.indexOf('flight-sim-3d.js'));
  assert.match(worker,/assets\/aircraft\/fa18e-native-manifest\.json/);
  assert.doesNotMatch(worker,/"assets\/aircraft\/fa18e-native\.glb"/);
- assert.match(worker,/agsa-flight-sim-v2-20261113-native-fa18-source1/);
+ // Asset manifest must survive offline cache version bumps for later fixes.
+ assert.match(worker,/const CACHE="agsa-flight-sim-v2-[^"]+"/);
 });
