@@ -1,6 +1,6 @@
 # Textured Exterior 360° Aircraft — Sources and Scope
 
-The optional fighter Exterior 360° tab embeds creator-hosted Sketchfab models. These
+The optional F/A-18E, F-22 and F-35 Exterior 360° views embed creator-hosted Sketchfab models. These
 models are **not** bundled, reuploaded, or substituted into the live flight
 simulation, so the original training controls and cockpit layouts are unchanged.
 All embeds need an internet connection and third-party access.
@@ -10,9 +10,11 @@ All embeds need an internet connection and third-party access.
 | F/A-18E | https://sketchfab.com/3d-models/boeing-fa-18e-super-hornet-9e852037bf2141dcb3fda17013958131 | KOG_THORNS | CC BY |
 | F-22 | https://sketchfab.com/3d-models/f22-raptor-free-2a64abf0866a405c865466c7642ca689 | NLM | CC BY |
 | F-35B tab | https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6 | andertan | CC BY |
-| Eurofighter | https://sketchfab.com/3d-models/eurofighter-typhoon-3d-b3ede3f4280f4bf99ebbd4ebc7f5480d | Chenzoss | CC BY |
+| Eurofighter Typhoon | Local source airframe, also used during flight | IAHM-COL / EF-Typhoon | GPL-2.0 |
 | Cessna 172 | Approved local Academy native model | Academy flight simulator | No third-party 360 embed |
 | Robinson R44 | Approved local Academy native model | Academy flight simulator | No third-party 360 embed |
+
+**Typhoon underside correction:** The former externally hosted Typhoon reference had an inaccurate belly, so the 360° inspector now renders the locally imported FlightGear Typhoon airframe. Its original mesh includes paired rectangular ventral intakes, separate main-gear bays/doors and the lower twin-engine body. Users can rotate and zoom the same aircraft shape seen in flight. The procedural fallback draws a divided chin intake instead of a generic belly slab. This preserves the genuine source model and avoids stacking a second airframe on top. Source: https://github.com/IAHM-COL/EF-Typhoon/blob/827020be8072fc348deb7cb94f1e9f2f9105a0e9/Models/EF-Typhoon.ac
 
 **F-35B variant caveat:** The external reference is labelled as an F-35 Lightning
 II family model. It has **not** been verified as a B-variant, so the app
@@ -39,7 +41,7 @@ affect cockpit instruments or flight training.
 
 ## Native flight model materials
 
-Separate from the hosted, photorealistic 360° embeds, the local in-flight
+Separate from the three hosted fighter 360° embeds, the local in-flight
 renderer now uses original deterministic vertex-colour finishes for F/A-18,
 F-22, F-35B and Typhoon as well as the previously upgraded Su-37. These
 are **native** WebGL2 aircraft paints and do not copy or pretend to embed

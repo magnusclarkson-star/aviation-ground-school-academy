@@ -510,17 +510,22 @@ function genericJet(m,id){
    [1.20,-.29,.25],[.80,-.30,.79]],tint(c,.71),.07);
   m.box(-.44,-.50,-7.54,.88,.12,.38,tint(c,.66));
  }else if(id==="typhoon"){
-  // Single chin intake beneath the sharp nose of the canard delta.
-  sheet(m,[[-.83,-.49,2.52],[.83,-.49,2.52],
-   [.62,-.64,.76],[-.62,-.64,.76]],palette.dark,.09);
-  m.box(-.83,-.54,2.49,1.66,.10,.11,tint(c,.80));
-  // Additional intake side lips and central splitter distinguish the
-  // Typhoon's single ventral intake from the twin side intakes on other jets.
+  // Fallback silhouette ONLY; native 3D uses the original GPL Typhoon.
+  // A real Typhoon has one *bifurcated* ventral chin intake assembly with
+  // two distinct rectangular ducts, not a generic single dark belly slab.
+  sheet(m,[[-.88,-.49,2.54],[.88,-.49,2.54],
+   [.70,-.65,.86],[-.70,-.65,.86]],tint(c,.77),.055);
   for(const sign of [-1,1]){
-   sheet(m,[[sign*.83,-.49,2.52],[sign*.65,-.69,1.55],
-    [sign*.62,-.64,.76],[sign*.84,-.40,1.17]],tint(c,.75),.045);
+   // Dark recessed port/starboard duct faces beneath separate lower lips.
+   sheet(m,[[sign*.075,-.62,2.41],[sign*.77,-.62,2.41],
+    [sign*.65,-.73,1.13],[sign*.075,-.73,1.13]],palette.black,.024);
+   sheet(m,[[sign*.075,-.52,2.58],[sign*.83,-.52,2.58],
+    [sign*.77,-.63,2.37],[sign*.075,-.63,2.37]],tint(c,.96),.025);
+   sheet(m,[[sign*.84,-.50,2.52],[sign*.77,-.70,1.62],
+    [sign*.66,-.69,.88],[sign*.78,-.41,1.20]],tint(c,.76),.035);
   }
-  m.box(-.055,-.68,1.04,.11,.075,1.10,tint(c,.64));
+  // Splitter blade divides the two intake mouths and meets the belly aft.
+  m.box(-.052,-.75,1.13,.104,.085,1.37,tint(c,.81));
   // Crisp centreline fin cap remains attached to the existing single fin.
   sheet(m,[[0,3.35,-6.7],[0,3.12,-7.35],[0,2.75,-8.6],
    [0,2.99,-7.05]],tint(c,.77),.018);

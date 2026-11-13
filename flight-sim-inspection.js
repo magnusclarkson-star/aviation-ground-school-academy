@@ -65,9 +65,9 @@
   const selected=()=>types.IDS.includes(select.value)?select.value:"c172";
   const interiorButton=$("aircraftInspectInterior");
   const exteriorButton=$("aircraftInspectExterior");
-  // C172 and R44 always use approved local Academy 360° models with
-  // mobile 2D fallback. External textured viewers are for fighters ONLY;
-  // never replace completed training aircraft without an explicit request.
+  // C172, R44 and Typhoon use their approved local source airframes.
+  // External texture viewers are for the three other fighters only.
+  // The old hosted Typhoon had the wrong underbelly geometry.
   const texturedViewer=$("aircraftInspectSuperHornet");
   const texturedFrame=$("aircraftInspectSuperHornetFrame");
   const texturedTitle=$("aircraftInspectTexturedTitle");
@@ -84,9 +84,8 @@
     name:"F-35 Lightning II (family reference)",author:"andertan",license:"CC BY",
     page:"https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6",
     note:"Family reference model, not verified as F-35B-specific"},
-   typhoon:{uid:"b3ede3f4280f4bf99ebbd4ebc7f5480d",
-    name:"Eurofighter Typhoon",author:"Chenzoss",license:"CC BY",
-    page:"https://sketchfab.com/3d-models/eurofighter-typhoon-3d-b3ede3f4280f4bf99ebbd4ebc7f5480d"},
+   // Typhoon: retain the local GPL FlightGear model whose paired chin
+   // intakes and ventral fuselage match the flight model, not a hosted stand-in.
    // Approved C172/R44 intentionally absent: native 360° is preserved.
    // Su-37 retains its local viewer until a source-authentic and clearly
    // licensed Su-37 model is verified; Su-35 is not interchangeable.
@@ -209,6 +208,7 @@
    // this label is missing, the phone has not loaded the dedicated mesh.
    $("aircraftInspectRenderMode").textContent=
     id==="su37"&&gpuVisible?"Su-37 · Native painted 3D":
+    id==="typhoon"&&gpuVisible?"Typhoon · FlightGear 3D":
     id==="fa18"?"Super Hornet V3 · "+modeText:modeText;
    return {loading,failed,gpuVisible};
   }
