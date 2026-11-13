@@ -29,7 +29,11 @@ test('F-22 lower fuselage stays matte while upper camouflage and other fighters 
  const low=Paint.paint('f22','Fuselage_2',1.5,-1.70,-2.4,base);
  assert.ok(low.every((c,i)=>c<base[i]-.16),
   'source Raptor underside and wheel-well shoulders must not look white');
- assert.deepEqual(Paint.paint('f22','Fuselage_2',1.5,-1.35,-2.4,base),base);
+ assert.deepEqual(Paint.paint('f22','Fuselage_2',1.5,-1.30,-2.4,base),base);
+ assert.deepEqual(Paint.paint('f22','Fuselage_2',0,-1.70,-2.4,base),base,
+  'centreline and nose must stay unchanged');
+ assert.deepEqual(Paint.paint('f22','Fuselage_2',1.5,-1.70,-4.4,base),base,
+  'aft fuselage cannot acquire a dark paint stripe');
  assert.deepEqual(Paint.paint('f35','fuselage',1.5,-1.70,-2.4,base),base);
  assert.deepEqual(Paint.paint('f22','Left_Wing_0',1.5,-1.70,-2.4,base),base);
 });
