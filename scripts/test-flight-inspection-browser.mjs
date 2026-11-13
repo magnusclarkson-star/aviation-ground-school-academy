@@ -69,8 +69,8 @@ try{
  await desktop.locator("#aircraftInspectReset").click();
  assert.match(await desktop.locator("#aircraftInspectAngles").textContent(),/AZ 000/);
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
- assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"158%",
-  "double clicking the aircraft zooms in without adding a new control");
+ assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"189%",
+  "Su-37 fitted radius 17m to close radius 9m: double click must zoom precisely");
  await desktop.locator("#aircraftInspectViewport").dblclick({position:{x:180,y:135}});
  assert.equal(await desktop.locator("#aircraftInspectZoomValue").textContent(),"100%",
   "second double click restores fitted aircraft view");
