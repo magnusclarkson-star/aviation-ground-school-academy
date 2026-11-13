@@ -1587,7 +1587,7 @@ void main(){
   }else{
    // F/A-18 currently combines glazing with the procedural body mesh;
    // only its pale exterior panels may receive painted-metal highlights.
-   float painted=uSkinFinish>3.5&&uSkinFinish<4.5?
+   float painted=uFighterMaterial==4?
     step(.39,vColor.r)*step(.43,vColor.g)*step(.47,vColor.b):1.;
    shine=pow(ndh,22.)*.095*painted;
    shaded+=shine*vec3(.58,.67,.73);
@@ -2305,7 +2305,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uAlphaCutoff,0);gl.uniform1i(uni.uC172Pass,0);
     }else if(!pendingSourceJet){
      gl.uniform1f(uni.uSkinFinish,id==="fa18"?finishId:0);
-     gl.uniform1i(uni.uFighterMaterial,id==="fa18"?1:0);
+     gl.uniform1i(uni.uFighterMaterial,id==="fa18"?4:0);
      gl.bindVertexArray(model.body.vao);
      gl.drawArrays(gl.TRIANGLES,0,model.body.count);
     }
@@ -2389,7 +2389,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      const fa18Panel=id==="fa18"&&!part.gearName&&
       /^(left|right)(Aileron|Flap)$|^(elevator|rudder)(Left|Right)$/.test(part.name);
      gl.uniform1f(uni.uSkinFinish,fa18Panel?finishId:0);
-     gl.uniform1i(uni.uFighterMaterial,fa18Panel?1:0);
+     gl.uniform1i(uni.uFighterMaterial,fa18Panel?4:0);
      gl.uniform1i(uni.uPartAxis,part.axis);
      gl.uniform3fv(uni.uPartPivot,part.pivot);
      // Procedural jet wheel doors follow the exact same retractable gear
