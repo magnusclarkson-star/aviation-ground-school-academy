@@ -10,6 +10,12 @@ photographic textures, UV images, nor complete PBR material sets.
 - **F-22 Raptor:** Blue-grey multi-tone faceted camouflage on genuine
   licensed GPL-2.0 FlightGear source geometry. Applied to fixed fuselage,
   wings and the animated control surfaces at aircraft-local coordinates.
+  The supplemental landing-gear doors now have a matched dark underside
+  finish instead of standing out as bright white rectangles when retracted.
+  Darker source-vertex colour is applied only to the two F-22 main-gear
+  bay shoulders, not the centreline, nose or entire lower fuselage, to blend
+  pale original wheel-well edges into the surrounding belly;
+  door hinges, wheels, upper wing livery and source geometry are unchanged.
 - **F-35B:** More subtle low-contrast grey RAM-inspired surface variation
   on the existing GPL-3.0 F-35B hull, tail and animated panels. Does not
   affect STOVL physics, hatches, canopy or landing gear.

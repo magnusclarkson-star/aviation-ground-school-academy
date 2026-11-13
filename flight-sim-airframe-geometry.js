@@ -883,7 +883,10 @@ function buildImportedGearDoors(Mesh,id){
  // licensed source meshes: only F-22 and Su-37 need supplemental panels.
  if(id!=="f22"&&id!=="su37")return null;
  const su37=id==="su37";
- const paint=su37?[.56,.60,.64]:[.62,.69,.73];
+ // The Raptor's underside is darker than its upper wing camouflage.
+ // Earlier generic light-grey doors appeared as white squares in the
+ // retracted 3D belly view. Match its dark low-reflectance skin instead.
+ const paint=su37?[.56,.60,.64]:[.36,.41,.45];
  const lip=[.28,.34,.38],wellDark=[.075,.095,.115];
  // The F-22 and Su-37 use separate light bay panels below their
  // source geometry. The F-35B uses its own original bay-door sections.

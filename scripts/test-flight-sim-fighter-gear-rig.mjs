@@ -103,6 +103,13 @@ assert.equal(Exterior.buildImportedGearDoors(Three.Mesh,"f35"),null,
  "F-35B source already includes six real nose and main-bay doors");
 for(const id of ["f22","su37"]){
  const plan=Exterior.buildImportedGearDoors(Three.Mesh,id);
+ if(id==="f22"){
+  const colors=plan.doors[0].mesh.colors;
+  // Mesh.box shades its upper face by 1.15, so compare the brightest
+  // vertex to the dark-skin budget, not the unshaded authored colour.
+  assert.ok(colors[0]<.45&&colors[1]<.50&&colors[2]<.56,
+   "F-22 gear-bay doors must match its dark underside, not bright white panels");
+ }
  assert.ok(plan&&plan.wells.triangles>=36,
   id+" needs three dark underside recesses");
  assert.equal(plan.slots.length,3);
