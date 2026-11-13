@@ -2249,7 +2249,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="fa18"||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
        const angle=part.gearDoorSide?
@@ -2259,7 +2259,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="fa18"||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,0);
        gl.uniform1f(uni.uPartAngle,0);
        gl.uniform3fv(uni.uPartPivot,[0,0,0]);
