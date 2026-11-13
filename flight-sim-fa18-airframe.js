@@ -70,7 +70,8 @@ function parseFA18GLB(buffer,cfg){
   throw Error("F/A-18E binary chunk overrun");
  const gltf=JSON.parse(new TextDecoder().decode(new Uint8Array(buffer,20,jsonBytes)));
  if(gltf.asset?.version!=="2.0"||
-    (gltf.extensionsRequired||[]).some(v=>v!=="KHR_mesh_quantization"))
+    (gltf.extensionsRequired||[]).some(v=>
+     !["KHR_mesh_quantization","EXT_texture_webp"].includes(v)))
   throw Error("F/A-18E unsupported glTF extensions");
  const views=gltf.bufferViews||[],accessors=gltf.accessors||[],
   sizeFor={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4},
