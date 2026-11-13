@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import {test} from "node:test";
 import {spawn} from "node:child_process";
 import {readFile} from "node:fs/promises";
-import {Pool} from "pg";
+import pg from "pg";
+const {Pool}=pg;
 import {hashPassword} from "../auth.mjs";
 
 const PORT=8871,ORIGIN="http://127.0.0.1:"+PORT;
