@@ -72,7 +72,14 @@ try{
       orbit:{azimuth:30,elevation:18,distance:26}});
     },id);
     assert.ok(selected,"first "+id+" render must not fail");
-    if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon"){
+    if(id==="fa18"){
+     // Its official high-detail binary is not shipped yet. Wait for the
+     // disabled manifest to resolve to the single procedural fallback
+     // rather than inspecting a transient asynchronous loading frame.
+     await page.waitForFunction(()=>{
+      return window.__fighterRenderer?.realFA18Status==="fallback";
+     },null,{timeout:25000});
+    }else{
      await page.waitForFunction(id=>{
       const r=window.__fighterRenderer;
       const status=id==="f22"?r.realF22Status:
