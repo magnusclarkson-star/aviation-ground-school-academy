@@ -9,11 +9,15 @@ for(const name of names){
  assert.ok(!name.startsWith("."),"Hidden source published: "+name);
  assert.ok(!["services","docs","scripts","node_modules","tests",".github",".git"].includes(name),"Private or internal directory leaked: "+name);
 }
-for(const expected of ["index.html","cockpit-v3.html","instructor-review.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","flight-sim.html","accreditation"]){
+for(const expected of ["index.html","cockpit-v3.html","instructor-review.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","academy-specialist-lectures.html","academy-specialist-lectures.css","academy-specialist-lectures.js","academy-specialist-lesson-data.js","academy-specialist-technical-plates.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","flight-sim.html","accreditation"]){
  const f=await stat(path.join(output,expected));assert.ok(f.isFile()||f.isDirectory(),expected+" missing");
 }
 // A successful GitHub Pages job must actually include the high-fidelity
 // airframes. Missing assets previously caused silent procedural placeholders.
+for(const slug of ["ground-school-visuals-12-topic","aviation-learning-overview","aviation-real-world-photographs","illustrated-cessna-structures-lecture"]){
+ const f=await stat(path.join(output,"assets/lecture-visuals/"+slug+".webp"));
+ assert.ok(f.isFile()&&f.size>200000,"Owner-shown original illustration missing: "+slug);
+}
 for(const [asset,minBytes] of [
  ["assets/aircraft/c172-e737-optimized.glb",100000],
  ["assets/aircraft/r44-flightgear.ac",100000],
