@@ -2219,8 +2219,11 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
       pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
       id==="fa18"?"superhornet-dedicated-v3":"procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
-     "not-rendered":id==="c172"||id==="r44"?
+    // Source GLBs have their own real seats/panels. The inspector must
+    // distinguish that approved source hardware from procedural lessons.
+    if(canvas.dataset)canvas.dataset.airframeInterior=
+     isMolenC172||isMolen?"source-cabin-and-panel":
+     !model.cabin?"not-rendered":id==="c172"||id==="r44"?
      "four-seats-and-panel":"fighter-seat-console-panel";
     const finishId=microTexture?({f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0):0;
     const isSurface=part=>{
