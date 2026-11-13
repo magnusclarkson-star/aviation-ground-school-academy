@@ -47,6 +47,7 @@ function activeUi(){
  const role=actor?.role;
  show("authPanel",!actor);show("dashboard",!!actor);
  $("sessionBadge").textContent=actor?actor.email+" · "+role:"Not signed in";
+ document.dispatchEvent(new CustomEvent("agsa:session",{detail:{user:actor}}));
  if(!actor)return;
  $("myRole").textContent=role;
  const staff=role!=="student";show("staffDashboard",staff);
