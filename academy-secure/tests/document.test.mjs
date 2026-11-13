@@ -20,6 +20,26 @@ test("formal and student-track PDF templates are structured A4 pages",async()=>{
   assert.equal(Math.round(doc.getPage(0).getHeight()),595);
  }
 });
+test("private specimen certificate and transcript PDFs are distinct from issued records",async()=>{
+ for(const style of Object.keys(STYLES)){
+  const issued=await renderCourseCertificate(completion,{style,options:{showSeal:true}});
+  const specimen=await renderCourseCertificate(completion,{style,options:{showSeal:true},sample:true});
+  assert.equal(Buffer.from(specimen).subarray(0,5).toString(),"%PDF-");
+  assert.notEqual(Buffer.compare(Buffer.from(issued),Buffer.from(specimen)),0,
+   "Specimen PDF must include additional unissued watermark artwork");
+  const doc=await PDFDocument.load(specimen);
+  assert.equal(doc.getPageCount(),1);
+ }
+ const transcript={name:"Example Learner",studentId:"DEMO-000",issuedAt:"2026-11-13T12:00:00Z",
+  releaseId:"SAMPLE-NOT-ISSUED",entries:[{
+   courseId:"test-course",courseTitle:"Safety Foundations",revision:"PREVIEW",startedAt:"2026-01-01",
+   enrolmentStatus:"DEMO",stages:[],assessments:[],completion:null
+  }],verifiedIdentity:false};
+ const issued=await renderAcademicTranscript(transcript);
+ const sample=await renderAcademicTranscript(transcript,{sample:true});
+ assert.notEqual(Buffer.compare(Buffer.from(issued),Buffer.from(sample)),0);
+ assert.equal((await PDFDocument.load(sample)).getPageCount(),1);
+});
 test("formal documents cannot be generated from self-study scores or fake serials",async()=>{
  await assert.rejects(()=>renderCourseCertificate({...completion,serial:"FAKE-123"}),/course completion/);
  await assert.rejects(()=>renderCourseCertificate({...completion,verifiedAcademicRecord:false}),/completion/);
