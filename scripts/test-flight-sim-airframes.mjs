@@ -101,7 +101,10 @@ assert.ok(nearVertex(c172P,-.075*cScale[0],2.39,-6.32*cScale[2]),
 // engine, with exactly one nacelle for F-35 and pairs for the other jets.
 for(const id of ["fa18","f22","f35","typhoon","su37"]){
  const mesh=T.buildVehicle(id),p=mesh.positions,c=mesh.colors;
- const twin=id!=="f35",exhaustZ=((twin?-5.7:-5.85)-1.64)*A.SCALE[id][2];
+ // The dedicated Super Hornet uses -5.74m nozzle stations rather than
+ // the shared generic jet's older -5.70m station.
+ const twin=id!=="f35",mountZ=id==="fa18"?-5.74:twin?-5.7:-5.85;
+ const exhaustZ=(mountZ-1.64)*A.SCALE[id][2];
  let rimVertices=0;
  for(let i=0;i<p.length;i+=3){
   if(Math.abs(p[i+2]-exhaustZ)>.008)continue;
