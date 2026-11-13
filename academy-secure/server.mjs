@@ -208,7 +208,7 @@ async function handle(req,res){
    });
    send(res,200,{evidence:doc,warning:"Internal attestation; not an online verification with SLCAA"});return;
   }
-  const revoke=/^\\/api\\/authority\\/evidence\\/([0-9a-f-]{36})\\/revoke$/.exec(pathname);
+  const revoke=new RegExp("^/api/authority/evidence/([0-9a-f-]{36})/revoke$").exec(pathname);
   if(method==="POST"&&revoke){
    requireRole(actor,"verify_evidence");const body=await json(req),why=requiredString(body,"reason",20,1500);
    const result=await transaction(async db=>{
@@ -220,7 +220,7 @@ async function handle(req,res){
    });
    send(res,200,{evidence:result,trainingRightsReevaluatedImmediately:true});return;
   }
-  const disable=/^\\/api\\/admin\\/users\\/([0-9a-f-]{36})\\/disable$/.exec(pathname);
+  const disable=new RegExp("^/api/admin/users/([0-9a-f-]{36})/disable$").exec(pathname);
   if(method==="POST"&&disable){
    if(actor.role!=="accountable_manager"||actor.id===disable[1])fail(403,"Separate accountable manager required");
    const body=await json(req),reason=requiredString(body,"reason",20,1500);
