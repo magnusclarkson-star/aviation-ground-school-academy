@@ -13,7 +13,7 @@ function updateSamples(){
   const cert=$(name);
   if(!cert)continue;
   for(const [checkbox,attribute] of toggles)
-   cert.dataset[attribute]=$(!checkbox?null:checkbox)?.checked?"true":"false";
+   cert.dataset[attribute]=$(checkbox)?.checked?"true":"false";
  }
 }
 function printSample(style){
