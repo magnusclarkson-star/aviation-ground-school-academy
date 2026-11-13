@@ -2518,7 +2518,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};
- }catch{
+ }catch(error){
+  if(typeof console!=="undefined")
+   console.error("AGSA WebGL2 renderer initialization:",error);
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
    if(skyProgram)gl.deleteProgram(skyProgram);}catch{}
