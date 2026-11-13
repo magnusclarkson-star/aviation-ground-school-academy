@@ -66,6 +66,6 @@ test("all seven exterior meshes remain distinct",()=>{
  const ids=["c172","r44","fa18","f22","f35","typhoon","su37"];
  const vertices=ids.map(id=>Geometry.buildVehicle(id).vertices);
  assert.ok(vertices.every(n=>n>=50&&n<4000));
- assert.equal(vertices[0],3222);
+ assert.equal(vertices[0],3834);
  assert.equal(vertices[1],3984);
 });

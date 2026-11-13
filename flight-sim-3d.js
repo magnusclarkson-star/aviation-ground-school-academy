@@ -37,6 +37,9 @@ const MolenR44=root?.AGSAR44Airframe||
 const MolenC172=root?.AGSAC172Airframe||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-c172-airframe.js"):null);
+const Fa18Native=root?.AGSAFa18NativeAirframe||
+ (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
+ require("./flight-sim-fa18-native.js"):null);
 const F22Airframe=root?.AGSAF22Airframe||
  (typeof module!=="undefined"&&module.exports&&typeof require==="function"?
  require("./flight-sim-f22-airframe.js"):null);
@@ -1478,7 +1481,8 @@ precision mediump float;
 in vec3 vColor,vLocalPosition,vLocalNormal,vWorldPosition,vWorldNormal;
 in vec2 vTexCoord;
 in float vDistance,vLight,vEmissive;
-uniform vec3 uFogColor,uLightColor,uEye;
+uniform vec3 uFogColor,uLightColor;
+uniform highp vec3 uEye;
 uniform float uOpacity,uHasTexture,uAlphaCutoff,uSkinFinish;
 uniform sampler2D uSkinMicroTexture;
 uniform int uC172Pass,uR44Skin,uFighterMaterial;
@@ -1637,6 +1641,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
  const buffers=[],objects=[],textures=[];
  let realC172=null,realC172Status="loading";
  let realR44=null,realR44Status="loading";
+ let realFa18=null,realFa18Status="idle";
  let realF22=null,realF22Status="idle";
  let realF35=null,realF35Status="idle";
  let realSu37=null,realSu37Status="idle";
@@ -1835,6 +1840,50 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     }
    }
    realR44Status="fallback";
+  }
+  // A properly licensed, prevalidated F/A-18E GLB is optional. If no
+  // authorised source is bundled, keep the existing flyable geometry.
+  function importFa18(){
+   if(realFa18Status!=="idle")return;
+   if(!Fa18Native?.ACTIVE){realFa18Status="fallback";return;}
+   realFa18Status="loading";
+   void boundedModelLoad(Fa18Native.ensureFa18()).then(async model=>{
+    if(disposed||lost)return;
+    const decoded=await Promise.all(model.images.map((bytes,i)=>
+     root.createImageBitmap(new Blob([bytes],
+      {type:model.imageMimeTypes[i]||"image/png"}))));
+    if(disposed||lost){decoded.forEach(img=>img.close?.());return;}
+    const images=[];
+    try{
+     for(const bitmap of decoded){
+      const texture=gl.createTexture();
+      if(!texture)throw Error("F/A-18E GPU texture allocation failed");
+      textures.push(texture);images.push(texture);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D,texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,
+       gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);
+      gl.generateMipmap(gl.TEXTURE_2D);
+     }
+     if(disposed||lost)return;
+     realFa18={primitives:model.primitives.map(uploadImported),images,
+      vertices:model.vertices,triangles:model.triangles,
+      kind:"licensed-fa18e-glb"};
+     realFa18Status="imported";
+    }finally{
+     decoded.forEach(bitmap=>bitmap.close?.());
+     gl.bindTexture(gl.TEXTURE_2D,null);
+    }
+   }).catch(error=>{
+    realFa18Status="fallback";
+    if(typeof console!=="undefined")
+     console.warn("Optional licensed F/A-18E GLB unavailable; keeping flyable original:",error);
+   });
   }
   // Load the actual FGUK F-22 mesh only after the fighter is selected.
   // Never burden C172/R44 first load with a third large aircraft asset.
@@ -2085,6 +2134,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    // The F-22 source is loaded on first exterior view, not at page startup.
    if(view!=="cockpit"&&state.mode==="airplane"){
     const selectedJet=Exterior.normalize(airframeId||state.mode);
+    if(selectedJet==="fa18")importFa18();
     if(selectedJet==="f22")importF22();
     if(selectedJet==="f35")importF35();
     if(selectedJet==="su37")importSu37();
@@ -2128,7 +2178,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.uniform1f(uni.uOpacity,1);
     }
     gl.uniform1f(uni.uActor,1);
-    const realModel=id==="f35"?realF35:
+    const realModel=id==="fa18"?realFa18:
+     id==="f35"?realF35:
      (id==="c172"?realC172:id==="r44"?realR44:
      id==="f22"?realF22:id==="su37"?realSu37:
      id==="typhoon"?realTyphoon:null);
@@ -2136,29 +2187,34 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
     // procedural jets while their genuine exterior assets load. This applies
     // to chase/3D exterior views as well as the already guarded 360 inspector.
     // Keep the scenery and flight controls live while the source is pending.
-    const sourceJet=id==="f22"||id==="f35"||
+    const sourceJet=(id==="fa18"&&realFa18Status==="loading")||
+     id==="f22"||id==="f35"||
      id==="su37"||id==="typhoon";
     const pendingSourceJet=sourceJet&&!realModel;
-    const sourceJetStatus=id==="f22"?realF22Status:
+    const sourceJetStatus=id==="fa18"?realFa18Status:
+     id==="f22"?realF22Status:
      id==="f35"?realF35Status:id==="su37"?realSu37Status:
      id==="typhoon"?realTyphoonStatus:null;
     const isMolen=id==="r44"&&realModel?.kind==="molen";
     const isMolenC172=id==="c172"&&realModel?.kind==="molen";
     if(canvas.dataset)canvas.dataset.airframeSource=realModel?
-     (id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":
+     (id==="fa18"?"ccby-fa18e-native-glb":id==="f22"?"gpl-f22-fguk":id==="f35"?"gpl-f35b-flightgear":
       id==="su37"?"gpl-su37-fguk":
       id==="typhoon"?"gpl-typhoon-fg":
       isMolenC172?"mit-c172s-glb":id==="c172"?"licensed-c172-glb":
       isMolen?"mit-r44-glb":"licensed-r44-ac3d"):
       pendingSourceJet?(sourceJetStatus==="fallback"?"unavailable":"loading"):
       id==="fa18"?"superhornet-dedicated-v3":"procedural";
-    if(canvas.dataset)canvas.dataset.airframeInterior=!model.cabin?
-     "not-rendered":id==="c172"||id==="r44"?
-     "four-seats-and-panel":"fighter-seat-console-panel";
+    if(canvas.dataset)canvas.dataset.airframeInterior=
+     (isMolen||isMolenC172)?"source-cabin-and-panel":
+     !model.cabin?"not-rendered":
+     id==="c172"||id==="r44"?"four-seats-and-panel":
+     "fighter-seat-console-panel";
     const finishId=microTexture?({f22:1,f35:2,typhoon:3,fa18:4,su37:5}[id]||0):0;
     const isSurface=part=>{
      if(!part||!part.sourceName||(part.opacity??1)<.99||part.partAxis===4)
       return false;
+     if(id==="fa18")return /^fa18e_(?:body|wing|tail|left|right|flap|aileron|elevator|rudder)/i.test(part.sourceName);
      if(id==="su37")return /^(fuselage|wing|tail|WNG_|CNRD_|ELV_|TF_)/.test(part.sourceName);
      return Boolean(root?.AGSANativeFighterLivery?.skinPart?.(id,part.sourceName));
     };
@@ -2181,7 +2237,8 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      gl.activeTexture(gl.TEXTURE0);
      const drawPrimitive=(part,alpha)=>{
       const painted=isSurface(part);
-      gl.uniform1f(uni.uSkinFinish,painted?finishId:0);
+      // A licensed GLB's original UV textures remain authoritative.
+      gl.uniform1f(uni.uSkinFinish,painted&&part.imageId===null?finishId:0);
       gl.uniform1i(uni.uFighterMaterial,fighterMaterialFor(id,
        part.sourceName,{opacity:part.opacity,partAxis:part.partAxis,painted}));
       const img=part.imageId===null?null:realModel.images[part.imageId];
@@ -2189,7 +2246,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uAlphaCutoff,part.alphaMask?part.alphaCutoff:0);
       gl.uniform1f(uni.uOpacity,alpha);
       gl.bindTexture(gl.TEXTURE_2D,img);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="fa18"||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,part.partAxis);
        gl.uniform3fv(uni.uPartPivot,part.partPivot);
        const angle=part.gearDoorSide?
@@ -2199,7 +2256,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       }
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES,part.count,part.indexType,0);
-      if((isMolen||isMolenC172||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
+      if((isMolen||isMolenC172||id==="fa18"||id==="f22"||id==="f35"||id==="su37"||id==="typhoon")&&part.partAxis){
        gl.uniform1i(uni.uPartAxis,0);
        gl.uniform1f(uni.uPartAngle,0);
        gl.uniform3fv(uni.uPartPivot,[0,0,0]);
@@ -2239,7 +2296,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
       gl.uniform1f(uni.uOpacity,.26);
       gl.bindVertexArray(model.shellGlass.vao);
       gl.drawArrays(gl.TRIANGLES,0,model.shellGlass.count);
-     }else if(id==="f22"||id==="f35"||id==="su37"||id==="typhoon"){
+     }else if(id==="fa18"||id==="f22"||id==="f35"||id==="su37"||id==="typhoon"){
       // The genuine FlightGear airframe keeps its opaque skin and correctly
       // hinged surfaces. Render full-size gear with depth writes while
       // deployed and rotating; conceal it only at the very end of the fold
@@ -2343,6 +2400,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
      model.authenticTailRotorSweep:model.tailRotorSweep;
     const interiorOnly=view==="inspect"&&orbit.interior===true;
     const animatedParts=interiorOnly||isMolen||pendingSourceJet?[]:
+     id==="fa18"&&realModel?[]:
      id==="f22"&&realModel?[]:
      id==="f35"&&realModel?[]:
      id==="su37"&&realModel?[]:
@@ -2446,6 +2504,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    // Allow the 360-degree inspector to request a source jet before the first
    // frame. It must not draw the old procedural fighter during model loading.
    prepareAirframe(id){
+    if(id==="fa18"){importFa18();return realFa18Status}
     if(id==="f22"){importF22();return realF22Status}
     if(id==="f35"){importF35();return realF35Status}
     if(id==="su37"){importSu37();return realSu37Status}
@@ -2454,6 +2513,7 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    },
    get realC172Status(){return realC172Status},
    get realR44Status(){return realR44Status},
+   get realFa18Status(){return realFa18Status},
    get realF22Status(){return realF22Status},
    get realF35Status(){return realF35Status},
    get realSu37Status(){return realSu37Status},
@@ -2461,7 +2521,9 @@ function createRenderer(canvas,{onLost=()=>{},inspectionOnly=false}={}){
    supported:true,engine:"webgl2",
    get realC172Kind(){return realC172?.kind||null},
    get lost(){return lost}};
- }catch{
+ }catch(error){
+  if(typeof console!=="undefined")
+   console.error("AGSA WebGL2 renderer initialization:",error);
   canvas.removeEventListener?.("webglcontextlost",contextLost);
   try{for(const b of buffers)gl.deleteBuffer(b);if(program)gl.deleteProgram(program);
    if(skyProgram)gl.deleteProgram(skyProgram);}catch{}

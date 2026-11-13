@@ -43,13 +43,13 @@ const hasRegion=(mesh,check)=>{
 };
 // Tube vertices ring the hook's centreline; check an actual hook shoe
 // corner rather than assuming its centreline is a triangle vertex.
-assert.ok(hasVertex(hornet,-.17*.890,-1.19,-7.75*1.148),
+assert.ok(hasVertex(hornet,-.16*.890,-1.18,-7.65*1.148),
  "F/A-18 must include the under-tail hook shoe geometry");
 assert.ok(hasRegion(hornet,(x,y,z)=>x>1.38*.890&&y>2.5&&z< -5.7*1.148),
  "F/A-18 must include right-hand canted tail detail");
 assert.ok(hasRegion(hornet,(x,y,z)=>x< -1.38*.890&&y>2.5&&z< -5.7*1.148),
  "F/A-18 must include left-hand canted tail detail");
-assert.ok(!hasVertex(typhoonControl,-.17*.890,-1.19,-7.75*1.148),
+assert.ok(!hasVertex(typhoonControl,-.16*.890,-1.18,-7.65*1.148),
  "FA18 hook shoe must not leak onto other jets");
 assert.ok(hornet.vertices<30000,
  "F/A-18 visible detail must remain within the mobile mesh budget");

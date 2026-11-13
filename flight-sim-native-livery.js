@@ -75,7 +75,12 @@ function paintMesh(id,mesh){
    original[1]>.33&&original[1]<.90&&
    original[2]>.38&&original[2]<.92&&
    Math.abs(original[1]-original[2])<.22;
-  if(!isHull)continue;
+  // The F/A-18's recessed nozzle rings use real unpainted metal; repainting
+  // them as hull skin made both engine exhausts visually disappear.
+  const isNozzleMetal=Math.abs(original[0]-151/255)<.002&&
+   Math.abs(original[1]-162/255)<.002&&
+   Math.abs(original[2]-172/255)<.002;
+  if(!isHull||isNozzleMetal)continue;
   const changed=paint(id,"skin",mesh.p[i],mesh.p[i+1],mesh.p[i+2],original);
   for(let k=0;k<3;k++)mesh.c[i+k]=changed[k];
  }
