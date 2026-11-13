@@ -57,6 +57,21 @@ function colorFor(name,materialId,mats){
   return base.map(x=>Math.max(.26,Math.min(.87,x*.80)));
  return base.map(x=>Math.max(.17,Math.min(.82,x*.72)));
 }
+// The upstream "details" mesh also contains thin construction cylinders
+// around the nose gear, mid-dorsal skin and fin tip. They are not the
+// actual aircraft wheels, fin, canards or wingtip housings. Remove only
+// triangles wholly inside those measured source-coordinate envelopes.
+function isConstructionPinTriangle(part,materialId,tri){
+ if(part.name!=="details"||![28,29,30,38].includes(materialId))return false;
+ const points=tri.map(index=>[
+  part.v[index*3]/1000,part.v[index*3+1]/1000,part.v[index*3+2]/1000]);
+ return points.every(([x,y,z])=>
+   Math.abs(x)<.75&&y<-.65&&z>2.85&&z<3.15)||
+  points.every(([x,y,z])=>
+   Math.abs(x)<.08&&y>.95&&y<1.10&&z>-1.12&&z<-.9)||
+  points.every(([x,y,z])=>
+   Math.abs(x)<.08&&y>3.2&&z<-7.35);
+}
 function parseTyphoon(text){
  if(typeof text!=="string"||text.length<300000||text.length>MAX_BYTES)
   throw Error("Typhoon source mesh size invalid");
@@ -93,7 +108,14 @@ function parseTyphoon(text){
       !Number.isInteger(group[0])||!data.materials[group[0]]||
       !Array.isArray(group[1])||group[1].length%3||
       group[1].length>40000)throw Error("Typhoon source material group invalid");
-   const material=data.materials[group[0]],faces=group[1];
+   const material=data.materials[group[0]];
+   const faces=[];
+   for(let j=0;j<group[1].length;j+=3){
+    const triangle=group[1].slice(j,j+3);
+    if(!isConstructionPinTriangle(part,group[0],triangle))
+     faces.push(...triangle);
+   }
+   if(!faces.length)continue;
    if(material.length!==4||!material.every(x=>finite(x)&&x>=0&&x<=1))
     throw Error("Typhoon source material invalid");
    // Unlike the original AC3D loader, pack only the vertices actually
@@ -169,7 +191,7 @@ function ensureTyphoon(fetcher=root?.fetch?.bind(root)){
  }
  return pending;
 }
-const api={FILE,SOURCE,parseTyphoon,ensureTyphoon,partMotion};
+const api={FILE,SOURCE,parseTyphoon,ensureTyphoon,partMotion,isConstructionPinTriangle};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 if(root)root.AGSATyphoonAirframe=api;
 })(typeof window!=="undefined"?window:null);
