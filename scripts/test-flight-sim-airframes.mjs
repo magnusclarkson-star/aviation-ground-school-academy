@@ -105,14 +105,27 @@ for(const id of ["fa18","f22","f35","typhoon","su37"]){
  // the shared generic jet's older -5.70m station.
  const twin=id!=="f35",mountZ=id==="fa18"?-5.74:twin?-5.7:-5.85;
  const exhaustZ=(mountZ-1.64)*A.SCALE[id][2];
- let rimVertices=0;
+ let rimVertices=0,port=0,starboard=0;
  for(let i=0;i<p.length;i+=3){
   if(Math.abs(p[i+2]-exhaustZ)>.008)continue;
-  if(Math.abs(c[i]-151/255)<.005&&Math.abs(c[i+1]-162/255)<.005&&
-   Math.abs(c[i+2]-172/255)<.005)rimVertices++;
+  if(id==="fa18"){
+   // The native Super Hornet now has individually shaded exhaust petals.
+   // Test both distinct nozzle rings, not only the old unshaded metal RGB.
+   if(c[i]>.47&&c[i]<.86&&c[i+1]>.49&&c[i+2]>.50){
+    if(p[i]<-.15)port++;
+    if(p[i]>.15)starboard++;
+   }
+  }else if(Math.abs(c[i]-151/255)<.005&&
+           Math.abs(c[i+1]-162/255)<.005&&
+           Math.abs(c[i+2]-172/255)<.005)rimVertices++;
  }
- assert.ok(rimVertices>=(twin?60:30),
-  id+" has "+(twin?"two recessed turbine nozzles":"one turbine nozzle")+" visible from rear");
+ if(id==="fa18"){
+  assert.ok(port>=24&&starboard>=24,
+   "Super Hornet must show separate left and right recessed nozzle rings");
+ }else{
+  assert.ok(rimVertices>=(twin?60:30),
+   id+" has "+(twin?"two recessed turbine nozzles":"one turbine nozzle")+" visible from rear");
+ }
 }
 
 assert.ok(metrics.find(x=>x.id==="c172").spanX>metrics.find(x=>x.id==="f35").spanX,
