@@ -42,7 +42,7 @@ function validateManifest(cfg){
    throw Error("F/A-18E motion mapping invalid");
   controls.set(c.node,c);bound.add(c.name);
  }
- if(cfg.requireControls===true){
+ if(cfg.requireControls===true||cfg.enabled===true){
   // Never replace the animated flight model with a static mesh merely
   // because a higher-resolution exterior is available.
   for(const name of allowed)
