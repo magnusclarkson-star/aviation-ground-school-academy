@@ -36,7 +36,9 @@ export function approvalFor(evidence,type,scope,now=new Date()){
 export function schoolApproved(evidence,now=new Date()){
  // Never assume a simulator or digital school has an ATO rating.
  return approvalFor(evidence,"ATO_CERTIFICATE","ORG",now)&&
-  approvalFor(evidence,"TRAINING_SPECIFICATIONS","ORG",now);
+  approvalFor(evidence,"TRAINING_SPECIFICATIONS","ORG",now)&&
+  approvalFor(evidence,"TPM_ACCEPTANCE","ORG",now)&&
+  approvalFor(evidence,"SMS_ACCEPTANCE","ORG",now);
 }
 export function courseApproved(evidence,courseId,now=new Date()){
  return schoolApproved(evidence,now)&&approvalFor(evidence,"COURSE_APPROVAL",courseId,now);
