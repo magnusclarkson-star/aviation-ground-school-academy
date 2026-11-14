@@ -30,7 +30,8 @@ function install(){
  if(objectives)sidebar.appendChild(objectives);
  if(gallery)sidebar.appendChild(gallery);
  const tools=document.createElement("details");tools.className="lesson-tools-collapse";
- const summary=document.createElement("summary");summary.textContent="Course options, progress and accreditation information";
+ const summary=document.createElement("summary");summary.textContent="Options";
+  summary.setAttribute("aria-label","Course options, progress and accreditation information");
  tools.appendChild(summary);tools.appendChild(controls);tools.appendChild(notice);
  sidebar.appendChild(tools);
  // The original section-navigation element must stay outside #lessonReading,
