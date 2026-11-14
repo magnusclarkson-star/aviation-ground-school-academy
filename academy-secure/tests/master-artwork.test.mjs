@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {MASTER_ARTWORK,validateMasterArtwork,originalArtworkFor,bundledApprovedArtwork} from "../master-artwork.mjs";
 import {renderOriginalCertificate} from "../original-certificate-pdf.mjs";
+import {provisionCertificateMasters} from "../provision-master-artwork.mjs";
 import {mkdtemp,writeFile,rm,symlink} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
@@ -71,4 +72,22 @@ test("production requires an exact verified private original, never bundled publ
  };
  assert.deepEqual(await originalArtworkFor(installedDb,style),original,
   "Exact administrator-installed database masters can be used without a private filesystem mount");
+});
+
+test("private master provisioning is verified, restrictive, idempotent and never public",async t=>{
+ const dir=await mkdtemp(join(tmpdir(),"agsa-owner-vault-"));
+ t.after(()=>rm(dir,{recursive:true,force:true}));
+ const first=await provisionCertificateMasters(dir);
+ assert.equal(first.length,3);
+ assert.ok(first.every(x=>x.preexisting===false));
+ const second=await provisionCertificateMasters(dir);
+ assert.equal(second.length,3);
+ assert.ok(second.every(x=>x.preexisting===true));
+ for(const [style,item] of Object.entries(MASTER_ARTWORK)){
+  const original=await bundledApprovedArtwork(style);
+  const saved=await import("node:fs/promises").then(fs=>fs.readFile(join(dir,item.filename)));
+  assert.deepEqual(saved,original);
+  assert.equal(validateMasterArtwork(saved,style).sha256,item.sha256);
+ }
+ await assert.rejects(()=>provisionCertificateMasters("relative/directory"),/absolute restricted private directory/);
 });
