@@ -182,8 +182,8 @@ function render(){
  const check=el("button","Check radio answer");check.type="button";check.className="radio-lab-check";
  const outcome=el("div");outcome.className="radio-lab-feedback";
  outcome.setAttribute("role","status");outcome.setAttribute("aria-live","polite");
- const previous=responses.get(item.id);
- if(previous)showAnswer(outcome,previous.result);
+ const savedAnswer=responses.get(item.id);
+ if(savedAnswer)showAnswer(outcome,savedAnswer.result);
  else outcome.textContent="Study the picture, listen or read the fictional exchange, and select the safest answer.";
  check.addEventListener("click",()=>{
   const selected=options.querySelector('input[type="radio"]:checked');
