@@ -47,7 +47,7 @@ Confirm `Cache-Control: no-store` on protected responses, HTTPS from the caller'
 
 - Private hosting and PostgreSQL with verified TLS have not been provisioned or tested.
 - Staff authenticator TOTP verification is implemented in the private server with encrypted seeds and anti-replay checks; an **independently assessed external access gateway**, stronger phishing-resistant MFA options, tested lost-device recovery governance, secure invitation delivery, student identity/age/guardian processes, data subject rights and production privacy controls are still required.
-- The production runtime now has a committed npm lockfile and isolated private Docker build, but its OS image digest, reviewed DB role separation and independently verified backup/restore procedure remain open launch requirements.
+- The runtime now has a committed npm lockfile, an isolated Docker build and a tested NOLOGIN least-privilege role definition. **Real** production DB role provisioning, a pinned/reviewed OS image digest and independently verified encrypted backup and restore procedures remain open requirements.
 - No connected live payment processor; the administrator manual settlement function is not bank verification.
 - Official Academy credential issuance still depends on private master artwork, protected owner-signature use, student identity checks, academic authorisation, independent fee release and manual regulatory reviews.
 - The public site must not be mistaken for the private student portal. A GitHub Actions check or GitHub Pages deployment proves code publication/tests, not private-server deployment.
