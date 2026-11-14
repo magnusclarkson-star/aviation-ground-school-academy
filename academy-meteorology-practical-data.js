@@ -16,7 +16,7 @@ const cases=Object.freeze([
  question:"In this international METAR example, what does the group 6000 mean?",
  options:["Six hours of forecast validity.","A runway that is 6,000 metres long.","Reported prevailing horizontal visibility of 6,000 metres."],answer:2,
  explanation:"In this example 6000 means prevailing visibility 6,000 metres. The coded report is a timed observation, not a forecast. 141200Z indicates day 14 at 12:00 UTC, 21012KT wind from 210 degrees true at 12 knots, -RA light rain, SCT018 scattered cloud around 1,800 feet and BKN035 broken cloud at 3,500 feet above aerodrome level, 26/23 temperature and dew point in Celsius, and Q1010 QNH pressure in hPa. Local/state conventions vary.",
- key:[["METAR","Aerodrome weather observation"],["141200Z","Day 14 at 12:00 UTC"],["6000","Visibility 6,000 metres in this invented international example"],["-RA","Light rain"],["SCT018","Scattered cloud based around 1,800 ft above aerodrome"],["Q1010","QNH 1010 hPa"]],
+ key:[["METAR","Aerodrome weather observation"],["141200Z","Day 14 at 12:00 UTC"],["6000","Visibility 6,000 metres in this invented international example"],["-RA","Light rain reported at the fictional aerodrome"],["SCT018","Scattered cloud based around 1,800 ft above aerodrome"],["Q1010","QNH 1010 hPa"]],
  scouts:"Air Scouts: touch each coded group to reveal its meaning, then identify the visibility group.",
  pilots:"Aspiring pilots: distinguish a timed observation from a forecast and note the importance of jurisdiction-specific conventions."},
  {id:"taf",number:3,title:"Read a fictional TAF and temporary weather",pictures:["detail-04"],
