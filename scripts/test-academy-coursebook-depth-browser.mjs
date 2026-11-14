@@ -825,7 +825,7 @@ try{
  assert.equal(await phoneRadio.locator(".radio-lab-letters button").count(),26);
  await phoneRadio.locator('.radio-lab-letters button[data-letter="A"]').tap();
  assert.match(await phoneRadio.locator(".radio-lab-letter-meaning").textContent(),/A — Alfa/);
- await phoneRadio.close();
+ await radioPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
