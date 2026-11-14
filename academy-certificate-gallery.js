@@ -13,7 +13,6 @@ async function loadOriginal(key){
  const meta=sources[key],card=document.querySelector('[data-original="'+key+'"]');
  if(!card)return;
  const status=card.querySelector(".load-status"),img=card.querySelector(".original-artwork");
- const button=card.querySelector("[data-print]");
  try{
   const parts=await Promise.all(Array.from({length:meta.parts},(_,i)=>{
    const filename=ROOT+meta.slug+".part"+String(i).padStart(2,"0")+".txt";
@@ -30,16 +29,13 @@ async function loadOriginal(key){
   const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),x=>x.toString(16).padStart(2,"0")).join("");
   if(hash!==meta.sha)throw Error("Original image authenticity check failed");
   const url=URL.createObjectURL(new Blob([bytes],{type:"image/png"}));urls.set(key,url);
-  img.onload=()=>{button.disabled=false;status.textContent="Original approved artwork verified and displayed."};
-  img.onerror=()=>{button.disabled=true;status.textContent="Image preview could not be displayed."};
+  img.onload=()=>{status.textContent="Original approved artwork verified and displayed. View only — printing is unavailable."};
+  img.onerror=()=>{status.textContent="Image preview could not be displayed."};
   img.src=url;
- }catch(error){status.textContent=String(error.message||error);button.disabled=true}
+ }catch(error){status.textContent=String(error.message||error)}
 }
 document.querySelectorAll("[data-original]").forEach(card=>{
- const key=card.dataset.original,btn=card.querySelector("[data-print]");
- btn.addEventListener("click",()=>{if(!btn.disabled){document.body.dataset.printStyle=key;window.print()}});
- void loadOriginal(key);
+ void loadOriginal(card.dataset.original);
 });
-window.addEventListener("afterprint",()=>document.body.removeAttribute("data-print-style"));
 window.addEventListener("pagehide",()=>{for(const url of urls.values())URL.revokeObjectURL(url)});
 })();
