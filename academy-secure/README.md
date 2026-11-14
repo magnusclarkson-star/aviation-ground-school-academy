@@ -12,6 +12,7 @@ This is a standalone, private-server component of the public [Aviation Ground Sc
 - Draft curriculum registration, required training stages, adult-only enrolments, staff-recorded stage records, authorised examiner evidence, independent quality countersignature and database-only approved-course-completion record. **No pilot licence or regulator certificate is generated.**
 - Append-only training/exam rows and audit history, with triggers preventing modification of protected records. API does not expose DELETE on training records.
 - Same-origin private portal and student access to their own enrolment, assessment and course-completion records.
+- Owner-only private tuition dashboard: current active student places, pending tuition, expiring grants within 14 days, discounted/scholarship places and date-expired records. Aggregates across **all** grants rather than the 200 most recent register entries; balances are separate by country and currency (never a fabricated cross-currency total). Historical off-platform settlement attestations are identified as **administrator statements, not bank-verified revenue**. This is a private-server feature, not present on public GitHub Pages.
 - Separate public API status that does **not** claim ATO accreditation, even if documents have been entered or internally attested.
 
 ## Regulatory source and status

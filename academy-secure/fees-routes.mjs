@@ -2,6 +2,7 @@
 // All prices/waivers/scholarships are controlled solely by accountable_manager.
 // This service DOES NOT charge a card or verify a payment with a provider.
 import {validatePrice,calculateAward,studentHasAccess,isOwner,financialAccessIsNotAccreditation} from "./fees-policy.mjs";
+import {buildFinanceOverview} from "./finance-overview.mjs";
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const COURSE=/^[a-z][a-z0-9_-]{2,63}$/;
 function validateId(id,fail){if(typeof id!=="string"||!UUID.test(id))fail(400,"Invalid record identifier");return id}
@@ -32,6 +33,31 @@ export async function handleFeesRoute({req,res,method,pathname,actor,db,transact
   if(!course[0])fail(404,"Course not found");
   send(res,200,{course:course[0],contentAccess:"ACTIVE",regulatoryCredit:"NONE_BY_PAYMENT_OR_SCHOLARSHIP",
    note:"Academic course approval is independent of payment. Course materials are provided through the separately governed teaching programme."});return true;
+ }
+ if(method==="GET"&&pathname==="/api/admin/finance/overview"){
+  owner(actor,fail);
+  // Aggregate across every grant, not the 200-row list shown on the portal.
+  // Separate country and currency; never sum SLE, GBP, USD, etc. together.
+  const {rows:grantRows}=await db.query(`SELECT btrim(country_code) AS country_code,
+   btrim(currency) AS currency,
+   count(*) FILTER (WHERE status='ACTIVE' AND (expires_at IS NULL OR expires_at>now()))::int AS active_count,
+   count(*) FILTER (WHERE status='PENDING_PAYMENT' AND (expires_at IS NULL OR expires_at>now()))::int AS pending_count,
+   count(*) FILTER (WHERE status='ACTIVE' AND expires_at>now()
+    AND expires_at<=now()+interval '14 days')::int AS expiring_count,
+   count(*) FILTER (WHERE status='ACTIVE' AND (expires_at IS NULL OR expires_at>now())
+    AND grant_type IN ('SCHOLARSHIP','WAIVER','FREE','PROMOTION'))::int AS discounted_count,
+   count(*) FILTER (WHERE status IN ('ACTIVE','PENDING_PAYMENT') AND expires_at<=now())::int AS ended_count,
+   COALESCE(sum(payable_minor) FILTER (WHERE status='PENDING_PAYMENT'
+    AND (expires_at IS NULL OR expires_at>now())),0)::text AS pending_minor,
+   COALESCE(sum(discount_minor) FILTER (WHERE status='ACTIVE'
+    AND (expires_at IS NULL OR expires_at>now())),0)::text AS active_discount_minor
+   FROM academy_access_grants
+   GROUP BY country_code,currency ORDER BY country_code,currency`);
+  const {rows:attestationRows}=await db.query(`SELECT btrim(currency) AS currency,
+   count(*)::int AS attestation_count,
+   COALESCE(sum(amount_minor),0)::text AS attested_minor
+   FROM academy_manual_payment_attestations GROUP BY currency ORDER BY currency`);
+  send(res,200,buildFinanceOverview(grantRows,attestationRows));return true;
  }
  if(method==="GET"&&pathname==="/api/admin/students"){
   owner(actor,fail);

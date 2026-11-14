@@ -24,3 +24,20 @@
 #signatureConfirmPassword{width:100%;max-width:390px;padding:12px;border-radius:9px;border:1px solid #7799ae;background:#061e30;color:#fff}
 #signatureStatus{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:770px){.signature-layout{grid-template-columns:1fr}#signaturePad{min-height:120px}.signature-drawing,.signature-preview,.signature-checks{padding:12px}}
+
+/* Owner finance overview: compact, high-contrast and currency-separated. */
+.finance-overview{margin:11px 0 14px;padding:10px;border:1px solid #6c9db5;background:#102f43;border-radius:9px}
+.finance-overview h3{margin:0 0 5px;font-size:16px;color:#ffe0a1}
+.finance-overview .hint{margin:5px 0 9px;color:#ecf5fc;font-size:12px}
+.finance-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.finance-metric{min-width:0;border:1px solid #719bad;border-radius:6px;background:#1a4359;padding:8px}
+.finance-metric strong{display:block;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;color:#fff}
+.finance-metric span{display:block;font-size:11px;line-height:1.4;color:#eff9ff}
+.finance-balances{margin:9px 0 0}
+.finance-balances h4{font-size:13px;color:#ffe3b2;margin:4px 0}
+.finance-balance-line{font-size:12px;color:#f4fbff;line-height:1.5;margin:4px 0;padding:6px;border-bottom:1px solid #567d91}
+.finance-note{font-size:12px;color:#ffebc7;background:#284357;padding:7px;border-left:3px solid #eac889;line-height:1.48}
+.finance-attestations summary{font-weight:750;font-size:12px;color:#b9f2ff;cursor:pointer}
+.finance-attestations p{font-size:12px;color:#ebf8ff;margin:5px 0}
+@media(max-width:900px){.finance-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-overview{padding:8px}.finance-metric{padding:7px}.finance-metric strong{font-size:20px}}

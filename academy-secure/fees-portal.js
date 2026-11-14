@@ -2,7 +2,7 @@
    No payment is collected here; only externally verified settlements are attested. */
 (()=>{"use strict";
 const $=id=>document.getElementById(id);
-let user=null,plans=[],grants=[],students=[];
+let user=null,plans=[],grants=[],students=[],overview=null;
 const clean=(tag,txt)=>{const el=document.createElement(tag);el.textContent=String(txt);return el};
 function show(id,on){$(id).hidden=!on}
 function message(msg,error=false){const el=$("flash");el.className=error?"error":"ok";el.textContent=String(msg)}
@@ -47,6 +47,45 @@ function describeGrant(g){
  const expiry=g.expires_at?new Date(g.expires_at).toLocaleDateString():"No automatic end";
  return (g.student_email||"You")+" · "+g.course_title+" · "+g.grant_type+" ("+g.discount_bps/100+"% off) · "+
    gross+" list / "+paid+" due · "+g.status+" · "+expiry;
+}
+function renderFinanceOverview(){
+ const box=$("financeOverview");box.replaceChildren();
+ if(!overview){box.appendChild(clean("p","Finance summary unavailable from the private server."));return}
+ const cards=document.createElement("div");cards.className="finance-metrics";
+ for(const [name,count] of [
+  ["Active learning places",overview.counts.active],
+  ["Awaiting payment",overview.counts.pending],
+  ["Expiring in 14 days",overview.counts.expiring14Days],
+  ["Discounted/free active",overview.counts.discountedActive],
+  ["Past expiry date",overview.counts.dateEnded]
+ ]){
+  const card=document.createElement("div");card.className="finance-metric";
+  const value=clean("strong",count),label=clean("span",name);
+  card.append(value,label);cards.appendChild(card);
+ }
+ box.appendChild(cards);
+ const table=document.createElement("div");table.className="finance-balances";
+ table.appendChild(clean("h4","Pending balances by country and currency"));
+ const pending=overview.byCountryCurrency.filter(x=>x.pending>0||x.active>0||x.expiring14Days>0);
+ if(!pending.length)table.appendChild(clean("p","No current active or pending awards."));
+ for(const row of pending){
+  const line=clean("p",row.countryCode+" · "+row.currency+" — "+
+   row.active+" active, "+row.pending+" pending, "+row.expiring14Days+" nearing expiry; "+
+   money(row.pendingMinor,row.currency)+" awaiting external settlement; "+
+   money(row.activeDiscountMinor,row.currency)+" discounts on currently active places.");
+  line.className="finance-balance-line";table.appendChild(line);
+ }
+ box.appendChild(table);
+ const note=document.createElement("p");note.className="finance-note";
+ note.textContent=overview.note;box.appendChild(note);
+ const attestations=document.createElement("details");attestations.className="finance-attestations";
+ attestations.appendChild(clean("summary","Owner-attested payment records (not bank-verified)"));
+ if(!overview.manualAttestations.length)attestations.appendChild(clean("p","No manual settlement attestations recorded."));
+ for(const row of overview.manualAttestations)
+  attestations.appendChild(clean("p",row.currency+": "+row.count+" attestations totalling "+money(row.amountMinor,row.currency)+
+   " — administrator-recorded history, not verified bank revenue."));
+ box.appendChild(attestations);
+ box.appendChild(clean("p","As of "+new Date(overview.asOf).toLocaleString()+" · grant register below shows up to 200 recent entries."));
 }
 function renderFinance(){
  const current=plans.filter(x=>x.status==="ACTIVE"),toSelect=current.map(p=>({value:p.id,
@@ -99,10 +138,12 @@ function setDiscountByType(){
 }
 async function refreshFinance(){
  if(user?.role!=="accountable_manager")return;
- const [feeData,grantData,studentData]=await Promise.all([
-  api("/api/admin/fees"),api("/api/admin/grants"),api("/api/admin/students")
+ const [feeData,grantData,studentData,overviewData]=await Promise.all([
+  api("/api/admin/fees"),api("/api/admin/grants"),api("/api/admin/students"),
+  api("/api/admin/finance/overview")
  ]);
- plans=feeData.plans;grants=grantData.grants;students=studentData.students;renderFinance();
+ plans=feeData.plans;grants=grantData.grants;students=studentData.students;overview=overviewData;
+ renderFinanceOverview();renderFinance();
 }
 async function refreshStudent(){
  if(user?.role!=="student")return;
@@ -185,7 +226,7 @@ document.addEventListener("agsa:session",event=>{
  show("myAccessPanel",user?.role==="student");
  if(user?.role==="accountable_manager")void task(refreshFinance);
  if(user?.role==="student")void task(refreshStudent);
- if(!user){plans=[];grants=[];students=[];$("feePlanList").replaceChildren();$("grantList").replaceChildren();$("myAccessList").replaceChildren()}
+ if(!user){plans=[];grants=[];students=[];overview=null;$("feePlanList").replaceChildren();$("grantList").replaceChildren();$("myAccessList").replaceChildren();$("financeOverview").replaceChildren()}
 });
 setDiscountByType();
 })();
