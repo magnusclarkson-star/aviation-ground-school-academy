@@ -34,10 +34,14 @@ The production server now starts with `ACADEMY_ACCESS_STATE=closed` unless an au
 
 On Render, set `HOST=0.0.0.0` and use the assigned `PORT`; local-only service binding remains the default. This is **only deployment preparation**. The `restricted` state is not MFA or proof of an external gateway. Do not expose the private portal to the public or enter real learner records until an independently tested access gateway, MFA, privacy processes, backups and production operational reviews are completed. See [the private hosting checklist](../docs/ACADEMY-PRIVATE-HOSTING-PREFLIGHT.md).
 
+## Isolated runtime container package
+
+For an image build without embedding private certificate artwork or test secrets, use `docker build -f academy-secure/Dockerfile -t agsa-private:staging academy-secure` from the repository root. The image runs as an unprivileged user with production access closed by default. Do not create a publicly reachable student portal until an independent MFA/access gateway, verified PostgreSQL TLS, restricted database roles, backup recovery and privacy review are in place. See the [private hosting preflight](../docs/ACADEMY-PRIVATE-HOSTING-PREFLIGHT.md).
+
 ## Run in an isolated secure environment (not on GitHub Pages)
 
 1. Use a dedicated PostgreSQL 16+ instance on private networking and a separately hosted Node.js 22+ environment behind an HTTPS reverse proxy. Create migration owner and restricted application database users. Configure verified remote database TLS, encrypted managed backups, security monitoring and a suitable secret manager.
-2. Install exact declared dependencies: `cd academy-secure && npm install` (generate, review and commit a lockfile before production deployment). Do not put secrets in the repository.
+2. Install the exact verified direct and transitive dependencies: `cd academy-secure && npm ci --ignore-scripts --no-audit --no-fund`, using the committed `package-lock.json`. The container build uses the same locked installation. Review dependency advisories and base image digest separately. Do not put secrets in the repository.
 3. Using a migration-capable connection: `psql "$DATABASE_URL" -f schema.sql`. Restrict the running application user to necessary DML; do not make it a schema owner, superuser or a role allowed to disable triggers.
 4. Set `ACADEMY_ORIGIN` to the exact external HTTPS origin and `DATABASE_URL` to the private PostgreSQL DSN using `sslmode=verify-full`. The service binds localhost by default; use a properly configured TLS terminator to route access.
 5. For the **first** accountable manager only, supply `ACADEMY_ENABLE_BOOTSTRAP=true`, `ACADEMY_BOOTSTRAP_EMAIL` and `ACADEMY_BOOTSTRAP_PASSWORD` from a secret manager to `npm run bootstrap`. The script rejects additional bootstrap accounts. Immediately remove bootstrap settings, rotate exposed secrets and enable supported MFA through an identity provider before a public launch.

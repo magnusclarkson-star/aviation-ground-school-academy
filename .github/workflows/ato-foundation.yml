@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install isolated private PDF and PostgreSQL dependencies
-        run: npm install --prefix academy-secure --ignore-scripts --no-audit --no-fund
+        run: npm ci --prefix academy-secure --ignore-scripts --no-audit --no-fund
       - run: node --check academy-secure/policy.mjs
       - run: node --check academy-secure/auth.mjs
       - run: node --check academy-secure/server.mjs
@@ -50,6 +50,43 @@ jobs:
       - run: node --check academy-secure/master-artwork-portal.js
       - run: node --check academy-secure/original-certificate-pdf.mjs
       - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/deployment-preflight.test.mjs academy-secure/tests/closed-portal.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/finance-overview.test.mjs academy-secure/tests/signature-vault.test.mjs academy-secure/tests/document.test.mjs academy-secure/tests/master-artwork.test.mjs
+  private-container-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated private runtime from its own context
+        run: docker build --file academy-secure/Dockerfile --tag agsa-private:ci academy-secure
+      - name: Confirm original certificate files and test secrets are not packaged
+        run: |
+          docker run --rm --entrypoint /bin/sh agsa-private:ci -ec '
+            test -f /srv/academy-private/server.mjs
+            test -f /srv/academy-private/package-lock.json
+            test ! -e /srv/academy-private/.env.example
+            test ! -e /srv/academy-private/schema.sql
+            test ! -e /srv/assets/certificates
+            test ! -e /srv/academy-private/tests
+            test "$(id -u)" = 1000
+          '
+      - name: Closed image liveness and fail-closed API smoke test
+        run: |
+          set -euo pipefail
+          docker run -d --name agsa-private-smoke \
+            -e NODE_ENV=test -e ACADEMY_ACCESS_STATE=closed \
+            -e ACADEMY_ORIGIN=http://127.0.0.1:8787 \
+            -e DATABASE_URL=postgresql://test:unused@127.0.0.1:54329/unreachable \
+            -p 127.0.0.1:18887:8787 agsa-private:ci
+          trap 'docker rm -f agsa-private-smoke >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:18887/api/health -o /tmp/agsa-health; then break; fi
+            sleep 0.25
+          done
+          grep -q '"status":"ok"' /tmp/agsa-health
+          status=$(curl -sS -o /tmp/agsa-ready -w '%{http_code}' http://127.0.0.1:18887/api/ready)
+          test "$status" = 503
+          grep -q 'PRIVATE_PORTAL_CLOSED' /tmp/agsa-ready
+          status=$(curl -sS -o /tmp/agsa-portal -w '%{http_code}' http://127.0.0.1:18887/)
+          test "$status" = 503
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -75,6 +112,6 @@ jobs:
         with:
           node-version: '22'
       - name: Install private-service dependency for isolated CI
-        run: npm install --prefix academy-secure --ignore-scripts --no-audit --no-fund
+        run: npm ci --prefix academy-secure --ignore-scripts --no-audit --no-fund
       - name: Execute PostgreSQL-backed integration and authority gate checks
         run: node --test academy-secure/tests/integration.test.mjs
