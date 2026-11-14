@@ -92,8 +92,8 @@ for(const [style,key,parts] of [
  }
 }
 const galleryHtml=await readFile(path.join(output,"academy-certificate-gallery.html"),"utf8");
-assert.doesNotMatch(galleryHtml,/assets\\/certificates\\/original-/);
-assert.match(galleryHtml,/assets\\/certificate-previews\\/formal-sample\\.png/);
+assert.ok(!galleryHtml.includes("assets/certificates/original-"),"Public HTML must not reference clean masters");
+assert.ok(galleryHtml.includes("assets/certificate-previews/formal-sample.png"));
 // An actual installable flight-practice PWA must ship both raster icons,
 // a same-origin manifest and its runtime offline cache worker.
 const manifestFile=path.join(output,"flight-sim-manifest.json");
