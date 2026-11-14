@@ -6,6 +6,9 @@ on:
       - 'docs/SLCAA-ATO-CERTIFICATION-DOSSIER.md'
       - 'docs/SLCAA-PREAPPLICATION-INQUIRY-DRAFT.md'
       - 'standards-readiness.html'
+      - 'infra/render-private-staging.yaml'
+      - 'docs/ACADEMY-RENDER-PRIVATE-STAGING.md'
+      - 'scripts/test-render-private-staging.mjs'
       - '.github/workflows/ato-foundation.yml'
   push:
     branches: [main]
@@ -32,6 +35,7 @@ jobs:
       - run: node --check academy-secure/mfa-routes.mjs
       - run: node --check academy-secure/server.mjs
       - run: node --check academy-secure/deployment-preflight.mjs
+      - run: node --test scripts/test-render-private-staging.mjs
       - run: node --check academy-secure/bootstrap-admin.mjs
       - run: node --check academy-secure/portal.js
       - run: node --check academy-secure/fees-policy.mjs
