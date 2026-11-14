@@ -2,7 +2,8 @@
 // A checksum match prevents the app from substituting degraded or redesigned models.
 // These decorative images are not staff signatures or regulator authorisations.
 import {createHash} from "node:crypto";
-import {readFile} from "node:fs/promises";
+import {readFile,lstat} from "node:fs/promises";
+import {isAbsolute,join} from "node:path";
 export const MASTER_ARTWORK=Object.freeze({
  FORMAL_TRADITIONAL:Object.freeze({filename:"formal-traditional-burgundy.png",sha256:"6050a0603674d7b5e402c0c21b477ef76b04b107e6abc61c13a314978d5f7986"}),
  SCOUT_MODERN:Object.freeze({filename:"scouts-modern-aviation.png",sha256:"e5a3fe35698e9637a37ffb24218ee1fbf79074e0232d0e93199eca7ccf8d98c9"}),
@@ -44,6 +45,32 @@ export async function bundledApprovedArtwork(style){
  bundledCache.set(style,bytes);
  return Buffer.from(bytes);
 }
+// Real issued certificate masters should come from a restricted server-side
+// directory (or an administrator-owned private database record), never a public
+// website. Local source fallback is permitted for development/tests ONLY.
+function privateMasterDirectory(){
+ const dir=String(process.env.ACADEMY_CERTIFICATE_MASTER_DIR||"").trim();
+ if(!dir)return null;
+ if(!isAbsolute(dir))throw Error("ACADEMY_CERTIFICATE_MASTER_DIR must be an absolute private filesystem path");
+ return dir;
+}
+async function restrictedMasterArtwork(style){
+ const expected=MASTER_ARTWORK[style];
+ if(!expected)throw Error("Unknown approved certificate style");
+ const directory=privateMasterDirectory();
+ if(directory){
+  const file=join(directory,expected.filename);
+  const info=await lstat(file);
+  if(!info.isFile()||info.isSymbolicLink())throw Error("Private Academy certificate master must be a regular file, not a symlink");
+  if(info.size<50000||info.size>6000000)throw Error("Private certificate master size outside allowed bounds");
+  const bytes=await readFile(file);
+  validateMasterArtwork(bytes,style);
+  return bytes;
+ }
+ if(process.env.NODE_ENV==="production")
+  throw Error("Original Academy certificate master is not provisioned in the private store");
+ return bundledApprovedArtwork(style);
+}
 export async function originalArtworkFor(db,style){
  const expected=MASTER_ARTWORK[style];
  if(!expected)throw Error("Unknown certificate style");
@@ -54,9 +81,9 @@ export async function originalArtworkFor(db,style){
   if(rows[0].sha256!==expected.sha256)throw Error("Stored original artwork fingerprint differs from the approved master");
   return buf;
  }
- // No upload is necessary: fall back to the EXACT checksum-matched approved
- // source image. Academic, payment, role and release checks are unchanged.
- return bundledApprovedArtwork(style);
+ // Existing owner-installed, SHA-256-verified records take precedence. In
+ // production the next source must be restricted storage; never public source.
+ return restrictedMasterArtwork(style);
 }
 export async function handleMasterArtworkRoute({req,res,method,pathname,actor,db,transaction,audit,send,fail}){
  if(!pathname.startsWith("/api/admin/certificate-master"))return false;
@@ -65,13 +92,22 @@ export async function handleMasterArtworkRoute({req,res,method,pathname,actor,db
   const {rows}=await db.query("SELECT style,sha256,uploaded_at FROM academy_certificate_master_artwork ORDER BY style");
   const state=await Promise.all(Object.entries(MASTER_ARTWORK).map(async([style,expected])=>{
    const got=rows.find(x=>x.style===style);
-   let bundled=false;try{await bundledApprovedArtwork(style);bundled=true}catch{}
+   let privateFile=false,bundledDev=false;
+   const fromDatabase=!!got&&got.sha256===expected.sha256;
+   try{
+    const path=privateMasterDirectory();
+    if(path){await restrictedMasterArtwork(style);privateFile=true}
+    else if(process.env.NODE_ENV!=="production"){await bundledApprovedArtwork(style);bundledDev=true}
+   }catch{}
    return {style,filename:expected.filename,sha256:expected.sha256,
-    installed:!!got&&got.sha256===expected.sha256||bundled,bundledOriginal:bundled,
+    installed:fromDatabase||privateFile||bundledDev,
+    bundledOriginal:bundledDev,privateFile,storedInDatabase:fromDatabase,
     uploadedAt:got?.uploaded_at||null};
   }));
   send(res,200,{originalMasters:state,allInstalled:state.every(x=>x.installed),
-   note:"Exact three owner-approved originals are permanently bundled; no upload needed."});return true;
+   note:process.env.NODE_ENV==="production"?
+    "Production requires a restricted private certificate master directory or verified administrator-installed records.":
+    "Local development can use checksum-verified bundled originals; production requires private storage."});return true;
  }
  const m=/^\/api\/admin\/certificate-master\/(FORMAL_TRADITIONAL|SCOUT_MODERN|ENTHUSIAST_NAVY_GOLD)$/.exec(pathname);
  if(!m)fail(404,"Artwork route not found");

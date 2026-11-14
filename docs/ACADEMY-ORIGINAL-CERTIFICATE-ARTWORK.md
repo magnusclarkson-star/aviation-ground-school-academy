@@ -1,5 +1,5 @@
 # Original Academy certificate designs — controlled master-artwork register
-**Status: implemented upload and print integration; original PNGs not included in the public GitHub repository.**
+**Status (14 Nov 2026): exact originals verified and publicly watermarked gallery deployed; original clean source segments remain present in the public GitHub repository and history. Private master-storage migration is not finished.**
 
 On 13 November 2026 the administrator selected the **original** high-resolution certificate artworks shown in the Academy project discussion. Earlier Academy source used simplified CSS and vector approximations; these are **not accepted substitutes**. This change keeps the three original images unchanged and provides administrator-only upload and checksum verification.
 
@@ -9,7 +9,7 @@ On 13 November 2026 the administrator selected the **original** high-resolution 
 | Scouts / Air Scouts | `scouts-modern-aviation.png` (teal/silver aviation runway) | `e5a3fe35698e9637a37ffb24218ee1fbf79074e0232d0e93199eca7ccf8d98c9` |
 | Enthusiasts | `enthusiast-navy-gold.png` (navy/gold avionics instruments) | `03de002823c75cbe8f7a93ad756bd7361f51f51287f4f8ecb1ccc93c5d4e8be1` |
 
-All original files measure **1491 × 1055 PNG pixels**. The hashes pin the **exact bytes**, not only visual similarity. The build deliberately does **not** embed the artwork in publicly accessible source files or create alternate recreated artwork.
+All original files measure **1491 × 1055 PNG pixels**. The hashes pin the **exact bytes**, not only visual similarity. The public gallery now displays separate raster PNG previews with SAMPLE / NOT ISSUED permanently embedded, not the original PNG bytes. However, the **clean original source bytes are still recoverable from historical and current GitHub repository files**. Do not treat the public repository or its history as secure storage. See [Certificate security completion](ACADEMY-CERTIFICATE-SECURITY-COMPLETION.md).
 
 ## Administrator installation
 
