@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -50,12 +50,15 @@ try{
  assert.equal(await desktop.locator(".notice-compact").count(),1);
  assert.match(await desktop.locator(".scenic-hero .eyebrow").textContent(),/compact reader v2/i);
  assert.match(await desktop.locator(".scenic-hero .eyebrow").textContent(),/focus layout v3/i);
- assert.ok((await desktop.locator(".scenic-hero").boundingBox()).height<85,
-  "Focus layout should have a narrow brand strip, not a tall marketing banner");
+ assert.equal(await desktop.locator(".scenic-hero").isVisible(),false);
+ assert.ok((await desktop.locator(".site-head").boundingBox()).height<=112,
+  "Owner-approved banner should occupy one row, not four");
+ assert.ok(await desktop.evaluate(()=>getComputedStyle(document.querySelector(".site-head")).backgroundImage.includes("illustrated-cessna-structures-lecture.webp")),
+  "Site banner must use the original full-width Academy design");
  assert.ok(await desktop.evaluate(()=>[...document.styleSheets].some(s=>s.href?.includes("academy-coursebook-focus-v3.css"))),
   "Actual browser must apply the V3 stylesheet");
- assert.ok((await desktop.locator(".scenic-hero").boundingBox()).height<165,
-   "Academy banner must not consume half the desktop screen");
+ assert.equal(await desktop.locator(".lesson-tools-collapse").isVisible(),true);
+ assert.equal(await desktop.locator(".lesson-tools-collapse").getAttribute("open"),null);
  const readerPanel=await desktop.locator('[aria-label="Lesson reading and self-check"]').boundingBox();
  assert.ok(readerPanel.width>=850,"Textbook reader should use the available 1280px desktop width");
  assert.ok(readerPanel.y<410,"Module title and teaching content should begin near top of screen");
@@ -73,11 +76,11 @@ try{
    return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
   return {notes:ratio(".textbook-prose p",".academy-textbook-chapter"),
    advanced:ratio(".deep-lesson p",".deep-lesson"),
-   moduleMeta:ratio("#moduleMeta",'[aria-label="Lesson reading and self-check"]')};
+   introHeading:ratio(".textbook-course-intro h3",".textbook-course-intro")};
  });
  assert.ok(contrast.notes>=7,"Core textbook text must have strong contrast: "+JSON.stringify(contrast));
  assert.ok(contrast.advanced>=7,"Advanced lesson text must have strong contrast: "+JSON.stringify(contrast));
- assert.ok(contrast.moduleMeta>=4.5,"Module metadata must be legible: "+JSON.stringify(contrast));
+ assert.ok(contrast.introHeading>=4.5,"Course note headings must be legible: "+JSON.stringify(contrast));
  assert.equal(await desktop.locator(".scenic-gold-strip").count(),0); // Retired unused banner row
  assert.ok((await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage)).includes("aviation-real-world-photographs.webp"));
  assert.equal(await desktop.locator(".textbook-course-intro").count(),1);
@@ -144,12 +147,24 @@ try{
  assert.match(await desktop.locator("#deepCourseProgress").textContent(),/1\/12/);
  await desktop.reload();
  assert.match(await desktop.locator("#deepModuleStatus").textContent(),/target met/);
+ await desktop.locator(".lesson-tools-collapse>summary").click();
  await desktop.locator("#route").selectOption("pilots");
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
  assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.match(await desktop.locator(".textbook-prose p").first().textContent(),/atmosphere/i);
+ await desktop.locator('#moduleList button[data-module="aircraft"]').click();
+ assert.equal(await desktop.locator(".original-coursebook-plate").count(),1,
+  "Aircraft lesson must present the owner's original Cessna coursebook");
+ assert.ok((await desktop.locator(".original-plate-viewport").boundingBox()).width>=850,
+  "Actual Cessna image must use the broad lesson area");
+ assert.match(await desktop.locator(".original-plate-viewport img").getAttribute("src"),/illustrated-cessna-structures-lecture\.webp/);
+ assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
+ await desktop.locator('#moduleList button[data-module="meteorology"]').click();
+ assert.equal(await desktop.locator(".original-coursebook-plate").count(),0,
+  "Module switch should not leave an unrelated aircraft plate");
+
  assert.equal(await desktop.locator(".textbook-glossary dt").count(),6);
 
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
@@ -197,6 +212,7 @@ try{
  assert.equal(await desktop.locator("#completionCelebration").isVisible(),true);
  assert.match(await desktop.locator("#completionCelebration").textContent(),/not a qualification/i);
  desktop.once("dialog",dialog=>dialog.accept());
+ await desktop.locator(".lesson-tools-collapse>summary").click();
  await desktop.locator(".study-tools>summary").click();
  await desktop.locator("#clearRecord").click();
  assert.equal(await desktop.locator("#completionCelebration").isVisible(),false);
@@ -212,10 +228,9 @@ try{
  assert.equal(await phone.locator("#mobileModuleJump option").count(),await phone.locator("#moduleList button").count());
  assert.equal(await phone.locator("#mobileModuleJump").isVisible(),true);
  assert.equal(await phone.locator("#moduleList").isVisible(),false);
- assert.ok((await phone.locator(".scenic-hero").boundingBox()).height<80,
-  "V3 phone header should display a compact strip");
- assert.ok((await phone.locator(".scenic-hero").boundingBox()).height<125,
-  "Phone header must remain compact");
+ assert.equal(await phone.locator(".scenic-hero").isVisible(),false);
+ assert.ok((await phone.locator(".site-head").boundingBox()).height<=85,
+  "Phone Academy banner should be one row");
 
  assert.equal(await phone.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.equal(await phone.locator(".textbook-worked-case").count(),3);
