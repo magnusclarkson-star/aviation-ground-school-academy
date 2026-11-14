@@ -1,7 +1,9 @@
 // Private formal document fees, waivers, independent identity review and printable PDF release.
 // Course completion records and transcript results are never created by payment.
 import {calculateAward,validatePrice} from "./fees-policy.mjs";
-import {STYLES,ACADEMY_STANDARD_STYLE,validateOptions,renderCourseCertificate,renderAcademicTranscript} from "./document-pdf.mjs";
+import {STYLES,validateOptions,renderCourseCertificate,renderAcademicTranscript} from "./document-pdf.mjs";
+import {renderOriginalCertificate} from "./original-certificate-pdf.mjs";
+import {originalArtworkFor} from "./master-artwork.mjs";
 import {courseApproved} from "./policy.mjs";
 import {keyFromEnvironment,decryptSignature,DEFAULT_PREFS} from "./signature-vault.mjs";
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -91,15 +93,17 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
       assessments:[],completion:null}],verifiedIdentity:false
    },{options,sample:true});
   }else{
-   // Permanent standard specimen: no uploaded certificate image is required.
-   // This owner-only endpoint still uses fictional data and a sample watermark.
-   bytes=await renderCourseCertificate({
+   const selected=stored?.style||defaults[audience];
+   let master;
+   try{master=await originalArtworkFor(db,selected)}
+   catch(e){fail(409,"Original certificate artwork is not installed: "+String(e.message).slice(0,120))}
+   bytes=await renderOriginalCertificate({
     name:"Example Academy Learner",serial:"AGSA-COURSE-"+"0".repeat(24),
     courseTitle:audience==="FORMAL"?"Aircraft Accident & Incident Investigation":
      audience==="SCOUT"?"Air Scouts Aviation Foundations":"Aviation Ground School Foundations",
     issuedAt:"2026-11-13T12:00:00Z",completedAt:"2026-11-13T12:00:00Z",
     verifiedAcademicRecord:true
-   },{style:ACADEMY_STANDARD_STYLE,options,sample:true});
+   },{style:selected,masterPng:master,options,sample:true});
   }
   binaryPdf(res,bytes,"agsa-"+audience.toLowerCase()+"-sample-not-issued.pdf","inline");
   return true;
@@ -141,12 +145,11 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
     const docs=await evidence(db);
     if(!courseApproved(docs,grant.course_id))fail(403,"Current course regulatory approval cannot be confirmed");
     png=await signatureFor(db,audience,opts);
-    // Document grants, identity verification, approved course evidence and
-    // staff-attested completion remain required. Only the decoration is fixed.
-    document=await renderCourseCertificate({
+    const master=await originalArtworkFor(db,settings.style);
+    document=await renderOriginalCertificate({
      name:people[0].legal_name,serial:completed[0].serial,courseTitle:completed[0].title,
      completedAt:completed[0].attested_at,issuedAt:grant.activated_at,verifiedAcademicRecord:true
-    },{style:ACADEMY_STANDARD_STYLE,options:opts,signaturePng:png});
+    },{style:settings.style,masterPng:master,options:opts,signaturePng:png});
    }else{
     const entries=await transcriptData(db,actor.id,grant.activated_at);
     if(!entries.length)fail(409,"No private course records exist for this transcript");
