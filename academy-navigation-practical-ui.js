@@ -100,7 +100,7 @@ function drawTrainingMap(canvas,result){
  ctx.beginPath();ctx.arc(bx,by,8,0,Math.PI*2);ctx.fill();
  // With an eastbound desired track, negative correction points north.
  const correction=result.correctionDegrees*Math.PI/180;
- const length=215,angle=-correction;
+ const length=215,angle=correction; // screen Y increases downwards; negative WCA points north
  arrow(ctx,ax,ay,ax+length*Math.cos(angle),ay+length*Math.sin(angle),"#ffd08a",6);
  ctx.font="bold 16px system-ui";
  ctx.fillStyle="#d8f2fb";ctx.fillText("Desired track 090° true",332,168);
