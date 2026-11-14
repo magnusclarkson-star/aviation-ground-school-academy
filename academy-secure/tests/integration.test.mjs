@@ -192,6 +192,13 @@ test("private ATO roles, verified-source gates and independent completion record
    "Training management cannot enrol students who lack owner-granted access");
   assert.equal((await call("/api/admin/fees","GET",undefined,student)).status,403);
   assert.equal((await call("/api/admin/grants","GET",undefined,head)).status,403);
+  assert.equal((await call("/api/admin/finance/overview","GET",undefined,student)).status,403);
+  assert.equal((await call("/api/admin/finance/overview","GET",undefined,head)).status,403);
+  const emptyFinance=await call("/api/admin/finance/overview","GET",undefined,admin);
+  assert.equal(emptyFinance.status,200,JSON.stringify(emptyFinance.body));
+  assert.equal(emptyFinance.body.counts.active,0);
+  assert.equal(emptyFinance.body.bankVerifiedRevenue,false);
+  assert.equal(emptyFinance.body.paymentProviderConnected,false);
   const price=await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"SL",
    currency:"SLE",billingPeriod:"ONE_TIME",amountMinor:150000},admin);
   assert.equal(price.status,201,JSON.stringify(price.body));
@@ -206,6 +213,11 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal(scholarship.body.grant.status,"ACTIVE");
   assert.equal(scholarship.body.grant.payable_minor,"0");
   assert.equal(scholarship.body.manualSettlementRequired,false);
+  const ownerFinanceAfterScholarship=(await call("/api/admin/finance/overview","GET",undefined,admin)).body;
+  assert.equal(ownerFinanceAfterScholarship.counts.active,1);
+  assert.equal(ownerFinanceAfterScholarship.counts.discountedActive,1);
+  assert.equal(ownerFinanceAfterScholarship.counts.pending,0);
+  assert.equal(ownerFinanceAfterScholarship.byCountryCurrency.find(x=>x.currency==="SLE").activeDiscountMinor,"150000");
   assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,student)).status,200);
   assert.equal((await call("/api/my/access","GET",undefined,student)).body.accessGrants.length,1);
   const revisedPrice=await call("/api/admin/fees","POST",{courseId:"ppl-theory",countryCode:"SL",
@@ -227,6 +239,11 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal(partial.status,201,JSON.stringify(partial.body));
   assert.equal(partial.body.grant.payable_minor,"8000");
   assert.equal(partial.body.grant.status,"PENDING_PAYMENT");
+  const pendingFinance=(await call("/api/admin/finance/overview","GET",undefined,admin)).body;
+  assert.equal(pendingFinance.counts.pending,1);
+  assert.equal(pendingFinance.counts.active,1);
+  assert.equal(pendingFinance.byCountryCurrency.find(x=>x.currency==="GBP").pendingMinor,"8000");
+  assert.deepEqual(pendingFinance.manualAttestations,[]);
   assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,inviteeSession)).status,403,
     "A partially funded place without verified settlement must remain locked");
   const wrongAmount=await call("/api/admin/grants/"+partial.body.grant.id+"/confirm-payment","POST",{
@@ -239,6 +256,12 @@ test("private ATO roles, verified-source gates and independent completion record
    notes:"Synthetic test of fully settled external funds"
   },admin);
   assert.equal(settled.status,200,JSON.stringify(settled.body));
+  const afterSettlement=(await call("/api/admin/finance/overview","GET",undefined,admin)).body;
+  assert.equal(afterSettlement.counts.pending,0);
+  assert.equal(afterSettlement.counts.active,2);
+  assert.equal(afterSettlement.byCountryCurrency.find(x=>x.currency==="GBP").pendingMinor,"0");
+  assert.equal(afterSettlement.manualAttestations.find(x=>x.currency==="GBP").amountMinor,"8000");
+  assert.equal(afterSettlement.bankVerifiedRevenue,false);
   assert.equal((await call("/api/my/courses/ppl-theory/access","GET",undefined,inviteeSession)).status,200);
   assert.equal((await call("/api/admin/grants/"+partial.body.grant.id+"/confirm-payment","POST",{
    amountMinor:8000,reference:"SYNTHETIC-TRANSFER-001",evidenceSha256:"e".repeat(64),
