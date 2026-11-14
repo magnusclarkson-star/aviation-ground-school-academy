@@ -12,6 +12,8 @@ import {handleSignatureRoute} from "./signature-routes.mjs";
 import {handleDocumentRoute} from "./document-routes.mjs";
 import {handleMasterArtworkRoute} from "./master-artwork.mjs";
 import {validateDeploymentSettings} from "./deployment-preflight.mjs";
+import {handleMfaRoute} from "./mfa-routes.mjs";
+import {isStaff} from "./staff-mfa.mjs";
 
 const deployment=validateDeploymentSettings(process.env);
 const httpPort=deployment.port;
@@ -57,7 +59,7 @@ async function audit(db,actor,action,resource,id,context={}){
 }
 async function actorFor(req){
  const token=cookieToken(req.headers.cookie);if(!token)fail(401,"Sign-in required");
- const {rows}=await pool.query(`SELECT u.id,u.email,u.role,u.adult_confirmed
+ const {rows}=await pool.query(`SELECT u.id,u.email,u.role,u.adult_confirmed,s.mfa_verified_at
  FROM academy_sessions s JOIN academy_users u ON u.id=s.user_id
  WHERE s.token_hash=$1 AND s.revoked_at IS NULL AND s.expires_at>now() AND u.active=true AND u.disabled_at IS NULL`,[sha256(token)]);
  if(!rows[0])fail(401,"Session expired or revoked");
@@ -133,9 +135,15 @@ async function handle(req,res){
    const token=newToken(),hash=sha256(token);
    await transaction(async db=>{
     await db.query("INSERT INTO academy_sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+($3::int * interval '1 hour'))",[hash,candidate.id,SESSION_HOURS]);
-    await audit(db,candidate.id,"LOGIN","SESSION",hash.slice(0,14));
+    await audit(db,candidate.id,isStaff(candidate.role)?"LOGIN_PASSWORD_ONLY":"LOGIN","SESSION",hash.slice(0,14));
    });
-   send(res,200,{signedIn:true,role:candidate.role}, {"Set-Cookie":sessionCookie(token,https)});return;
+   let mfaEnrolled=false;
+   if(isStaff(candidate.role)){
+    const {rows:enrollment}=await pool.query("SELECT status FROM academy_staff_mfa WHERE user_id=$1",[candidate.id]);
+    mfaEnrolled=enrollment[0]?.status==="ACTIVE";
+   }
+   send(res,200,{signedIn:!isStaff(candidate.role),role:candidate.role,
+    mfaRequired:isStaff(candidate.role),mfaEnrolled}, {"Set-Cookie":sessionCookie(token,https)});return;
   }
   if(method==="POST"&&pathname==="/api/activate"){
    const body=await json(req),email=validateEmail(body.email),password=validatePassword(body.password),token=requiredString(body,"token",64,64);
@@ -154,6 +162,12 @@ async function handle(req,res){
    send(res,201,{activated:true,role:user.role,signInRequired:true});return;
   }
   const actor=await actorFor(req);
+  if(await handleMfaRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail,
+    failureCount,incrementFailure,clientIp}))return;
+  // Password-only staff sessions cannot view, change or issue any Academy
+  // material before authenticator verification. Logout remains permitted.
+  if(isStaff(actor.role)&&!actor.mfa_verified_at&&!(method==="POST"&&pathname==="/api/logout"))
+   fail(403,"Staff authenticator verification required");
   if(await handleMasterArtworkRoute({req,res,method,pathname,actor,db:pool,transaction,audit,send,fail}))return;
   if(await handleDocumentRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;
   if(await handleSignatureRoute({req,res,method,pathname,actor,db:pool,transaction,audit,json,send,fail}))return;

@@ -5,6 +5,7 @@ import {readFile} from "node:fs/promises";
 import pg from "pg";
 const {Pool}=pg;
 import {hashPassword} from "../auth.mjs";
+import {totp} from "../staff-mfa.mjs";
 import {deflateSync} from "node:zlib";
 function pngChunk(type,payload){
  const body=Buffer.concat([Buffer.from(type),payload]),length=Buffer.alloc(4);
@@ -51,7 +52,7 @@ test("private ATO roles, verified-source gates and independent completion record
   child=spawn(process.execPath,[new URL("../server.mjs",import.meta.url).pathname],{
    cwd:new URL("..",import.meta.url).pathname,
    env:{...process.env,ACADEMY_ORIGIN:ORIGIN,PORT:String(PORT),HOST:"127.0.0.1",DATABASE_URL,
-    ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,73).toString("base64")},
+    ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,73).toString("base64"),ACADEMY_TOTP_ENCRYPTION_KEY:Buffer.alloc(32,91).toString("base64")},
    stdio:["ignore","pipe","pipe"]
   });
   let errOutput="";
@@ -78,6 +79,28 @@ test("private ATO roles, verified-source gates and independent completion record
    const r=await call("/api/login","POST",{email:users[label].email,password:pass});
    assert.equal(r.status,200,JSON.stringify(r.body));
    assert.match(r.cookie,/^agsa_auth=/);
+   if(label!=="student"&&label!=="invitee"){
+    assert.equal(r.body.mfaRequired,true);
+    assert.equal(r.body.signedIn,false);
+    assert.equal((await call("/api/me","GET",undefined,r.cookie)).status,403,
+     "Password-only staff sessions may not read any private records");
+    assert.equal((await call("/api/admin/fees","GET",undefined,r.cookie)).status,403);
+    const setup=await call("/api/mfa/setup","POST",{confirmPassword:pass},r.cookie);
+    assert.equal(setup.status,200,JSON.stringify(setup.body));
+    assert.match(setup.body.uri,/^otpauth:\/\/totp\//);
+    const bad=await call("/api/mfa/enable","POST",{code:"notcode"},r.cookie);
+    assert.equal(bad.status,403);
+    const enable=await call("/api/mfa/enable","POST",{
+     code:totp(setup.body.secret,Math.floor(Date.now()/30000))
+    },r.cookie);
+    assert.equal(enable.status,200,JSON.stringify(enable.body));
+    assert.equal(enable.body.mfaVerified,true);
+    assert.equal((await call("/api/mfa/status","GET",undefined,r.cookie)).body.verified,true);
+    assert.equal((await call("/api/me","GET",undefined,r.cookie)).status,200);
+   }else{
+    assert.equal(r.body.mfaRequired,false);
+    assert.equal(r.body.signedIn,true);
+   }
    return r.cookie;
   }
   const initial=await call("/api/public/approval");
@@ -86,6 +109,35 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/me")).status,401);
   const student=await login("student"),head=await login("head"),qa=await login("qa"),admin=await login("admin"),
    instructor=await login("instructor"),examiner=await login("examiner");
+  // Fresh staff sessions require a fresh authenticator challenge. A code from
+  // the preceding verification step is never accepted again.
+  const reLogin=await call("/api/login","POST",{email:users.admin.email,password:pass});
+  assert.equal(reLogin.status,200);
+  assert.equal(reLogin.body.mfaRequired,true);
+  assert.equal(reLogin.body.mfaEnrolled,true);
+  assert.equal((await call("/api/me","GET",undefined,reLogin.cookie)).status,403);
+  const enrolled=await pool.query("SELECT secret_ciphertext,nonce,auth_tag,last_step FROM academy_staff_mfa WHERE user_id=$1",[users.admin.id]);
+  assert.equal(enrolled.rows.length,1);
+  assert.equal(enrolled.rows[0].secret_ciphertext.toString("utf8").includes("otpauth"),false);
+  assert.equal((await call("/api/mfa/verify","POST",{code:"invalid"},reLogin.cookie)).status,403);
+  const currentMfa=await pool.query("SELECT secret_ciphertext,nonce,auth_tag,last_step FROM academy_staff_mfa WHERE user_id=$1",[users.admin.id]);
+  assert.equal(Number(currentMfa.rows[0].last_step)>=0,true);
+  const {openSecret}=await import("../staff-mfa.mjs");
+  const seed=openSecret(currentMfa.rows[0],Buffer.alloc(32,91),users.admin.id);
+  const previouslyUsed=totp(seed,Number(currentMfa.rows[0].last_step));
+  assert.equal((await call("/api/mfa/verify","POST",{code:previouslyUsed},reLogin.cookie)).status,403,
+   "A code used during initial MFA enrollment cannot verify a second session");
+  const nextCode=totp(seed,Number(currentMfa.rows[0].last_step)+1);
+  const secondFactor=await call("/api/mfa/verify","POST",{code:nextCode},reLogin.cookie);
+  assert.equal(secondFactor.status,200,JSON.stringify(secondFactor.body));
+  assert.equal((await call("/api/me","GET",undefined,reLogin.cookie)).status,200);
+  assert.equal((await call("/api/mfa/verify","POST",{code:nextCode},reLogin.cookie)).status,409,
+   "A verified session cannot reuse the code");
+  assert.equal((await call("/api/mfa/setup","POST",{confirmPassword:pass},reLogin.cookie)).status,409,
+   "An enrolled staff account must not silently replace its authenticator");
+  // Re-used MFA codes and session completion are tested via dedicated MFA test.
+  assert.equal((await call("/api/logout","POST",{},reLogin.cookie)).status,200,
+   "MFA sessions must be able to sign out");
   assert.equal((await call("/api/authority/evidence","POST",{},student)).status,403);
 
   // Owner-only signature capture, at-rest encryption and explicit tick boxes.

@@ -6,6 +6,8 @@ This is a standalone, private-server component of the public [Aviation Ground Sc
 
 - Invite-only adult student/staff accounts; no unrestricted signup or youth accounts.
 - Passwords hashed with per-user salt using scrypt; opaque 256-bit cookie sessions hashed before database storage, HTTP-only, SameSite Strict, Secure on HTTPS, with 8-hour expiry and logout revocation.
+- **Staff authenticator MFA:** every accountable manager, training manager, quality reviewer, instructor and examiner signs in with a password and then a six-digit TOTP code. Password-only cookies are restricted to setup, verification and sign-out; they cannot access private student records, signatures, tuition or certificates. The authenticator setup key is displayed after a second password confirmation, encrypted in PostgreSQL with a separate AES-256-GCM key, and activated only after a valid code. A verified time-step is never accepted twice. Wrong attempts are rate-limited. New staff without a registered authenticator cannot bypass setup. Lost devices require an offline, identity-verified administrator recovery process; **there is no password-only MFA bypass or recovery endpoint**.
+
 - Role authorisation for accountable manager, head of training, quality manager, instructor, examiner and student.
 - Manual submission and **independent internal QA review** of authority-issued documentary references and SHA-256 hashes.
 - Distinct ATO certificate, training specifications, training/procedures manual and safety-management acceptance evidence gates. Course approval and examining authority are further independent gates.
@@ -30,7 +32,7 @@ https://slcaa.gov.sl/wp-content/uploads/2024/01/SLCAA-AC-PEL048-Rev-00-CERTIFICA
 
 ## New fail-closed private launch preflight
 
-The production server now starts with `ACADEMY_ACCESS_STATE=closed` unless an authorised operator explicitly configures `restricted`. While closed, login, the portal and all protected endpoints return 503. `/api/health` reports **process liveness only**, and `/api/ready` returns 503 until the portal is deliberately open and the PostgreSQL readiness query succeeds. Production configuration validates the exact HTTPS origin, strict verified PostgreSQL TLS (`sslmode=verify-full`), a correctly sized owner-signature encryption key and disabled bootstrap.
+The production server now starts with `ACADEMY_ACCESS_STATE=closed` unless an authorised operator explicitly configures `restricted`. While closed, login, the portal and all protected endpoints return 503. `/api/health` reports **process liveness only**, and `/api/ready` returns 503 until the portal is deliberately open and the PostgreSQL readiness query succeeds. Production configuration validates the exact HTTPS origin, strict verified PostgreSQL TLS (`sslmode=verify-full`), separate correctly sized signature and staff MFA encryption keys, and disabled bootstrap.
 
 On Render, set `HOST=0.0.0.0` and use the assigned `PORT`; local-only service binding remains the default. This is **only deployment preparation**. The `restricted` state is not MFA or proof of an external gateway. Do not expose the private portal to the public or enter real learner records until an independently tested access gateway, MFA, privacy processes, backups and production operational reviews are completed. See [the private hosting checklist](../docs/ACADEMY-PRIVATE-HOSTING-PREFLIGHT.md).
 

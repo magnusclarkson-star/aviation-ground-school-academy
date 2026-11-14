@@ -41,3 +41,20 @@
 .finance-attestations p{font-size:12px;color:#ebf8ff;margin:5px 0}
 @media(max-width:900px){.finance-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:520px){.finance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-overview{padding:8px}.finance-metric{padding:7px}.finance-metric strong{font-size:20px}}
+
+/* Staff MFA challenge: compact, high contrast and touch-friendly. */
+.mfa-panel{max-width:720px;margin:12px auto;border-color:#a5c1ca;background:#12334b;padding:14px 16px}
+.mfa-panel h2{font-size:19px;color:#ffe3b0}
+.mfa-panel h3{font-size:16px;color:#ffe3b0;margin:6px 0}
+.mfa-panel p{font-size:13px;line-height:1.55;margin:7px 0;color:#f5fbff}
+.mfa-panel label{color:#f2faff;font-size:13px;margin:10px 0}
+.mfa-panel input{font-size:16px}
+.mfa-panel .mfa-secret{display:inline-block;max-width:100%;overflow-wrap:anywhere;
+ border:1px solid #9cc6d4;border-radius:6px;background:#071d31;color:#fff;padding:8px;
+ font:700 15px/1.6 ui-monospace,monospace;letter-spacing:.09em}
+.mfa-panel a{color:#a5edff;text-decoration:underline;text-underline-offset:3px}
+.mfa-panel .toolbar{gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.mfa-panel .toolbar button{font-size:12px;padding:7px 10px}
+.mfa-panel button:focus-visible,.mfa-panel a:focus-visible{outline:3px solid #ffe0a0;outline-offset:2px}
+@media(max-width:520px){.mfa-panel{padding:10px}.mfa-panel .toolbar{align-items:flex-start}
+ .mfa-panel .toolbar h2{font-size:18px}.mfa-panel button{min-height:42px}}
