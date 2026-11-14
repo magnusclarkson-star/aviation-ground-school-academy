@@ -249,11 +249,21 @@ try{
   await card.locator(".load-status").getByText(/verified and displayed/).waitFor({timeout:30000});
   assert.ok(await card.locator(".original-artwork").evaluate(img=>img.complete&&img.naturalWidth===1491&&img.naturalHeight===1055),
    "Exact original approved PNG must render at full resolution: "+key);
-  assert.equal(await card.locator("[data-print]").isDisabled(),false);
+  assert.equal(await card.locator("[data-print]").count(),0,
+   "Approved sample gallery is view-only and has no print controls");
   assert.match(await card.textContent(),/SAMPLE · NOT ISSUED/);
  }
  assert.ok((await standard.locator('[data-original="formal"] .sheet-wrap').boundingBox()).width>=800,
   "Desktop should use the available area for original certificate art");
+ assert.equal(await standard.locator(".print-restriction").isVisible(),false);
+ await standard.emulateMedia({media:"print"});
+ assert.equal(await standard.locator("#gallery").isVisible(),false,
+  "Browser print or Save as PDF must never include public sample images");
+ assert.equal(await standard.locator(".print-restriction").isVisible(),true,
+  "Browser print must display view-only restriction instead of certificate artwork");
+ await standard.emulateMedia({media:"screen"});
+ assert.equal(await standard.locator('[data-original="formal"] .original-artwork').isVisible(),true,
+  "Print restriction must not change approved screen previews");
  await standard.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
