@@ -4,6 +4,23 @@ const page=fs.readFileSync(new URL("../academy-coursebook.html",import.meta.url)
 const css=fs.readFileSync(new URL("../academy-coursebook-layout-v2.css",import.meta.url),"utf8");
 const js=fs.readFileSync(new URL("../academy-coursebook-layout-v2.js",import.meta.url),"utf8");
 const focus=fs.readFileSync(new URL("../academy-coursebook-focus-v3.css",import.meta.url),"utf8");
+const classic=fs.readFileSync(new URL("../academy-coursebook-classic-v4.css",import.meta.url),"utf8");
+const classicJs=fs.readFileSync(new URL("../academy-coursebook-classic-v4.js",import.meta.url),"utf8");
+const academyHome=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const preservedDashboard=fs.readFileSync(new URL("../academy-dashboard.html",import.meta.url),"utf8");
+assert.match(page,/academy-coursebook-classic-v4\.css\?v=20261114-original/);
+assert.match(page,/academy-coursebook-classic-v4\.js\?v=20261114-original/);
+assert.match(page,/class="site-menu"/);
+assert.match(academyHome,/location\.replace\(coursebook\.href\)/);
+assert.match(preservedDashboard,/Flight Training Starts Here/);
+assert.match(classic,/illustrated-cessna-structures-lecture\.webp/);
+assert.match(classic,/\.original-plate-viewport/);
+assert.match(classic,/\.scenic-hero \{display:none!important\}/);
+assert.match(classicJs,/original-coursebook-plate/);
+assert.match(classicJs,/id==="aircraft"/);
+assert.match(classicJs,/tools\.appendChild\(controls\)/);
+assert.match(classicJs,/tools\.appendChild\(notice\)/);
+
 assert.match(page,/academy-coursebook-focus-v3\.css\?v=20261114-focus-v3/);
 assert.match(page,/FOCUS LAYOUT V3/);
 
