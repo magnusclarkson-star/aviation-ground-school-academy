@@ -28,6 +28,7 @@ body { background:#e7edf3; color:var(--classic-ink); }
  box-shadow:0 10px 26px #00172f99;z-index:22;
 }
 .site-menu:not([open]) nav {display:none}
+.site-head .menu-short{display:none}
 .site-menu nav a {color:#fff!important;text-decoration:none;padding:8px 9px;font-size:14px!important;font-weight:700;border:0;}
 .site-menu nav a:hover {background:#1d4e78}
 main {max-width:none;width:100%;margin:0;padding:5px 7px 22px}
@@ -157,7 +158,7 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
  .site-head .brand{
   position:absolute!important;display:flex!important;flex-direction:column;
   justify-content:center;gap:5px;left:59px;top:14px;
-  width:calc(100% - 169px);height:74px;max-width:none;min-width:0;
+  width:calc(100% - 136px);height:74px;max-width:none;min-width:0;
   padding:0;margin:0;clip-path:none;overflow:visible;white-space:normal;
   text-decoration:none;text-align:left;letter-spacing:.2px;
  }
@@ -176,6 +177,8 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
  }
  .site-head .academy-logo-header img{width:34px;height:34px;border-radius:3px}
  .site-head .site-menu{top:9px;right:8px;z-index:25}
+ .site-head .menu-full{display:none}
+ .site-head .menu-short{display:inline}
  .site-head .site-menu>summary{
   padding:8px 9px;min-height:34px;background:#081f3bea;
   border-color:#e4bc72;color:#fff4db;font-size:12px;
@@ -199,7 +202,7 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
 }
 @media(max-width:360px){
  .site-head{height:112px;min-height:112px}
- .site-head .brand{left:52px;top:17px;width:calc(100% - 149px);height:78px}
+ .site-head .brand{left:52px;top:17px;width:calc(100% - 128px);height:78px}
  .site-head .brand-name{font-size:12px;line-height:1.17}
  .site-head .brand-subtitle{font-size:12px}
  .site-head .academy-logo-header{left:7px;top:37px}
