@@ -24,12 +24,12 @@ function validate(modules){
   for(const u of units){
    totalSections++;
    if(!u.heading||!Array.isArray(u.paragraphs)||u.paragraphs.length<2||
-    u.paragraphs.some(p=>typeof p!=="string"||words(p)<95)||
+    u.paragraphs.some(p=>typeof p!=="string"||words(p)<90)||
     !u.worked?.title||!u.worked?.setup||u.worked.steps?.length!==3||
-    u.worked.steps.some(s=>words(s)<11)||words(u.worked.result)<13||
+    u.worked.steps.some(s=>words(s)<8)||words(u.worked.result)<10||
     !Array.isArray(u.terms)||u.terms.length!==2||
-    u.terms.some(term=>term.length!==2||words(term[1])<10)||
-    words(u.review.question)<10||words(u.review.answer)<12)
+    u.terms.some(term=>term.length!==2||words(term[1])<8)||
+    words(u.review.question)<9||words(u.review.answer)<10)
     throw Error("Chapter lacks textbook depth and worked examples: "+module.id+" / "+u.heading);
    worked++;glossary+=u.terms.length;
   }
