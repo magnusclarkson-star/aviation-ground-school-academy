@@ -71,9 +71,8 @@ test("Render private PostgreSQL supports only named internal dpg TLS endpoint",(
  assert.equal(validateDeploymentSettings(env).accessState,"closed");
  // pg-connection-string's libpq-compatible mode enables TLS with the
  // self-signed Render internal cert. It is never allowed for a public DB host.
- const pool=new pg.Pool({connectionString:internal});
- assert.equal(pool.options.ssl?.rejectUnauthorized,false);
- pool.end();
+ const client=new pg.Client({connectionString:internal});
+ assert.equal(client.connectionParameters.ssl?.rejectUnauthorized,false);
  const denied=[
   {...env,RENDER:undefined},
   {...env,NODE_ENV:"test"},
