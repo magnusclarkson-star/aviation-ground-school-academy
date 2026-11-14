@@ -19,6 +19,7 @@ jobs:
       - name: Install pinned V3 scene-graph build tools
         run: npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 sharp@0.35.5
       - run: node scripts/build-flight-sim-v3.mjs
+      - run: node scripts/build-public-certificate-previews.mjs assets/certificate-previews
       - run: node scripts/check-site.mjs
       - run: node --check academy-brand.js
       - run: node --check flight-lab-v2.js
