@@ -63,6 +63,10 @@ test("private ATO roles, verified-source gates and independent completion record
    await new Promise(resolve=>setTimeout(resolve,80));
   }
   assert.ok(up,"private API must start: "+errOutput);
+  const ready=await fetch(ORIGIN+"/api/ready");
+  assert.equal(ready.status,200,"Private service readiness requires working PostgreSQL");
+  assert.equal((await ready.json()).ready,true);
+
   async function call(path,method="GET",payload,token){
    const headers={Origin:ORIGIN,"Content-Type":"application/json"};
    if(token)headers.Cookie=token;
