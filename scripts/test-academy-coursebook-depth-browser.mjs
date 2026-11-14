@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -219,6 +219,31 @@ try{
  assert.equal(await desktop.evaluate(()=>localStorage.getItem(window.AGSADeepCoursebook.KEY)),null);
  assert.deepEqual(errors,[]);
  await desktop.close();
+
+ const wide=await browser.newPage({viewport:{width:1536,height:900}});
+ wide.on("pageerror",e=>errors.push("wide: "+e.message));
+ await wide.goto(base+"?module=aircraft",{waitUntil:"load"});
+ await wide.locator(".original-coursebook-plate").waitFor({state:"visible"});
+ const widePlate=await wide.locator(".original-coursebook-plate").boundingBox();
+ const wideIntro=await wide.locator(".textbook-course-intro").boundingBox();
+ assert.ok(widePlate.width>=540,"Desktop must show a large original Cessna rather than a small thumbnail");
+ assert.ok(widePlate.x+widePlate.width<=wideIntro.x+8,
+  "Desktop reading content must use the space next to the original Cessna plate");
+ assert.ok(wideIntro.width>=360,"Real teaching notes must be readable beside the illustration");
+ assert.ok(await wide.locator(".original-plate-viewport img").evaluate(img=>img.complete&&img.naturalWidth>=1000));
+ await wide.close();
+
+ const standard=await browser.newPage({viewport:{width:1365,height:850}});
+ standard.on("pageerror",e=>errors.push("certificate: "+e.message));
+ await standard.goto("http://127.0.0.1:"+server.address().port+"/academy-certificate-gallery.html",{waitUntil:"load"});
+ assert.equal(await standard.locator(".certificate-card").count(),1);
+ assert.equal(await standard.locator('input[type="file"]').count(),0);
+ assert.ok(await standard.locator("#academyStandard").isVisible(),
+  "Permanent Academy specimen must display automatically without upload");
+ assert.ok((await standard.locator("#academyStandard").boundingBox()).width>=800,
+  "Desktop certificate should occupy the available print-preview area");
+ assert.match(await standard.locator("#academyStandard").textContent(),/SAMPLE · NOT ISSUED/);
+ await standard.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
