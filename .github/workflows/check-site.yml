@@ -75,6 +75,12 @@ jobs:
       - run: node --check academy-coursebook-visual-lessons.js
       - run: node --check academy-coursebook-visual-ui.js
       - run: node scripts/test-academy-visual-lessons.mjs
+      - run: node --check academy-coursebook-chapters-a.js
+      - run: node --check academy-coursebook-chapters-b.js
+      - run: node --check academy-coursebook-chapters-c.js
+      - run: node --check academy-coursebook-chapters.js
+      - run: node --check academy-coursebook-chapter-ui.js
+      - run: node scripts/test-academy-chapter-depth.mjs
       - run: node --check academy-specialist-courses-data.js
       - run: node --check academy-specialist-courses.js
       - run: node scripts/test-academy-specialist-courses.mjs
