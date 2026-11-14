@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -198,6 +198,36 @@ try{
  assert.ok(plateRect.x+plateRect.width<=teachingRect.x+8,
   "Desktop Cessna should sit beside substantial lesson content, not wasted space");
  assert.match(await desktop.locator(".original-plate-viewport img").getAttribute("src"),/illustrated-cessna-structures-lecture\.webp/);
+ const partsLab=desktop.locator("#aircraftIdentificationLab");
+ await partsLab.waitFor({state:"visible"});
+ assert.equal(await partsLab.locator(".aircraft-id-figure").count(),1);
+ assert.equal(await desktop.locator(".textbook-print").count(),0,
+  "Study notes must no longer have a print button");
+ await partsLab.locator(".aircraft-id-picture-button").first().click();
+ assert.equal(await desktop.locator(".aircraft-id-zoom").isVisible(),true);
+ await desktop.locator(".aircraft-id-zoom button").click();
+ assert.equal(await desktop.locator(".aircraft-id-zoom").isVisible(),false);
+ for(const [index,right] of [[0,1],[1,0],[2,2],[3,1]]){
+  assert.match(await partsLab.locator(".aircraft-id-body h4").textContent(),new RegExp("^0"+(index+1)));
+  await partsLab.locator(".aircraft-id-answers input").nth(right).check();
+  await partsLab.getByRole("button",{name:"Check identification"}).click();
+  assert.match(await partsLab.locator(".aircraft-id-feedback").textContent(),/Correct identification/);
+  await partsLab.locator(".aircraft-id-key>summary").click();
+  assert.ok(await partsLab.locator(".aircraft-id-key dt").count()>=3);
+  if(index<3)await partsLab.getByRole("button",{name:"Next picture"}).click();
+ }
+ assert.equal(await partsLab.locator(".aircraft-id-figure").count(),2,
+  "Fixed-wing and rotorcraft comparison uses two separate existing approved pictures");
+ assert.match(await partsLab.locator(".aircraft-id-progress").textContent(),/4 reviewed/);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
+ await desktop.emulateMedia({media:"print"});
+ assert.equal(await desktop.locator("main").isVisible(),false,
+  "Print and Save as PDF must hide all lesson notes, illustrations and assessments");
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),true,
+  "Browser printing educational materials shows only the in-app reading notice");
+ await desktop.emulateMedia({media:"screen"});
+ assert.equal(await desktop.locator("#aircraftIdentificationLab").isVisible(),true);
+
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.equal(await desktop.locator(".original-coursebook-plate").count(),0,
@@ -319,6 +349,22 @@ try{
  await phoneLab.getByRole("button",{name:"Check this decision"}).tap();
  assert.match(await phoneLab.locator(".orientation-lab-frame .orientation-lab-feedback").textContent(),/Good safety judgement/);
  await safetyPhone.close();
+
+
+ const partsPhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ partsPhone.on("pageerror",e=>errors.push("aircraft-phone: "+e.message));
+ await partsPhone.goto(base+"?path=scouts&module=aircraft",{waitUntil:"load"});
+ const mobileParts=partsPhone.locator("#aircraftIdentificationLab");
+ await mobileParts.waitFor({state:"visible"});
+ assert.equal(await mobileParts.locator(".aircraft-id-figure").count(),1);
+ assert.ok(await partsPhone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),
+  "Course 02 picture exercise must fit a 390px phone without horizontal scroll");
+ await mobileParts.locator(".aircraft-id-answers input").nth(1).check();
+ await mobileParts.getByRole("button",{name:"Check identification"}).tap();
+ assert.match(await mobileParts.locator(".aircraft-id-feedback").textContent(),/Correct identification/);
+ await mobileParts.getByRole("button",{name:"Next picture"}).tap();
+ assert.match(await mobileParts.locator(".aircraft-id-body h4").textContent(),/control surfaces/i);
+ await partsPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
