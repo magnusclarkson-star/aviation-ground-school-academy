@@ -11,8 +11,10 @@ import {handleFeesRoute} from "./fees-routes.mjs";
 import {handleSignatureRoute} from "./signature-routes.mjs";
 import {handleDocumentRoute} from "./document-routes.mjs";
 import {handleMasterArtworkRoute} from "./master-artwork.mjs";
+import {validateDeploymentSettings} from "./deployment-preflight.mjs";
 
-const httpPort=Number(process.env.PORT||8787);
+const deployment=validateDeploymentSettings(process.env);
+const httpPort=deployment.port;
 const baseOrigin=process.env.ACADEMY_ORIGIN;
 const databaseUrl=process.env.DATABASE_URL;
 if(!baseOrigin||!databaseUrl)throw Error("ACADEMY_ORIGIN and DATABASE_URL are required");
@@ -82,6 +84,23 @@ const invalidHash=await hashPassword("UnusableBootstrapNotARealUser!72");
 async function handle(req,res){
  const method=req.method||"GET",pathname=new URL(req.url||"/",baseOrigin).pathname;
  try{
+  // In production the private portal starts CLOSED unless an operator
+  // deliberately enables restricted access after external MFA/gateway review.
+  if(method==="GET"&&pathname==="/api/ready"){
+   if(!deployment.readyToAcceptRequests){
+    send(res,503,{ready:false,reason:"PRIVATE_PORTAL_CLOSED"});return;
+   }
+   try{
+    await pool.query("SELECT 1 AS academy_ready");
+    send(res,200,{ready:true,service:"academy-private-ato-foundation",studentRecordsPublic:false});
+   }catch{
+    send(res,503,{ready:false,reason:"PRIVATE_DATABASE_UNAVAILABLE"});
+   }
+   return;
+  }
+  if(!deployment.readyToAcceptRequests&&pathname!=="/api/health")
+   fail(503,"Private Academy portal closed pending security review");
+
   if(method==="GET"&&["/","/portal.js","/fees-portal.js","/signature-portal.js","/document-portal.js","/master-artwork-portal.js","/portal.css"].includes(pathname)){
    const file=pathname==="/"? "portal.html":pathname.slice(1);
    const bytes=await readFile(new URL("./"+file,import.meta.url));
@@ -402,5 +421,5 @@ server.headersTimeout=8000;
 server.maxRequestsPerSocket=100;
 pool.on("error",error=>console.error("PostgreSQL idle connection failure",error?.code||error?.name||"unknown"));
 
-server.listen(httpPort,process.env.HOST||"127.0.0.1",()=>console.log("Academy private ATO service listening on "+httpPort+"; no regulator approval asserted."));
+server.listen(httpPort,deployment.host,()=>console.log("Academy private ATO service listening on "+deployment.host+":"+httpPort+"; private access "+deployment.accessState+"; no regulator approval asserted."));
 process.on("SIGTERM",()=>{server.close(()=>{void pool.end()})});
