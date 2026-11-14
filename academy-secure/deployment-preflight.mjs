@@ -42,6 +42,8 @@ export function validateDeploymentSettings(env){
    throw Error("Production private PostgreSQL must be remote with sslmode=verify-full");
   if(!isEncryptionKey(env.ACADEMY_SIGNATURE_ENCRYPTION_KEY))
    throw Error("Production must have a dedicated base64 32-byte signature encryption key");
+  if(!isEncryptionKey(env.ACADEMY_TOTP_ENCRYPTION_KEY)||env.ACADEMY_TOTP_ENCRYPTION_KEY===env.ACADEMY_SIGNATURE_ENCRYPTION_KEY)
+   throw Error("Production must have a separate 32-byte base64 staff MFA encryption key");
   if(env.ACADEMY_ENABLE_BOOTSTRAP==="true")throw Error("Disable account bootstrap before production server startup");
  }
  return Object.freeze({production,accessState,host,port:Number(env.PORT||8787),
