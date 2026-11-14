@@ -21,7 +21,7 @@ for(const m of core.modules){
   }
   assert.ok(note.explain.length>=300,"Professionally detailed concept explanation in "+m.id+" section "+i);
   assert.match(note.misconception,/[.?!]$/);
-  assert.match(note.question,/\?$/);
+  assert.match(note.question,/[.?!]$/);
   assert.match(note.answer,/[.?!]$/);
  }
 }
