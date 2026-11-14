@@ -43,6 +43,10 @@ main{max-width:1920px;padding:7px 10px 30px}
 .panel[aria-label="Lesson reading and self-check"]>#moduleMeta{margin:4px 0;font-size:13px;color:#fff}
 .panel[aria-label="Lesson reading and self-check"]>p.meta{font-size:13px;line-height:1.4;margin:3px 0;color:#f3fbff}
 .panel[aria-label="Lesson reading and self-check"]>p.meta a{color:#c6f3ff;text-underline-offset:2px}
+.supplementary-links{margin:4px 0 5px;color:#f7fbff;font-size:13px}
+.supplementary-links>summary{cursor:pointer;color:#d3f3ff;font-size:13px;font-weight:750}
+.supplementary-links .meta{margin:4px 0;color:#fff}
+.supplementary-links a{color:#b7f0ff;font-weight:700}
 .objectives-panel{margin:5px 0;padding:6px 9px}
 .objectives-panel>summary{font-size:13px;color:#fff}
 .visual-lesson-nav{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;gap:5px;margin:5px 0 7px;padding-bottom:2px}
