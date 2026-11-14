@@ -441,7 +441,7 @@ try{
   assert.ok(await navLab.locator(".nav-lab-key dt").count()>=4);
   if(index===1){
    const diagram=navLab.locator(".nav-lab-training-map");
-   assert.equal(await diagram.getAttribute("width"),null);
+   assert.equal(await diagram.getAttribute("width"),"800");
    const slider=navLab.locator("#navWindSpeed");
    await slider.evaluate(input=>{input.value="20";input.dispatchEvent(new Event("input",{bubbles:true}))});
    assert.match(await navLab.locator(".nav-lab-heading-readout").textContent(),/77\.2°/);
