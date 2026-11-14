@@ -62,6 +62,9 @@ jobs:
       - run: node --check academy-aircraft-identification-data.js
       - run: node --check academy-aircraft-identification-ui.js
       - run: node scripts/test-academy-aircraft-identification.mjs
+      - run: node --check academy-aerodynamics-practical-data.js
+      - run: node --check academy-aerodynamics-practical-ui.js
+      - run: node scripts/test-academy-aerodynamics-practical.mjs
       - run: node scripts/test-academy-in-app-notes.mjs
       - run: node --check academy-coursebook-depth-a.js
       - run: node --check academy-coursebook-depth-b1.js

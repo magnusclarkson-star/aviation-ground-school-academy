@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -227,6 +227,48 @@ try{
   "Browser printing educational materials shows only the in-app reading notice");
  await desktop.emulateMedia({media:"screen"});
  assert.equal(await desktop.locator("#aircraftIdentificationLab").isVisible(),true);
+ await desktop.locator('#moduleList button[data-module="aerodynamics"]').click();
+ const aeroLab=desktop.locator("#aerodynamicsPracticalLab");
+ await aeroLab.waitFor({state:"visible"});
+ assert.equal(await desktop.locator("#aircraftIdentificationLab").isVisible(),false,
+  "Course 02 practical must not leak into Course 03");
+ assert.equal(await aeroLab.locator(".aero-lab-figure").count(),1);
+ assert.equal(await aeroLab.locator(".aero-lab-questions input").count(),3);
+ await aeroLab.locator(".aero-lab-image-button").click();
+ assert.equal(await desktop.locator(".aero-lab-dialog").isVisible(),true);
+ await desktop.locator(".aero-lab-dialog button").click();
+ assert.equal(await desktop.locator(".aero-lab-dialog").isVisible(),false);
+ for(const [index,answer] of [[0,1],[1,2],[2,0],[3,1]]){
+  assert.match(await aeroLab.locator(".aero-lab-reading h4").textContent(),new RegExp("^0"+(index+1)));
+  await aeroLab.locator(".aero-lab-questions input").nth(answer).check();
+  await aeroLab.getByRole("button",{name:"Check my reasoning"}).click();
+  assert.match(await aeroLab.locator(".aero-lab-result").textContent(),/Correct reasoning/);
+  await aeroLab.locator(".aero-lab-key summary").click();
+  assert.ok(await aeroLab.locator(".aero-lab-key dt").count()>=3);
+  if(index<3)await aeroLab.getByRole("button",{name:"Next concept"}).click();
+ }
+ assert.match(await aeroLab.locator(".aero-lab-progress").textContent(),/4 responses reviewed/);
+ const bankSlider=aeroLab.locator("#aeroClassroomBank");
+ await bankSlider.evaluate(input=>{
+  input.value="60";input.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+ assert.match(await aeroLab.locator(".aero-lab-metric").first().textContent(),/2\.00 g/);
+ assert.match(await aeroLab.locator(".aero-lab-metric").last().textContent(),/1\.41 ×/);
+ await bankSlider.evaluate(input=>{
+  input.value="45";input.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+ assert.match(await aeroLab.locator(".aero-lab-metric").first().textContent(),/1\.41 g/);
+ assert.match(await aeroLab.locator(".aero-lab-caution").textContent(),/not an aircraft flight limit/i);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
+ await desktop.emulateMedia({media:"print"});
+ assert.equal(await desktop.locator("main").isVisible(),false);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),true,
+  "Course 03 notes and figures must not be printable from the browser");
+ await desktop.emulateMedia({media:"screen"});
+ assert.equal(await aeroLab.isVisible(),true);
+ await desktop.locator('#moduleList button[data-module="aircraft"]').click();
+ assert.equal(await aeroLab.isVisible(),false,
+  "Switching subject must hide the Course 03 practice");
 
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
@@ -365,6 +407,21 @@ try{
  await mobileParts.getByRole("button",{name:"Next picture"}).tap();
  assert.match(await mobileParts.locator(".aircraft-id-body h4").textContent(),/control surfaces/i);
  await partsPhone.close();
+
+ const aeroPhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ aeroPhone.on("pageerror",e=>errors.push("aero-phone: "+e.message));
+ await aeroPhone.goto(base+"?path=scouts&module=aerodynamics",{waitUntil:"load"});
+ const mobileAero=aeroPhone.locator("#aerodynamicsPracticalLab");
+ await mobileAero.waitFor({state:"visible"});
+ assert.equal(await mobileAero.locator(".aero-lab-figure").count(),1);
+ assert.ok(await aeroPhone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),
+  "Course 03 picture practice must fit a 390px phone without horizontal scroll");
+ await mobileAero.locator(".aero-lab-questions input").nth(1).check();
+ await mobileAero.getByRole("button",{name:"Check my reasoning"}).tap();
+ assert.match(await mobileAero.locator(".aero-lab-result").textContent(),/Correct reasoning/);
+ await mobileAero.getByRole("button",{name:"Next concept"}).tap();
+ assert.match(await mobileAero.locator(".aero-lab-reading h4").textContent(),/angle of attack/i);
+ await aeroPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
