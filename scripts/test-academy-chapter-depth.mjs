@@ -43,7 +43,7 @@ for(const file of ["academy-coursebook-chapters-a.js","academy-coursebook-chapte
  "academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js"])
  assert.ok(html.includes('src="'+file+'"'),"Missing substantial lecture content module "+file);
 assert.ok(html.includes('class="hero scenic-hero"'));
-assert.ok(html.includes('class="scenic-gold-strip"'));
+assert.ok(html.includes('class="quick-controls"')); // Compact bar replaces the tall decorative gold strip
 assert.ok(html.includes('class="chapter-crest"'));
 const css=fs.readFileSync(new URL("../academy-coursebook.css",import.meta.url),"utf8");
 for(const token of [".scenic-hero",".hero-scene",".scenic-gold-strip",".textbook-prose",
