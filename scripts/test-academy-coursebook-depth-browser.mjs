@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-meteorology-practical-data.js","academy-meteorology-practical-ui.js","academy-meteorology-practical.css","academy-navigation-practical-data.js","academy-navigation-practical-ui.js","academy-navigation-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-meteorology-practical-data.js","academy-meteorology-practical-ui.js","academy-meteorology-practical.css","academy-navigation-practical-data.js","academy-navigation-practical-ui.js","academy-navigation-practical.css","academy-airspace-practical-data.js","academy-airspace-practical-ui.js","academy-airspace-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -469,6 +469,56 @@ try{
  await desktop.locator('#moduleList button[data-module="aircraft"]').click();
  assert.equal(await navLab.isVisible(),false,
   "Course 07 material should not be visible while reading other subjects");
+ await desktop.locator('#moduleList button[data-module="airspace"]').click();
+ const airspaceLab=desktop.locator("#airspacePracticalLab");
+ await airspaceLab.waitFor({state:"visible"});
+ assert.equal(await navLab.isVisible(),false);
+ assert.equal(await airspaceLab.locator(".as-lab-figure").count(),2);
+ await airspaceLab.locator(".as-lab-picture-button").first().click();
+ assert.equal(await desktop.locator(".as-lab-zoom").isVisible(),true);
+ await desktop.locator(".as-lab-zoom button").click();
+ assert.equal(await desktop.locator(".as-lab-zoom").isVisible(),false);
+ for(const [index,correct] of [[0,1],[1,2],[2,0],[3,2]]){
+  assert.match(await airspaceLab.locator(".as-lab-reading h4").textContent(),new RegExp("^0"+(index+1)));
+  await airspaceLab.locator(".as-lab-questions input").nth(correct).check();
+  await airspaceLab.getByRole("button",{name:"Check my understanding"}).click();
+  assert.match(await airspaceLab.locator(".as-lab-feedback").textContent(),/Correct distinction/);
+  await airspaceLab.locator(".as-lab-key summary").click();
+  assert.ok(await airspaceLab.locator(".as-lab-key dt").count()>=5);
+  if(index===0){
+   assert.equal(await airspaceLab.locator(".as-lab-airspace-cross").count(),1);
+   await airspaceLab.getByRole("button",{name:"Upper limit / ceiling"}).click();
+   assert.equal(await airspaceLab.locator(".as-lab-diagram-info").getAttribute("data-selected"),"ceiling");
+   assert.match(await airspaceLab.locator(".as-lab-diagram-info").textContent(),/upper boundary/i);
+  }
+  if(index===1){
+   assert.equal(await airspaceLab.locator(".as-lab-airport-map").count(),1);
+   assert.match(await airspaceLab.locator(".as-lab-airport-map").getAttribute("aria-label"),/runway 09\/27/i);
+   assert.equal(await airspaceLab.locator(".as-lab-diagram-info").getAttribute("data-selected"),"hold");
+   await airspaceLab.getByRole("button",{name:"Taxiway A",exact:true}).click();
+   assert.equal(await airspaceLab.locator(".as-lab-diagram-info").getAttribute("data-selected"),"taxiway");
+   assert.match(await airspaceLab.locator(".as-lab-diagram-info").textContent(),/NOT an issued taxi clearance/);
+  }
+  if(index===2){
+   const readout=airspaceLab.locator(".as-lab-runway-readout");
+   assert.match(await readout.textContent(),/09[\s\S]*27/);
+   await airspaceLab.locator("#asRunwayNumber").selectOption("27");
+   assert.match(await readout.textContent(),/27[\s\S]*09/);
+   await airspaceLab.locator("#asRunwayNumber").selectOption("36");
+   assert.match(await readout.textContent(),/36[\s\S]*18/);
+  }
+  if(index<3)await airspaceLab.getByRole("button",{name:"Next topic"}).click();
+ }
+ assert.match(await airspaceLab.locator(".as-lab-progress").textContent(),/4 reviewed on this page/);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
+ await desktop.emulateMedia({media:"print"});
+ assert.equal(await desktop.locator("main").isVisible(),false,
+  "Course 08 airport, airspace diagrams and notes must not print or save as PDF");
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),true);
+ await desktop.emulateMedia({media:"screen"});
+ await desktop.locator('#moduleList button[data-module="aircraft"]').click();
+ assert.equal(await airspaceLab.isVisible(),false,
+  "Course 08 material must remain scoped to its own module");
 
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
@@ -688,6 +738,23 @@ try{
  await mobileNav.locator("#navWindFrom").selectOption("90");
  assert.match(await mobileNav.locator(".nav-lab-heading-readout").textContent(),/90\.0°/);
  await navigationPhone.close();
+
+ const airspacePhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ airspacePhone.on("pageerror",e=>errors.push("airspace-phone: "+e.message));
+ await airspacePhone.goto(base+"?path=scouts&module=airspace",{waitUntil:"load"});
+ const phoneAirspace=airspacePhone.locator("#airspacePracticalLab");
+ await phoneAirspace.waitFor({state:"visible"});
+ assert.equal(await phoneAirspace.locator(".as-lab-figure").count(),2);
+ assert.ok(await airspacePhone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),
+  "Course 08 diagrams must not introduce horizontal overflow on a 390px phone");
+ await phoneAirspace.locator(".as-lab-questions input").nth(1).check();
+ await phoneAirspace.getByRole("button",{name:"Check my understanding"}).tap();
+ assert.match(await phoneAirspace.locator(".as-lab-feedback").textContent(),/Correct distinction/);
+ await phoneAirspace.getByRole("button",{name:"Next topic"}).tap();
+ assert.equal(await phoneAirspace.locator(".as-lab-airport-map").count(),1);
+ await phoneAirspace.getByRole("button",{name:"Taxiway A",exact:true}).tap();
+ assert.equal(await phoneAirspace.locator(".as-lab-diagram-info").getAttribute("data-selected"),"taxiway");
+ await airspacePhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
