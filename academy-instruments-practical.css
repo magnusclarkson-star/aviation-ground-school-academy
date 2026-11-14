@@ -1,0 +1,70 @@
+/* Course 05: additive original-pictorial instruments practical; no global
+   cockpit/model or approved textbook styles are changed. */
+.inst-lab{margin:13px 0 22px;padding:13px;color:#edf7fe;background:#0c293e;border:1px solid #98bacd;border-left:4px solid #e2c17c;border-radius:12px}
+.inst-lab[hidden]{display:none!important}
+.inst-lab-head{border-bottom:1px solid #4b7288;padding-bottom:8px}
+.inst-lab-kicker{color:#f3cb84;font:800 11px/1.5 system-ui,sans-serif;letter-spacing:.08em;margin:2px 0!important}
+.inst-lab-head h3{color:#ffe4b5;font:700 clamp(19px,2.2vw,24px)/1.3 Georgia,serif;margin:3px 0}
+.inst-lab-head p{font-size:14px;line-height:1.58;margin:6px 0}
+.inst-lab-focus{color:#daf4fb!important;background:#15435a;border-left:3px solid #7bd4de;padding:8px 10px;border-radius:6px;font-size:13px!important;line-height:1.55}
+.inst-lab-progress{color:#cce2ef;font-size:12px;margin:11px 0}
+.inst-lab-reading h4{color:#ffe4b3;font-size:18px;margin:9px 0 12px}
+.inst-lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:start}
+.inst-lab-gallery{display:grid;grid-template-columns:1fr;gap:9px;min-width:0}
+.inst-lab-gallery:has(.inst-lab-figure:nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))}
+.inst-lab-figure{margin:0;min-width:0;background:#123349;border:1px solid #7692a8;border-radius:9px;overflow:hidden}
+.inst-lab-picture-button{display:block;position:relative;background:#142f44!important;border:0!important;border-radius:0!important;padding:0!important;min-height:0!important;width:100%;cursor:zoom-in}
+.inst-lab-picture{display:block;width:100%;height:auto;min-height:105px;background:#17394e}
+.inst-lab-enlarge{position:absolute;bottom:5px;right:5px;color:#fff;background:#102738df;padding:4px 6px;border-radius:6px;font:700 11px/1.4 system-ui,sans-serif}
+.inst-lab-figure figcaption{padding:8px 9px;font-size:12px;line-height:1.45;color:#e1f1f8}
+.inst-lab-lesson{min-width:0}
+.inst-lab-lesson>p:first-child{font-size:14px;line-height:1.6;margin:0 0 9px}
+.inst-lab-questions{border:1px solid #6c92a7;border-radius:9px;min-width:0;padding:9px;margin:10px 0}
+.inst-lab-questions legend{font-size:14px;line-height:1.4;font-weight:800;color:#ffe2aa;padding:1px 4px}
+.inst-lab-questions label{display:flex;align-items:start;gap:9px;line-height:1.5;font-size:13px;margin:4px 0;padding:9px 7px;border:1px solid transparent;border-radius:7px;cursor:pointer}
+.inst-lab-questions label:has(input:checked){background:#1a5169;border-color:#81d7de}
+.inst-lab-questions input{margin:3px 0 0;accent-color:#70d5df;flex:0 0 auto}
+.inst-lab button{min-height:40px;padding:9px 12px;background:#1c506a;border:1px solid #c8ae7a;border-radius:8px;color:#fff;font:700 13px/1.4 system-ui,sans-serif;cursor:pointer}
+.inst-lab button:not(:disabled):hover{background:#286c88}
+.inst-lab button:disabled{opacity:.45;cursor:not-allowed}
+.inst-lab button:focus-visible,.inst-lab input:focus-visible,.inst-lab-dialog button:focus-visible{outline:3px solid #ffe1a2;outline-offset:2px}
+.inst-lab-feedback{margin:10px 0;padding:11px;background:#163a50;border:1px solid #668aa0;border-radius:8px;line-height:1.6;font-size:13px}
+.inst-lab-feedback p{margin:7px 0}
+.inst-lab-feedback strong{color:#def1be}
+.inst-lab-feedback[data-correct="false"] strong{color:#ffe0ae}
+.inst-lab-key{border:1px solid #7096a9;border-radius:7px;padding:8px;margin:11px 0 0}
+.inst-lab-key summary{cursor:pointer;font-weight:800;color:#ffe6b6}
+.inst-lab-key dl{display:grid;grid-template-columns:minmax(0,125px) minmax(0,1fr);gap:6px 10px}
+.inst-lab-key dt{font-weight:800;color:#c8ecf4}
+.inst-lab-key dd{margin:0}
+.inst-lab-sensors{margin:14px 0 3px;background:#112f45;border:1px solid #7f9eaf;border-radius:11px;padding:12px}
+.inst-lab-sensors h5{font-size:16px;color:#ffe0ae;margin:1px 0 5px}
+.inst-lab-sensors p{font-size:13px;line-height:1.55;margin:6px 0}
+.inst-lab-source-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.inst-lab-source-tabs button[aria-pressed="true"]{background:#e7cc8f!important;color:#122d43!important;border-color:#ffe8b4}
+.inst-lab-source-content{padding:12px;border:1px solid #789eae;border-radius:8px;background:#163d55}
+.inst-lab-source-content h6{font-size:14px;color:#f6e1b8;margin:0 0 9px}
+.inst-lab-source-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.inst-lab-source-node,.inst-lab-source-output{min-width:115px;flex:1 1 132px;text-align:center;padding:12px 9px;border:1px solid #a0c3d5;border-radius:8px;background:#194e69;color:#f2f9fe;font-size:13px;font-weight:750}
+.inst-lab-source-output{border-color:#efce90;background:#36556a;color:#ffe3b2}
+.inst-lab-source-arrow{font-size:23px;color:#ffdfa3}
+.inst-lab-source-note{color:#d9eaf4;font-size:12px!important;margin-top:11px!important}
+.inst-lab-nav{display:flex;justify-content:space-between;gap:9px;margin:15px 0}
+.inst-lab-foot{color:#c4dce9;font-size:12px;line-height:1.5;margin:8px 0 0}
+.inst-lab-dialog{position:fixed;max-width:min(95vw,1180px);max-height:92vh;overflow:auto;margin:auto;background:#0c293e;color:#fff;padding:13px;border:2px solid #b7cdda;border-radius:12px}
+.inst-lab-dialog::backdrop{background:rgba(0,10,20,.85)}
+.inst-lab-dialog h3{color:#ffe3aa;font-size:17px}
+.inst-lab-dialog canvas{display:block;max-width:100%;height:auto;background:#fff;border-radius:6px}
+.inst-lab-dialog button{display:block;margin:12px auto 0;background:#215d76;border:1px solid #c2ab79;color:#fff;padding:10px 16px;border-radius:8px}
+@media(max-width:1020px){.inst-lab-grid{grid-template-columns:1fr}.inst-lab-gallery{max-width:760px}}
+@media(max-width:590px){
+ .inst-lab{padding:10px 8px;border-left-width:3px;margin:9px 0}
+ .inst-lab-gallery:has(.inst-lab-figure:nth-child(2)){grid-template-columns:1fr}
+ .inst-lab-questions label{font-size:14px}
+ .inst-lab-key dl{grid-template-columns:1fr;gap:2px}
+ .inst-lab-key dd{margin-bottom:7px}
+ .inst-lab-nav button{flex:1}
+ .inst-lab-source-flow{gap:5px}
+ .inst-lab-source-node,.inst-lab-source-output{flex-basis:100%}
+ .inst-lab-source-arrow{transform:rotate(90deg);margin:0 auto}
+}
