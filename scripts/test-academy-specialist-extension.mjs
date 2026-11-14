@@ -56,9 +56,9 @@ for(const asset of ["academy-specialist-extension.js","academy-specialist-compac
  assert.ok(html.includes(asset));
  assert.ok(build.includes(asset),"Asset omitted from published build: "+asset);
 }
-assert.ok(html.includes("Four lessons per pathway"));
-assert.ok(html.includes("four non-credit preview lessons per pathway"));
-assert.ok(catalogHtml.includes("Four free illustrated sample lessons"));
+assert.ok(html.includes("All eight planned syllabus units per flagship pathway"));
+assert.ok(html.includes("eight non-credit preview lessons per pathway"));
+assert.ok(catalogHtml.includes("Eight free illustrated sample lessons"));
 assert.match(js,/extension\.validate\(\)/);
 assert.match(js,/function lessons\(course\)/);
 assert.match(js,/extension\.getPlate\(plateId\)/);
