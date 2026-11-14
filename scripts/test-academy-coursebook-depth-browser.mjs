@@ -43,6 +43,26 @@ try{
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
 
  await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"}); 
+ // The desktop sidebar, mobile picker and sequential buttons must follow
+ // the printed course numbers, irrespective of Scout or pilot pathway.
+ const canonicalLabels=Array.from({length:12},(_,i)=>i+1);
+ async function verifyModuleOrder(page,routeName){
+  const buttons=page.locator("#moduleList button strong");
+  const numbers=(await buttons.allTextContents()).map(v=>Number(v.match(/^(\d+)\./)?.[1]));
+  assert.deepEqual(numbers,canonicalLabels,routeName+" desktop sidebar must be 1 through 12");
+  const mobile=page.locator("#mobileModuleJump option");
+  const mobileNumbers=(await mobile.allTextContents()).map(v=>Number(v.match(/^(\d+)\./)?.[1]));
+  assert.deepEqual(mobileNumbers,canonicalLabels,routeName+" mobile module jump must be 1 through 12");
+ }
+ await verifyModuleOrder(desktop,"scouts");
+ await desktop.locator('#moduleList button[data-module="aerodynamics"]').click();
+ await desktop.locator("#followingModule").click();
+ assert.equal(await desktop.locator("#moduleTitle").textContent().then(x=>x.startsWith("4. ")),true,
+  "Next from Course 03 should be Course 04, not Course 05");
+ assert.match(await desktop.locator("#moduleTitle").textContent(),/Powerplants and aircraft systems/);
+ await desktop.locator("#followingModule").click();
+ assert.match(await desktop.locator("#moduleTitle").textContent(),/^5\. Flight instruments/);
+ await desktop.locator('#moduleList button[data-module="orientation"]').click();
  const safetyLab=desktop.locator("#orientationSafetyLab");
  await safetyLab.waitFor({state:"visible"});
  assert.equal(await safetyLab.locator(".orientation-lab-options input").count(),3);
@@ -183,6 +203,7 @@ try{
  assert.match(await desktop.locator("#deepModuleStatus").textContent(),/target met/);
  await desktop.locator(".lesson-tools-collapse>summary").click();
  await desktop.locator("#route").selectOption("pilots");
+ await verifyModuleOrder(desktop,"pilots");
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.equal(await desktop.locator("#orientationSafetyLab").isVisible(),false,"Course 01 practical must not appear in unrelated subjects");
