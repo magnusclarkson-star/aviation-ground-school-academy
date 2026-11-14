@@ -1,0 +1,11 @@
+# Private service build context only.
+# Never include root repository, certificate source segments, test fixtures or
+# secrets in this image. Run: docker build -f academy-secure/Dockerfile academy-secure
+*
+!Dockerfile
+!package.json
+!package-lock.json
+!*.mjs
+!*.js
+!*.html
+!*.css
