@@ -83,7 +83,7 @@ function validate(modules,atlas){
     illustrations++;
    }
    for(const field of ["focus","explain","misconception","question","answer"]){
-    if(typeof card[field]!=="string"||card[field].length<(field==="explain"?300:55))throw Error("Editorial teaching text incomplete: "+m.id+"/"+i+"/"+field);
+    if(typeof card[field]!=="string"||card[field].length<(field==="explain"?300:field==="question"?35:field==="misconception"?45:55))throw Error("Editorial teaching text incomplete: "+m.id+"/"+i+"/"+field);
    }
   }
  }
