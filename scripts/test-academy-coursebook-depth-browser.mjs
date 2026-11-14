@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-meteorology-practical-data.js","academy-meteorology-practical-ui.js","academy-meteorology-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -374,6 +374,55 @@ try{
  await desktop.locator('#moduleList button[data-module="aircraft"]').click();
  assert.equal(await instrumentLab.isVisible(),false,
   "The Course 05 lab must not appear when reading other modules");
+ await desktop.locator('#moduleList button[data-module="meteorology"]').click();
+ const weatherLab=desktop.locator("#meteorologyPracticalLab");
+ await weatherLab.waitFor({state:"visible"});
+ assert.equal(await instrumentLab.isVisible(),false);
+ assert.equal(await weatherLab.locator(".wx-lab-figure").count(),2);
+ await weatherLab.locator(".wx-lab-picture-button").first().click();
+ assert.equal(await desktop.locator(".wx-lab-dialog").isVisible(),true);
+ await desktop.locator(".wx-lab-dialog button").click();
+ assert.equal(await desktop.locator(".wx-lab-dialog").isVisible(),false);
+ for(const [index,answer] of [[0,1],[1,2],[2,0],[3,1]]){
+  assert.match(await weatherLab.locator(".wx-lab-reading h4").textContent(),new RegExp("^0"+(index+1)));
+  await weatherLab.locator(".wx-lab-questions input").nth(answer).check();
+  await weatherLab.getByRole("button",{name:"Check weather interpretation"}).click();
+  assert.match(await weatherLab.locator(".wx-lab-feedback").textContent(),/Correct interpretation/);
+  await weatherLab.locator(".wx-lab-key summary").click();
+  assert.ok(await weatherLab.locator(".wx-lab-key dt").count()>=4);
+  if(index===0){
+   assert.equal(await weatherLab.locator(".wx-lab-step").count(),3);
+  }
+  if(index===1){
+   const data=weatherLab.locator(".wx-lab-decode");
+   assert.equal(await data.locator(".wx-lab-code-line button").count(),10);
+   await data.getByRole("button",{name:"6000",exact:true}).click();
+   assert.match(await data.locator(".wx-lab-code-meaning").textContent(),/6,000 metres/);
+   await data.getByRole("button",{name:"Q1010",exact:true}).click();
+   assert.match(await data.locator(".wx-lab-code-meaning").textContent(),/1010 hectopascals/);
+  }
+  if(index===2){
+   const data=weatherLab.locator(".wx-lab-decode");
+   assert.equal(await data.locator(".wx-lab-code-line button").count(),12);
+   await data.getByRole("button",{name:"1414/1418",exact:true}).click();
+   assert.match(await data.locator(".wx-lab-code-meaning").textContent(),/14:00–18:00 UTC/);
+   await data.getByRole("button",{name:"TSRA",exact:true}).click();
+   assert.match(await data.locator(".wx-lab-code-meaning").textContent(),/Thunderstorm with rain/);
+   assert.equal(await data.locator(".wx-lab-time-grid>div").count(),2);
+  }
+  if(index<3)await weatherLab.getByRole("button",{name:"Next weather exercise"}).click();
+ }
+ assert.match(await weatherLab.locator(".wx-lab-progress").textContent(),/4 responses reviewed/);
+ assert.equal(await weatherLab.locator(".wx-lab-figure").count(),2);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
+ await desktop.emulateMedia({media:"print"});
+ assert.equal(await desktop.locator("main").isVisible(),false,
+  "Weather pictures and METAR/TAF lessons must not print or save as PDF");
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),true);
+ await desktop.emulateMedia({media:"screen"});
+ await desktop.locator('#moduleList button[data-module="aircraft"]').click();
+ assert.equal(await weatherLab.isVisible(),false,
+  "Course 06 material must not appear on unrelated subjects");
 
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
@@ -560,6 +609,22 @@ try{
  await mobileInstruments.getByRole("button",{name:"Altimeter",exact:true}).tap();
  assert.equal(await mobileInstruments.locator(".inst-lab-source-content").getAttribute("data-source"),"altimeter");
  await instrumentPhone.close();
+
+ const weatherPhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ weatherPhone.on("pageerror",e=>errors.push("weather-phone: "+e.message));
+ await weatherPhone.goto(base+"?path=scouts&module=meteorology",{waitUntil:"load"});
+ const mobileWeather=weatherPhone.locator("#meteorologyPracticalLab");
+ await mobileWeather.waitFor({state:"visible"});
+ assert.equal(await mobileWeather.locator(".wx-lab-figure").count(),2);
+ assert.ok(await weatherPhone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),
+  "Course 06 weather pictures must fit mobile without horizontal scroll");
+ await mobileWeather.locator(".wx-lab-questions input").nth(1).check();
+ await mobileWeather.getByRole("button",{name:"Check weather interpretation"}).tap();
+ assert.match(await mobileWeather.locator(".wx-lab-feedback").textContent(),/Correct interpretation/);
+ await mobileWeather.getByRole("button",{name:"Next weather exercise"}).tap();
+ await mobileWeather.getByRole("button",{name:"6000",exact:true}).tap();
+ assert.match(await mobileWeather.locator(".wx-lab-code-meaning").textContent(),/6,000 metres/);
+ await weatherPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
