@@ -29,13 +29,22 @@ for(const [key,style,parts] of designs){
  assert.ok(bytes.length>2000000,"The exact original must be full quality");
 }
 assert.match(css,/\.original-artwork/);
+assert.match(html,/academy-certificate-gallery\.css\?v=20261114-strong-watermark/);
+assert.match(css,/\.sheet-wrap::after\{/);
+assert.match(css,/background-image:url\("data:image\/svg\+xml/);
+assert.match(css,/background-repeat:repeat/);
+assert.match(css,/rotate\(-28\)/);
+assert.match(css,/NOT%20ISSUED/);
+assert.match(css,/SAMPLE%3C\/text/);
+assert.match(css,/z-index:3;pointer-events:none/);
+assert.match(html,/strong repeated SAMPLE · NOT ISSUED watermark/);
 assert.doesNotMatch(css,/\.certificate\.academy-standard|\.certificate\.formal\s*\{/,
  "Never redraw approved originals using generic certificate markup");
 assert.match(js,/crypto\.subtle\.digest\("SHA-256"/);
 assert.doesNotMatch(js,/window\.print\(|afterprint|data-print|printStyle/,
  "Public sample gallery must not contain print actions");
 assert.match(html,/class="print-restriction"/);
-assert.match(html,/Samples are view-only/);
+assert.match(html,/Samples carry a strong repeated SAMPLE · NOT ISSUED watermark/);
 assert.match(css,/@media print\{/);
 assert.match(css,/\.site-head,main,footer\{display:none!important\}/);
 assert.match(css,/\.print-restriction\{display:block!important/);

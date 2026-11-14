@@ -252,6 +252,14 @@ try{
   assert.equal(await card.locator("[data-print]").count(),0,
    "Approved sample gallery is view-only and has no print controls");
   assert.match(await card.textContent(),/SAMPLE · NOT ISSUED/);
+  const overlay=await card.locator(".sheet-wrap").evaluate(el=>{
+   const css=getComputedStyle(el,"::after");
+   return {content:css.content,image:css.backgroundImage,repeat:css.backgroundRepeat,z:Number(css.zIndex)};
+  });
+  assert.equal(overlay.content,'""',"Full-sheet watermark overlay must exist");
+  assert.match(overlay.image,/data:image\/svg\+xml/,"Every approved sample must be covered in bold watermark text");
+  assert.equal(overlay.repeat,"repeat","Watermark must tile across the complete certificate");
+  assert.ok(overlay.z>=3,"Watermark must appear on top of the approved original artwork");
  }
  assert.ok((await standard.locator('[data-original="formal"] .sheet-wrap').boundingBox()).width>=800,
   "Desktop should use the available area for original certificate art");
