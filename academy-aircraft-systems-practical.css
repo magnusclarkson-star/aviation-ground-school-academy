@@ -1,0 +1,66 @@
+/* Additive Course 04 original-picture systems study. No simulator or
+   aircraft model selectors are altered. Existing in-app print guard applies. */
+.systems-lab{margin:16px 0 24px;padding:15px;color:#edf7fd;background:#0c293f;border:1px solid #8fb0c4;border-left:4px solid #e1bc79;border-radius:14px}
+.systems-lab[hidden]{display:none!important}
+.systems-lab-head{border-bottom:1px solid #476c84;padding-bottom:10px}
+.systems-lab-head h3{font:700 clamp(19px,2.3vw,24px)/1.25 Georgia,serif;color:#ffdfac;margin:5px 0}
+.systems-lab-head p{font-size:14px;line-height:1.58;margin:7px 0}
+.systems-lab-kicker{color:#f2ca80!important;font-size:11px!important;font-weight:800;letter-spacing:.1em}
+.systems-lab-focus{border-left:3px solid #6bc8d7;background:#164359;color:#ddf6fd;border-radius:6px;padding:9px 11px;font-size:13px;line-height:1.55}
+.systems-lab-progress{color:#beddeb;font-size:12px;margin:12px 0}
+.systems-lab-reading h4{color:#ffe2b3;font-size:19px;margin:10px 0 14px}
+.systems-lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;align-items:start}
+.systems-lab-gallery{display:grid;grid-template-columns:1fr;gap:10px;min-width:0}
+.systems-lab-gallery:has(.systems-lab-figure:nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))}
+.systems-lab-figure{margin:0;min-width:0;border:1px solid #67869b;border-radius:10px;overflow:hidden;background:#163248}
+.systems-lab-picture-button{display:block;position:relative;width:100%;min-height:0!important;border:0!important;padding:0!important;border-radius:0!important;background:#102e41!important;cursor:zoom-in}
+.systems-lab-picture{display:block;width:100%;height:auto;min-height:100px;background:#16384c}
+.systems-lab-picture-cue{position:absolute;bottom:5px;right:5px;padding:4px 7px;background:#10283ddd;color:#fff;border-radius:6px;font-size:11px;font-weight:700}
+.systems-lab-figure figcaption{padding:9px;color:#dfedf5;font-size:12px;line-height:1.5}
+.systems-lab-panel{min-width:0}
+.systems-lab-panel>p:first-child{font-size:14px;line-height:1.65;margin:0 0 10px}
+.systems-lab-options{min-width:0;border:1px solid #698aa1;border-radius:9px;padding:10px;margin:10px 0 11px}
+.systems-lab-options legend{font-size:14px;line-height:1.45;color:#ffe7b8;font-weight:750;padding:0 4px}
+.systems-lab-options label{display:flex;align-items:start;gap:10px;padding:10px 8px;margin:5px 0;border:1px solid transparent;border-radius:8px;cursor:pointer;font-size:13px;line-height:1.55}
+.systems-lab-options label:has(input:checked){background:#1a4b62;border-color:#8fd4e0}
+.systems-lab-options input{margin:4px 0 0;accent-color:#6accdb;flex:0 0 auto}
+.systems-lab button{min-height:40px;border:1px solid #c9b481;background:#1d506b;color:#fff;font:700 13px/1.4 system-ui,sans-serif;padding:10px 13px;border-radius:8px;cursor:pointer}
+.systems-lab button:disabled{opacity:.45;cursor:not-allowed}
+.systems-lab button:not(:disabled):hover{background:#286c88}
+.systems-lab button:focus-visible,.systems-lab input:focus-visible,.systems-lab-dialog button:focus-visible{outline:3px solid #ffe09c;outline-offset:2px}
+.systems-lab-feedback{border:1px solid #5a7d92;background:#173b52;color:#edf6fb;border-radius:9px;padding:12px;margin:12px 0;font-size:13px;line-height:1.65}
+.systems-lab-feedback strong{color:#d8efb7}
+.systems-lab-feedback[data-correct="false"] strong{color:#ffdea8}
+.systems-lab-feedback p{margin:8px 0}
+.systems-lab-key{border:1px solid #608ca4;border-radius:7px;padding:9px;margin:10px 0 0}
+.systems-lab-key summary{color:#ffe4b3;font-weight:800;cursor:pointer}
+.systems-lab-key dl{display:grid;grid-template-columns:minmax(0,125px) minmax(0,1fr);gap:8px 11px}
+.systems-lab-key dt{font-weight:800;color:#d4f2f8}
+.systems-lab-key dd{margin:0}
+.systems-lab-diagram{background:#102d43;border:1px solid #7595a9;border-radius:11px;padding:13px;margin:15px 0}
+.systems-lab-diagram h5{font-size:16px;color:#ffdfab;margin:2px 0 9px}
+.systems-lab-flow{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;margin:10px 0;flex-wrap:wrap}
+.systems-lab-node{min-width:110px;max-width:240px;flex:1 1 120px;padding:15px 10px;text-align:center;border:1px solid #a5c8d6;border-radius:9px;background:#164962;color:#fff;font-size:13px;font-weight:750}
+.systems-lab-arrow{font-size:24px;color:#f2d093;font-weight:700}
+.systems-lab-diagram-note{color:#d8e7ef;font-size:12px;line-height:1.55;margin:12px 0 0}
+.systems-lab-diagram-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0}
+.systems-lab-diagram-tabs button[aria-pressed="true"]{background:#d9bc7d!important;border-color:#eddaaa!important;color:#142d41!important}
+.systems-lab-nav{display:flex;justify-content:space-between;gap:12px;margin:17px 0}
+.systems-lab-notice{font-size:12px;line-height:1.55;color:#c4ddeb;margin:8px 0}
+.systems-lab-dialog{position:fixed;max-width:min(95vw,1180px);max-height:92vh;overflow:auto;margin:auto;padding:14px;border:2px solid #b1cede;border-radius:13px;background:#0b283d;color:#fff}
+.systems-lab-dialog::backdrop{background:#04131dde}
+.systems-lab-dialog h3{font-size:18px;color:#ffe2ad}
+.systems-lab-dialog canvas{display:block;max-width:100%;height:auto;background:#fff;border-radius:6px}
+.systems-lab-dialog button{display:block;margin:13px auto 0;background:#205771;border:1px solid #c4b17b;color:#fff;padding:10px 15px;border-radius:8px}
+@media(max-width:1030px){.systems-lab-grid{grid-template-columns:1fr}.systems-lab-gallery{max-width:760px}}
+@media(max-width:590px){
+ .systems-lab{padding:10px 8px;margin:9px 0;border-left-width:3px}
+ .systems-lab-gallery:has(.systems-lab-figure:nth-child(2)){grid-template-columns:1fr}
+ .systems-lab-options label{font-size:14px}
+ .systems-lab-key dl{grid-template-columns:1fr;gap:2px}
+ .systems-lab-key dd{margin-bottom:7px}
+ .systems-lab-nav button{flex:1}
+ .systems-lab-node{flex-basis:100%;max-width:none}
+ .systems-lab-arrow{transform:rotate(90deg);font-size:20px}
+ .systems-lab-flow{gap:6px}
+}

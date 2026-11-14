@@ -771,13 +771,26 @@ const modules=Object.freeze([
   "reviewStatus": "SME_REVIEW_REQUIRED"
  }
 ]);
-const routes=Object.freeze({scouts:["orientation","aircraft","aerodynamics","instruments","meteorology","communications","human","rotorcraft","systems","navigation","airspace","performance"],pilots:["orientation","aircraft","aerodynamics","systems","instruments","meteorology","navigation","airspace","communications","performance","human","rotorcraft"]});
+// The module sequence must match each printed course number for BOTH learner
+// routes. Previously the Scouts route jumped from 3 to 5 and returned to 4
+// near the end. Keep routes as audience choices, not competing numbering orders.
+const canonicalCourseOrder=Object.freeze(
+ modules.slice().sort((a,b)=>a.number-b.number).map(m=>m.id)
+);
+const routes=Object.freeze({scouts:canonicalCourseOrder,pilots:canonicalCourseOrder});
 function validate(){
  if(modules.length!==12||new Set(modules.map(x=>x.id)).size!==12)throw Error("Expected twelve distinct course modules");
  for(const m of modules){if(m.reviewStatus!=="SME_REVIEW_REQUIRED"||m.sections.length!==3||m.quiz.length!==3||m.objectives.length!==3)throw Error("Incomplete module "+m.id);
   for(const q of m.quiz)if(q.options.length!==3||new Set(q.options).size!==3||!Number.isInteger(q.answer)||q.answer<0||q.answer>2||q.explanation.length<30)throw Error("Bad question "+q.id);
  }
- for(const route of Object.values(routes))if(route.length!==12||new Set(route).size!==12||route.some(id=>!modules.some(m=>m.id===id)))throw Error("Incomplete learner route");
+ const numbers=modules.map(m=>m.number).sort((a,b)=>a-b);
+ if(numbers.some((n,index)=>n!==index+1))throw Error("Course module numbers must run consecutively from 1 through 12");
+ for(const route of Object.values(routes)){
+  if(route.length!==12||new Set(route).size!==12||route.some(id=>!modules.some(m=>m.id===id)))
+   throw Error("Incomplete learner route");
+  if(route.some((id,index)=>modules.find(m=>m.id===id).number!==index+1))
+   throw Error("Learner routes must list every course in numeric sequence");
+ }
  return {modules:12,lessons:36,questions:36,revision:REVISION};
 }
 function grade(id,answers){const m=modules.find(m=>m.id===id);if(!m)throw Error("Unknown module");if(!Array.isArray(answers)||answers.length!==3||answers.some(n=>!Number.isInteger(n)||n<0||n>2))throw Error("Answer all three questions");let correct=0;const feedback=m.quiz.map((q,i)=>{let pass=q.answer===answers[i];if(pass)correct++;return {question:q.question,selected:answers[i],correct:q.answer,pass,explanation:q.explanation};});return {id,correct,total:3,metTarget:correct>=2,feedback,revision:REVISION};}
