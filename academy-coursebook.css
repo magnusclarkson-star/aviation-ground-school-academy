@@ -180,3 +180,77 @@
 @media(max-width:900px){#lessonReading article.visual-manual-section{grid-template-columns:1fr}.visual-manual-hero .approved-full-picture{max-height:500px}}
 @media(max-width:540px){.visual-manual-cover{padding:11px}.visual-manual-strip{margin:-11px -11px 13px;padding:11px;gap:7px}.visual-manual-strip span{font-size:9px}.visual-manual-cover h3{font-size:24px}#lessonReading article.visual-manual-section{padding:12px;gap:12px}#lessonReading article.visual-manual-section>h3{font-size:21px}.visual-lecture-num{width:35px;height:35px;font-size:14px}.visual-manual-cover>p{font-size:13px}.visual-lesson-study{padding:10px}.visual-lesson-dialog{padding:10px;border-radius:10px}.visual-lesson-nav button{width:100%}}
 @media print{.visual-manual-cover,#lessonReading article.visual-manual-section{background:#fff!important;border-color:#9daeb6;break-inside:avoid;box-shadow:none}.visual-manual-strip,.visual-note-kicker{print-color-adjust:exact;-webkit-print-color-adjust:exact}.visual-lesson-dialog,.visual-note-cue{display:none!important}.visual-lesson-nav{display:none!important}.visual-observation-check{break-inside:avoid}}
+
+
+/* Scenic navy-and-gold illustrated academy theme.
+ * Inspired by the owner's reference screenshot, not a copied image or mock page.
+ * The scene uses our already-approved local Cessna photograph collage.
+ */
+:root{--academy-gold:#d5ac62;--academy-cream:#faf5e9;--academy-navy:#0a2237;--academy-sky:#9cc5d8}
+body{background:radial-gradient(ellipse at 87% 9%,#1a4055 0,transparent 38%),linear-gradient(180deg,#061b2b 0%,#0b2538 65%,#081d2d 100%);color:#f7f5ef}
+.site-head{background:#0a2336;border-bottom:3px solid #bd9356;box-shadow:0 6px 17px #03101b55}
+.brand{color:#f4e5c6;font-family:Georgia,"Times New Roman",serif;letter-spacing:.5px;font-size:clamp(14px,2vw,18px)}
+.brand small{color:#d2b277;font-family:system-ui,sans-serif;letter-spacing:2px}
+.site-head nav a{color:#e6d7b9;text-decoration:none;border-bottom:1px solid transparent;padding-bottom:4px}
+.site-head nav a:hover,.site-head nav a:focus-visible{color:#ffe5a9;border-bottom-color:#d6af64}
+.scenic-hero{position:relative;isolation:isolate;overflow:hidden;min-height:344px;padding:0;border:1px solid #b48d56;border-bottom:5px solid #d2aa5e;background:#0c2940;border-radius:16px;box-shadow:0 14px 35px #030e1880}
+.scenic-hero .hero-scene{position:absolute;right:0;top:0;bottom:43px;width:59%;z-index:-2;background-image:url("assets/lecture-visuals/aviation-real-world-photographs.webp");background-repeat:no-repeat;background-size:202% 202%;background-position:right top;filter:saturate(1.12) contrast(1.04)}
+.scenic-hero::before{content:"";position:absolute;inset:0 0 43px;z-index:-1;background:linear-gradient(91deg,#091f31 0%,#0b2539 36%,#0b2638ed 51%,#13354b55 75%,#0c24334d 100%)}
+.scenic-hero .scenic-content{padding:37px 34px 29px;max-width:min(720px,70%);min-height:299px;display:flex;flex-direction:column;justify-content:center}
+.scenic-hero .eyebrow{color:#f1d29a;font-size:11px;letter-spacing:1.7px;text-shadow:0 2px 6px #051c2d}
+.scenic-hero h1{font:700 clamp(29px,4.1vw,49px)/1.12 Georgia,"Times New Roman",serif;color:#ffe8bb;margin:16px 0 14px;text-shadow:0 3px 6px #05131fd4}
+.scenic-hero p{font-size:13px;line-height:1.75;color:#f4e6d1;max-width:690px;text-shadow:0 1px 3px #061b31a0}
+.scenic-gold-strip{display:flex;justify-content:space-around;gap:10px;align-items:center;flex-wrap:wrap;background:linear-gradient(100deg,#8e6837,#d5b276,#9f7841);color:#122d3b;min-height:44px;padding:9px 15px}
+.scenic-gold-strip span{font-size:11px;letter-spacing:.7px;text-transform:uppercase;font-weight:800}
+.scenic-gold-strip strong{font:750 16px Georgia,serif;margin-right:7px;color:#2a3d41}
+.notice{background:linear-gradient(105deg,#2d3440,#203446);border:1px solid #796a54;border-left:4px solid var(--academy-gold);color:#efe7d7}
+.panel{border-color:#4f6671;background:linear-gradient(165deg,#112e41,#0c2537);box-shadow:0 5px 19px #02111a30}
+.panel h2{font-family:Georgia,"Times New Roman",serif;color:#f4d7a3}
+.panel h3{color:#f1d9b6}
+.gold-sidebar{border:1px solid #a5824f;box-shadow:inset 0 3px 0 #cfa868,0 12px 25px #020e1840}
+.sidebar-kicker{font-size:10px;letter-spacing:1.4px;color:#d1a86b;font-weight:850;margin:2px 0 5px}
+.sidebar-help{font-size:12px;color:#bed0db;line-height:1.65;margin:0 0 14px}
+.sidebar button[aria-pressed=true],.sidebar button.active{background:#8c6936!important;color:#fdf5e5!important;border-color:#d9b677!important}
+.sidebar button{transition:background .15s,border .15s}
+.panel[aria-label="Course settings"]{border-top:3px solid #b79255}
+.panel[aria-label="Course settings"] button.primary,#nextLesson,.actions button.primary{background:linear-gradient(115deg,#c6a05c,#f0cf85);border:1px solid #c9a969;color:#192d39;font-weight:850}
+button.primary:hover,#nextLesson:hover{filter:brightness(1.06)}
+.panel[aria-label="Lesson reading and self-check"]{position:relative;border:1px solid #bd9963;border-top:4px solid #d6b16f}
+.panel[aria-label="Lesson reading and self-check"]>h2#moduleTitle{font:700 clamp(24px,3vw,33px)/1.2 Georgia,"Times New Roman",serif;color:#f1dcaf}
+.chapter-crest{display:flex;width:49px;height:49px;align-items:center;justify-content:center;background:#d0a960;color:#143144;border:2px solid #fff0c6;border-radius:50%;box-shadow:0 4px 15px #09111f55;font-size:26px;margin-bottom:11px}
+.visual-manual-cover{border:2px solid #c5a16a;background:linear-gradient(160deg,#fffaf0,#f8f2e5);box-shadow:0 7px 19px #010f1b33}
+.visual-manual-strip{background:linear-gradient(105deg,#142c3d,#164b58);border-bottom:5px solid #c9a05c}
+.visual-manual-cover h3{color:#1d4255}
+.visual-manual-cover .visual-manual-meta{color:#926c36}
+#lessonReading article.visual-manual-section{border:1px solid #c3a778;background:linear-gradient(145deg,#fffdf7,#f8f4e9);box-shadow:0 7px 20px #000d1629}
+#lessonReading article.visual-manual-section>h3{border-bottom:2px solid #c7a56c}
+.visual-lecture-num{background:#143a4e;border-color:#c4a16b}
+.visual-note-kicker{background:#153951;color:#f7e8bf;border-bottom:2px solid #c4a16d}
+.visual-observation-check{background:#eff1ec;border-color:#b4bea8}
+.visual-lesson-picture{box-shadow:0 5px 16px #132c3922}
+a.reference{color:#95e2f0}
+#courseProgress{accent-color:#d4ad70}
+#quizResult,.feedback{border-color:#caa76f}
+@media(max-width:820px){
+ .scenic-hero .hero-scene{width:100%;height:190px;bottom:auto;background-size:205% 205%;background-position:right top}
+ .scenic-hero::before{background:linear-gradient(180deg,#0b25375c 0,#0b25378f 168px,#0c273a 230px,#0b2639 100%);inset:0 0 43px}
+ .scenic-hero .scenic-content{max-width:100%;padding:205px 21px 23px;min-height:auto}
+ .scenic-hero h1{margin:6px 0 10px;font-size:clamp(27px,6vw,39px)}
+ .scenic-hero p{font-size:13px}
+}
+@media(max-width:510px){
+ .scenic-hero .hero-scene{height:148px}
+ .scenic-hero .scenic-content{padding:160px 15px 21px}
+ .scenic-gold-strip{justify-content:flex-start;gap:9px 17px}
+ .scenic-gold-strip span{font-size:9px}
+ main{padding:14px 10px 50px}
+}
+@media print{
+ .scenic-hero{min-height:0;background:#fff;border-color:#a88a5d;box-shadow:none}
+ .scenic-hero .hero-scene{display:none}
+ .scenic-hero::before{display:none}
+ .scenic-hero .scenic-content{max-width:100%;min-height:0;padding:15px}
+ .scenic-hero h1,.scenic-hero p{color:#183449;text-shadow:none}
+ .scenic-hero .eyebrow{color:#7e6134}
+ .scenic-gold-strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
