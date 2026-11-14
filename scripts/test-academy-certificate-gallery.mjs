@@ -44,7 +44,7 @@ assert.match(js,/crypto\.subtle\.digest\("SHA-256"/);
 assert.doesNotMatch(js,/window\.print\(|afterprint|data-print|printStyle/,
  "Public sample gallery must not contain print actions");
 assert.match(html,/class="print-restriction"/);
-assert.match(html,/Samples are view-only/);
+assert.match(html,/Samples carry a strong repeated SAMPLE · NOT ISSUED watermark/);
 assert.match(css,/@media print\{/);
 assert.match(css,/\.site-head,main,footer\{display:none!important\}/);
 assert.match(css,/\.print-restriction\{display:block!important/);
