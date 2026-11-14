@@ -919,8 +919,8 @@ try{
  assert.equal(await phone.locator("#moduleList").isVisible(),false);
  assert.equal(await phone.locator(".scenic-hero").isVisible(),false);
  const mobileHeader=await phone.locator(".site-head").boundingBox();
- assert.ok(mobileHeader.height>=102&&mobileHeader.height<=116,
-  "Phone needs the designed compact original-artwork banner, not a cropped photo strip");
+ assert.ok(mobileHeader.height>=80&&mobileHeader.height<=94,
+  "Phone should have one compact original-artwork banner so the teaching content starts sooner");
  assert.ok(await phone.evaluate(()=>{
   const head=document.querySelector(".site-head");
   const image=getComputedStyle(head).backgroundImage;
