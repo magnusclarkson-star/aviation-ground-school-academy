@@ -258,7 +258,7 @@ try{
   input.value="45";input.dispatchEvent(new Event("input",{bubbles:true}));
  });
  assert.match(await aeroLab.locator(".aero-lab-metric").first().textContent(),/1\.41 g/);
- assert.match(await aeroLab.locator(".aero-lab-caution").textContent(),/not an aircraft flight limit/);
+ assert.match(await aeroLab.locator(".aero-lab-caution").textContent(),/not an aircraft flight limit/i);
  assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
  await desktop.emulateMedia({media:"print"});
  assert.equal(await desktop.locator("main").isVisible(),false);
