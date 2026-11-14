@@ -91,7 +91,7 @@ jobs:
           test "$status" = 503
   private-postgres-integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 16
     services:
       postgres:
         image: postgres:16-alpine
@@ -117,3 +117,18 @@ jobs:
         run: npm ci --prefix academy-secure --ignore-scripts --no-audit --no-fund
       - name: Execute PostgreSQL-backed integration and authority gate checks
         run: node --test academy-secure/tests/integration.test.mjs
+      - name: Rehearse restore of synthetic private Academy records
+        env:
+          CI: 'true'
+          ACADEMY_BACKUP_TEST_FIXTURE: 'true'
+          PGHOST: 127.0.0.1
+          PGPORT: '5432'
+          PGUSER: academy_test
+          PGPASSWORD: test-only-password
+          PGDATABASE: academy_test
+        run: |
+          if ! command -v pg_dump >/dev/null || ! command -v pg_restore >/dev/null || ! command -v psql >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          bash academy-secure/scripts/test-backup-restore.sh
