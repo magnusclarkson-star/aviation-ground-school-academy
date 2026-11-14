@@ -8,8 +8,14 @@ assert.equal(new Set(M.modules.map(x=>x.id)).size,12);
 assert.equal(new Set(M.modules.flatMap(m=>m.quiz.map(q=>q.id))).size,36);
 const positions=M.modules.flatMap(m=>m.quiz.map(q=>q.answer));
 for(const n of [0,1,2])assert.ok(positions.filter(x=>x===n).length>=10);
-for(const route of Object.values(M.routes)){
+for(const [path,route] of Object.entries(M.routes)){
  assert.equal(route.length,12);assert.equal(new Set(route).size,12);
+ assert.deepEqual(route.map(id=>M.modules.find(m=>m.id===id)?.number),
+  Array.from({length:12},(_,i)=>i+1),
+  "Course numbers in "+path+" learning route must run in order, no missing or skipped numbers");
+ assert.equal(route[2],"aerodynamics");
+ assert.equal(route[3],"systems","Course 04 must follow Course 03");
+ assert.equal(route[4],"instruments","Course 05 must follow Course 04");
 }
 for(const m of M.modules){
  assert.equal(m.sections.length,3);
