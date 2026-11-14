@@ -68,7 +68,7 @@ try{
  assert.ok(contrast.notes>=7,"Core textbook text must have strong contrast: "+JSON.stringify(contrast));
  assert.ok(contrast.advanced>=7,"Advanced lesson text must have strong contrast: "+JSON.stringify(contrast));
  assert.ok(contrast.moduleMeta>=4.5,"Module metadata must be legible: "+JSON.stringify(contrast));
- assert.equal(await desktop.locator(".scenic-gold-strip>span").count(),3);
+ assert.equal(await desktop.locator(".scenic-gold-strip").count(),0); // Retired unused banner row
  assert.ok((await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage)).includes("aviation-real-world-photographs.webp"));
  assert.equal(await desktop.locator(".textbook-course-intro").count(),1);
  assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
