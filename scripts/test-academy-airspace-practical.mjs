@@ -39,7 +39,7 @@ assert.deepEqual(lab.runway(36).reciprocal,"18");
 assert.equal(lab.runway(36).nominalMagnetic,0);
 for(let i=1;i<=36;i++){
  const p=lab.runway(i),q=lab.runway(Number(p.reciprocal));
- assert.equal(q.number,p.number,"Runway number must be reciprocal after 180°");
+ assert.equal(q.reciprocal,p.number,"Reciprocal of the reciprocal must equal the original runway number");
  assert.match(p.note,/Real runway designation comes from the published aerodrome chart/);
 }
 assert.throws(()=>lab.runway(0),/from 01 to 36/);
