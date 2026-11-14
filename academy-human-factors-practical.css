@@ -1,0 +1,69 @@
+/* Course 11 only: compact, high-contrast pictorial self-study. */
+.human-lab{margin:10px 0 17px;padding:12px;color:#f3faff;background:#102f43;border:1px solid #8bb0c5;border-left:4px solid #efc986;border-radius:10px}
+.human-lab[hidden]{display:none!important}
+.human-lab *{box-sizing:border-box}
+.human-lab-header{border-bottom:1px solid #6e94a9;padding-bottom:7px}
+.human-lab-kicker{margin:0!important;font:800 11px/1.35 system-ui,sans-serif!important;color:#ffe0a8!important;letter-spacing:.07em}
+.human-lab-header h3{margin:4px 0;color:#ffe7bc;font:700 clamp(18px,2vw,23px)/1.3 Georgia,serif}
+.human-lab-header p{font-size:13px;line-height:1.51;margin:5px 0;color:#f0f9ff}
+.human-lab-focus{margin:8px 0!important;padding:8px 9px;background:#204d61;border-left:3px solid #a1e3ee;border-radius:6px;color:#f7fcff!important;font-size:13px!important;line-height:1.47!important}
+.human-lab-progress{font-size:12px;color:#ebf4fa;margin:9px 0}
+.human-lab-reading>h4{font-size:17px;color:#ffe6b9;margin:7px 0 9px}
+.human-lab-grid{display:grid;grid-template-columns:minmax(175px,1fr) minmax(0,1.7fr);gap:12px;align-items:start}
+.human-lab-gallery{min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.human-lab-gallery:has(figure:only-child){grid-template-columns:1fr}
+.human-lab-figure{margin:0;min-width:0;border:1px solid #80a7bd;border-radius:7px;overflow:hidden;background:#234b5e}
+.human-lab-picture-trigger{display:block;position:relative;width:100%;min-height:0!important;padding:0!important;border:0!important;background:#163a4c!important;cursor:zoom-in}
+.human-lab-picture{display:block;width:100%;height:auto;max-height:150px;object-fit:contain;background:#193b4c}
+.human-lab-zoom-cue{position:absolute;right:3px;bottom:3px;padding:3px 5px;border-radius:4px;font:700 10px/1.3 system-ui;color:#fff;background:#102d40e8}
+.human-lab-figure figcaption{padding:5px 6px;font-size:11px;line-height:1.34;color:#f1f9ff}
+.human-lab-lesson>p:first-child{margin:0 0 8px;font-size:13px;line-height:1.53;color:#f2faff}
+.human-lab-choices{min-width:0;margin:8px 0;padding:8px;border:1px solid #92b6ca;border-radius:7px}
+.human-lab-choices legend{padding:0 3px;font-size:13px;font-weight:800;color:#ffe9c0;line-height:1.43}
+.human-lab-choices label{display:flex;gap:8px;align-items:flex-start;margin:4px 0;padding:7px;border:1px solid transparent;border-radius:5px;font-size:13px;line-height:1.43;cursor:pointer;color:#f7fcff}
+.human-lab-choices label:has(input:checked){background:#27647b;border-color:#95daea}
+.human-lab-choices input{flex:0 0 auto;accent-color:#95dbe8;margin:3px 0 0}
+.human-lab button{border:1px solid #c5dbe5;min-height:36px;border-radius:7px;background:#26627d;color:#fff;font:750 12px/1.35 system-ui,sans-serif;padding:7px 10px;cursor:pointer}
+.human-lab button:disabled{opacity:.56;cursor:not-allowed}
+.human-lab button:not(:disabled):hover{background:#347d99}
+.human-lab :focus-visible,.human-lab-dialog :focus-visible{outline:3px solid #ffdc98;outline-offset:2px}
+.human-lab-feedback,.human-lab-output{background:#1c455b;border:1px solid #88b2c8;border-radius:7px;padding:9px;font-size:12px;line-height:1.52;color:#f4fbff;margin:9px 0}
+.human-lab-feedback p,.human-lab-output p{margin:5px 0;color:#f3faff}
+.human-lab-feedback strong,.human-lab-output strong{color:#ffe6b9}
+.human-lab-glossary{border-top:1px solid #7596a9;margin-top:9px;padding-top:8px}
+.human-lab-glossary summary{font-weight:750;cursor:pointer;color:#ffe4b4}
+.human-lab-glossary dl,.human-lab-steps{display:grid;grid-template-columns:minmax(90px,125px) minmax(0,1fr);gap:6px 8px;margin:9px 0 0}
+.human-lab-glossary dt,.human-lab-steps dt{font-weight:800;color:#ffe2b0}
+.human-lab-glossary dd,.human-lab-steps dd{margin:0;color:#f5fcff}
+.human-lab-activity{margin:12px 0 0;padding:10px;background:#183c51;border:1px solid #85aabd;border-radius:8px}
+.human-lab-activity h5{margin:0 0 5px;color:#ffe6b9;font-size:15px}
+.human-lab-activity>p{font-size:12px;line-height:1.5;color:#edf9ff;margin:4px 0 9px}
+.human-lab-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.human-lab-checkbox{display:flex;align-items:center;gap:7px;border:1px solid #729eb5;border-radius:6px;padding:7px;min-height:42px;background:#26536a;color:#fff;font-weight:700;font-size:12px;cursor:pointer}
+.human-lab-checkbox:has(input:checked){background:#316d82;border-color:#b8e5eb}
+.human-lab-checkbox input{accent-color:#9ce4ec}
+.human-lab-output ul{padding-left:19px;margin:6px 0}
+.human-lab-risk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.human-lab-risk-card{min-width:0;border:1px solid #81a9bd;background:#224b60;padding:9px;border-radius:7px;font-size:12px;line-height:1.45}
+.human-lab-risk-card strong{display:block;color:#ffe0a7;font-size:13px}
+.human-lab-risk-card p{margin:5px 0;color:#f3faff}
+.human-lab-risk-card button{margin:4px 0}
+.human-lab-risk-detail{padding-top:6px;border-top:1px solid #7fa9bb}
+.human-lab-nav{display:flex;justify-content:space-between;gap:8px;margin:12px 0 8px}
+.human-lab-foot{margin:6px 0 0;font-size:11px;line-height:1.5;color:#e1f1f8}
+.human-lab-dialog{position:fixed;margin:auto;padding:13px;max-width:min(94vw,1140px);max-height:92vh;overflow:auto;border-radius:10px;border:2px solid #a3c5d7;background:#102e43;color:#fff}
+.human-lab-dialog::backdrop{background:#051828db}
+.human-lab-dialog h3{color:#ffe5b7;font-size:16px}
+.human-lab-dialog canvas{display:block;max-width:100%;height:auto;border-radius:5px}
+.human-lab-dialog button{display:block;margin:10px auto 0;border:1px solid #d9c79d;background:#24617b;color:#fff;padding:9px 15px;border-radius:7px}
+@media(max-width:950px){.human-lab-grid{grid-template-columns:1fr}.human-lab-gallery{max-width:600px}}
+@media(max-width:590px){
+ .human-lab{padding:9px 8px;margin:8px 0}
+ .human-lab-header h3{font-size:19px}
+ .human-lab-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .human-lab-figure figcaption{font-size:10px}
+ .human-lab-picture{max-height:106px}
+ .human-lab-risk-grid{grid-template-columns:1fr}
+ .human-lab-choices label{font-size:13px}
+ .human-lab-nav button{flex:1}
+}

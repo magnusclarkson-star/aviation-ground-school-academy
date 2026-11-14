@@ -86,6 +86,9 @@ jobs:
       - run: node --check academy-performance-practical-data.js
       - run: node --check academy-performance-practical-ui.js
       - run: node scripts/test-academy-performance-practical.mjs
+      - run: node --check academy-human-factors-practical-data.js
+      - run: node --check academy-human-factors-practical-ui.js
+      - run: node scripts/test-academy-human-factors-practical.mjs
       - run: node scripts/test-academy-in-app-notes.mjs
       - run: node --check academy-coursebook-depth-a.js
       - run: node --check academy-coursebook-depth-b1.js
