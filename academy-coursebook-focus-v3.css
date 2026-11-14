@@ -57,7 +57,7 @@ main{max-width:1920px;padding:7px 10px 30px}
 .visual-manual-cover>h3{grid-column:1;grid-row:1;font-size:clamp(19px,2vw,24px);line-height:1.2;margin:2px 0 0;color:#142e41}
 .visual-manual-cover>p:not(.visual-manual-meta){display:none}
 .visual-manual-cover>.visual-manual-meta{grid-column:1;grid-row:2;font-size:13px;line-height:1.35;margin:3px 0;color:#5a3d1a}
-.visual-manual-hero{grid-column:2;grid-row:1/span 2;max-height:192px;overflow:hidden}
+.visual-manual-hero{grid-column:2;grid-row:1/span 2;max-height:none;overflow:visible}
 .visual-manual-hero .approved-visual-heading{padding:5px 8px}
 .visual-manual-hero .approved-visual-heading h4{font-size:13px;line-height:1.2}
 .visual-manual-hero .approved-picture-trigger img,.visual-manual-hero .approved-full-picture{max-height:124px}
@@ -109,7 +109,7 @@ footer{font-size:13px;color:#e7f4fb;margin-top:8px}
  .site-head nav a{font-size:12px;flex-shrink:0}
  .scenic-hero{min-height:62px!important}
  .scenic-hero .scenic-content{min-height:60px!important;padding:6px 9px!important;gap:3px 9px}
- .scenic-hero .eyebrow{font-size:10px!important}
+ .scenic-hero .eyebrow{font-size:10px!important;white-space:normal!important;overflow-wrap:anywhere;max-width:100%}
  .scenic-hero h1{font-size:21px!important;white-space:normal;line-height:1.1}
  .scenic-hero .hero-summary{display:none}
  .scenic-hero .hero-scene{width:34%}
