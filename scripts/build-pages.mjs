@@ -29,7 +29,15 @@ const publicAircraftFiles=[
  "assets/aircraft/typhoon-fg-exterior.json",
  "assets/aircraft/TYPHOON-ATTRIBUTION.md"
 ];
-const publicCuratedPaths=["assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",
+// Approved certificate PNGs are stored as byte-for-byte base64 segments so
+// GitHub's text-file API can upload the exact originals. These are PUBLIC,
+// reviewed sample artwork only: never student records or private signatures.
+const originalCertificateSegments=[
+ ...Array.from({length:7},(_,i)=>"assets/certificates/original-formal.part"+String(i).padStart(2,"0")+".txt"),
+ ...Array.from({length:5},(_,i)=>"assets/certificates/original-scout.part"+String(i).padStart(2,"0")+".txt"),
+ ...Array.from({length:5},(_,i)=>"assets/certificates/original-enthusiast.part"+String(i).padStart(2,"0")+".txt")
+];
+const publicCuratedPaths=["assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",...originalCertificateSegments,
  "accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
