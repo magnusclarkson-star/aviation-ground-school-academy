@@ -40,6 +40,31 @@ test("private ATO roles, verified-source gates and independent completion record
  try{
   const schema=await readFile(new URL("../schema.sql",import.meta.url),"utf8");
   await pool.query(schema);
+  // CI acts as a dedicated migration role here. The HTTP server runs under
+  // a completely different, non-owner database account for this entire test.
+  const privileges=await readFile(new URL("../runtime-privileges.sql",import.meta.url),"utf8");
+  await pool.query(privileges);
+  await pool.query("CREATE ROLE agsa_app_ci LOGIN PASSWORD 'ci-synthetic-only-runtime-password' INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE");
+  await pool.query("GRANT agsa_app_runtime TO agsa_app_ci");
+  const runtimeUrl=new URL(DATABASE_URL);
+  runtimeUrl.username="agsa_app_ci";
+  runtimeUrl.password="ci-synthetic-only-runtime-password";
+  const runtimePool=new Pool({connectionString:runtimeUrl.toString()});
+  try{
+   const {rows:[p]}=await runtimePool.query(`SELECT
+    current_user='agsa_app_ci' AS expected_login,
+    has_table_privilege(current_user,'academy_users','SELECT') AS can_read,
+    has_table_privilege(current_user,'academy_training_stages','INSERT') AS can_record_training,
+    has_table_privilege(current_user,'academy_training_stages','UPDATE') AS can_mutate_training,
+    has_table_privilege(current_user,'academy_assessment_records','DELETE') AS can_delete_exam,
+    has_table_privilege(current_user,'academy_audit_events','UPDATE') AS can_modify_audit,
+    has_table_privilege(current_user,'academy_document_manual_settlements','DELETE') AS can_delete_settlement,
+    has_schema_privilege(current_user,'public','CREATE') AS can_create_sql`);
+   assert.deepEqual(p,{expected_login:true,can_read:true,can_record_training:true,
+    can_mutate_training:false,can_delete_exam:false,can_modify_audit:false,
+    can_delete_settlement:false,can_create_sql:false});
+   await assert.rejects(()=>runtimePool.query("ALTER TABLE academy_users ADD COLUMN synthetic_escalation boolean"),/must be owner|permission denied/i);
+  }finally{await runtimePool.end()}
   const pass="ExampleVeryStrongTrainingPassword!2026";
   const encoded=await hashPassword(pass);
   const users={};
@@ -51,7 +76,7 @@ test("private ATO roles, verified-source gates and independent completion record
   }
   child=spawn(process.execPath,[new URL("../server.mjs",import.meta.url).pathname],{
    cwd:new URL("..",import.meta.url).pathname,
-   env:{...process.env,ACADEMY_ORIGIN:ORIGIN,PORT:String(PORT),HOST:"127.0.0.1",DATABASE_URL,
+   env:{...process.env,ACADEMY_ORIGIN:ORIGIN,PORT:String(PORT),HOST:"127.0.0.1",DATABASE_URL:runtimeUrl.toString(),
     ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,73).toString("base64"),ACADEMY_TOTP_ENCRYPTION_KEY:Buffer.alloc(32,91).toString("base64")},
    stdio:["ignore","pipe","pipe"]
   });
