@@ -62,9 +62,8 @@ function render(id){
  const label=el("p","ACADEMY FULL LECTURE EDITION");label.className="textbook-kicker";
  const h=el("h3","Full teaching notes, examples and practical reasoning");
  const intro=el("p","This chapter includes "+count.toLocaleString()+" words of additional original textbook instruction, three worked examples, six explained technical terms and three reflective questions. Read the complete lesson before relying on a picture or practice score.");
- const print=el("button","Print these teaching notes");print.type="button";print.className="textbook-print";
- print.addEventListener("click",()=>window.print());
- overview.append(label,h,intro,print);
+ // All teaching notes remain in the Academy reader; no print/download action.
+ overview.append(label,h,intro);
  const cover=reading.querySelector(".visual-manual-cover");
  if(cover)cover.after(overview);else reading.prepend(overview);
  articles.forEach((article,index)=>{
