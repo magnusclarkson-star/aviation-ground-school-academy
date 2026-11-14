@@ -1,0 +1,171 @@
+/* Classic Academy Coursebook V4.
+   Restores the owner-selected Aircraft Structure and Controls Coursebook
+   as the visible Academy lesson screen. All image pixels come from the
+   pre-existing approved source artwork. Keep controls/assessments live.
+ */
+:root { --classic-navy:#061b37; --classic-navy2:#102f55; --classic-gold:#e2b651; --classic-ink:#0d2347; }
+html { scroll-padding-top: 12px; }
+body { background:#e7edf3; color:var(--classic-ink); }
+.site-head {
+  position:relative; min-height:100px; height:clamp(80px,6.51vw,112px);
+  padding:0; background-color:#071c39;
+  background-image:url("assets/lecture-visuals/illustrated-cessna-structures-lecture.webp");
+  background-size:100% auto; background-position:center top;
+  background-repeat:no-repeat; box-shadow:none; border-bottom:3px solid #b79045;
+}
+.site-head .brand { position:absolute!important;clip-path:inset(50%);width:1px;height:1px;overflow:hidden;white-space:nowrap; }
+.site-head .site-menu { position:absolute;top:8px;right:10px;z-index:20; }
+.site-menu>summary {
+ display:block;cursor:pointer;list-style:none;padding:6px 10px;
+ background:#082747e8;color:#fff5d9;font-size:13px;font-weight:800;
+ border:1px solid #e6ba63;border-radius:7px;
+}
+.site-menu>summary::-webkit-details-marker {display:none}
+.site-menu nav {
+ display:flex;flex-direction:column;align-items:stretch;gap:3px;
+ position:absolute;top:calc(100% + 3px);right:0;width:min(290px,88vw);
+ padding:9px;background:#092846;border:2px solid #d3a658;border-radius:9px;
+ box-shadow:0 10px 26px #00172f99;z-index:22;
+}
+.site-menu:not([open]) nav {display:none}
+.site-menu nav a {color:#fff!important;text-decoration:none;padding:8px 9px;font-size:14px!important;font-weight:700;border:0;}
+.site-menu nav a:hover {background:#1d4e78}
+main {max-width:none;width:100%;margin:0;padding:5px 7px 22px}
+.scenic-hero {display:none!important}
+.grid {display:grid;grid-template-columns:minmax(220px,242px) minmax(0,1fr);gap:8px;align-items:start}
+.panel, .panel[aria-label="Lesson reading and self-check"] {
+ background:#f8fbff;color:#102746;border:1px solid #a1b6c9;border-radius:10px;
+ box-shadow:none;padding:8px;
+}
+.sidebar.gold-sidebar {
+ position:sticky;top:6px;max-height:calc(100dvh - 13px);
+ overflow:auto;background:linear-gradient(180deg,#0c2a51,#071c37);
+ color:#fff;border:1px solid #9bb6c5;padding:6px;border-radius:8px;
+}
+.sidebar .sidebar-kicker {display:none}
+.sidebar h2 {display:block;font:800 16px/1.2 Georgia,serif;color:white;margin:0 0 7px;padding:9px 8px;
+ background:linear-gradient(90deg,#0b2443,#163b6b);border-radius:5px}
+#moduleList {display:grid;gap:3px}
+#moduleList>button {
+ display:block;text-align:left;min-height:35px;padding:7px 9px;
+ background:linear-gradient(115deg,#0b2344,#09203c)!important;
+ color:#fff!important;border:1px solid #28466a;border-radius:3px;box-shadow:none;
+}
+#moduleList>button strong {display:block;font-size:13px;color:inherit;line-height:1.25;font-weight:800}
+#moduleList>button .module-note {display:none}
+#moduleList>button[aria-pressed="true"] {
+ background:linear-gradient(95deg,#f6d47a,#bd8d29)!important;
+ border:1px solid #edc15f!important;color:#061b33!important;
+}
+#moduleList>button[aria-pressed="true"] strong {color:#0b1d34!important}
+.lesson-tools-collapse {margin:9px 0 0;padding:5px 7px;color:#f4f8fb;border:1px solid #47688c;border-radius:5px}
+.lesson-tools-collapse>summary {cursor:pointer;font-size:13px;color:#fff3d9;font-weight:750}
+.lesson-tools-collapse .quick-controls {
+ display:block;margin:8px 0 6px;padding:7px;background:#163957;border:1px solid #60869f
+}
+.lesson-tools-collapse .quick-primary {display:flex;flex-direction:column;align-items:stretch;gap:5px}
+.lesson-tools-collapse .quick-primary>label {position:static;width:auto;height:auto;clip:auto;font-size:13px;white-space:normal}
+.lesson-tools-collapse .quick-primary select,.lesson-tools-collapse .quick-primary #search,
+.lesson-tools-collapse .quick-primary button {width:100%;min-width:0;flex:auto;height:38px;max-width:none}
+.lesson-tools-collapse .study-tools>summary {font-size:13px}
+.lesson-tools-collapse .notice-compact {display:block;margin:9px 0;padding:7px}
+.lesson-tools-collapse .notice-compact>summary {color:#ffebbd}
+.sidebar .supplementary-links,.sidebar .objectives-panel {
+ margin:6px 0;padding:5px 7px;color:#f7fcff;border:1px solid #466b89;
+ border-radius:5px;background:#123551;font-size:13px
+}
+.sidebar .supplementary-links>summary,.sidebar .objectives-panel>summary{color:#fff4d4;font-size:13px;line-height:1.3}
+.sidebar .supplementary-links .meta,.sidebar .objectives-panel li {color:white;font-size:13px}
+.sidebar .supplementary-links a{color:#bdf3ff}
+.panel[aria-label="Lesson reading and self-check"] {padding:7px 8px;border-top:1px solid #a1b6c9}
+.panel[aria-label="Lesson reading and self-check"]>.eyebrow,
+.panel[aria-label="Lesson reading and self-check"]>.meta#moduleMeta {display:none}
+.panel[aria-label="Lesson reading and self-check"]>h2#moduleTitle {
+ display:block;margin:0 0 5px;padding:9px 17px;border-radius:8px;
+ background:linear-gradient(180deg,#f6dd96,#be8e3c)!important;
+ color:#092347!important;border:1px solid #c9a05b;
+ font:800 clamp(21px,2.15vw,30px)/1.14 Georgia,"Times New Roman",serif;
+ text-shadow:none;box-shadow:inset 0 1px 0 #fff6db;
+}
+.visual-lesson-nav {display:flex;gap:5px;margin:5px 0 7px;overflow-x:auto}
+.visual-lesson-nav button{flex:1;max-width:none;min-width:160px;border-radius:6px;min-height:34px;
+ color:#fff;background:#123e6c;font-size:13px;line-height:1.3}
+#lessonReading {margin:0;gap:9px}
+.original-coursebook-plate {margin:0 0 9px;padding:0;border:1px solid #9aadc4;border-radius:10px;background:white;overflow:hidden}
+.original-coursebook-plate .original-plate-link{display:block;border:0;border-radius:0;padding:0;text-decoration:none;background:white;cursor:zoom-in}
+.original-plate-viewport {position:relative;display:block;width:100%;aspect-ratio:1278/862;overflow:hidden;background:#eef5fb}
+.original-plate-viewport img {
+ position:absolute;display:block;width:120.2%;height:auto;max-width:none;max-height:none!important;
+ left:-19.9%;top:-12.2%;object-fit:initial;
+}
+.original-coursebook-plate figcaption{padding:5px 8px;font-size:13px;line-height:1.3;
+ background:#e9f1f9;color:#173a57;font-weight:700}
+html[data-course-module="aircraft"] .visual-manual-cover {display:none!important}
+html[data-course-module="aircraft"] .visual-lesson-nav {margin:6px 0 8px}
+.textbook-course-intro {background:#f7faff;border:1px solid #aac0d1;border-radius:6px;padding:9px 13px;
+ color:#15334e;box-shadow:none;margin-bottom:7px}
+.textbook-course-intro .textbook-kicker{font-size:12px;letter-spacing:.2px;color:#61400c}
+.textbook-course-intro h3{font-size:18px;color:#102e4b}
+.textbook-course-intro>p:not(.textbook-kicker){font-size:14px;line-height:1.5;color:#1b3c53}
+#lessonReading article.visual-manual-section{background:#fff;border-color:#bbc8d6;border-radius:8px;padding:11px}
+#lessonReading article.visual-manual-section>h3{color:#123b69;border-bottom-color:#d8b65e}
+#lessonReading article.visual-manual-section>p{font-size:16px;color:#102e44;line-height:1.65}
+.textbook-prose p{font-size:16px;line-height:1.63;color:#132f44}
+.textbook-worked-case>p:not(.textbook-label),.textbook-worked-case li{font-size:15px;color:#133649}
+.textbook-head p,.textbook-head span{color:#fff1cd}
+.visual-lesson-study .visual-focus,.visual-lesson-study .visual-expanded-explanation{color:#122f45!important;font-size:15px!important}
+.visual-lesson-study .visual-detail-caption{color:#18364d}
+.panel[aria-label="Lesson reading and self-check"]>h3,
+.panel[aria-label="Lesson reading and self-check"]>p:not(.meta) {color:#123653}
+.panel[aria-label="Lesson reading and self-check"]>p.meta{color:#183e59}
+.panel[aria-label="Lesson reading and self-check"]>.visual-sourcing-note {color:#183e59}
+#quizQuestions p,#quizQuestions label,#quizQuestions .question legend {color:#132d45}
+#quizQuestions .question,#quizQuestions .capstone-question{border-color:#aebeca}
+.deep-section {background:#103656;border-color:#5e839e;color:#fff}
+.deep-section>summary {background:#133e62}
+.deep-section>summary strong,.deep-section .meta{color:#fff8e8}
+.deep-lesson{background:#fffdf8;color:#1a3a4b}
+.deep-lesson p{color:#16364a!important}
+.deep-lesson h4{color:#123a57}
+.capstone-panel,.certificate-panel {background:#102e4d;color:#fff;margin:10px 0}
+.capstone-panel h2,.certificate-panel h2{color:#ffe4b2}
+.capstone-panel p,.certificate-panel p,.capstone-panel .meta,.certificate-panel .meta{color:#f9fdff}
+.feedback{color:#fff;background:#173d58}
+footer{color:#2b475d;font-size:13px;margin:10px 0}
+@media(max-width:980px){
+ .grid{grid-template-columns:minmax(180px,215px) minmax(0,1fr);gap:6px}
+ .site-head{height:83px;min-height:83px}
+}
+@media(max-width:760px){
+ .site-head {height:78px;min-height:78px;background-image:linear-gradient(90deg,#071a33cc,#071a3388),url("assets/lecture-visuals/aviation-real-world-photographs.webp");
+ background-position:center center;background-size:cover}
+ .site-head:before{content:"AVIATION GROUND SCHOOL ACADEMY";position:absolute;left:8px;top:9px;color:#ffe5a5;
+ font:800 14px/1.2 Georgia,serif;max-width:63%}
+ .site-head:after{content:"Ground School Coursebook";position:absolute;left:8px;top:34px;color:white;
+ font:800 18px/1.25 Georgia,serif;max-width:75%}
+ .site-head .site-menu{top:7px;right:7px}
+ main {padding:4px 5px 20px}
+ .grid{grid-template-columns:1fr;gap:5px}
+ .sidebar.gold-sidebar{position:static;max-height:none;display:block;padding:5px}
+ .sidebar h2,#moduleList{display:none}
+ #mobileModuleJump{display:block;width:100%;font-size:15px;min-width:0;min-height:41px;
+ background:#082847;border:1px solid #afc4d2;color:#fff}
+ .mobile-jump-label{display:block;color:#fff;font-size:13px;font-weight:800;margin:0 0 3px}
+ .sidebar .supplementary-links,.sidebar .objectives-panel{display:none}
+ .lesson-tools-collapse{margin:5px 0 0}
+ .panel[aria-label="Lesson reading and self-check"]>h2#moduleTitle{font-size:20px;padding:8px 10px}
+ .original-plate-viewport {aspect-ratio:736/396}
+ .original-plate-viewport img{width:208.7%;left:-34.9%;top:-42.2%}
+ .original-coursebook-plate figcaption{font-size:12px}
+ #lessonReading article.visual-manual-section{grid-template-columns:1fr;padding:9px}
+ .visual-lesson-nav{flex-wrap:nowrap;overflow-x:auto}
+ .visual-lesson-nav button{flex:0 0 auto;max-width:230px}
+}
+@media print {
+ .site-head,.site-menu,.sidebar,.lesson-tools-collapse,.visual-lesson-nav {display:none!important}
+ main{padding:0}
+ .grid{display:block}
+ .original-coursebook-plate{break-inside:avoid;print-color-adjust:exact}
+ .original-plate-viewport img{print-color-adjust:exact}
+ .panel[aria-label="Lesson reading and self-check"]{border:0}
+}
