@@ -187,6 +187,7 @@ try{
  assert.equal(await desktop.locator("#completionCelebration").isVisible(),true);
  assert.match(await desktop.locator("#completionCelebration").textContent(),/not a qualification/i);
  desktop.once("dialog",dialog=>dialog.accept());
+ await desktop.locator(".study-tools>summary").click();
  await desktop.locator("#clearRecord").click();
  assert.equal(await desktop.locator("#completionCelebration").isVisible(),false);
  assert.equal(await desktop.evaluate(()=>localStorage.getItem(window.AGSADeepCoursebook.KEY)),null);
