@@ -32,6 +32,20 @@ CREATE TABLE IF NOT EXISTS academy_sessions (
   revoked_at timestamptz
 );
 CREATE INDEX IF NOT EXISTS sessions_user_idx ON academy_sessions(user_id) WHERE revoked_at IS NULL;
+ALTER TABLE academy_sessions ADD COLUMN IF NOT EXISTS mfa_verified_at timestamptz;
+-- Staff authenticator secrets use AES-256-GCM and a separate host-managed key.
+-- Never store plaintext TOTP seeds, QR codes or recovery bypass codes in SQL.
+CREATE TABLE IF NOT EXISTS academy_staff_mfa (
+ user_id uuid PRIMARY KEY REFERENCES academy_users(id),
+ secret_ciphertext bytea NOT NULL,
+ nonce bytea NOT NULL CHECK(octet_length(nonce)=12),
+ auth_tag bytea NOT NULL CHECK(octet_length(auth_tag)=16),
+ status text NOT NULL CHECK(status IN ('PENDING','ACTIVE')),
+ last_step bigint NOT NULL DEFAULT -1,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ changed_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS academy_login_failures (
   bucket text PRIMARY KEY,
   attempts integer NOT NULL DEFAULT 0,
