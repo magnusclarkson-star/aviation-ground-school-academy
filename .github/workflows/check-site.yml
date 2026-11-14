@@ -81,6 +81,8 @@ jobs:
       - run: node --check academy-coursebook-chapters.js
       - run: node --check academy-coursebook-chapter-ui.js
       - run: node scripts/test-academy-chapter-depth.mjs
+      - run: node --check academy-coursebook-layout-v2.js
+      - run: node scripts/test-academy-reader-layout.mjs
       - run: node --check academy-specialist-courses-data.js
       - run: node --check academy-specialist-courses.js
       - run: node scripts/test-academy-specialist-courses.mjs
