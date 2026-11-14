@@ -6,14 +6,14 @@ import {chromium} from "playwright";
 
 const root=process.cwd();
 const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
-for(const [prefix,parts] of [["formal",7],["scout",5],["enthusiast",5]])
- for(let i=0;i<parts;i++)allowed.add("assets/certificates/original-"+prefix+".part"+String(i).padStart(2,"0")+".txt");
+for(const key of ["formal","scout","enthusiast"])
+ allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
  try{
   const bytes=await readFile(path.join(root,name));
-  res.writeHead(200,{"Content-Type":(name.endsWith(".js")||name.endsWith(".mjs"))?"text/javascript":name.endsWith(".css")?"text/css":name.endsWith(".webp")?"image/webp":"text/html"});
+  res.writeHead(200,{"Content-Type":(name.endsWith(".js")||name.endsWith(".mjs"))?"text/javascript":name.endsWith(".css")?"text/css":name.endsWith(".webp")?"image/webp":name.endsWith(".png")?"image/png":"text/html"});
   res.end(bytes);
  }catch{res.writeHead(404);res.end()}
 });
@@ -246,21 +246,20 @@ try{
  assert.equal(await standard.locator('input[type="file"]').count(),0);
  for(const key of ["formal","scout","enthusiast"]){
   const card=standard.locator('[data-original="'+key+'"]');
-  await card.locator(".load-status").getByText(/verified and displayed/).waitFor({timeout:30000});
+  await card.locator(".load-status").getByText(/protected sample displayed/i).waitFor({timeout:30000});
   assert.ok(await card.locator(".original-artwork").evaluate(img=>img.complete&&img.naturalWidth===1491&&img.naturalHeight===1055),
    "Exact original approved PNG must render at full resolution: "+key);
   assert.equal(await card.locator("[data-print]").count(),0,
    "Approved sample gallery is view-only and has no print controls");
   assert.match(await card.textContent(),/SAMPLE · NOT ISSUED/);
-  const overlay=await card.locator(".sheet-wrap").evaluate(el=>{
-   const css=getComputedStyle(el,"::after");
-   return {content:css.content,image:css.backgroundImage,repeat:css.backgroundRepeat,z:Number(css.zIndex)};
-  });
-  assert.equal(overlay.content,'""',"Full-sheet watermark overlay must exist");
-  assert.match(overlay.image,/data:image\/svg\+xml/,"Every approved sample must be covered in bold watermark text");
-  assert.equal(overlay.repeat,"repeat","Watermark must tile across the complete certificate");
-  assert.ok(overlay.z>=3,"Watermark must appear on top of the approved original artwork");
+  const src=await card.locator(".original-artwork").getAttribute("src");
+  assert.equal(src,"assets/certificate-previews/"+key+"-sample.png",
+   "Gallery must load protected raster PNGs, never clean certificate segments");
+  assert.equal(await card.locator(".sheet-wrap").evaluate(el=>getComputedStyle(el,"::after").content),"none",
+   "Public images must already contain their watermark in pixels, not a removable CSS layer");
  }
+ const originalViaPublic=await standard.evaluate(()=>fetch("assets/certificates/original-formal.part00.txt").then(x=>x.status));
+ assert.equal(originalViaPublic,404,"Clean original segments must not be served by the public gallery");
  assert.ok((await standard.locator('[data-original="formal"] .sheet-wrap').boundingBox()).width>=800,
   "Desktop should use the available area for original certificate art");
  assert.equal(await standard.locator(".print-restriction").isVisible(),false);
