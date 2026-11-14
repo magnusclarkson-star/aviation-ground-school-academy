@@ -84,21 +84,45 @@ footer{padding:25px 16px;text-align:center;border-top:1px solid #355772;color:#a
  .certificate .watermark{font-size:62px}
 }
 
-/* The source artwork is now the selected original PNG itself, never a CSS redraw. */
-.gallery .certificate{display:none!important}
-.switches{display:none!important}
-.master-local-picker{min-height:260px;display:flex;flex-direction:column;gap:10px}
-.master-local-picker p{color:#d4e4f1;margin:6px 0;font-size:13px}
-.master-local-picker input[type=file]{width:100%;padding:12px;border:1px solid #67899e;border-radius:10px;background:#0d2637;color:#fff}
-.exact-master-preview{width:100%;aspect-ratio:1491/1055;position:relative;overflow:hidden;background:#142c3e;border:1px solid #55758a}
-.exact-master-preview:empty{background:repeating-linear-gradient(135deg,#152f43 0 15px,#0e273a 15px 30px)}
-.approved-master-art{display:block;width:100%;height:100%;object-fit:contain}
-.sample-watermark{position:absolute;bottom:2%;left:2%;padding:4px 7px;border-radius:3px;background:#641a1ce8;color:#fff;font-size:clamp(9px,1.2vw,16px);font-weight:900;z-index:5}
-[data-print]:disabled{opacity:.45;cursor:not-allowed}
+
+/* Single permanent Academy standard: matching the navy-and-gold PDF palette.
+   No hidden specimen or upload placeholder. */
+main{max-width:1450px;padding:12px 14px 35px}
+.hero{padding:16px 20px;border-radius:9px}
+.hero h1{font-size:clamp(25px,3vw,34px);margin:5px 0}
+.hero p{font-size:15px;line-height:1.45;margin:5px 0;color:#f5faff}
+.gallery{display:block}
+.certificate-card,.certificate-card:last-child{display:block;grid-column:auto;max-width:1020px;width:100%;margin:0 auto;padding:12px}
+.card-info h2{font-size:20px;margin:4px 0}
+.card-info p{font-size:14px;line-height:1.45;min-height:0;margin:4px 0 10px;color:#ecf7ff}
+.sheet-wrap{padding:9px}
+.certificate.academy-standard{
+ --paper:#FBF9F2;--body:#203449;--outer:#122B42;
+ --heading:#122B42;--accent:#CBA85C;--subtext:#496176;
+ border-width:12px;
+}
+.certificate.academy-standard .band{background:#122B42}
+.certificate.academy-standard .academy-title{font-size:clamp(11px,1.6vw,21px)}
+.certificate.academy-standard .academy-subtitle{font-size:clamp(7px,.75vw,11px)}
+.certificate.academy-standard .student-name{color:#122B42}
+.certificate.academy-standard .watermark{color:#92302c53}
+.certificate.academy-standard .stamp{color:#785d2f}
+.card-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0 0}
+.card-actions a{font-size:14px;color:#bcefff;font-weight:750}
+.controls{max-width:1020px;margin:12px auto;padding:14px 18px}
+.controls p{margin:5px 0;font-size:14px;line-height:1.5;color:#e3f2fb}
+@media(max-width:850px){
+ main{padding:8px 8px 24px}
+ .hero{padding:12px}
+ .certificate-card{padding:8px}
+ .certificate.academy-standard .academy-title{font-size:clamp(9px,2.5vw,19px)}
+ .certificate.academy-standard .academy-subtitle{font-size:clamp(5px,1.4vw,11px)}
+ .certificate.academy-standard .stamp{font-size:clamp(5px,.9vw,11px)}
+}
 @media print{
- .master-local-picker{display:block;min-height:auto}
- .master-local-picker>p,.master-local-picker>input{display:none!important}
- .exact-master-preview{width:100%;aspect-ratio:1491/1055;border:0}
- .approved-master-art{print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .sample-watermark{font-size:16px}
+ .certificate-card,.certificate-card:last-child{max-width:none;width:100%;padding:0}
+ .certificate.academy-standard{display:block!important;border-width:12px}
+ .certificate.academy-standard .watermark{font-size:62px}
+ .sheet-wrap{padding:0}
+ .card-actions{display:none!important}
 }
