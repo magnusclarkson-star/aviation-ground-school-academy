@@ -322,7 +322,7 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/admin/documents/layouts","POST",{
    audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
   },admin)).status,400,"Unverified QR codes must stay disabled");
-  // Originals must be the exact chosen PNGs. No silent fallback to generic art.
+  // Legacy optional image uploads remain strictly validated; standard PDFs no longer depend on them.
   const masterStatus=await call("/api/admin/certificate-master/status","GET",undefined,admin);
   assert.equal(masterStatus.status,200);
   assert.equal(masterStatus.body.allInstalled,false);
@@ -348,9 +348,8 @@ test("private ATO roles, verified-source gates and independent completion record
    const denied=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:student}});
    assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
    const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
-   assert.equal(example.status,audience==="TRANSCRIPT"?200:409,
-    audience+" preview must refuse absent original artwork");
-   if(audience!=="TRANSCRIPT")continue;
+   assert.equal(example.status,200,
+    audience+" built-in PDF specimen should render without uploaded artwork");
    assert.ok(example.headers.get("content-type")?.includes("application/pdf"));
    assert.match(example.headers.get("content-disposition"),/inline/);
    const pdf=Buffer.from(await example.arrayBuffer());
@@ -360,12 +359,14 @@ test("private ATO roles, verified-source gates and independent completion record
   const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(pdfResponse.status,409,"Formal certificate must be blocked until original artwork is installed");
+  assert.equal(pdfResponse.status,200,"Approved and fee-released certificate should use permanent artwork");
+  assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
 
   const printCertificate=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(printCertificate.status,409,"Printing requires the original certificate image");
+  assert.equal(printCertificate.status,200,"Permanent built-in certificate supports authorised printing");
+  assert.match(printCertificate.headers.get("content-disposition"),/inline/);
 
   const forbiddenPrint=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
    headers:{Origin:ORIGIN,Cookie:head}
