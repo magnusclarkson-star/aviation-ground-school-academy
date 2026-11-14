@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -46,6 +46,28 @@ try{
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  assert.equal(await desktop.locator(".scenic-hero").count(),1);
+ assert.equal(await desktop.locator(".quick-controls").count(),1);
+ assert.equal(await desktop.locator(".notice-compact").count(),1);
+ assert.match(await desktop.locator(".scenic-hero .eyebrow").textContent(),/compact reader v2/i);
+ assert.ok((await desktop.locator(".scenic-hero").boundingBox()).height<165,
+   "Academy banner must not consume half the desktop screen");
+ const readerPanel=await desktop.locator('[aria-label="Lesson reading and self-check"]').boundingBox();
+ assert.ok(readerPanel.width>=850,"Textbook reader should use the available 1280px desktop width");
+ assert.ok(readerPanel.y<410,"Module title and teaching content should begin near top of screen");
+ const contrast=await desktop.evaluate(()=>{
+  const rgba=s=>{const m=s.match(/[\d.]+/g);return m.slice(0,3).map(Number)};
+  const lum=c=>rgba(c).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4)
+   .reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+  const ratio=(text,background)=>{const a=lum(getComputedStyle(document.querySelector(text)).color);
+   const b=lum(getComputedStyle(document.querySelector(background)).backgroundColor);
+   return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
+  return {notes:ratio(".textbook-prose p",".academy-textbook-chapter"),
+   advanced:ratio(".deep-lesson p",".deep-lesson"),
+   moduleMeta:ratio("#moduleMeta",'[aria-label="Lesson reading and self-check"]')};
+ });
+ assert.ok(contrast.notes>=7,"Core textbook text must have strong contrast: "+JSON.stringify(contrast));
+ assert.ok(contrast.advanced>=7,"Advanced lesson text must have strong contrast: "+JSON.stringify(contrast));
+ assert.ok(contrast.moduleMeta>=4.5,"Module metadata must be legible: "+JSON.stringify(contrast));
  assert.equal(await desktop.locator(".scenic-gold-strip>span").count(),3);
  assert.ok((await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage)).includes("aviation-real-world-photographs.webp"));
  assert.equal(await desktop.locator(".textbook-course-intro").count(),1);
@@ -176,6 +198,12 @@ try{
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
  assert.equal(await phone.locator(".textbook-course-intro").count(),1);
+ assert.equal(await phone.locator("#mobileModuleJump option").count(),await phone.locator("#moduleList button").count());
+ assert.equal(await phone.locator("#mobileModuleJump").isVisible(),true);
+ assert.equal(await phone.locator("#moduleList").isVisible(),false);
+ assert.ok((await phone.locator(".scenic-hero").boundingBox()).height<125,
+  "Phone header must remain compact");
+
  assert.equal(await phone.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.equal(await phone.locator(".textbook-worked-case").count(),3);
  assert.equal(await phone.locator(".textbook-glossary dt").count(),6);
@@ -218,6 +246,11 @@ try{
  await correctAdvanced(phone);
  assert.match(await phone.locator("#deepFeedback").textContent(),/4\/4 correct/);
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2));
+ await phone.locator("#mobileModuleJump").selectOption("aircraft");
+ assert.match(await phone.locator("#moduleTitle").textContent(),/aircraft/i);
+ assert.equal(await phone.locator(".academy-textbook-chapter").count(),3);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+  "Compact mobile coursebook must never overflow horizontally");
  await phone.close();
  // Inspect the dedicated picture atlas at 390px width: every original can be reached
  // even when the large source poster is hard to read inside a small coursebook view.
