@@ -6,17 +6,19 @@ const model=window.AGSASpecialistSampleLessons;
 const plates=window.AGSASpecialistTechnicalPlates;
 const approved=window.AGSAApprovedLectureVisuals;
 const catalogue=window.AGSASpecialistCatalogue;
-if(!model||!plates||!approved||!catalogue)return;
-model.validate();plates.validate();approved.validate();catalogue.validate();
+const extension=window.AGSASpecialistExtension;
+if(!model||!plates||!approved||!catalogue||!extension)return;
+model.validate();plates.validate();approved.validate();catalogue.validate();extension.validate();
 const $=id=>document.getElementById(id),create=(tag,value)=>{
  const node=document.createElement(tag);if(value!==undefined)node.textContent=String(value);return node;
 };
 const keys=Object.keys(model.programmes);
+function lessons(course){return model.programmes[course].units.concat(extension.units[course]||[])}
 const url=new URL(window.location.href);
 let activeCourse=keys.includes(url.searchParams.get("course"))?url.searchParams.get("course"):keys[0];
-let activeIndex=Math.min(1,Math.max(0,Number.parseInt(url.searchParams.get("lesson")||"1",10)-1||0));
+let activeIndex=Math.min(lessons(activeCourse).length-1,Math.max(0,Number.parseInt(url.searchParams.get("lesson")||"1",10)-1||0));
 function state(){
- const p=model.programmes[activeCourse];return {p,u:p.units[activeIndex]};
+ const p=model.programmes[activeCourse];return {p,u:lessons(activeCourse)[activeIndex]};
 }
 const viewer=$("technicalZoom"),vTitle=$("technicalZoomTitle"),vImg=$("technicalZoomImage"),vCaption=$("technicalZoomCaption");
 $("closeTechnicalZoom").addEventListener("click",()=>viewer.close());
@@ -30,7 +32,7 @@ function showDiagram(plate,caption){
  $("closeTechnicalZoom").focus();
 }
 function technicalPlate(plateId){
- const p=plates.get(plateId);
+ const p=plates.get(plateId)||extension.getPlate(plateId);
  if(!p)return document.createDocumentFragment();
  const detail=create("details");detail.className="technical-plate";
  const summary=create("summary","Show supplementary labelled technical diagram");
@@ -46,7 +48,7 @@ function technicalPlate(plateId){
 function renderCourseButtons(){
  const area=$("moduleButtons"),{p}=state();
  area.replaceChildren();
- p.units.forEach((unit,i)=>{
+ lessons(activeCourse).forEach((unit,i)=>{
   const button=create("button",unit.title);button.type="button";
   button.classList.toggle("active",i===activeIndex);
   button.setAttribute("aria-pressed",i===activeIndex?"true":"false");
@@ -55,7 +57,7 @@ function renderCourseButtons(){
  });
  const course=catalogue.courses.find(x=>x.id===activeCourse);
  $("upcomingList").replaceChildren();
- for(const title of (course?.modules||[]).slice(2))$("upcomingList").appendChild(create("li",title));
+ for(const title of (course?.modules||[]).slice(4))$("upcomingList").appendChild(create("li",title));
 }
 function renderSection(unit,section,i){
  const el=create("section");el.className="lesson-subsection";
@@ -107,7 +109,7 @@ function render(){
  });
  renderQuiz(u);
  $("previousLesson").disabled=activeIndex===0;
- $("nextLesson").disabled=activeIndex===p.units.length-1;
+ $("nextLesson").disabled=activeIndex===lessons(activeCourse).length-1;
  const next=new URL(window.location.href);next.searchParams.set("course",activeCourse);
  next.searchParams.set("lesson",String(activeIndex+1));
  window.history.replaceState(null,"",next.pathname+next.search+next.hash);
@@ -116,7 +118,7 @@ function select(course,index){
  if(!keys.includes(course))return;
  if(viewer.open)viewer.close();
  const old=activeCourse;activeCourse=course;
- activeIndex=old===course?Math.max(0,Math.min(model.programmes[course].units.length-1,index)):0;
+ activeIndex=old===course?Math.max(0,Math.min(lessons(course).length-1,index)):0;
  render();
  if(window.scrollY>550)$("lessonHeading").scrollIntoView({behavior:"smooth",block:"start"});
 }
