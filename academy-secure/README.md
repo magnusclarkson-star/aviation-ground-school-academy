@@ -28,6 +28,12 @@ https://slcaa.gov.sl/wp-content/uploads/2024/01/SLCAA-AC-PEL048-Rev-00-CERTIFICA
 
 **Human sign-off is mandatory:** An evidence SHA-256 is not a certificate authenticity check. A verified record means an authorised internal quality reviewer claims to have checked external documents and scope. Software cannot independently query SLCAA's current certificate registry, issue examining privileges or approve a school. Any official training claim requires direct confirmation of the certificate and training specifications.
 
+## New fail-closed private launch preflight
+
+The production server now starts with `ACADEMY_ACCESS_STATE=closed` unless an authorised operator explicitly configures `restricted`. While closed, login, the portal and all protected endpoints return 503. `/api/health` reports **process liveness only**, and `/api/ready` returns 503 until the portal is deliberately open and the PostgreSQL readiness query succeeds. Production configuration validates the exact HTTPS origin, strict verified PostgreSQL TLS (`sslmode=verify-full`), a correctly sized owner-signature encryption key and disabled bootstrap.
+
+On Render, set `HOST=0.0.0.0` and use the assigned `PORT`; local-only service binding remains the default. This is **only deployment preparation**. The `restricted` state is not MFA or proof of an external gateway. Do not expose the private portal to the public or enter real learner records until an independently tested access gateway, MFA, privacy processes, backups and production operational reviews are completed. See [the private hosting checklist](../docs/ACADEMY-PRIVATE-HOSTING-PREFLIGHT.md).
+
 ## Run in an isolated secure environment (not on GitHub Pages)
 
 1. Use a dedicated PostgreSQL 16+ instance on private networking and a separately hosted Node.js 22+ environment behind an HTTPS reverse proxy. Create migration owner and restricted application database users. Configure verified remote database TLS, encrypted managed backups, security monitoring and a suitable secret manager.
