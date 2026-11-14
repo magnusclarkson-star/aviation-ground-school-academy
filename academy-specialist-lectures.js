@@ -1,4 +1,4 @@
-/* Four freely viewable specialist lesson previews with original owner-shown imagery.
+/* Sixteen freely viewable specialist lesson previews with original owner-shown imagery.
  * Knowledge checks are ungraded, local to the visible page and not recorded.
  */
 (()=>{"use strict";
@@ -7,13 +7,14 @@ const plates=window.AGSASpecialistTechnicalPlates;
 const approved=window.AGSAApprovedLectureVisuals;
 const catalogue=window.AGSASpecialistCatalogue;
 const extension=window.AGSASpecialistExtension;
-if(!model||!plates||!approved||!catalogue||!extension)return;
-model.validate();plates.validate();approved.validate();catalogue.validate();extension.validate();
+const full=window.AGSASpecialistUnits58;
+if(!model||!plates||!approved||!catalogue||!extension||!full)return;
+model.validate();plates.validate();approved.validate();catalogue.validate();extension.validate();full.validate();
 const $=id=>document.getElementById(id),create=(tag,value)=>{
  const node=document.createElement(tag);if(value!==undefined)node.textContent=String(value);return node;
 };
 const keys=Object.keys(model.programmes);
-function lessons(course){return model.programmes[course].units.concat(extension.units[course]||[])}
+function lessons(course){return model.programmes[course].units.concat(extension.units[course]||[],full.programmes[course]||[])}
 const url=new URL(window.location.href);
 let activeCourse=keys.includes(url.searchParams.get("course"))?url.searchParams.get("course"):keys[0];
 let activeIndex=Math.min(lessons(activeCourse).length-1,Math.max(0,Number.parseInt(url.searchParams.get("lesson")||"1",10)-1||0));
@@ -32,7 +33,7 @@ function showDiagram(plate,caption){
  $("closeTechnicalZoom").focus();
 }
 function technicalPlate(plateId){
- const p=plates.get(plateId)||extension.getPlate(plateId);
+ const p=plates.get(plateId)||extension.getPlate(plateId)||full.getPlate(plateId);
  if(!p)return document.createDocumentFragment();
  const detail=create("details");detail.className="technical-plate";
  const summary=create("summary","Show supplementary labelled technical diagram");
@@ -57,14 +58,17 @@ function renderCourseButtons(){
  });
  const course=catalogue.courses.find(x=>x.id===activeCourse);
  $("upcomingList").replaceChildren();
- for(const title of (course?.modules||[]).slice(4))$("upcomingList").appendChild(create("li",title));
+ const upcoming=(course?.modules||[]).slice(lessons(activeCourse).length);
+ $("upcomingModules").hidden=upcoming.length===0;
+ for(const title of upcoming)$("upcomingList").appendChild(create("li",title));
 }
 function renderSection(unit,section,i){
  const el=create("section");el.className="lesson-subsection";
  el.appendChild(create("h3",section.heading));
  const para=create("p",section.body);el.appendChild(para);
  if(i===0){
-  const exact=approved.getSpecialist(activeCourse)[activeIndex];
+  const original=approved.getSpecialist(activeCourse);
+  const exact=original[activeIndex%original.length];
   const renderer=window.AGSACoursebookApprovedFigure;
   if(exact&&renderer)el.appendChild(renderer.figure(exact));
  }
