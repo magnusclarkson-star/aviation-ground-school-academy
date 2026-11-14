@@ -7,6 +7,27 @@
  <form id="loginForm" class="panel"><h2>Sign in</h2><label>Email<input id="loginEmail" type="email" autocomplete="username" required maxlength="254"></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button type="submit" class="primary">Sign in securely</button></form>
  <form id="activateForm" class="panel"><h2>Accept staff-issued invitation</h2><p class="hint">Invitation-only. Adult accounts only until safeguarding, guardian consent and youth account governance are separately approved.</p><label>Email<input id="activateEmail" type="email" autocomplete="email" required></label><label>Invitation token<input id="activateToken" type="text" required minlength="64" maxlength="64" autocomplete="off"></label><label>Set password (12+ characters)<input id="activatePassword" type="password" autocomplete="new-password" required minlength="12"></label><label class="check"><input id="adultConfirm" type="checkbox" required> I confirm I am an adult and authorised to accept this invitation</label><button type="submit">Activate account</button></form>
 </section>
+<section id="mfaPanel" class="panel mfa-panel" hidden aria-labelledby="mfaTitle">
+ <div class="toolbar"><h2 id="mfaTitle">Verify staff identity</h2><button type="button" id="mfaLogout">Cancel and sign out</button></div>
+ <p class="hint">Your password was accepted. Access to the Academy's student records, fees, assessments and documents remains locked until you enter an authenticator code.</p>
+ <form id="mfaSetupForm" hidden>
+  <h3>Set up your authenticator</h3>
+  <p>Use a trusted authenticator app on your phone. Confirm your account password to display the setup key once. Store your authenticator safely; lost-device recovery requires separate verified administrator support.</p>
+  <label>Confirm account password<input type="password" id="mfaConfirmPassword" autocomplete="current-password" required></label>
+  <button type="submit" class="primary">Generate authenticator setup key</button>
+ </form>
+ <section id="mfaSetupResult" hidden aria-live="polite">
+  <h3>Save this setup key in your authenticator</h3>
+  <p class="hint">This is a private secret. Do not share it, capture it in screenshots or paste it into chat. It is not saved in the browser.</p>
+  <p><strong>Setup key:</strong> <code id="mfaSecret" class="mfa-secret"></code></p>
+  <p><a id="mfaAppLink" href="#" rel="noreferrer">Open authenticator setup on this device</a></p>
+ </section>
+ <form id="mfaCodeForm" hidden>
+  <label>Six-digit authenticator code<input id="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+  <button type="submit" class="primary" id="mfaSubmit">Verify and unlock private dashboard</button>
+ </form>
+ <p class="hint">A new code is required after each staff sign-in. Codes cannot be reused. This control supplements, but does not replace, the independent private-host security review.</p>
+</section>
 <section id="dashboard" hidden><div class="toolbar"><h2>Secure dashboard</h2><span id="myRole"></span><button id="logout">Sign out</button></div>
 <section class="panel"><h3>Your training and assessment records</h3><p class="hint">These records are retained on the Academy's private database and are not the public browser practice scores.</p><div class="records"><section><h4>Enrolments</h4><pre id="myEnrolments">None loaded</pre></section><section><h4>Assessments</h4><pre id="myAssessments">None loaded</pre></section><section><h4>Completion records</h4><pre id="myCompletions">None loaded</pre></section></div><button id="refreshRecords">Refresh records</button></section>
 <section class="panel" id="myAccessPanel" hidden>
