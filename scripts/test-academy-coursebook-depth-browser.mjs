@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -44,6 +44,24 @@ try{
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
+ assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
+ assert.equal(await desktop.locator("#lessonReading article.visual-manual-section").count(),3);
+ assert.equal(await desktop.locator(".visual-lesson-study").count(),3);
+ assert.equal(await desktop.locator(".visual-lesson-picture").count(),3);
+ assert.equal(await desktop.locator("#visualSectionNavigation button").count(),3);
+ assert.match(await desktop.locator(".visual-manual-cover>h3").textContent(),/orientation and safety culture/i);
+ assert.ok((await desktop.locator(".visual-expanded-explanation").first().textContent()).length>300);
+ await desktop.locator(".visual-observation-check>summary").first().click();
+ assert.equal(await desktop.locator(".visual-observation-check").first().getAttribute("open"),"");
+ const firstDetail=desktop.locator(".visual-detail-canvas").first();
+ await firstDetail.scrollIntoViewIfNeeded();
+ await desktop.waitForFunction(()=>document.querySelector(".visual-detail-canvas").width>420);
+ await desktop.locator(".visual-detail-trigger").first().click();
+ assert.equal(await desktop.locator("#visualLessonZoom").isVisible(),true);
+ assert.equal(await desktop.locator("#visualLessonZoom canvas").evaluate(c=>c.width>0&&c.height>0),true);
+ await desktop.locator("#visualLessonZoom button").click();
+ assert.equal(await desktop.locator("#visualLessonZoom").isVisible(),false);
+
  assert.equal(await desktop.locator(".related-original-pictures").count(),1);
  await desktop.locator(".related-original-pictures>summary").click();
  await desktop.locator(".related-original-card").first().waitFor({state:"visible"});
@@ -87,6 +105,12 @@ try{
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
+ assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
+ assert.equal(await desktop.locator("#lessonReading article.visual-manual-section").count(),3);
+ assert.equal(await desktop.locator(".visual-lesson-picture").count(),2);
+ assert.match(await desktop.locator(".visual-manual-cover>h3").textContent(),/weather/i);
+ assert.equal(await desktop.locator("#visualSectionNavigation button").count(),3);
+
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.match(await desktop.locator(".lesson-pictorial h4").textContent(),/weather hazards/i);
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
@@ -136,6 +160,16 @@ try{
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
+ assert.equal(await phone.locator(".visual-manual-cover").count(),1);
+ assert.equal(await phone.locator("#lessonReading article.visual-manual-section").count(),3);
+ assert.equal(await phone.locator(".visual-lesson-picture").count(),2);
+ await phone.locator(".visual-detail-trigger").first().tap();
+ assert.equal(await phone.locator("#visualLessonZoom").isVisible(),true);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+   "Visual first lesson and enlarged detail must fit mobile viewport");
+ await phone.locator("#visualLessonZoom button").tap();
+ assert.equal(await phone.locator("#visualLessonZoom").isVisible(),false);
+
  assert.equal(await phone.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await phone.locator("#lessonReading .approved-visual-figure").count(),1);
  assert.equal(await phone.locator(".related-original-pictures").count(),1);
