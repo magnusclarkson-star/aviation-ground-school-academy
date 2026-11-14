@@ -128,6 +128,8 @@ jobs:
       - run: node --check academy-specialist-technical-plates.js
       - run: node --check academy-specialist-lectures.js
       - run: node scripts/test-academy-specialist-lectures.mjs
+      - run: node --check academy-specialist-extension.js
+      - run: node scripts/test-academy-specialist-extension.mjs
       - run: node scripts/test-academy-certificates.mjs
       - run: node --check academy-certificate-gallery.js
       - run: node scripts/test-academy-certificate-gallery.mjs
