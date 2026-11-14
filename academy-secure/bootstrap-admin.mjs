@@ -3,10 +3,11 @@
 import pg from "pg";
 const {Pool}=pg;
 import {validateEmail,hashPassword} from "./auth.mjs";
+import {validateDatabaseTransport} from "./deployment-preflight.mjs";
 if(process.env.ACADEMY_ENABLE_BOOTSTRAP!=="true")throw Error("Explicit ACADEMY_ENABLE_BOOTSTRAP=true required");
 if(!process.env.DATABASE_URL||!process.env.ACADEMY_BOOTSTRAP_EMAIL||!process.env.ACADEMY_BOOTSTRAP_PASSWORD)throw Error("Missing bootstrap settings");
-const db=new URL(process.env.DATABASE_URL),local=["localhost","127.0.0.1"].includes(db.hostname);
-if(!local&&!["verify-full","verify-ca"].includes(db.searchParams.get("sslmode")))throw Error("Remote DB must use verified TLS");
+// The one-time bootstrap process uses the same scoped network transport gate.
+validateDatabaseTransport(process.env);
 const email=validateEmail(process.env.ACADEMY_BOOTSTRAP_EMAIL);
 const hash=await hashPassword(process.env.ACADEMY_BOOTSTRAP_PASSWORD);
 const pool=new Pool({connectionString:process.env.DATABASE_URL});

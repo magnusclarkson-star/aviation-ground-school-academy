@@ -1,0 +1,53 @@
+# OPTIONAL, MANUAL-ONLY Render Blueprint for isolated Academy private staging.
+# Render does not apply this file until an owner explicitly selects its path
+# from the connected repo and approves BILLABLE private-service/database plans.
+# No student-facing website or payment service is created by this template.
+previews:
+  generation: off
+services:
+  - type: pserv
+    name: agsa-private-records-staging
+    runtime: docker
+    plan: 0.5c-512mb
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./academy-secure/Dockerfile
+    dockerContext: ./academy-secure
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: '8787'
+      - key: ACADEMY_ACCESS_STATE
+        value: closed
+      - key: ACADEMY_DB_NETWORK
+        value: render-private
+      # A real HTTPS gateway origin is required by production startup checks.
+      # There is NO public URL on a private service and no gateway in this plan.
+      # Do NOT connect a public gateway while access is CLOSED.
+      - key: ACADEMY_ORIGIN
+        sync: false
+      # DBA-provisioned, NONOWNER runtime credentials. DO NOT use fromDatabase
+      # here; it exposes the database's default migration-owner credentials.
+      # Use the private dpg-...-a host with:
+      # ?sslmode=require&uselibpqcompat=true
+      - key: DATABASE_URL
+        sync: false
+      # Separate 32 random bytes each (canonical base64); back up as secrets.
+      # Never add these values to Git, public Pages or support requests.
+      - key: ACADEMY_SIGNATURE_ENCRYPTION_KEY
+        sync: false
+      - key: ACADEMY_TOTP_ENCRYPTION_KEY
+        sync: false
+
+databases:
+  - name: agsa-private-postgres-staging
+    plan: 0.5c-1g
+    region: frankfurt
+    postgresMajorVersion: '16'
+    databaseName: agsa_private_staging
+    user: agsa_schema_owner
+    ipAllowList: []
