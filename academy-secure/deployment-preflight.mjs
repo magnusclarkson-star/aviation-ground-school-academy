@@ -36,7 +36,7 @@ export function validateDeploymentSettings(env){
  if(production){
   const origin=new URL(env.ACADEMY_ORIGIN);
   if(origin.protocol!=="https:")throw Error("Production Academy origin must be HTTPS");
-  if(origin.hostname.endsWith(".invalid")||["localhost","127.0.0.1"].includes(origin.hostname))
+  if([".invalid",".example",".test"].some(suffix=>origin.hostname.endsWith(suffix))||["localhost","127.0.0.1"].includes(origin.hostname))
    throw Error("Production Academy origin must not be a placeholder or localhost");
   if(["localhost","127.0.0.1"].includes(database.hostname)||database.searchParams.get("sslmode")!=="verify-full")
    throw Error("Production private PostgreSQL must be remote with sslmode=verify-full");
