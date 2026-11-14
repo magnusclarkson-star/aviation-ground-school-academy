@@ -254,3 +254,39 @@ a.reference{color:#95e2f0}
  .scenic-hero .eyebrow{color:#7e6134}
  .scenic-gold-strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+
+/* Long-form textbook chapters: readable academic typography, gold academic
+   sectioning and full-width prose beneath the preserved original illustrations. */
+.textbook-course-intro{background:linear-gradient(108deg,#fffdf8,#f3ecd9);border:1px solid #bc9c63;border-left:6px solid #caa45d;border-radius:13px;padding:20px 22px;box-shadow:0 6px 19px #061b2d1b}
+.textbook-course-intro .textbook-kicker{color:#936a30;font-size:10px;letter-spacing:1.4px;font-weight:850;margin:0 0 6px}
+.textbook-course-intro h3{font:700 clamp(22px,2.7vw,28px)/1.2 Georgia,"Times New Roman",serif;color:#15384b;margin:5px 0 10px}
+.textbook-course-intro>p:not(.textbook-kicker){color:#355168;font-size:14px;line-height:1.7;max-width:800px}
+.textbook-print{background:#16465c;color:#fff;border:1px solid #b79a66;border-radius:8px;font-weight:800;padding:10px 14px;margin-top:6px}
+#lessonReading article.visual-manual-section>.academy-textbook-chapter{grid-column:1/-1;min-width:0;background:#fffefb;border:1px solid #cfbea0;border-radius:14px;overflow:hidden;margin-top:9px;color:#193747}
+.textbook-head{padding:17px 20px 16px;background:linear-gradient(105deg,#0b2a40,#1b4c58);border-bottom:4px solid #c7a267}
+.textbook-head>span{font-size:11px;color:#d7ba7f;font-weight:850;letter-spacing:1.3px}
+.textbook-head h4{font:700 clamp(20px,2.8vw,27px)/1.25 Georgia,"Times New Roman",serif;color:#fff2d5;margin:7px 0 6px}
+.textbook-head p{font-size:12px;color:#cce4eb;margin:0}
+.textbook-prose{max-width:900px;padding:18px 22px 8px}
+.textbook-prose p{font:400 16px/1.88 Georgia,"Times New Roman",serif;color:#263e4d;margin:0 0 18px;text-wrap:pretty}
+.textbook-prose p.textbook-lead::first-letter{font:700 47px/.85 Georgia,serif;color:#b08b50;float:left;margin:6px 9px 0 0}
+.textbook-worked-case{margin:5px 22px 18px;padding:17px 18px 15px;background:#f3f6f3;border:1px solid #b8cac8;border-left:5px solid #2e8184;border-radius:10px}
+.textbook-worked-case .textbook-label{font-size:11px;letter-spacing:1.2px;color:#1c7a7d;font-weight:850;margin:0 0 7px}
+.textbook-worked-case h5,.textbook-terms h5,.textbook-recall h5{font:700 19px/1.25 Georgia,serif;color:#193d51;margin:0 0 9px}
+.textbook-worked-case>p:not(.textbook-label){font-size:14px;line-height:1.73;color:#2d4856;margin:7px 0}
+.textbook-worked-case ol{padding-left:25px;margin:9px 0 15px}
+.textbook-worked-case li{font-size:14px;line-height:1.7;color:#284958;margin:7px 0}
+.textbook-worked-case .textbook-result{padding:11px 13px;background:#e5f0ea;border-radius:8px;border-left:4px solid #33958b;font-weight:700}
+.textbook-terms{margin:14px 22px;padding:15px 17px;background:#fbf3e5;border:1px solid #d5b98a;border-radius:10px}
+.textbook-glossary{display:grid;grid-template-columns:minmax(128px,.29fr) minmax(0,1fr);gap:10px 15px;margin:9px 0 0}
+.textbook-glossary dt{font-weight:850;font-size:13px;color:#805723}
+.textbook-glossary dd{font-size:13px;line-height:1.63;color:#3b4d59;margin:0}
+.textbook-recall{margin:0 22px 20px;padding:13px 17px;background:#eef4f6;border:1px solid #b6cdd4;border-radius:10px}
+.textbook-selfcheck{padding:10px 13px;background:#fff;border:1px solid #c2d7df;border-radius:8px}
+.textbook-selfcheck>summary{font-size:14px;line-height:1.5;color:#17506b;font-weight:770;cursor:pointer}
+.textbook-selfcheck>p{font-size:14px;line-height:1.72;color:#2c4b5d;margin:12px 0 5px}
+.textbook-selfcheck>p.textbook-note{font-size:11px;color:#677a84}
+.textbook-selfcheck>summary:focus-visible{outline:3px solid #e1ae61;outline-offset:3px}
+@media(max-width:580px){.textbook-course-intro{padding:14px}.textbook-head{padding:14px}.textbook-head h4{font-size:21px}.textbook-prose{padding:14px 14px 6px}.textbook-prose p{font-size:15px;line-height:1.8}.textbook-worked-case,.textbook-terms,.textbook-recall{margin:10px 11px;padding:13px}.textbook-glossary{grid-template-columns:1fr;gap:3px}.textbook-glossary dd{margin-bottom:7px}}
+@media print{.textbook-course-intro,#lessonReading article.visual-manual-section>.academy-textbook-chapter{border-color:#a1aab0;background:#fff!important;box-shadow:none}.textbook-head{break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}.textbook-prose p{orphans:3;widows:3}.textbook-worked-case,.textbook-recall,.textbook-terms{break-inside:avoid}.textbook-print{display:none}}
