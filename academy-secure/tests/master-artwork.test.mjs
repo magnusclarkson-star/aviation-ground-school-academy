@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {MASTER_ARTWORK,validateMasterArtwork,originalArtworkFor,bundledApprovedArtwork} from "../master-artwork.mjs";
 import {renderOriginalCertificate} from "../original-certificate-pdf.mjs";
+import {mkdtemp,writeFile,rm,symlink} from "node:fs/promises";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
 const names=Object.keys(MASTER_ARTWORK);
 test("exact three visual designs mapped to correct Academy audiences",()=>{
  assert.deepEqual(names,["FORMAL_TRADITIONAL","SCOUT_MODERN","ENTHUSIAST_NAVY_GOLD"]);
@@ -32,4 +35,40 @@ test("permanently bundled exact originals work without browser or administrator 
   name:"Test Learner",courseTitle:"Aviation Foundations",
   serial:"AGSA-COURSE-"+"A".repeat(24),verifiedAcademicRecord:true
  },{style:"FORMAL_TRADITIONAL",masterPng:Buffer.alloc(0)}),/size outside/);
+});
+
+test("production requires an exact verified private original, never bundled public-source fallback",async t=>{
+ const oldNode=process.env.NODE_ENV,oldDir=process.env.ACADEMY_CERTIFICATE_MASTER_DIR;
+ t.after(()=>{
+  if(oldNode===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=oldNode;
+  if(oldDir===undefined)delete process.env.ACADEMY_CERTIFICATE_MASTER_DIR;
+  else process.env.ACADEMY_CERTIFICATE_MASTER_DIR=oldDir;
+ });
+ const db={async query(){return {rows:[]}}};
+ const style="FORMAL_TRADITIONAL",filename=MASTER_ARTWORK[style].filename;
+ const original=await bundledApprovedArtwork(style);
+ process.env.NODE_ENV="production";
+ delete process.env.ACADEMY_CERTIFICATE_MASTER_DIR;
+ await assert.rejects(()=>originalArtworkFor(db,style),/not provisioned in the private store/);
+ process.env.ACADEMY_CERTIFICATE_MASTER_DIR="relative/path";
+ await assert.rejects(()=>originalArtworkFor(db,style),/absolute private filesystem path/);
+ const dir=await mkdtemp(join(tmpdir(),"agsa-private-master-"));
+ t.after(()=>rm(dir,{recursive:true,force:true}));
+ process.env.ACADEMY_CERTIFICATE_MASTER_DIR=dir;
+ const full=join(dir,filename);
+ await writeFile(full,original,{mode:0o600});
+ assert.deepEqual(await originalArtworkFor(db,style),original);
+ const wrong=Buffer.from(original);
+ wrong[wrong.length-50]^=0x01;
+ await writeFile(full,wrong);
+ await assert.rejects(()=>originalArtworkFor(db,style),/does not match/);
+ await rm(full);
+ await symlink(join(dir,"nonexistent.png"),full);
+ await assert.rejects(()=>originalArtworkFor(db,style),/not a symlink/);
+ await rm(full);
+ const installedDb={
+  async query(){return {rows:[{png:original,sha256:MASTER_ARTWORK[style].sha256}]}}
+ };
+ assert.deepEqual(await originalArtworkFor(installedDb,style),original,
+  "Exact administrator-installed database masters can be used without a private filesystem mount");
 });
