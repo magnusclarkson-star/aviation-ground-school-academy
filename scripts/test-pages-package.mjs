@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {readdir,readFile,stat} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import path from "node:path";
+import sharp from "sharp";
+import {bundledApprovedArtwork} from "../academy-secure/master-artwork.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const output=path.join(root,"dist-pages");
 const names=await readdir(output);
@@ -54,6 +56,44 @@ for(const forbidden of ["services/training-api/src/http.mjs","services/training-
  assert.equal(found,false,"Forbidden deployment path: "+forbidden);
 }
 
+// Public certificate samples must have the watermark permanently in their
+// pixels. CSS-only watermarks were removable while clean original PNG segments
+// were downloadable from the website.
+for(const [style,key,parts] of [
+ ["FORMAL_TRADITIONAL","formal",7],
+ ["SCOUT_MODERN","scout",5],
+ ["ENTHUSIAST_NAVY_GOLD","enthusiast",5]
+]){
+ const outputImage=path.join(output,"assets/certificate-previews/"+key+"-sample.png");
+ const info=await stat(outputImage);
+ assert.ok(info.isFile()&&info.size>100000,"Protected "+key+" sample must be a real raster image");
+ const preview=await readFile(outputImage);
+ const metadata=await sharp(preview).metadata();
+ assert.equal(metadata.format,"png");
+ assert.equal(metadata.width,1491);assert.equal(metadata.height,1055);
+ const original=await bundledApprovedArtwork(style);
+ const rasterOriginal=await sharp(original).ensureAlpha().raw().toBuffer();
+ const rasterPreview=await sharp(preview).ensureAlpha().raw().toBuffer();
+ let sampled=0,changed=0;
+ for(let i=0;i<rasterPreview.length;i+=4*113){
+  sampled++;
+  const colorDelta=Math.abs(rasterPreview[i]-rasterOriginal[i])
+   +Math.abs(rasterPreview[i+1]-rasterOriginal[i+1])
+   +Math.abs(rasterPreview[i+2]-rasterOriginal[i+2]);
+  if(colorDelta>30)changed++;
+ }
+ assert.ok(changed>sampled*0.015,
+  "Watermark must be embedded into "+key+" preview pixels, not just CSS");
+ for(let i=0;i<parts;i++){
+  const originalPath=path.join(output,"assets/certificates/original-"+key+
+   ".part"+String(i).padStart(2,"0")+".txt");
+  await assert.rejects(stat(originalPath),{code:"ENOENT"},
+   "Public Pages must not expose pristine certificate master data");
+ }
+}
+const galleryHtml=await readFile(path.join(output,"academy-certificate-gallery.html"),"utf8");
+assert.ok(!galleryHtml.includes("assets/certificates/original-"),"Public HTML must not reference clean masters");
+assert.ok(galleryHtml.includes("assets/certificate-previews/formal-sample.png"));
 // An actual installable flight-practice PWA must ship both raster icons,
 // a same-origin manifest and its runtime offline cache worker.
 const manifestFile=path.join(output,"flight-sim-manifest.json");

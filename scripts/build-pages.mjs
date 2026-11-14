@@ -1,6 +1,7 @@
 import {readdir,copyFile,mkdir,rm,stat} from "node:fs/promises";
 import path from "node:path";
 import {createFlightSimIcons} from "./build-flight-sim-icons.mjs";
+import {buildPublicCertificatePreviews} from "./build-public-certificate-previews.mjs";
 import {fileURLToPath} from "node:url";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
@@ -29,15 +30,9 @@ const publicAircraftFiles=[
  "assets/aircraft/typhoon-fg-exterior.json",
  "assets/aircraft/TYPHOON-ATTRIBUTION.md"
 ];
-// Approved certificate PNGs are stored as byte-for-byte base64 segments so
-// GitHub's text-file API can upload the exact originals. These are PUBLIC,
-// reviewed sample artwork only: never student records or private signatures.
-const originalCertificateSegments=[
- ...Array.from({length:7},(_,i)=>"assets/certificates/original-formal.part"+String(i).padStart(2,"0")+".txt"),
- ...Array.from({length:5},(_,i)=>"assets/certificates/original-scout.part"+String(i).padStart(2,"0")+".txt"),
- ...Array.from({length:5},(_,i)=>"assets/certificates/original-enthusiast.part"+String(i).padStart(2,"0")+".txt")
-];
-const publicCuratedPaths=["assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",...originalCertificateSegments,
+// Only flattened, permanently watermarked certificate previews are published.
+// Exact original masters stay in source for authorised private PDF issuance.
+const publicCuratedPaths=["assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs",
  "accreditation/readiness-register.json",
  "flight-sim-manifest.json",...publicAircraftFiles];
 await rm(output,{recursive:true,force:true});
@@ -58,6 +53,11 @@ for(const item of publicCuratedPaths){
  await copyFile(source,target);
  count++;
 }
+// Rasterise the owner-approved artwork with permanent repeated SAMPLE markings.
+// This prevents the Pages site from serving the clean original PNG segments.
+const certificatePreviews=await buildPublicCertificatePreviews(path.join(output,"assets/certificate-previews"));
+if(certificatePreviews.length!==3)throw Error("Expected three protected certificate previews");
+count+=certificatePreviews.length;
 // Generate valid 192/512px opaque raster icons as part of the allowlisted
 // static website build, without introducing remote images or dependencies.
 await createFlightSimIcons(output);

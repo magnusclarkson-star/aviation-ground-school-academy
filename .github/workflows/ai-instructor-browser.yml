@@ -77,7 +77,8 @@ jobs:
       - run: node --check ground-school-modules.js
       - run: node --check ground-school-modules-ui.js
       - run: node scripts/test-ground-school-modules.mjs
-      - run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1
+      - run: npm install --no-save --no-package-lock --ignore-scripts --no-audit playwright@1.56.1 sharp@0.35.5
+      - run: node scripts/build-public-certificate-previews.mjs assets/certificate-previews
       - run: npx playwright install chromium
       - run: node scripts/test-ai-instructor-browser.mjs
       - run: node scripts/test-ground-school-modules-browser.mjs

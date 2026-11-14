@@ -23,7 +23,7 @@ jobs:
         run: node scripts/audit-flightgear-c172-candidate.mjs
       - name: Check detailed native C172 source hierarchy in independent Three.js viewer
         run: |
-          npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 playwright@1.56.1
+          npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 playwright@1.56.1 sharp@0.35.5
           npx playwright install chromium
           cp artifacts/c172-detailed-candidate.glb assets/aircraft/c172-detailed-evaluation.glb
           node scripts/build-flight-sim-v3.mjs
