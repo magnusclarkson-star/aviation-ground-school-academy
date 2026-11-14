@@ -6,7 +6,8 @@ const base={NODE_ENV:"test",ACADEMY_ORIGIN:"http://127.0.0.1:8871",
  DATABASE_URL:"postgresql://test:pass@127.0.0.1:5432/academy",HOST:"127.0.0.1",PORT:"8871"};
 const secure={...base,NODE_ENV:"production",ACADEMY_ORIGIN:"https://records.academy-training.org",
  DATABASE_URL:"postgresql://app:secret@db.academy.example/academy?sslmode=verify-full",
- ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,34).toString("base64"),HOST:"0.0.0.0",PORT:"10000",
+ ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,34).toString("base64"),
+ ACADEMY_TOTP_ENCRYPTION_KEY:Buffer.alloc(32,53).toString("base64"),HOST:"0.0.0.0",PORT:"10000",
  RENDER:"true"};
 test("local development and CI can use deliberately restricted access",()=>{
  const cfg=validateDeploymentSettings(base);
@@ -36,6 +37,8 @@ test("production enforces exact HTTPS origin, verified database TLS and signatur
   [{...secure,DATABASE_URL:"postgresql://app:pass@127.0.0.1/academy?sslmode=verify-full"},/remote/],
   [{...secure,ACADEMY_SIGNATURE_ENCRYPTION_KEY:"fake"},/encryption key/],
   [{...secure,ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(16).toString("base64")},/encryption key/],
+  [{...secure,ACADEMY_TOTP_ENCRYPTION_KEY:undefined},/MFA encryption key/],
+  [{...secure,ACADEMY_TOTP_ENCRYPTION_KEY:secure.ACADEMY_SIGNATURE_ENCRYPTION_KEY},/MFA encryption key/],
   [{...secure,ACADEMY_ENABLE_BOOTSTRAP:"true"},/bootstrap/]
  ];
  for(const [env,pattern] of invalid)assert.throws(()=>validateDeploymentSettings(env),pattern);
