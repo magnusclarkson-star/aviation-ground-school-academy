@@ -137,13 +137,49 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
  .site-head{height:83px;min-height:83px}
 }
 @media(max-width:760px){
- .site-head {height:78px;min-height:78px;background-image:linear-gradient(90deg,#071a33cc,#071a3388),url("assets/lecture-visuals/aviation-real-world-photographs.webp");
- background-position:center center;background-size:cover}
- .site-head:before{content:"AVIATION GROUND SCHOOL ACADEMY";position:absolute;left:8px;top:9px;color:#ffe5a5;
- font:800 14px/1.2 Georgia,serif;max-width:63%}
- .site-head:after{content:"Ground School Coursebook";position:absolute;left:8px;top:34px;color:white;
- font:800 18px/1.25 Georgia,serif;max-width:75%}
- .site-head .site-menu{top:7px;right:7px}
+ /* Use the exact same Cessna coursebook artwork as desktop. The previous
+    phone-specific photography collage and CSS-generated headings are removed. */
+ .site-head{
+  height:108px;min-height:108px;isolation:isolate;
+  background-color:#071c39;
+  background-image:linear-gradient(95deg,#071b35fa 0%,#071b35ef 48%,#071b35b8 73%,#071b354f 100%),
+   url("assets/lecture-visuals/illustrated-cessna-structures-lecture.webp")!important;
+  background-position:center center,center 14%!important;
+  background-size:cover,cover!important;
+  border-top:3px solid #dabb72;border-bottom:4px double #c7a15b;
+  box-shadow:inset 0 0 0 1px #b49557aa;
+ }
+ .site-head::before{
+  content:"";position:absolute;left:58px;right:108px;bottom:13px;
+  top:auto;max-width:none;border-top:1px solid #d6af6d96;pointer-events:none;
+ }
+ .site-head::after{content:none;display:none}
+ .site-head .brand{
+  position:absolute!important;display:flex!important;flex-direction:column;
+  justify-content:center;gap:5px;left:59px;top:14px;
+  width:calc(100% - 169px);height:74px;max-width:none;min-width:0;
+  padding:0;margin:0;clip-path:none;overflow:visible;white-space:normal;
+  text-decoration:none;text-align:left;letter-spacing:.2px;
+ }
+ .site-head .brand-name{
+  color:#ffe2a1;font:800 clamp(12px,3.3vw,15px)/1.22 Georgia,"Times New Roman",serif;
+  letter-spacing:.35px;text-shadow:0 2px 5px #041324;
+ }
+ .site-head .brand-subtitle{
+  color:#fffaf0;font:800 clamp(12px,3.55vw,16px)/1.18 Georgia,"Times New Roman",serif;
+  text-shadow:0 2px 5px #041324;
+ }
+ .site-head .academy-logo-header{
+  position:absolute!important;left:9px;top:32px;z-index:2;
+  padding:2px;border:1px solid #dabd7c;border-radius:6px;
+  box-shadow:0 2px 8px #01132966;
+ }
+ .site-head .academy-logo-header img{width:34px;height:34px;border-radius:3px}
+ .site-head .site-menu{top:9px;right:8px;z-index:25}
+ .site-head .site-menu>summary{
+  padding:8px 9px;min-height:34px;background:#081f3bea;
+  border-color:#e4bc72;color:#fff4db;font-size:12px;
+ }
  main {padding:4px 5px 20px}
  .grid{grid-template-columns:1fr;gap:5px}
  .sidebar.gold-sidebar{position:static;max-height:none;display:block;padding:5px}
@@ -160,6 +196,17 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
  #lessonReading article.visual-manual-section{grid-template-columns:1fr;padding:9px}
  .visual-lesson-nav{flex-wrap:nowrap;overflow-x:auto}
  .visual-lesson-nav button{flex:0 0 auto;max-width:230px}
+}
+@media(max-width:360px){
+ .site-head{height:112px;min-height:112px}
+ .site-head .brand{left:52px;top:17px;width:calc(100% - 149px);height:78px}
+ .site-head .brand-name{font-size:12px;line-height:1.17}
+ .site-head .brand-subtitle{font-size:12px}
+ .site-head .academy-logo-header{left:7px;top:37px}
+ .site-head .academy-logo-header img{width:29px;height:29px}
+ .site-head::before{left:51px;right:100px}
+ .site-head .site-menu{right:6px;top:8px}
+ .site-head .site-menu>summary{font-size:11px;padding:8px 7px}
 }
 @media print {
  .site-head,.site-menu,.sidebar,.lesson-tools-collapse,.visual-lesson-nav {display:none!important}
