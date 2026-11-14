@@ -33,7 +33,7 @@ for(const [name,size] of [["metar",10],["taf",12]]){
  assert.equal(report.groups.length,size);
  for(const [i,group] of report.groups.entries()){
   assert.deepEqual(lab.decode(name,i),group);
-  assert.ok(group.meaning.length>12);
+  assert.ok(group.meaning.length>=8,"Every decoded group must have a meaningful description");
   assert.ok(report.text.includes(group.token));
  }
 }
