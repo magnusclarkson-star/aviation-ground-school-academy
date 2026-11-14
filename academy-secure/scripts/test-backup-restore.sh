@@ -18,15 +18,25 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Force PostgreSQL 16 dump/restore clients to match the PG16 test service.
+# Newer runner images ship clients that may emit transaction_timeout settings
+# unknown to PG16; using the matching version prevents false recovery failures.
+pg16() {
+  docker run --rm --network host \
+    -v "$tempdir:/academy-recovery" \
+    -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD -e PGDATABASE \
+    postgres:16-alpine "$@"
+}
 # The dump never leaves the runner or becomes a GitHub Actions artifact.
-pg_dump --format=custom --no-owner --no-acl --file="$tempdir/test-academy.dump" "$PGDATABASE"
+pg16 pg_dump --format=custom --no-owner --no-acl \
+  --file=/academy-recovery/test-academy.dump "$PGDATABASE"
 test -s "$tempdir/test-academy.dump"
-pg_restore --list "$tempdir/test-academy.dump" > "$tempdir/toc.txt"
+pg16 pg_restore --list /academy-recovery/test-academy.dump > "$tempdir/toc.txt"
 grep -q 'academy_users' "$tempdir/toc.txt"
 grep -q 'academy_audit_events' "$tempdir/toc.txt"
 createdb "$restore_db"
-pg_restore --clean --if-exists --no-owner --no-acl --exit-on-error \
-  --dbname="$restore_db" "$tempdir/test-academy.dump"
+pg16 pg_restore --clean --if-exists --no-owner --no-acl --exit-on-error \
+  --dbname="$restore_db" /academy-recovery/test-academy.dump
 
 # Role grants are deliberately NOT part of a portable data backup. The
 # migration operator must reapply runtime ACLs in each restoration.
