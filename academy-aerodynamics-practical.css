@@ -1,0 +1,64 @@
+/* Additive Course 03 pictorial aerodynamics study panel.
+   Existing aircraft, simulator, approved images and note-print guards unaffected. */
+.aero-lab{margin:16px 0 24px;padding:15px;border-radius:13px;background:#0c293e;border:1px solid #93b1c1;border-left:4px solid #e2bc76;color:#eaf5fc}
+.aero-lab[hidden]{display:none!important}
+.aero-lab-heading{border-bottom:1px solid #456c83;padding-bottom:10px}
+.aero-lab-heading h3{font:700 clamp(19px,2.35vw,24px)/1.25 Georgia,serif;color:#ffdfad;margin:5px 0 8px}
+.aero-lab-heading p{font-size:14px;line-height:1.58;margin:6px 0}
+.aero-lab-eyebrow{font-size:10px!important;font-weight:800;letter-spacing:.12em;color:#f4ca86!important}
+.aero-lab-pathway{background:#154357;color:#dcf2fb;border-left:3px solid #6cccd7;border-radius:6px;padding:8px 10px;font-size:13px;line-height:1.55}
+.aero-lab-progress{font-size:12px;color:#c7ddeb;margin:12px 0}
+.aero-lab-reading h4{font-size:18px;color:#ffe0a7;margin:9px 0 12px}
+.aero-lab-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;align-items:start}
+.aero-lab-gallery{min-width:0}
+.aero-lab-figure{margin:0 0 8px;min-width:0;border:1px solid #597a92;border-radius:10px;overflow:hidden;background:#113148}
+.aero-lab-image-button{width:100%;display:block;position:relative;background:#0d2c44!important;border:0!important;padding:0!important;cursor:zoom-in;min-height:0!important;border-radius:0!important}
+.aero-lab-image{display:block;width:100%;height:auto;background:#193950;min-height:110px}
+.aero-lab-image-cue{position:absolute;right:6px;bottom:6px;border-radius:6px;padding:4px 7px;background:rgba(5,23,38,.87);color:white;font-size:11px;font-weight:700}
+.aero-lab-figure figcaption{padding:8px 10px;font-size:12px;color:#daebf2}
+.aero-lab-panel{min-width:0}
+.aero-lab-panel>p:first-child{line-height:1.6;font-size:14px;margin:0 0 10px}
+.aero-lab-questions{margin:11px 0;padding:9px;border:1px solid #6e8fa1;border-radius:9px;min-width:0}
+.aero-lab-questions legend{font-size:14px;color:#ffe4b2;font-weight:750;line-height:1.5;padding:0 4px}
+.aero-lab-questions label{display:flex;align-items:flex-start;gap:9px;margin:5px 0;padding:10px 7px;border:1px solid transparent;border-radius:7px;font-size:13px;line-height:1.5;cursor:pointer}
+.aero-lab-questions label:has(input:checked){border-color:#87cfdb;background:#17526b}
+.aero-lab-questions input{margin-top:3px;accent-color:#70d1db;flex:0 0 auto}
+.aero-lab button{min-height:40px;border:1px solid #d5b980;background:#195470;color:white;font:700 13px/1.4 system-ui,sans-serif;padding:10px 13px;border-radius:8px;cursor:pointer}
+.aero-lab button:hover:not(:disabled){background:#226d8b}
+.aero-lab button:focus-visible,.aero-lab-dialog button:focus-visible,.aero-lab input:focus-visible{outline:3px solid #fce6a7;outline-offset:2px}
+.aero-lab button:disabled{opacity:.45;cursor:not-allowed}
+.aero-lab-result{margin-top:11px;border:1px solid #56788e;border-radius:9px;padding:12px;background:#163b51;color:#eaf6fc;font-size:13px;line-height:1.65}
+.aero-lab-result strong{color:#d8f1bc}
+.aero-lab-result[data-correct="false"] strong{color:#ffdda4}
+.aero-lab-result p{margin:8px 0}
+.aero-lab-key{border:1px solid #678da3;border-radius:7px;margin:12px 0 2px;padding:8px 10px}
+.aero-lab-key summary{color:#ffe2ae;font-weight:800;cursor:pointer}
+.aero-lab-key dl{display:grid;grid-template-columns:minmax(0,125px) minmax(0,1fr);gap:7px 10px}
+.aero-lab-key dt{font-weight:750;color:#ccecf4}
+.aero-lab-key dd{margin:0}
+.aero-lab-nav{display:flex;justify-content:space-between;gap:10px;margin:17px 0}
+.aero-lab-comparison{padding:15px;margin:16px 0 0;border:1px solid #9cb4c5;border-radius:11px;background:#112c43}
+.aero-lab-comparison h5{font-size:17px;color:#ffe0ab;margin:0 0 7px}
+.aero-lab-comparison p{font-size:13px;line-height:1.6}
+.aero-lab-comparison label{display:block;color:#e7f8fc;font-size:14px;font-weight:700;margin:12px 0 4px}
+.aero-lab-bank-value{color:#ffe3a7;font-variant-numeric:tabular-nums}
+.aero-lab-comparison input[type=range]{display:block;width:100%;max-width:580px;min-height:39px;accent-color:#7dd2e0}
+.aero-lab-metric{font-variant-numeric:tabular-nums;margin:13px 0 5px}
+.aero-lab-bar{max-width:580px;width:100%;height:14px;background:#0a1d2d;border:1px solid #6f91a3;border-radius:20px;overflow:hidden}
+.aero-lab-bar span{display:block;height:100%;background:linear-gradient(90deg,#4dafe2,#dfbc75);transition:width .12s ease}
+.aero-lab-caution{color:#e4dac3;font-size:12px!important;margin:15px 0 0}
+.aero-lab-notice{color:#c6dbea;font-size:12px;line-height:1.5;margin:9px 0 0}
+.aero-lab-dialog{position:fixed;margin:auto;max-width:min(94vw,1170px);width:max-content;max-height:92vh;overflow:auto;padding:14px;background:#0b293c;color:white;border:2px solid #b2ccda;border-radius:12px}
+.aero-lab-dialog::backdrop{background:rgba(0,10,22,.84)}
+.aero-lab-dialog h3{color:#ffdea5;font-size:17px}
+.aero-lab-dialog canvas{display:block;max-width:100%;height:auto;background:#fff;border-radius:6px}
+.aero-lab-dialog button{display:block;margin:12px auto 0;border:1px solid #bfa678;color:#fff;background:#1c5670;padding:10px 16px;border-radius:8px}
+@media(max-width:1050px){.aero-lab-grid{grid-template-columns:1fr}.aero-lab-gallery{max-width:750px}}
+@media(max-width:590px){
+ .aero-lab{padding:10px 8px;border-left-width:3px;margin:9px 0}
+ .aero-lab-nav button{flex:1}
+ .aero-lab-questions label{font-size:14px}
+ .aero-lab-key dl{grid-template-columns:1fr;gap:2px}
+ .aero-lab-key dd{margin-bottom:7px}
+ .aero-lab-comparison{padding:10px}
+}
