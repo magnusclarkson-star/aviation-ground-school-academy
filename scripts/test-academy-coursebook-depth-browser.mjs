@@ -257,8 +257,29 @@ try{
  assert.equal(await phone.locator("#mobileModuleJump").isVisible(),true);
  assert.equal(await phone.locator("#moduleList").isVisible(),false);
  assert.equal(await phone.locator(".scenic-hero").isVisible(),false);
- assert.ok((await phone.locator(".site-head").boundingBox()).height<=85,
-  "Phone Academy banner should be one row");
+ const mobileHeader=await phone.locator(".site-head").boundingBox();
+ assert.ok(mobileHeader.height>=102&&mobileHeader.height<=116,
+  "Phone needs the designed compact original-artwork banner, not a cropped photo strip");
+ assert.ok(await phone.evaluate(()=>{
+  const head=document.querySelector(".site-head");
+  const image=getComputedStyle(head).backgroundImage;
+  return image.includes("illustrated-cessna-structures-lecture.webp")
+   &&!image.includes("aviation-real-world-photographs.webp");
+ }),"Phone and desktop must use exactly the same original Cessna coursebook artwork");
+ assert.equal(await phone.locator(".site-head .brand-name").isVisible(),true);
+ assert.equal(await phone.locator(".site-head .brand-subtitle").isVisible(),true);
+ assert.match(await phone.locator(".site-head .brand-name").textContent(),/AVIATION GROUND SCHOOL ACADEMY/);
+ assert.ok(await phone.evaluate(()=>{
+  const brand=document.querySelector(".site-head .brand").getBoundingClientRect();
+  const menu=document.querySelector(".site-head .site-menu>summary").getBoundingClientRect();
+  const logo=document.querySelector(".site-head .academy-logo-header").getBoundingClientRect();
+  return brand.width>170&&brand.right<=menu.left+2&&logo.right<=brand.left+4;
+ }),"Mobile brand, original logo and Academy menu must not overlap");
+ assert.equal(await phone.locator(".site-head .menu-short").isVisible(),true);
+ await phone.locator(".site-head .site-menu>summary").tap();
+ assert.equal(await phone.locator(".site-head nav").isVisible(),true);
+ await phone.locator(".site-head .site-menu>summary").tap();
+ assert.equal(await phone.locator(".site-head nav").isVisible(),false);
 
  assert.equal(await phone.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.equal(await phone.locator(".textbook-worked-case").count(),3);
@@ -308,6 +329,21 @@ try{
  assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
   "Compact mobile coursebook must never overflow horizontally");
  await phone.close();
+
+ const smallPhone=await browser.newPage({viewport:{width:320,height:700},isMobile:true,hasTouch:true});
+ smallPhone.on("pageerror",e=>errors.push("small-phone: "+e.message));
+ await smallPhone.goto(base+"?module=aircraft",{waitUntil:"load"});
+ assert.ok(await smallPhone.evaluate(()=>{
+  const brand=document.querySelector(".site-head .brand").getBoundingClientRect();
+  const menu=document.querySelector(".site-head .site-menu>summary").getBoundingClientRect();
+  const logo=document.querySelector(".site-head .academy-logo-header").getBoundingClientRect();
+  const image=getComputedStyle(document.querySelector(".site-head")).backgroundImage;
+  return brand.right<=menu.left+2&&logo.right<=brand.left+4
+   &&image.includes("illustrated-cessna-structures-lecture.webp");
+ }),"320px phone must retain original desktop artwork without title/menu collision");
+ assert.ok(await smallPhone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
+  "Phone header must never cause horizontal scrolling on a 320px handset");
+ await smallPhone.close();
  // Inspect the dedicated picture atlas at 390px width: every original can be reached
  // even when the large source poster is hard to read inside a small coursebook view.
  const gallery=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
