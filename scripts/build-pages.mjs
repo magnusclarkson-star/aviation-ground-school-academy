@@ -1,4 +1,5 @@
-import {readdir,copyFile,mkdir,rm,stat} from "node:fs/promises";
+import {readdir,copyFile,mkdir,rm,stat,writeFile} from "node:fs/promises";
+import {MASTER_ARTWORK,bundledMasterArtworkFor} from "../academy-secure/master-artwork.mjs";
 import path from "node:path";
 import {createFlightSimIcons} from "./build-flight-sim-icons.mjs";
 import {fileURLToPath} from "node:url";
@@ -50,6 +51,16 @@ for(const item of publicCuratedPaths){
  await copyFile(source,target);
  count++;
 }
+// Publish the exact previously approved 1491 x 1055 certificate PNGs, not
+// approximate CSS redraws. They are assembled from checksum-protected base64
+// chunks in the source repository. Public samples carry a visible watermark.
+for(const [style,meta] of Object.entries(MASTER_ARTWORK)){
+ const source=await bundledMasterArtworkFor(style); // rejects a pixel mismatch
+ const target=path.join(output,"assets/certificate-originals",meta.filename);
+ await mkdir(path.dirname(target),{recursive:true});
+ await writeFile(target,source);
+ count++;
+}
 // Generate valid 192/512px opaque raster icons as part of the allowlisted
 // static website build, without introducing remote images or dependencies.
 await createFlightSimIcons(output);
@@ -74,6 +85,10 @@ for(const [asset,minBytes] of [
 }
 for(const required of ["index.html","cockpit-v3.html","standards-readiness.html","ground-school-modules.html","academy-coursebook.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","academy-coursebook-data.js","academy-coursebook.js","academy-coursebook.css","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-coursebook-professional-media.js","academy-coursebook-professional-ui.js","academy-certificate-core.mjs","academy-certificate-eligibility.mjs","academy-certificate-ui.mjs","academy-specialist-courses.html","academy-specialist-courses-data.js","academy-specialist-courses.js","academy-specialist-courses.css","academy-approved-visual-gallery.html","academy-specialist-lectures.html","academy-specialist-lectures.css","academy-specialist-lectures.js","academy-specialist-lesson-data.js","academy-specialist-technical-plates.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-layout-v2.js","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-dashboard.html","flight-sim.html"]){
  try{await stat(path.join(output,required));}catch{throw Error("Public page missing: "+required);}
+}
+for(const original of Object.values(MASTER_ARTWORK)){
+ const image=await stat(path.join(output,"assets/certificate-originals",original.filename));
+ if(!image.isFile()||image.size<2000000)throw Error("Incomplete exact original certificate: "+original.filename);
 }
 for(const slug of ["ground-school-visuals-12-topic","aviation-learning-overview","aviation-real-world-photographs","illustrated-cessna-structures-lecture"]){
  const img=await stat(path.join(output,"assets/lecture-visuals/"+slug+".webp"));
