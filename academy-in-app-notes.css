@@ -1,0 +1,17 @@
+/* Educational reading pages stay inside the Academy app.
+ * No print stylesheet can stop screenshots or copying publicly served source.
+ * Genuine issued certificate/transcript PDF documents are separate assets.
+ */
+#inAppOnlyPrintNotice{display:none}
+@page{margin:18mm}
+@media print{
+ html,body{background:#fff!important;color:#172535!important;box-shadow:none!important}
+ body>*:not(#inAppOnlyPrintNotice){display:none!important}
+ #inAppOnlyPrintNotice{
+  display:block!important;box-sizing:border-box;
+  max-width:180mm;margin:26mm auto;padding:22mm 12mm;
+  border:2px solid #172535;border-radius:8px;
+  text-align:center;background:#fff!important;color:#172535!important;
+  font:700 17pt/1.6 system-ui,sans-serif
+ }
+}
