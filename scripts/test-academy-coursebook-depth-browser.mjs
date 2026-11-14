@@ -47,7 +47,7 @@ try{
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  assert.equal(await desktop.locator(".scenic-hero").count(),1);
  assert.equal(await desktop.locator(".scenic-gold-strip>span").count(),3);
- assert.match(await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage),/aviation-real-world-photographs\\.webp/);
+ assert.ok((await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage)).includes("aviation-real-world-photographs.webp"));
  assert.equal(await desktop.locator(".textbook-course-intro").count(),1);
  assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.equal(await desktop.locator("#lessonReading .textbook-worked-case").count(),3);
