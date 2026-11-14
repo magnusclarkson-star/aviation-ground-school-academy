@@ -37,7 +37,7 @@ if(Core&&Deep&&$("certificatesPanel")){
   const state=eligible();
   const name=$("certificateLearnerName").value.trim()||"Academy Learner";
   const record=prepareSelfStudyAward({Core,Deep,id,programme,name,...state,now:new Date().toISOString()});
-  record.style=$("route")?.value==="scouts"?"SCOUT_MODERN":"ENTHUSIAST_NAVY_GOLD";
+  record.style="ACADEMY_STANDARD"; // One consistent public PDF design; no user template selection.
   return record;
  }
  function asUrl(record){
