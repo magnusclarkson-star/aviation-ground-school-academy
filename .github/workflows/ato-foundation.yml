@@ -29,6 +29,7 @@ jobs:
       - run: node --check academy-secure/policy.mjs
       - run: node --check academy-secure/auth.mjs
       - run: node --check academy-secure/server.mjs
+      - run: node --check academy-secure/deployment-preflight.mjs
       - run: node --check academy-secure/bootstrap-admin.mjs
       - run: node --check academy-secure/portal.js
       - run: node --check academy-secure/fees-policy.mjs
@@ -48,7 +49,7 @@ jobs:
       - run: node --check academy-secure/master-artwork.mjs
       - run: node --check academy-secure/master-artwork-portal.js
       - run: node --check academy-secure/original-certificate-pdf.mjs
-      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/finance-overview.test.mjs academy-secure/tests/signature-vault.test.mjs academy-secure/tests/document.test.mjs academy-secure/tests/master-artwork.test.mjs
+      - run: node --test academy-secure/tests/policy.test.mjs academy-secure/tests/auth.test.mjs academy-secure/tests/deployment-preflight.test.mjs academy-secure/tests/closed-portal.test.mjs academy-secure/tests/fees-policy.test.mjs academy-secure/tests/finance-overview.test.mjs academy-secure/tests/signature-vault.test.mjs academy-secure/tests/document.test.mjs academy-secure/tests/master-artwork.test.mjs
   private-postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 12
