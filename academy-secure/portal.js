@@ -1,7 +1,7 @@
 /* Private same-origin Academy records console; authorisation is always enforced by server roles. */
 (()=>{"use strict";
 const $=id=>document.getElementById(id);
-let actor=null;
+let actor=null,mfaState=null;
 const show=(id,yes)=>{$(id).hidden=!yes};
 const say=(message,error=false)=>{const el=$("flash");el.className=error?"error":"ok";el.textContent=String(message)};
 const object=record=>JSON.stringify(record,null,2);
@@ -45,8 +45,13 @@ async function readiness(){
 }
 function activeUi(){
  const role=actor?.role;
- show("authPanel",!actor);show("dashboard",!!actor);
- $("sessionBadge").textContent=actor?actor.email+" · "+role:"Not signed in";
+ show("authPanel",!actor&&!mfaState);show("mfaPanel",!!mfaState&&!actor);show("dashboard",!!actor);
+ if(mfaState&&!actor){
+  show("mfaSetupForm",!mfaState.mfaEnrolled);
+  show("mfaCodeForm",mfaState.mfaEnrolled||!$("mfaSetupResult").hidden);
+  $("mfaSubmit").textContent=mfaState.mfaEnrolled?"Verify authenticator and sign in":"Activate authenticator and sign in";
+ }
+ $("sessionBadge").textContent=actor?actor.email+" · "+role:(mfaState?"Password verified · authenticator needed":"Not signed in");
  document.dispatchEvent(new CustomEvent("agsa:session",{detail:{user:actor}}));
  if(!actor)return;
  $("myRole").textContent=role;
@@ -75,8 +80,12 @@ function activeUi(){
  void records();
 }
 async function identify(){
- try{const data=await call("/api/me");actor=data.user}
- catch{actor=null}
+ try{const data=await call("/api/me");actor=data.user;mfaState=null}
+ catch{
+  actor=null;
+  try{const mfa=await call("/api/mfa/status");mfaState=mfa.mfaRequired&&!mfa.verified?mfa:null}
+  catch{mfaState=null}
+ }
  activeUi();
 }
 async function action(fn){
@@ -98,10 +107,37 @@ function wireForm(id,path,mapper){
 }
 $("loginForm").addEventListener("submit",event=>{
  event.preventDefault();void action(async()=>{
-  await call("/api/login",{method:"POST",data:{email:$("loginEmail").value,password:$("loginPassword").value}});
-  $("loginPassword").value="";say("Sign-in accepted.");await identify();
+  const result=await call("/api/login",{method:"POST",data:{email:$("loginEmail").value,password:$("loginPassword").value}});
+  $("loginPassword").value="";say(result.mfaRequired?"Password accepted. Authenticator verification required.":"Signed in.");await identify();
  });
 });
+$("mfaSetupForm").addEventListener("submit",event=>{
+ event.preventDefault();void action(async()=>{
+  const result=await call("/api/mfa/setup",{method:"POST",data:{confirmPassword:$("mfaConfirmPassword").value}});
+  $("mfaConfirmPassword").value="";
+  $("mfaSecret").textContent=result.secret;
+  $("mfaAppLink").href=result.uri;
+  show("mfaSetupResult",true);show("mfaCodeForm",true);
+  $("mfaCode").focus();
+  say("Authenticator setup key generated. Enter the six-digit code to finish activation.");
+ });
+});
+$("mfaCodeForm").addEventListener("submit",event=>{
+ event.preventDefault();void action(async()=>{
+  const route=mfaState?.mfaEnrolled?"/api/mfa/verify":"/api/mfa/enable";
+  const code=$("mfaCode").value;
+  await call(route,{method:"POST",data:{code}});
+  $("mfaCode").value="";$("mfaSecret").textContent="";
+  $("mfaAppLink").removeAttribute("href");show("mfaSetupResult",false);
+  await identify();say("Authenticator verified. Private staff dashboard unlocked.");
+ });
+});
+$("mfaLogout").addEventListener("click",()=>void action(async()=>{
+ await call("/api/logout",{method:"POST",data:{}});
+ actor=null;mfaState=null;$("mfaCode").value="";$("mfaConfirmPassword").value="";
+ $("mfaSecret").textContent="";$("mfaAppLink").removeAttribute("href");show("mfaSetupResult",false);
+ activeUi();say("Signed out before private records were unlocked.");
+}));
 $("activateForm").addEventListener("submit",event=>{
  event.preventDefault();void action(async()=>{
   await call("/api/activate",{method:"POST",data:{email:$("activateEmail").value,token:$("activateToken").value,
