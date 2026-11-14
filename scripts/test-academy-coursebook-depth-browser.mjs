@@ -286,7 +286,6 @@ try{
   assert.match(await systemLab.locator(".systems-lab-feedback").textContent(),/Correct systems concept/);
   await systemLab.locator(".systems-lab-key summary").click();
   assert.equal(await systemLab.locator(".systems-lab-key dt").count(),4);
-  if(index<3)await systemLab.getByRole("button",{name:"Next system"}).click();
   if(index===1){
    assert.equal(await systemLab.locator(".systems-lab-diagram").getAttribute("data-diagram"),"fuel");
    assert.equal(await systemLab.locator(".systems-lab-node").count(),3);
@@ -299,6 +298,7 @@ try{
    await systemLab.getByRole("button",{name:"Shared bus"}).click();
    assert.equal(await systemLab.locator(".systems-lab-diagram-result").getAttribute("data-diagram"),"electricalShared");
   }
+  if(index<3)await systemLab.getByRole("button",{name:"Next system"}).click();
  }
  assert.match(await systemLab.locator(".systems-lab-progress").textContent(),/4 checked on this page/);
  assert.equal(await systemLab.locator(".systems-lab-figure").count(),2,
