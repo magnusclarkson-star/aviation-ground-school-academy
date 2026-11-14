@@ -29,16 +29,12 @@ h1{font:800 clamp(25px,3vw,36px)/1.15 Georgia,serif;margin:0 0 8px;color:#ffe4a5
 .controls p{font-size:14px;line-height:1.55;margin:0}
 footer{text-align:center;color:#bed0df;font-size:12px;padding:20px 10px;border-top:1px solid #385d77}
 @media(max-width:760px){main{padding:8px 6px 25px}.hero{padding:12px}.certificate-card{padding:7px}.site-head{padding:12px 9px}.site-head nav{gap:8px}.sample-watermark{font-size:10px;padding:4px 6px}.card-actions{gap:7px}}
-@page{size:A4 landscape;margin:7mm}
+.print-restriction{display:none}
+@page{margin:20mm}
 @media print{
- html,body{margin:0;padding:0;background:white}
- .site-head,.hero,.controls,footer,.card-actions,.certificate-card>h2,.certificate-card>p{display:none!important}
- main,.gallery{padding:0;margin:0;max-width:none;display:block}
- .certificate-card{display:none!important;background:white;border:0;padding:0;margin:0;border-radius:0}
- body[data-print-style="formal"] .certificate-card[data-original="formal"],
- body[data-print-style="scout"] .certificate-card[data-original="scout"],
- body[data-print-style="enthusiast"] .certificate-card[data-original="enthusiast"]{display:block!important}
- .sheet-wrap{width:100%;height:auto;border:0;aspect-ratio:1491/1055;background:white;break-inside:avoid}
- .original-artwork{width:100%;height:auto;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .sample-watermark{font-size:18px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ html,body{margin:0!important;padding:0!important;background:white!important;color:#111!important}
+ .site-head,main,footer{display:none!important}
+ .print-restriction{display:block!important;margin:2cm auto;max-width:17cm;
+  padding:20px;border:2px solid #333;color:#111;background:white;
+  font:700 17pt/1.5 system-ui,sans-serif;text-align:center}
 }

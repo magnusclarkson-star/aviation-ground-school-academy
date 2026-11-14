@@ -16,7 +16,7 @@ const designs=[
 ];
 for(const [key,style,parts] of designs){
  assert.ok(html.includes('data-original="'+key+'"'),key+" card");
- assert.ok(html.includes('data-print="'+key+'"'),key+" print control");
+ assert.ok(!html.includes('data-print="'+key+'"'),key+" sample must not offer printing");
  assert.match(html,/SAMPLE · NOT ISSUED/);
  const chunks=await Promise.all(Array.from({length:parts},(_,i)=>read(
   "assets/certificates/original-"+key+".part"+String(i).padStart(2,"0")+".txt"
@@ -32,10 +32,16 @@ assert.match(css,/\.original-artwork/);
 assert.doesNotMatch(css,/\.certificate\.academy-standard|\.certificate\.formal\s*\{/,
  "Never redraw approved originals using generic certificate markup");
 assert.match(js,/crypto\.subtle\.digest\("SHA-256"/);
-assert.match(js,/window\.print\(\)/);
+assert.doesNotMatch(js,/window\.print\(|afterprint|data-print|printStyle/,
+ "Public sample gallery must not contain print actions");
+assert.match(html,/class="print-restriction"/);
+assert.match(html,/Samples are view-only/);
+assert.match(css,/@media print\{/);
+assert.match(css,/\.site-head,main,footer\{display:none!important\}/);
+assert.match(css,/\.print-restriction\{display:block!important/);
 assert.doesNotMatch(html,/<input[^>]+type="file"/i);
 assert.doesNotMatch(js,/indexedDB|localStorage|sessionStorage|XMLHttpRequest|sendBeacon/);
 assert.ok(home.includes('href="academy-certificate-gallery.html"'));
 assert.ok(course.includes('href="academy-certificate-gallery.html"'));
 assert.match(css,/@media print/);
-console.log("Exactly three SHA-256-verified owner-approved original certificate PNGs restored without uploads, substitutes or signatures.");
+console.log("Three exact SHA-256-verified originals stay visible; gallery cannot print samples via its UI or browser print stylesheet.");
