@@ -1,5 +1,7 @@
 # Aviation Ground School Academy — V1 Prototype
 
+**Course completion review (14 Nov 2026):** [Individual readiness audit covering all 12 current Ground School subjects and 16 proposed specialist courses](docs/ACADEMY-COURSE-BY-COURSE-AUDIT-2026-11-14.md). This audit distinguishes built lessons from outlines, prioritises remaining coursework, and does not change any approved visual designs.
+
 A standalone, responsive aviation ground school learning app. This project is **separate from Salone One**.
 
 ## Branding
