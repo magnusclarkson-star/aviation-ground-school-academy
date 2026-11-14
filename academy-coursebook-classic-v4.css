@@ -169,3 +169,31 @@ footer{color:#2b475d;font-size:13px;margin:10px 0}
  .original-plate-viewport img{print-color-adjust:exact}
  .panel[aria-label="Lesson reading and self-check"]{border:0}
 }
+
+/* Desktop-only: keep the large original Cessna visible beside real lesson text
+   instead of leaving a broad empty area. Phone/tablet layout is untouched. */
+@media(min-width:1280px){
+ html[data-course-module="aircraft"] #lessonReading{
+  display:grid;grid-template-columns:minmax(490px,1.16fr) minmax(0,1fr);
+  gap:10px 14px;align-items:start;
+ }
+ html[data-course-module="aircraft"] #lessonReading>.original-coursebook-plate{
+  grid-column:1;grid-row:1 / span 8;align-self:start;
+  position:sticky;top:8px;max-height:calc(100dvh - 16px);overflow:auto;
+  margin:0;
+ }
+ html[data-course-module="aircraft"] #lessonReading>.textbook-course-intro,
+ html[data-course-module="aircraft"] #lessonReading>article.visual-manual-section{
+  grid-column:2;min-width:0;margin:0;
+ }
+ html[data-course-module="aircraft"] #lessonReading>article.visual-manual-section{
+  grid-template-columns:minmax(0,1fr);gap:8px;
+ }
+ html[data-course-module="aircraft"] #lessonReading>article.visual-manual-section>.academy-textbook-chapter{
+  grid-column:1;max-width:100%;
+ }
+ html[data-course-module="aircraft"] .original-plate-viewport{
+  aspect-ratio:1278/862;
+ }
+ html[data-course-module="aircraft"] .textbook-prose{max-width:100%}
+}
