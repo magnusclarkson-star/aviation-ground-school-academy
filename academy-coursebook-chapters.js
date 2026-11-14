@@ -2,7 +2,9 @@
  * Structured textbook narrative independent of unverified student grades and payment.
  */
 (function(root){"use strict";
-const parts=[root?.AGSALongChaptersA,root?.AGSALongChaptersB,root?.AGSALongChaptersC];
+const parts=(typeof module!=="undefined"&&module.exports)
+ ?[require("./academy-coursebook-chapters-a.js"),require("./academy-coursebook-chapters-b.js"),require("./academy-coursebook-chapters-c.js")]
+ :[root?.AGSALongChaptersA,root?.AGSALongChaptersB,root?.AGSALongChaptersC];
 if(parts.some(p=>!p?.chapters))throw Error("A complete set of ground-school textbook chapters is required");
 const chapters=Object.freeze(Object.assign({},...parts.map(p=>p.chapters)));
 const words=s=>String(s).trim().split(/\s+/).filter(Boolean).length;
