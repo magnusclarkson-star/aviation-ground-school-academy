@@ -59,7 +59,7 @@ assert.match(ui,/moduleId!=="aerodynamics"/);
 assert.match(ui,/getById\(id\)/);
 assert.match(ui,/drawImage\(image/);
 assert.match(ui,/lab\.levelTurn/);
-assert.match(ui,/type="range"/);
+assert.match(ui,/slider\.type="range"/);
 assert.match(ui,/showModal\(\)/);
 assert.doesNotMatch(ui,/\.innerHTML\b|fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage|window\.print\(|\.download\s*=/,
  "Course 03 lessons must not upload, store, print, or export learning material");
