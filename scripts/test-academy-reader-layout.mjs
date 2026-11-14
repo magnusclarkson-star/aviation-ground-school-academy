@@ -8,9 +8,13 @@ const classic=fs.readFileSync(new URL("../academy-coursebook-classic-v4.css",imp
 const classicJs=fs.readFileSync(new URL("../academy-coursebook-classic-v4.js",import.meta.url),"utf8");
 const academyHome=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
 const preservedDashboard=fs.readFileSync(new URL("../academy-dashboard.html",import.meta.url),"utf8");
-assert.match(page,/academy-coursebook-classic-v4\.css\?v=20261114-original/);
+assert.match(page,/academy-coursebook-classic-v4\.css\?v=20261114-mobile-header-v5/);
 assert.match(page,/academy-coursebook-classic-v4\.js\?v=20261114-original/);
 assert.match(page,/class="site-menu"/);
+assert.match(page,/class="brand-name">AVIATION GROUND SCHOOL ACADEMY/);
+assert.match(page,/class="brand-subtitle">GROUND SCHOOL COURSEBOOK/);
+assert.match(classic,/\.site-head \.menu-short\{display:inline\}/);
+assert.match(classic,/@media\(max-width:360px\)/);
 assert.match(academyHome,/location\.replace\(coursebook\.href\)/);
 assert.match(preservedDashboard,/Flight Training Starts Here/);
 assert.match(classic,/illustrated-cessna-structures-lecture\.webp/);
