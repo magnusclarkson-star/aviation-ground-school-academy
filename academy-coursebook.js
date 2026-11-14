@@ -13,7 +13,7 @@ let history=[];try{const raw=get(KEY);if(raw&&raw.length<20000)history=M.clean(J
 const query=new URL(location.href).searchParams;
 let route=M.routes[query.get("path")]?query.get("path"):M.routes[get(PATHKEY)]?get(PATHKEY):"scouts";
 let id=M.modules.some(m=>m.id===query.get("module"))?query.get("module"):M.routes[route][0];
-let completed=false;
+let completed=false,audioGeneration=0;
 function ordered(){return M.routes[route].map(mid=>M.modules.find(m=>m.id===mid))}
 function latest(mid){return history.filter(x=>x.id===mid).at(-1)}
 function progress(){
@@ -66,6 +66,7 @@ function renderQuiz(){
 }
 function select(nextId){
  if(!M.modules.some(x=>x.id===nextId))return;
+ audioGeneration++;
  if("speechSynthesis" in window)window.speechSynthesis.cancel();
  id=nextId;updateUrl();renderList();renderQuiz();
  const m=M.modules.find(m=>m.id===id);
@@ -129,10 +130,35 @@ $("clearRecord").addEventListener("click",()=>{
 });
 $("readAloud").addEventListener("click",()=>{
  if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){$("quizResult").textContent="Your device does not support speech playback.";return}
- window.speechSynthesis.cancel();const m=M.modules.find(m=>m.id===id);
- const utterance=new SpeechSynthesisUtterance([m.title,...m.sections.flatMap(s=>[s.title,s.body])].join(". "));
- utterance.lang="en";utterance.rate=.95;window.speechSynthesis.speak(utterance);
+ const generation=++audioGeneration;
+ window.speechSynthesis.cancel();
+ const m=M.modules.find(m=>m.id===id),full=window.AGSAFullCoursebookChapters?.get(id)||[];
+ const texts=[m.title,...m.sections.flatMap(s=>[s.title,s.body])];
+ for(const unit of full){
+  texts.push(unit.heading,...unit.paragraphs,unit.worked.title,unit.worked.setup,
+   ...unit.worked.steps,unit.worked.result,...unit.terms.flat(),unit.review.question,unit.review.answer);
+ }
+ // Split by sentences and queue short segments: Android speech engines may cut
+ // off one extremely long utterance. This does not send speech text to a server.
+ const chunks=[];let current="";
+ for(const text of texts){
+  for(const sentence of String(text).match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]){
+   if(current.length+sentence.length>680&&current.trim()){chunks.push(current.trim());current=""}
+   current+=" "+sentence.trim();
+  }
+ }
+ if(current.trim())chunks.push(current.trim());
+ let position=0;
+ function speakNext(){
+  if(generation!==audioGeneration||position>=chunks.length)return;
+  const utterance=new SpeechSynthesisUtterance(chunks[position++]);
+  utterance.lang="en";utterance.rate=.95;
+  utterance.onend=()=>{if(generation===audioGeneration)speakNext()};
+  utterance.onerror=()=>{$("quizResult").textContent="Speech playback stopped. Your device may restrict long readings."};
+  window.speechSynthesis.speak(utterance);
+ }
+ speakNext();
 });
-$("stopReading").addEventListener("click",()=>{if("speechSynthesis" in window)window.speechSynthesis.cancel()});
+$("stopReading").addEventListener("click",()=>{audioGeneration++;if("speechSynthesis" in window)window.speechSynthesis.cancel()});
 select(id);progress();
 })();

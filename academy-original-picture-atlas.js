@@ -74,8 +74,28 @@ cessnaDetails.forEach(([title,moduleId,rect],i)=>{
  items.push({id:"cessna-"+String(i+1).padStart(2,"0"),group:"cessna",source:"cessna",
   rect,title,moduleId,caption:"An original detail from the Cessna illustrated coursebook concept. Diagrams and text are educational artwork."});
 });
+/* Crops used to touch a collage cell's boundary and show a sliver of
+ * its neighbour. Apply a subject-aware inset in original source pixels; never
+ * edit the four complete original master images.
+ */
+const cropInsets=Object.freeze({
+ detailed:Object.freeze([12,16,12,12]),
+ overview:Object.freeze([8,6,8,9]),
+ photographs:Object.freeze([7,7,7,7]),
+ cessna:Object.freeze([8,9,8,9])
+});
+function trimCrop(item){
+ const [left,top,right,bottom]=cropInsets[item.source];
+ // Fourth detailed-sheet column contains an extra dark edge from column three.
+ const moreLeft=item.id==="detail-04"?17:0;
+ const [x,y,w,h]=item.rect;
+ return [x+left+moreLeft,y+top,w-left-right-moreLeft,h-top-bottom];
+}
 const sorted=Object.freeze(items.map(item=>Object.freeze({
- ...item,rect:Object.freeze(item.rect),src:base+sources[item.source].file,
+ ...item,
+ originalRect:Object.freeze([...item.rect]),
+ rect:Object.freeze(trimCrop(item)),
+ src:base+sources[item.source].file,
  sourceWidth:sources[item.source].width,sourceHeight:sources[item.source].height,
  groupLabel:sources[item.source].label,
  alt:"Previously shown original Academy picture — "+item.title
@@ -88,6 +108,8 @@ function validate(){
  const ids=new Set();
  for(const item of sorted){
   const [x,y,w,h]=item.rect;
+  const [ox,oy,ow,oh]=item.originalRect;
+  if(!(x>ox&&y>oy&&x+w<ox+ow&&y+h<oy+oh))throw Error("Crop must exclude the shared collage-cell border: "+item.id);
   if(ids.has(item.id)||x<0||y<0||w<100||h<100||x+w>item.sourceWidth||y+h>item.sourceHeight||
     item.title.length<14||item.caption.length<30)throw Error("Invalid or duplicate original picture panel "+item.id);
   ids.add(item.id);
