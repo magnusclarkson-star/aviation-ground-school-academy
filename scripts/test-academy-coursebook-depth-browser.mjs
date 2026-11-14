@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-meteorology-practical-data.js","academy-meteorology-practical-ui.js","academy-meteorology-practical.css","academy-navigation-practical-data.js","academy-navigation-practical-ui.js","academy-navigation-practical.css","academy-airspace-practical-data.js","academy-airspace-practical-ui.js","academy-airspace-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-aircraft-identification-data.js","academy-aircraft-identification-ui.js","academy-aircraft-identification.css","academy-aerodynamics-practical-data.js","academy-aerodynamics-practical-ui.js","academy-aerodynamics-practical.css","academy-aircraft-systems-practical-data.js","academy-aircraft-systems-practical-ui.js","academy-aircraft-systems-practical.css","academy-instruments-practical-data.js","academy-instruments-practical-ui.js","academy-instruments-practical.css","academy-meteorology-practical-data.js","academy-meteorology-practical-ui.js","academy-meteorology-practical.css","academy-navigation-practical-data.js","academy-navigation-practical-ui.js","academy-navigation-practical.css","academy-airspace-practical-data.js","academy-airspace-practical-ui.js","academy-airspace-practical.css","academy-radio-practical-data.js","academy-radio-practical-ui.js","academy-radio-practical.css","academy-in-app-notes.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -519,6 +519,58 @@ try{
  await desktop.locator('#moduleList button[data-module="aircraft"]').click();
  assert.equal(await airspaceLab.isVisible(),false,
   "Course 08 material must remain scoped to its own module");
+ await desktop.locator('#moduleList button[data-module="communications"]').click();
+ const radioLab=desktop.locator("#radioPracticalLab");
+ await radioLab.waitFor({state:"visible"});
+ assert.equal(await airspaceLab.isVisible(),false);
+ assert.equal(await radioLab.locator(".radio-lab-figure").count(),2);
+ await radioLab.locator(".radio-lab-picture-button").first().click();
+ assert.equal(await desktop.locator(".radio-lab-dialog").isVisible(),true);
+ await desktop.locator(".radio-lab-dialog button").click();
+ assert.equal(await desktop.locator(".radio-lab-dialog").isVisible(),false);
+ for(const [index,correct] of [[0,1],[1,2],[2,0],[3,1]]){
+  assert.match(await radioLab.locator(".radio-lab-reading h4").textContent(),new RegExp("^0"+(index+1)));
+  await radioLab.locator(".radio-lab-questions input").nth(correct).check();
+  await radioLab.getByRole("button",{name:"Check radio answer"}).click();
+  assert.match(await radioLab.locator(".radio-lab-feedback").textContent(),/Correct radio communication concept/);
+  await radioLab.locator(".radio-lab-key summary").click();
+  assert.ok(await radioLab.locator(".radio-lab-key dt").count()>=5);
+  assert.equal(await radioLab.locator(".radio-lab-transcript").isVisible(),false);
+  await radioLab.getByRole("button",{name:"Show transcript"}).click();
+  assert.equal(await radioLab.locator(".radio-lab-transcript").isVisible(),true);
+  assert.ok(await radioLab.locator(".radio-lab-transcript li").count()>=2);
+  if(index===0){
+   await radioLab.getByRole("button",{name:"Listen to example"}).click();
+   await radioLab.getByRole("button",{name:"Stop audio"}).click();
+   assert.match(await radioLab.locator(".radio-lab-audio-status").textContent(),/Playback stopped/);
+  }
+  if(index===1){
+   assert.equal(await radioLab.locator(".radio-lab-letters button").count(),26);
+   await radioLab.locator('.radio-lab-letters button[data-letter="J"]').click();
+   assert.match(await radioLab.locator(".radio-lab-letter-meaning").textContent(),/J — Juliett/);
+   await radioLab.locator("#radioSpellingInput").fill("ABC");
+   assert.match(await radioLab.locator(".radio-lab-spelled").textContent(),/Alfa · Bravo · Charlie/);
+   await radioLab.locator("#radioSpellingInput").fill("ABC-123");
+   assert.equal(await radioLab.locator(".radio-lab-spelled").getAttribute("data-valid"),"false");
+   await radioLab.locator("#radioSpellingInput").fill("ABC");
+  }
+  if(index===2){
+   assert.match(await radioLab.locator(".radio-lab-transcript").textContent(),/runway two seven/);
+   assert.match(await radioLab.locator(".radio-lab-transcript").textContent(),/Correction, hold short runway zero niner/);
+  }
+  if(index<3)await radioLab.getByRole("button",{name:"Next radio exercise"}).click();
+ }
+ assert.match(await radioLab.locator(".radio-lab-progress").textContent(),/4 reviewed this visit/);
+ assert.equal(await radioLab.locator(".radio-lab-figure").count(),2);
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),false);
+ await desktop.emulateMedia({media:"print"});
+ assert.equal(await desktop.locator("main").isVisible(),false,
+  "Course 09 original pictures, transcripts and notes must not appear in Print or Save as PDF");
+ assert.equal(await desktop.locator("#inAppOnlyPrintNotice").isVisible(),true);
+ await desktop.emulateMedia({media:"screen"});
+ await desktop.locator('#moduleList button[data-module="aircraft"]').click();
+ assert.equal(await radioLab.isVisible(),false,
+  "Course 09 radio trainer must not appear in any other course");
 
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
@@ -755,6 +807,25 @@ try{
  await phoneAirspace.getByRole("button",{name:"Taxiway A",exact:true}).tap();
  assert.equal(await phoneAirspace.locator(".as-lab-diagram-info").getAttribute("data-selected"),"taxiway");
  await airspacePhone.close();
+
+ const radioPhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ radioPhone.on("pageerror",e=>errors.push("radio-phone: "+e.message));
+ await radioPhone.goto(base+"?path=scouts&module=communications",{waitUntil:"load"});
+ const phoneRadio=radioPhone.locator("#radioPracticalLab");
+ await phoneRadio.waitFor({state:"visible"});
+ assert.equal(await phoneRadio.locator(".radio-lab-figure").count(),2);
+ assert.ok(await radioPhone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3),
+  "Course 09 radio exercises must fit a 390px mobile screen without horizontal scrolling");
+ await phoneRadio.locator(".radio-lab-questions input").nth(1).check();
+ await phoneRadio.getByRole("button",{name:"Check radio answer"}).tap();
+ assert.match(await phoneRadio.locator(".radio-lab-feedback").textContent(),/Correct radio communication concept/);
+ await phoneRadio.getByRole("button",{name:"Show transcript"}).tap();
+ assert.equal(await phoneRadio.locator(".radio-lab-transcript").isVisible(),true);
+ await phoneRadio.getByRole("button",{name:"Next radio exercise"}).tap();
+ assert.equal(await phoneRadio.locator(".radio-lab-letters button").count(),26);
+ await phoneRadio.locator('.radio-lab-letters button[data-letter="A"]').tap();
+ assert.match(await phoneRadio.locator(".radio-lab-letter-meaning").textContent(),/A — Alfa/);
+ await radioPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
