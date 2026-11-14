@@ -1,0 +1,56 @@
+/* Additive Course 02 picture-led identification only. Existing Cessna and
+   helicopter models and the approved visual textbook layout stay unchanged. */
+.aircraft-id-lab{margin:16px 0 24px;padding:15px;border-radius:14px;border:1px solid #9bb4c5;border-left:4px solid #d8b36b;background:#0c2940;color:#edf6fe}
+.aircraft-id-lab[hidden]{display:none!important}
+.aircraft-id-heading{border-bottom:1px solid #49748b;padding-bottom:10px}
+.aircraft-id-heading h3{font:700 clamp(19px,2.4vw,25px)/1.25 Georgia,serif;color:#ffe7b3;margin:5px 0 8px}
+.aircraft-id-heading p{font-size:14px;line-height:1.55;margin:6px 0}
+.aircraft-id-heading .aircraft-id-eyebrow{font:800 11px/1.5 system-ui,sans-serif;letter-spacing:.09em;color:#efc575}
+.aircraft-id-pathway{font-size:13px;color:#e4f7ff;padding:9px 12px;border-left:3px solid #6cc9d8;background:#154056;border-radius:7px}
+.aircraft-id-progress{font-size:12px;color:#c8e0ec;margin:12px 0}
+.aircraft-id-body h4{font:750 19px/1.35 system-ui,sans-serif;color:#ffe4aa;margin:9px 0 14px}
+.aircraft-id-content{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:14px;align-items:start}
+.aircraft-id-gallery{display:grid;grid-template-columns:1fr;gap:10px;min-width:0}
+.aircraft-id-gallery:has(.aircraft-id-figure:nth-child(2)){grid-template-columns:repeat(2,minmax(0,1fr))}
+.aircraft-id-figure{margin:0;min-width:0;border:1px solid #5b7f95;border-radius:11px;overflow:hidden;background:#112e43}
+.aircraft-id-picture-button{display:block;position:relative;width:100%;background:#e1e9eb;border:0;border-radius:0;padding:0;cursor:zoom-in}
+.aircraft-id-picture{display:block;width:100%;height:auto;object-fit:contain;background:#183348;min-height:100px}
+.aircraft-id-picture-cue{position:absolute;bottom:5px;right:5px;color:#fff;background:rgba(7,26,40,.84);border:1px solid rgba(255,255,255,.6);border-radius:6px;padding:3px 6px;font-size:11px;font-weight:700}
+.aircraft-id-figure figcaption{padding:8px 10px;color:#e7f0f7;font-size:12px;line-height:1.4}
+.aircraft-id-lesson{min-width:0}
+.aircraft-id-lesson>p:first-child{font-size:14px;line-height:1.65;margin:0 0 10px}
+.aircraft-id-answers{margin:10px 0;padding:10px;border:1px solid #6089a2;border-radius:10px;min-width:0}
+.aircraft-id-answers legend{font-size:14px;line-height:1.4;font-weight:750;color:#f5e3b7;padding:2px 5px}
+.aircraft-id-answers label{display:flex;align-items:start;gap:9px;padding:10px 8px;margin:5px 0;border:1px solid transparent;border-radius:8px;line-height:1.55;font-size:13px;cursor:pointer}
+.aircraft-id-answers label:has(input:checked){background:#17546b;border-color:#79ccd8}
+.aircraft-id-answers input{margin:4px 0 0;flex:0 0 auto;accent-color:#67d1df}
+.aircraft-id-lab button{font:700 13px/1.4 system-ui,sans-serif;min-height:40px;border-radius:8px;border:1px solid #ccae73;background:#1d4e67;color:white;padding:9px 12px;cursor:pointer}
+.aircraft-id-lab button:focus-visible,.aircraft-id-zoom button:focus-visible{outline:3px solid #ffdb85;outline-offset:3px}
+.aircraft-id-lab button:disabled{opacity:.45;cursor:not-allowed}
+.aircraft-id-lab button:not(:disabled):hover{background:#266984}
+.aircraft-id-picture-button{border-radius:0!important;min-height:0!important;background:#173448!important;padding:0!important;border:0!important}
+.aircraft-id-feedback{margin:13px 0;padding:12px;border-radius:9px;border:1px solid #4e7692;background:#15394e;color:#e7f5fd;font-size:13px;line-height:1.65}
+.aircraft-id-feedback strong{color:#d7edb5}
+.aircraft-id-feedback[data-correct="false"] strong{color:#ffdfaf}
+.aircraft-id-feedback p{margin:7px 0}
+.aircraft-id-key{margin:11px 0 3px;border:1px solid #678ca1;padding:8px 10px;border-radius:8px}
+.aircraft-id-key summary{cursor:pointer;color:#fbe5b4;font-weight:800}
+.aircraft-id-key dl{display:grid;grid-template-columns:minmax(0,110px) minmax(0,1fr);gap:7px 10px}
+.aircraft-id-key dt{font-weight:800;color:#ccecf4}
+.aircraft-id-key dd{margin:0}
+.aircraft-id-controls{display:flex;justify-content:space-between;gap:12px;margin:17px 0}
+.aircraft-id-foot{font-size:12px;color:#c1d5e4;line-height:1.5}
+.aircraft-id-zoom{position:fixed;margin:auto;max-width:min(94vw,1160px);width:max-content;max-height:92vh;overflow:auto;border:2px solid #afc7d8;border-radius:12px;background:#092537;color:#fff;padding:14px}
+.aircraft-id-zoom::backdrop{background:rgba(0,10,20,.85)}
+.aircraft-id-zoom h3{font-size:17px;max-width:95%;color:#ffe6b9}
+.aircraft-id-zoom canvas{display:block;max-width:100%;height:auto;background:#fff;border-radius:6px}
+.aircraft-id-zoom button{display:block;margin:13px auto 0;background:#205f78;border:1px solid #cbb17b;color:#fff;border-radius:8px;padding:10px 16px;min-height:40px}
+@media(max-width:1050px){.aircraft-id-content{grid-template-columns:1fr}.aircraft-id-gallery{max-width:850px}}
+@media(max-width:590px){
+ .aircraft-id-lab{padding:10px 8px;margin:9px 0;border-left-width:3px}
+ .aircraft-id-gallery:has(.aircraft-id-figure:nth-child(2)){grid-template-columns:1fr}
+ .aircraft-id-answers label{font-size:14px}
+ .aircraft-id-controls button{flex:1}
+ .aircraft-id-key dl{grid-template-columns:1fr;gap:2px}
+ .aircraft-id-key dd{margin-bottom:7px}
+}
