@@ -157,8 +157,11 @@ try{
  await desktop.locator('#moduleList button[data-module="aircraft"]').click();
  assert.equal(await desktop.locator(".original-coursebook-plate").count(),1,
   "Aircraft lesson must present the owner's original Cessna coursebook");
- assert.ok((await desktop.locator(".original-plate-viewport").boundingBox()).width>=850,
-  "Actual Cessna image must use the broad lesson area");
+ const plateRect=await desktop.locator(".original-plate-viewport").boundingBox();
+ const teachingRect=await desktop.locator(".textbook-course-intro").boundingBox();
+ assert.ok(plateRect.width>=480,"Desktop must preserve a large Cessna teaching picture");
+ assert.ok(plateRect.x+plateRect.width<=teachingRect.x+8,
+  "Desktop Cessna should sit beside substantial lesson content, not wasted space");
  assert.match(await desktop.locator(".original-plate-viewport img").getAttribute("src"),/illustrated-cessna-structures-lecture\.webp/);
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
