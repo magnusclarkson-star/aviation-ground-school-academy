@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {MASTER_ARTWORK,validateMasterArtwork,originalArtworkFor} from "../master-artwork.mjs";
+import {MASTER_ARTWORK,validateMasterArtwork,originalArtworkFor,bundledApprovedArtwork} from "../master-artwork.mjs";
 import {renderOriginalCertificate} from "../original-certificate-pdf.mjs";
 const names=Object.keys(MASTER_ARTWORK);
 test("exact three visual designs mapped to correct Academy audiences",()=>{
@@ -21,10 +21,13 @@ test("incorrect and synthetic PNGs are refused instead of silently redrawing",()
  const wrongSize=Buffer.from(fake);wrongSize.writeUInt32BE(1024,16);
  assert.throws(()=>validateMasterArtwork(wrongSize,"SCOUT_MODERN"),/1491 x 1055/);
 });
-test("no original is installed means no formal certificate background",async()=>{
- await assert.rejects(()=>originalArtworkFor({
-  async query(){return {rows:[]}}
- },"FORMAL_TRADITIONAL"),/not installed/);
+test("permanently bundled exact originals work without browser or administrator uploads",async()=>{
+ for(const style of names){
+  const bundled=await bundledApprovedArtwork(style);
+  const normal=await originalArtworkFor({async query(){return {rows:[]}}},style);
+  assert.deepEqual(normal,bundled);
+  assert.equal(validateMasterArtwork(bundled,style).sha256,MASTER_ARTWORK[style].sha256);
+ }
  await assert.rejects(()=>renderOriginalCertificate({
   name:"Test Learner",courseTitle:"Aviation Foundations",
   serial:"AGSA-COURSE-"+"A".repeat(24),verifiedAcademicRecord:true

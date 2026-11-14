@@ -2,7 +2,6 @@
 // IMPORTANT: image signature is an optional visual reproduction, NOT cryptographic signing.
 import {PDFDocument,StandardFonts,rgb,degrees} from "pdf-lib";
 import {buildTranscriptPdf} from "./transcript-pdf.mjs";
-export const ACADEMY_STANDARD_STYLE="ACADEMY_STANDARD";
 export const STYLES=Object.freeze({
  FORMAL_TRADITIONAL:"Formal academic ivory and burgundy",
  SCOUT_MODERN:"Air Scouts modern aviation blue and teal",
@@ -49,8 +48,8 @@ function seal(page,x,y,ink=C.gold){
  rays.forEach(([dx,dy])=>rule(page,x,y,x+dx,y+dy,ink,.95));
  page.drawText("AGSA",{x:x-15,y:y-5,size:10,color:ink});
 }
-export async function renderCourseCertificate(record,{style=ACADEMY_STANDARD_STYLE,options={},signaturePng=null,sample=false}={}){
- if(!STYLES[style]&&style!==ACADEMY_STANDARD_STYLE)throw Error("Unrecognised Academy certificate design");
+export async function renderCourseCertificate(record,{style="FORMAL_TRADITIONAL",options={},signaturePng=null,sample=false}={}){
+ if(!STYLES[style])throw Error("Unrecognised Academy certificate design");
  const opts=validateOptions(options);
  if(!record||typeof record.name!=="string"||record.name.trim().length<3||
    !/^AGSA-COURSE-[0-9A-F]{24}$/.test(record.serial||"")||record.verifiedAcademicRecord!==true)
@@ -59,8 +58,7 @@ export async function renderCourseCertificate(record,{style=ACADEMY_STANDARD_STY
  const ser=await doc.embedFont(StandardFonts.Helvetica),bold=await doc.embedFont(StandardFonts.HelveticaBold);
  const book=await doc.embedFont(StandardFonts.TimesRoman),bookBold=await doc.embedFont(StandardFonts.TimesRomanBold);
  const width=page.getWidth(),height=page.getHeight();
- const theme=style===ACADEMY_STANDARD_STYLE?{background:C.ivory,heading:C.navy,accent:C.gold,body:C.navy,font:bookBold}:
-  style==="FORMAL_TRADITIONAL"?{background:C.ivory,heading:C.burgundy,accent:C.gold,body:C.navy,font:bookBold}:
+ const theme=style==="FORMAL_TRADITIONAL"?{background:C.ivory,heading:C.burgundy,accent:C.gold,body:C.navy,font:bookBold}:
   style==="SCOUT_MODERN"?{background:C.white,heading:C.blue,accent:C.teal,body:C.navy,font:bold}:
    {background:C.navy,heading:C.white,accent:C.gold,body:C.white,font:bookBold};
  page.drawRectangle({x:0,y:0,width,height,color:theme.background});
@@ -73,16 +71,13 @@ export async function renderCourseCertificate(record,{style=ACADEMY_STANDARD_STY
  }else if(style==="FORMAL_TRADITIONAL"){
   page.drawRectangle({x:0,y:height-39,width,height:39,color:C.burgundy});
   rule(page,140,472,702,472,C.gold,1.5);
- }else if(style===ACADEMY_STANDARD_STYLE){
-  page.drawRectangle({x:0,y:height-22,width,height:22,color:C.navy});
-  rule(page,140,472,702,472,C.gold,1.5);
  }else{
   page.drawRectangle({x:0,y:0,width:13,height,color:C.gold});
   page.drawRectangle({x:width-13,y:0,width:13,height,color:C.gold});
  }
  const topColor=style==="SCOUT_MODERN"?C.white:theme.heading;
  centered(page,"AVIATION GROUND SCHOOL ACADEMY",style==="SCOUT_MODERN"?515:520,18,bold,topColor);
- centered(page,style==="SCOUT_MODERN"?"AIR SCOUTS AND AVIATION STUDIES":style==="ENTHUSIAST_NAVY_GOLD"?"AVIATION STUDIES - KNOWLEDGE AND DISCIPLINE":style===ACADEMY_STANDARD_STYLE?"KNOWLEDGE - DISCIPLINE - SAFETY":"ACADEMIC COURSE RECORD",style==="SCOUT_MODERN"?490:495,10,ser,topColor);
+ centered(page,style==="SCOUT_MODERN"?"AIR SCOUTS AND AVIATION STUDIES":style==="ENTHUSIAST_NAVY_GOLD"?"AVIATION STUDIES - KNOWLEDGE AND DISCIPLINE":"ACADEMIC COURSE RECORD",style==="SCOUT_MODERN"?490:495,10,ser,topColor);
  centered(page,"CERTIFICATE OF COURSE COMPLETION",427,26,theme.font,theme.heading);
  centered(page,"THIS CERTIFIES THAT",387,11,ser,theme.body);
  centered(page,record.name,338,34,style==="SCOUT_MODERN"?bold:bookBold,theme.heading,690);

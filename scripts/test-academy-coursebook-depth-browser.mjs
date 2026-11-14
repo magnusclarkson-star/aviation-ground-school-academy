@@ -6,6 +6,8 @@ import {chromium} from "playwright";
 
 const root=process.cwd();
 const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+for(const [prefix,parts] of [["formal",7],["scout",5],["enthusiast",5]])
+ for(let i=0;i<parts;i++)allowed.add("assets/certificates/original-"+prefix+".part"+String(i).padStart(2,"0")+".txt");
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -239,13 +241,19 @@ try{
  const standard=await browser.newPage({viewport:{width:1365,height:850}});
  standard.on("pageerror",e=>errors.push("certificate: "+e.message));
  await standard.goto("http://127.0.0.1:"+server.address().port+"/academy-certificate-gallery.html",{waitUntil:"load"});
- assert.equal(await standard.locator(".certificate-card").count(),1);
+ assert.equal(await standard.locator(".certificate-card").count(),3,
+  "All three approved original certificate images must be restored");
  assert.equal(await standard.locator('input[type="file"]').count(),0);
- assert.ok(await standard.locator("#academyStandard").isVisible(),
-  "Permanent Academy specimen must display automatically without upload");
- assert.ok((await standard.locator("#academyStandard").boundingBox()).width>=800,
-  "Desktop certificate should occupy the available print-preview area");
- assert.match(await standard.locator("#academyStandard").textContent(),/SAMPLE · NOT ISSUED/);
+ for(const key of ["formal","scout","enthusiast"]){
+  const card=standard.locator('[data-original="'+key+'"]');
+  await card.locator(".load-status").getByText(/verified and displayed/).waitFor({timeout:30000});
+  assert.ok(await card.locator(".original-artwork").evaluate(img=>img.complete&&img.naturalWidth===1491&&img.naturalHeight===1055),
+   "Exact original approved PNG must render at full resolution: "+key);
+  assert.equal(await card.locator("[data-print]").isDisabled(),false);
+  assert.match(await card.textContent(),/SAMPLE · NOT ISSUED/);
+ }
+ assert.ok((await standard.locator('[data-original="formal"] .sheet-wrap').boundingBox()).width>=800,
+  "Desktop should use the available area for original certificate art");
  await standard.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});

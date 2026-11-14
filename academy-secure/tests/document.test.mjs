@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
 import {PDFDocument} from "pdf-lib";
-import {STYLES,ACADEMY_STANDARD_STYLE,validateOptions,renderCourseCertificate,renderAcademicTranscript} from "../document-pdf.mjs";
+import {STYLES,validateOptions,renderCourseCertificate,renderAcademicTranscript} from "../document-pdf.mjs";
 import {buildCertificatePdf} from "../../academy-certificate-core.mjs";
 import {eligibleModule,eligibleProgramme} from "../../academy-certificate-eligibility.mjs";
 import Core from "../../academy-coursebook-data.js";
@@ -9,21 +9,6 @@ import Deep from "../../academy-coursebook-depth-model.js";
 const serial="AGSA-COURSE-"+"A".repeat(24);
 const completion={name:"Academic Test Learner",serial,verifiedAcademicRecord:true,
  courseTitle:"Aircraft Accident and Incident Investigation",completedAt:"2026-11-13T10:00:00.000Z",issuedAt:"2026-11-13T12:00:00.000Z"};
-test("built-in Academy standard certificate works without an image upload",async()=>{
- assert.equal(ACADEMY_STANDARD_STYLE,"ACADEMY_STANDARD");
- const issued=await renderCourseCertificate(completion,{
-  style:ACADEMY_STANDARD_STYLE,options:{showSeal:true,showSignature:false}
- });
- const sample=await renderCourseCertificate(completion,{
-  style:ACADEMY_STANDARD_STYLE,options:{showSeal:true},sample:true
- });
- assert.equal((await PDFDocument.load(issued)).getPageCount(),1);
- assert.ok(issued.length>2000);
- assert.notEqual(Buffer.compare(Buffer.from(issued),Buffer.from(sample)),0);
- await assert.rejects(()=>renderCourseCertificate({...completion,verifiedAcademicRecord:false},{
-  style:ACADEMY_STANDARD_STYLE
- }),/completion/);
-});
 test("formal and student-track PDF templates are structured A4 pages",async()=>{
  for(const style of Object.keys(STYLES)){
   const bytes=await renderCourseCertificate(completion,{style,options:{showSeal:true,showSignature:false}});

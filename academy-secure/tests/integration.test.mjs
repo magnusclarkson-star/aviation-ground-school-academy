@@ -322,10 +322,11 @@ test("private ATO roles, verified-source gates and independent completion record
   assert.equal((await call("/api/admin/documents/layouts","POST",{
    audience:"FORMAL",style:"SCOUT_MODERN",enabled:true,options:{showQrVerification:true}
   },admin)).status,400,"Unverified QR codes must stay disabled");
-  // Legacy optional image uploads remain strictly validated; standard PDFs no longer depend on them.
+  // Exact owner-approved originals are permanently bundled. Uploads are unnecessary; modified replacements remain rejected.
   const masterStatus=await call("/api/admin/certificate-master/status","GET",undefined,admin);
   assert.equal(masterStatus.status,200);
-  assert.equal(masterStatus.body.allInstalled,false);
+  assert.equal(masterStatus.body.allInstalled,true,"All three exact approved masters should be available without upload");
+  assert.equal(masterStatus.body.originalMasters.every(x=>x.bundledOriginal===true),true);
   assert.equal(masterStatus.body.originalMasters.length,3);
   assert.equal((await call("/api/admin/certificate-master/status","GET",undefined,student)).status,403);
   const fakeImage=Buffer.alloc(70000);
@@ -349,7 +350,7 @@ test("private ATO roles, verified-source gates and independent completion record
    assert.equal(denied.status,403,"Students may not use private owner-only specimen endpoint");
    const example=await fetch(ORIGIN+path,{headers:{Origin:ORIGIN,Cookie:admin}});
    assert.equal(example.status,200,
-    audience+" built-in PDF specimen should render without uploaded artwork");
+    audience+" original owner-approved specimen should render without uploaded artwork");
    assert.ok(example.headers.get("content-type")?.includes("application/pdf"));
    assert.match(example.headers.get("content-disposition"),/inline/);
    const pdf=Buffer.from(await example.arrayBuffer());
@@ -359,13 +360,13 @@ test("private ATO roles, verified-source gates and independent completion record
   const pdfResponse=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/download",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(pdfResponse.status,200,"Approved and fee-released certificate should use permanent artwork");
+  assert.equal(pdfResponse.status,200,"Approved and fee-released certificate must use the exact original academic design");
   assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),"%PDF-");
 
   const printCertificate=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{
    headers:{Origin:ORIGIN,Cookie:student}
   });
-  assert.equal(printCertificate.status,200,"Permanent built-in certificate supports authorised printing");
+  assert.equal(printCertificate.status,200,"Original approved certificate supports authorised printing");
   assert.match(printCertificate.headers.get("content-disposition"),/inline/);
 
   const forbiddenPrint=await fetch(ORIGIN+"/api/my/documents/"+certificateGrant.body.grant.id+"/print",{

@@ -47,7 +47,8 @@ function changeLayout(){
   FORMAL:"FORMAL_TRADITIONAL",SCOUT:"SCOUT_MODERN",
   ENTHUSIAST:"ENTHUSIAST_NAVY_GOLD",TRANSCRIPT:"FORMAL_TRADITIONAL"
  };
- f.elements.style.value=selected?.style||defaults[$("docAudience").value];
+ // The owner approved the three originals. The audience fixes the exact design.
+ f.elements.style.value=defaults[$("docAudience").value];
  f.elements.enabled.checked=!!selected?.enabled;
  const fields=["showSeal","showSignature","showCertificateNumber","showCompletionDate",
   "showCourseTitle","showInstructorLine","autoDownload","autoPrint"];
