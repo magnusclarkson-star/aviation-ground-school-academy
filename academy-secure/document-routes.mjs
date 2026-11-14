@@ -93,7 +93,8 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
       assessments:[],completion:null}],verifiedIdentity:false
    },{options,sample:true});
   }else{
-   const selected=stored?.style||defaults[audience];
+   // Owner approved one exact original design for each audience. Never substitute another style.
+   const selected=defaults[audience];
    let master;
    try{master=await originalArtworkFor(db,selected)}
    catch(e){fail(409,"Original certificate artwork is not installed: "+String(e.message).slice(0,120))}
@@ -145,11 +146,14 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
     const docs=await evidence(db);
     if(!courseApproved(docs,grant.course_id))fail(403,"Current course regulatory approval cannot be confirmed");
     png=await signatureFor(db,audience,opts);
-    const master=await originalArtworkFor(db,settings.style);
+    const approvedStyle={FORMAL:"FORMAL_TRADITIONAL",SCOUT:"SCOUT_MODERN",
+     ENTHUSIAST:"ENTHUSIAST_NAVY_GOLD"}[audience];
+    if(!approvedStyle)fail(409,"Unknown approved Academy certificate audience");
+    const master=await originalArtworkFor(db,approvedStyle);
     document=await renderOriginalCertificate({
      name:people[0].legal_name,serial:completed[0].serial,courseTitle:completed[0].title,
      completedAt:completed[0].attested_at,issuedAt:grant.activated_at,verifiedAcademicRecord:true
-    },{style:settings.style,masterPng:master,options:opts,signaturePng:png});
+    },{style:approvedStyle,masterPng:master,options:opts,signaturePng:png});
    }else{
     const entries=await transcriptData(db,actor.id,grant.activated_at);
     if(!entries.length)fail(409,"No private course records exist for this transcript");
@@ -221,7 +225,10 @@ export async function handleDocumentRoute({req,res,method,pathname,actor,db,tran
  }
  if(method==="POST"&&pathname==="/api/admin/documents/layouts"){
   const b=await json(req),audience=string(b,"audience",4,20,fail);
-  if(!AUDIENCES.includes(audience)||!STYLES[b.style]||typeof b.enabled!=="boolean")fail(400,"Invalid design choices");
+  const approvedStyles={FORMAL:"FORMAL_TRADITIONAL",SCOUT:"SCOUT_MODERN",
+   ENTHUSIAST:"ENTHUSIAST_NAVY_GOLD",TRANSCRIPT:"FORMAL_TRADITIONAL"};
+  if(!AUDIENCES.includes(audience)||b.style!==approvedStyles[audience]||typeof b.enabled!=="boolean")
+   fail(400,"Only the owner-approved certificate design for this learning route can be configured");
   let opts;try{opts=validateOptions(b.options)}catch(e){fail(400,e.message)}
   const data=await transaction(async tx=>{
    const {rows}=await tx.query(`INSERT INTO academy_document_layouts(id,style,enabled,options,changed_by)
