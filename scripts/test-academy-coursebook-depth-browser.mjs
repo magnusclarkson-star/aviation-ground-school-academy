@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-orientation-safety-lab-data.js","academy-orientation-safety-lab.js","academy-orientation-safety-lab.css","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-classic-v4.css","academy-coursebook-classic-v4.js","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","academy-certificate-gallery.html","academy-certificate-gallery.css","academy-certificate-gallery.js","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 for(const key of ["formal","scout","enthusiast"])
  allowed.add("assets/certificate-previews/"+key+"-sample.png");
 const server=createServer(async(req,res)=>{
@@ -42,7 +42,39 @@ try{
  const desktop=await browser.newPage({viewport:{width:1280,height:900},acceptDownloads:true});
  desktop.on("pageerror",e=>errors.push("desktop: "+e.message));
 
- await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
+ await desktop.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"}); 
+ const safetyLab=desktop.locator("#orientationSafetyLab");
+ await safetyLab.waitFor({state:"visible"});
+ assert.equal(await safetyLab.locator(".orientation-lab-options input").count(),3);
+ await desktop.waitForFunction(()=>{
+  const c=document.querySelector(".orientation-lab-picture canvas");
+  if(!c)return false;
+  const d=c.getContext("2d")?.getImageData(Math.round(c.width/2),Math.round(c.height/2),1,1).data;
+  return d?.[3]===255;
+ });
+ assert.match(await safetyLab.locator(".orientation-lab-picture figcaption").textContent(),/approved academy photograph/i);
+ for(const [index,correct] of [[0,0],[1,1],[2,2]]){
+  assert.match(await safetyLab.locator(".orientation-lab-frame h4").textContent(),new RegExp("^"+(index+1)+"\\."));
+  await safetyLab.locator(".orientation-lab-options input").nth(correct).check();
+  await safetyLab.getByRole("button",{name:"Check this decision"}).click();
+  assert.match(await safetyLab.locator(".orientation-lab-frame .orientation-lab-feedback").textContent(),/Good safety judgement/);
+  assert.equal(await safetyLab.locator(".orientation-lab-fact-grid dt").count(),4,
+   "Learner must see observation, uncertainty, protection and reporting");
+  if(index<2)await safetyLab.getByRole("button",{name:"Next situation"}).click();
+ }
+ assert.match(await safetyLab.locator(".orientation-lab-progress").textContent(),/3 decisions reviewed/);
+ await safetyLab.locator(".orientation-lab-report summary").click();
+ for(const [i,value] of [
+  "A fictional equipment case blocks the visitor route.",
+  "A learner might trip or enter an unfamiliar area.",
+  "Keep the group clear and stop before the obstruction.",
+  "Report to the supervising instructor for safe correction."
+ ].entries())await safetyLab.locator(".orientation-lab-field textarea").nth(i).fill(value);
+ await safetyLab.getByRole("button",{name:"Check report structure"}).click();
+ assert.equal(await safetyLab.locator("#orientationLabReportFeedback").getAttribute("data-complete"),"true");
+ await safetyLab.getByRole("button",{name:"Clear worksheet"}).click();
+ assert.equal(await safetyLab.locator(".orientation-lab-field textarea").first().inputValue(),"");
+
  assert.equal(await desktop.locator("#deepReading .deep-lesson").count(),3);
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
@@ -153,6 +185,7 @@ try{
  await desktop.locator("#route").selectOption("pilots");
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
+ assert.equal(await desktop.locator("#orientationSafetyLab").isVisible(),false,"Course 01 practical must not appear in unrelated subjects");
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
  assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
  assert.match(await desktop.locator(".textbook-prose p").first().textContent(),/atmosphere/i);
@@ -272,6 +305,20 @@ try{
  assert.equal(await standard.locator('[data-original="formal"] .original-artwork').isVisible(),true,
   "Print restriction must not change approved screen previews");
  await standard.close();
+
+
+ const safetyPhone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ safetyPhone.on("pageerror",e=>errors.push("orientation-phone: "+e.message));
+ await safetyPhone.goto(base+"?path=scouts&module=orientation",{waitUntil:"load"});
+ const phoneLab=safetyPhone.locator("#orientationSafetyLab");
+ await phoneLab.waitFor({state:"visible"});
+ assert.equal(await phoneLab.locator(".orientation-lab-options input").count(),3);
+ assert.equal(await safetyPhone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),true,
+  "Pictorial practical must not cause horizontal overflow on narrow phone screens");
+ await phoneLab.locator(".orientation-lab-options input").first().check();
+ await phoneLab.getByRole("button",{name:"Check this decision"}).tap();
+ assert.match(await phoneLab.locator(".orientation-lab-frame .orientation-lab-feedback").textContent(),/Good safety judgement/);
+ await safetyPhone.close();
 
  const phone=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  phone.on("pageerror",e=>errors.push("phone: "+e.message));

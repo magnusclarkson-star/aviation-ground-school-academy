@@ -1,0 +1,63 @@
+/* Course 01 additive pictorial safety practical — no global cockpit or
+   approved artwork layout rules are altered. */
+.orientation-lab{
+ margin:16px 0 23px;padding:14px;
+ color:#edf7ff;background:#0c2940;
+ border:1px solid #7c9aad;border-left:4px solid #dfbd78;border-radius:13px;
+ box-shadow:0 5px 24px rgba(0,0,0,.12)
+}
+.orientation-lab[hidden]{display:none!important}
+.orientation-lab-head{border-bottom:1px solid #44677e;padding-bottom:10px}
+.orientation-lab-head h3{font:700 clamp(19px,2.2vw,24px)/1.25 Georgia,serif;color:#ffe4aa;margin:3px 0 5px}
+.orientation-lab-head>p{font-size:14px;line-height:1.55;margin:5px 0}
+.orientation-lab-kicker{color:#efc87e;font-size:11px!important;letter-spacing:.1em;font-weight:800}
+.orientation-lab-route{color:#bfe6ee;line-height:1.5;padding:7px 10px;border-left:3px solid #74ccd2;background:#12384c;border-radius:4px;font-size:13px}
+.orientation-lab-progress{color:#d8e8f3;font-size:12px;margin:11px 0}
+.orientation-lab-frame{min-width:0}
+.orientation-lab-frame h4{color:#fbe5b5;font-size:18px;margin:13px 0}
+.orientation-lab-case-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.14fr);gap:13px;align-items:start}
+.orientation-lab-picture{margin:0;border:1px solid #52728a;border-radius:10px;overflow:hidden;background:#102232;min-width:0}
+.orientation-lab-picture canvas{display:block;width:100%;height:auto;min-height:125px;object-fit:contain;background:#193247}
+.orientation-lab-picture figcaption{padding:9px 10px;color:#e2e9ee;font-size:12px;line-height:1.5}
+.orientation-lab-picture>a{display:inline-block;margin:0 10px 11px;color:#b6edff;font-size:12px;line-height:1.5}
+.orientation-lab-situation{min-width:0}
+.orientation-lab-situation>p:first-child{font-size:14px;line-height:1.58;margin:0 0 12px}
+.orientation-lab-options{border:1px solid #52768e;border-radius:9px;margin:10px 0 12px;padding:9px;min-width:0}
+.orientation-lab-options legend{color:#f3d9a0;font-size:14px;font-weight:750;padding:0 4px}
+.orientation-lab-options label{display:flex;align-items:flex-start;gap:9px;margin:5px 0;padding:10px 9px;border:1px solid transparent;border-radius:8px;line-height:1.45;cursor:pointer;font-size:13px}
+.orientation-lab-options label:has(input:checked){background:#17455b;border-color:#80d5dc}
+.orientation-lab-options input{accent-color:#6dd8df;margin:3px 0 0;flex:0 0 auto}
+.orientation-lab button{font:700 13px/1.35 system-ui,sans-serif;min-height:40px;min-width:0;padding:10px 13px;border:1px solid #d7bd85;background:#16425e;color:#fff;border-radius:8px;cursor:pointer}
+.orientation-lab button:hover:not(:disabled),.orientation-lab button:focus-visible{background:#236084}
+.orientation-lab button:focus-visible,.orientation-lab input:focus-visible,.orientation-lab textarea:focus-visible{outline:3px solid #f2cf84;outline-offset:2px}
+.orientation-lab button:disabled{opacity:.45;cursor:not-allowed}
+.orientation-lab-feedback{padding:12px;background:#163951;border:1px solid #496f89;border-radius:9px;color:#f0f7ff;font-size:13px;line-height:1.6;margin:11px 0}
+.orientation-lab-feedback strong{color:#e4f2bd}
+.orientation-lab-feedback[data-correct="false"] strong{color:#ffdbad}
+.orientation-lab-feedback p{margin:8px 0}
+.orientation-lab-fact-grid{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,2fr);gap:8px 12px;margin:11px 0 0}
+.orientation-lab-fact-grid dt{color:#ffe4ac;font-weight:700}
+.orientation-lab-fact-grid dd{margin:0;color:#e5f0f7}
+.orientation-lab-nav{display:flex;justify-content:space-between;gap:10px;margin:13px 0 20px}
+.orientation-lab-report{border:1px solid #68869b;border-radius:10px;padding:12px;background:#112d43}
+.orientation-lab-report summary{font-weight:800;color:#f3dda9;cursor:pointer;line-height:1.5}
+.orientation-lab-report>p{font-size:13px;line-height:1.6}
+.orientation-lab-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.orientation-lab-field{min-width:0}
+.orientation-lab-field label{display:block;color:#e5f2f9;font-weight:700;font-size:13px;margin-bottom:6px}
+.orientation-lab-field textarea{display:block;width:100%;box-sizing:border-box;background:#071c2e;color:#fff;border:1px solid #6c95ad;border-radius:8px;padding:10px;min-height:82px;font:14px/1.5 system-ui,sans-serif;resize:vertical}
+.orientation-lab-field textarea::placeholder{color:#a8bfd0}
+.orientation-lab-report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px}
+.orientation-lab-foot{font-size:12px;line-height:1.5;color:#b8d0df;margin:12px 0 0}
+@media(max-width:1000px){.orientation-lab-case-grid{grid-template-columns:1fr}.orientation-lab-picture{max-width:760px}}
+@media(max-width:590px){
+ .orientation-lab{padding:10px 8px;margin:10px 0;border-left-width:3px}
+ .orientation-lab-report-grid,.orientation-lab-fact-grid{grid-template-columns:1fr}
+ .orientation-lab-fact-grid{gap:1px}.orientation-lab-fact-grid dd{margin-bottom:7px}
+ .orientation-lab-nav button{flex:1}
+ .orientation-lab-options label{padding:11px 6px;font-size:14px}
+ .orientation-lab-progress{font-size:12px}
+}
+@media print{.orientation-lab-nav,.orientation-lab-options,.orientation-lab-check,
+ .orientation-lab-report-actions,.orientation-lab-feedback{display:none!important}
+ .orientation-lab{box-shadow:none;break-inside:avoid}}
