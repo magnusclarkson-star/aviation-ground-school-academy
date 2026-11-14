@@ -125,3 +125,58 @@
 .related-original-link:focus-visible,.related-original-pictures>summary:focus-visible{outline:3px solid #e2af56;outline-offset:3px}
 @media(max-width:550px){.related-original-pictures{padding:9px}.related-original-grid{grid-template-columns:1fr}}
 @media print{.related-original-pictures{break-inside:avoid}.related-original-grid{grid-template-columns:repeat(2,1fr)}}
+
+
+/* Visual manual, inspired by the owner-approved illustrated Cessna coursebook page.
+   Restrained navy, antique-paper, teal and brass accents, retaining every original picture. */
+#lessonReading{--manual-navy:#17374e;--manual-brass:#bc9456;--manual-paper:#fcfaf3;--manual-ink:#233849;--manual-muted:#455f6d;display:grid;gap:16px;margin-top:16px}
+.visual-manual-cover{background:var(--manual-paper);color:var(--manual-ink);border:1px solid #bfa573;border-radius:16px;padding:17px;overflow:hidden;box-shadow:0 12px 24px #04101d40}
+.visual-manual-strip{background:linear-gradient(115deg,#0e344a,#1b5e6b);margin:-17px -17px 16px;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:4px solid #cba668}
+.visual-manual-strip span{color:#fff5de;font-size:10px;font-weight:800;letter-spacing:1.3px;line-height:1.4}
+.visual-manual-cover h3{font:700 clamp(23px,3.6vw,35px)/1.14 Georgia,"Times New Roman",serif;color:#143c4d;margin:8px 0 12px}
+.visual-manual-cover>p{color:var(--manual-muted);font-size:14px;line-height:1.7;max-width:850px}
+.visual-manual-cover>.visual-manual-meta{font-size:11px;letter-spacing:.75px;text-transform:uppercase;color:#846130;font-weight:800}
+.visual-manual-hero{background:#fff;border:1px solid #c7d5d9;border-radius:13px;overflow:hidden;margin-top:17px}
+.visual-manual-hero .approved-visual-figure{margin:0;border:0;border-radius:0;box-shadow:none}
+.visual-manual-hero .approved-full-picture{max-height:620px}
+.visual-manual-all-pictures{margin-top:14px}
+.visual-manual-all-pictures .related-original-pictures{background:#eaf2f3;border-color:#98bac4;margin:0}
+.visual-manual-all-pictures .related-original-pictures>summary{color:#194b63}
+#lessonReading article.visual-manual-section{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,.93fr);gap:13px 21px;background:var(--manual-paper);color:var(--manual-ink);border:1px solid #bcb39e;box-shadow:0 4px 16px #040f1b26;padding:18px;border-radius:15px;scroll-margin-top:15px;min-width:0}
+#lessonReading article.visual-manual-section>h3{grid-column:1/-1;font:700 clamp(21px,2.5vw,27px)/1.2 Georgia,"Times New Roman",serif;color:var(--manual-navy);border-bottom:1px solid #d8c9a4;padding-bottom:13px;margin:0 0 1px;display:flex;align-items:center;gap:11px}
+.visual-lecture-num{display:inline-flex;align-items:center;justify-content:center;flex:none;width:43px;height:43px;border-radius:50%;background:#173f56;color:#fff6d8;border:2px solid #bd9a5f;font:800 16px system-ui,sans-serif}
+#lessonReading article.visual-manual-section>p{font-size:15px;line-height:1.8;color:#344d60;margin:5px 0 0;min-width:0;max-width:100%;text-wrap:pretty}
+.visual-lesson-study{background:#f3f7f7;border:1px solid #bbced1;border-radius:12px;padding:12px;min-width:0;align-self:start}
+.visual-lesson-study p{color:#334c59}
+.visual-lesson-picture{background:#fff;border:1px solid #c9d7dc;border-radius:10px;overflow:hidden;margin:0 0 15px}
+.visual-note-kicker{display:block;background:#144862;color:#fff7dc;padding:9px 11px;font-size:10px;letter-spacing:.85px;font-weight:850}
+.visual-detail-trigger{width:100%;display:block;padding:0;border:0;border-radius:0;overflow:hidden;cursor:zoom-in;background:#fff;color:#164760}
+.visual-detail-trigger:disabled{opacity:.9;cursor:default}
+.visual-detail-canvas{width:100%;height:auto;display:block;background:#fafcfd}
+.visual-note-cue{font-size:11px;color:#144f69;font-weight:800;background:#e1eff3;padding:8px 10px;display:block}
+.visual-detail-caption{padding:10px 12px 5px;font-size:13px;font-weight:750;color:#244b5a}
+.visual-lesson-picture>a{display:inline-block;font-size:11px;color:#12688b;padding:0 12px 11px;font-weight:750}
+.visual-observation-label{font-size:10px!important;letter-spacing:1px;font-weight:850!important;color:#916b33!important;margin:10px 0 4px!important}
+.visual-focus,.visual-expanded-explanation{font-size:13px!important;line-height:1.75!important;color:#253f4e!important;margin:3px 0 10px!important}
+.visual-misconception{font-size:12px!important;line-height:1.6!important;color:#683d34!important;background:#fff3e4;border-left:3px solid #bf844c;border-radius:0 7px 7px 0;padding:10px 12px;margin:3px 0 12px!important}
+.visual-observation-check{background:#e2eef1;border:1px solid #b3cbd5;border-radius:9px;padding:10px 11px;min-width:0}
+.visual-observation-check>summary{font-weight:780;font-size:13px;color:#174c65;cursor:pointer;line-height:1.55}
+.visual-observation-check>p{font-size:12px;line-height:1.7;color:#305366;margin:10px 0 0}
+.visual-observation-check>.visual-caption-footnote{font-size:10px;color:#667782}
+.visual-concept-signpost{border:1px dashed #7eafbd;background:#e6f1f6;border-radius:9px;padding:12px}
+.visual-concept-signpost span{font-size:10px;font-weight:850;color:#286781;letter-spacing:1px}
+.visual-concept-signpost p{font-size:12px;line-height:1.6;margin:8px 0;color:#305365}
+#lessonReading article.visual-manual-section>.lesson-pictorial{grid-column:1/-1;margin:12px 0 0}
+.visual-lesson-dialog{max-width:min(1130px,97vw);width:min(1130px,97vw);max-height:94dvh;overflow:auto;padding:16px;background:#fbfcfc;color:#17364b;border:2px solid #9abcca;border-radius:14px;box-shadow:0 16px 60px #06152677}
+.visual-lesson-dialog::backdrop{background:#051320de;backdrop-filter:blur(4px)}
+.visual-lesson-dialog h3{font:700 clamp(20px,3.2vw,28px) Georgia,serif;margin:0 0 12px}
+.visual-lesson-dialog canvas{display:block;width:100%;height:auto;max-height:71dvh;object-fit:contain;background:#fff;border:1px solid #c1d6e1;border-radius:9px}
+.visual-lesson-dialog p{color:#365568;font-size:13px;line-height:1.65}
+.visual-lesson-dialog a{color:#145e7e;font-weight:700}
+.visual-lesson-dialog button{margin:15px 0 0;display:block;color:#fff;background:#155873;border-color:#155873;min-height:44px}
+.visual-lesson-nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.visual-lesson-nav button{background:#1a4861;color:#f2fbff;font-size:12px;border:1px solid #73a2b5;padding:9px 12px;border-radius:8px;text-align:left;white-space:normal}
+#lessonReading .approved-visual-figure figcaption,#lessonReading .approved-picture-source{color:#284c5c}
+@media(max-width:900px){#lessonReading article.visual-manual-section{grid-template-columns:1fr}.visual-manual-hero .approved-full-picture{max-height:500px}}
+@media(max-width:540px){.visual-manual-cover{padding:11px}.visual-manual-strip{margin:-11px -11px 13px;padding:11px;gap:7px}.visual-manual-strip span{font-size:9px}.visual-manual-cover h3{font-size:24px}#lessonReading article.visual-manual-section{padding:12px;gap:12px}#lessonReading article.visual-manual-section>h3{font-size:21px}.visual-lecture-num{width:35px;height:35px;font-size:14px}.visual-manual-cover>p{font-size:13px}.visual-lesson-study{padding:10px}.visual-lesson-dialog{padding:10px;border-radius:10px}.visual-lesson-nav button{width:100%}}
+@media print{.visual-manual-cover,#lessonReading article.visual-manual-section{background:#fff!important;border-color:#9daeb6;break-inside:avoid;box-shadow:none}.visual-manual-strip,.visual-note-kicker{print-color-adjust:exact;-webkit-print-color-adjust:exact}.visual-lesson-dialog,.visual-note-cue{display:none!important}.visual-lesson-nav{display:none!important}.visual-observation-check{break-inside:avoid}}
