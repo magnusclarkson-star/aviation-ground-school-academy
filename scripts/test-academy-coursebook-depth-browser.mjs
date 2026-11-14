@@ -255,7 +255,7 @@ try{
   const src=await card.locator(".original-artwork").getAttribute("src");
   assert.equal(src,"assets/certificate-previews/"+key+"-sample.png",
    "Gallery must load protected raster PNGs, never clean certificate segments");
-  assert.equal(await card.locator(".sheet-wrap").evaluate(el=>getComputedStyle(el,"::after").content),"none",
+  assert.ok(["none","normal"].includes(await card.locator(".sheet-wrap").evaluate(el=>getComputedStyle(el,"::after").content)),
    "Public images must already contain their watermark in pixels, not a removable CSS layer");
  }
  const originalViaPublic=await standard.evaluate(()=>fetch("assets/certificates/original-formal.part00.txt").then(x=>x.status));
