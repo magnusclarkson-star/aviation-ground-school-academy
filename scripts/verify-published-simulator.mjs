@@ -20,7 +20,9 @@ const sourceFiles=[
  "flight-sim.html","flight-sim-sw.js",
  "flight-sim-3d.js","flight-sim-airframe-geometry.js",
  "flight-sim-f22-airframe.js","flight-sim-f35-airframe.js",
- "flight-sim-manifest.json"
+ "flight-sim-manifest.json",
+ "academy-certificate-gallery.html","academy-certificate-gallery.css",
+ "academy-certificate-gallery.js"
 ];
 const models=[
  ["assets/aircraft/f22-fguk-exterior.json","json",500000],
@@ -93,6 +95,33 @@ async function checkLive(attempt){
    if(Number.isFinite(n)&&n<minBytes)
     throw Error(file+": live model is too small ("+n+" bytes)");
   }
+ }
+ // Public certificate pages must serve ONLY the baked-watermark versions.
+ // A successful deployment must not accidentally restore exact clean originals.
+ for(const file of [
+  "assets/certificate-previews/formal-sample.png",
+  "assets/certificate-previews/scout-sample.png",
+  "assets/certificate-previews/enthusiast-sample.png"
+ ]){
+  const local=await readFile(path.join(root,"dist-pages",file));
+  if(local.length<100000||local.subarray(0,8).toString("hex")!=="89504e470d0a1a0a")
+   throw Error(file+": local raster watermark preview missing or invalid");
+  const {bytes,mime}=await download(file,attempt);
+  if(!mime.includes("image/png")||digest(bytes)!==digest(local))
+   throw Error(file+": public sample does not match raster-watermarked release bytes");
+ }
+ for(const file of [
+  "assets/certificates/original-formal.part00.txt",
+  "assets/certificates/original-scout.part00.txt",
+  "assets/certificates/original-enthusiast.part00.txt"
+ ]){
+  const response=await fetch(deployedUrl(file,attempt),{
+   headers:{"Cache-Control":"no-cache"},signal:AbortSignal.timeout(18000),
+   redirect:"manual"
+  });
+  try{await response.body?.cancel()}catch{}
+  if(response.status!==404&&response.status!==410)
+   throw Error(file+": clean original certificate asset is exposed on public GitHub Pages (HTTP "+response.status+")");
  }
  console.log("Public Pages release "+version+" matches checked-out simulator JS, "+
   versions.length+" exact source files and all four real aircraft model assets.");
