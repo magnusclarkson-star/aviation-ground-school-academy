@@ -4,7 +4,7 @@ import {validateDeploymentSettings} from "../deployment-preflight.mjs";
 
 const base={NODE_ENV:"test",ACADEMY_ORIGIN:"http://127.0.0.1:8871",
  DATABASE_URL:"postgresql://test:pass@127.0.0.1:5432/academy",HOST:"127.0.0.1",PORT:"8871"};
-const secure={...base,NODE_ENV:"production",ACADEMY_ORIGIN:"https://records.academy.example",
+const secure={...base,NODE_ENV:"production",ACADEMY_ORIGIN:"https://records.academy-training.org",
  DATABASE_URL:"postgresql://app:secret@db.academy.example/academy?sslmode=verify-full",
  ACADEMY_SIGNATURE_ENCRYPTION_KEY:Buffer.alloc(32,34).toString("base64"),HOST:"0.0.0.0",PORT:"10000",
  RENDER:"true"};
@@ -18,7 +18,7 @@ test("production defaults closed even with TLS and a configured signature key",(
  const cfg=validateDeploymentSettings(secure);
  assert.equal(cfg.production,true);assert.equal(cfg.accessState,"closed");
  assert.equal(cfg.readyToAcceptRequests,false);
- assert.equal(cfg.origin,"https://records.academy.example");
+ assert.equal(cfg.origin,"https://records.academy-training.org");
  assert.equal(cfg.host,"0.0.0.0");
  assert.ok(!JSON.stringify(cfg).includes("secret"));
  assert.ok(!JSON.stringify(cfg).includes("AAAA"));
@@ -29,6 +29,7 @@ test("production enforces exact HTTPS origin, verified database TLS and signatur
  const invalid=[
   [{...secure,ACADEMY_ORIGIN:"http://records.academy.example"},/HTTPS/],
   [{...secure,ACADEMY_ORIGIN:"https://example.invalid"},/placeholder/],
+  [{...secure,ACADEMY_ORIGIN:"https://records.academy.example"},/placeholder/],
   [{...secure,ACADEMY_ORIGIN:"https://127.0.0.1"},/localhost/],
   [{...secure,DATABASE_URL:"postgresql://app:pass@db.academy.example/academy"},/verify-full/],
   [{...secure,DATABASE_URL:"postgresql://app:pass@db.academy.example/academy?sslmode=verify-ca"},/verify-full/],
