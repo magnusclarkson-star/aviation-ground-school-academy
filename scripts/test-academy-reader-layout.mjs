@@ -4,7 +4,7 @@ const page=fs.readFileSync(new URL("../academy-coursebook.html",import.meta.url)
 const css=fs.readFileSync(new URL("../academy-coursebook-layout-v2.css",import.meta.url),"utf8");
 const js=fs.readFileSync(new URL("../academy-coursebook-layout-v2.js",import.meta.url),"utf8");
 const focus=fs.readFileSync(new URL("../academy-coursebook-focus-v3.css",import.meta.url),"utf8");
-assert.match(page,/academy-coursebook-focus-v3\\.css\\?v=20261114-focus-v3/);
+assert.match(page,/academy-coursebook-focus-v3\.css\?v=20261114-focus-v3/);
 assert.match(page,/FOCUS LAYOUT V3/);
 
 assert.match(page,/<link rel="stylesheet" href="academy-coursebook-layout-v2\.css\?v=20261114-compact">/);
