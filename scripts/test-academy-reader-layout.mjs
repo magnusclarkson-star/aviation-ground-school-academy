@@ -3,6 +3,10 @@ import fs from "node:fs";
 const page=fs.readFileSync(new URL("../academy-coursebook.html",import.meta.url),"utf8");
 const css=fs.readFileSync(new URL("../academy-coursebook-layout-v2.css",import.meta.url),"utf8");
 const js=fs.readFileSync(new URL("../academy-coursebook-layout-v2.js",import.meta.url),"utf8");
+const focus=fs.readFileSync(new URL("../academy-coursebook-focus-v3.css",import.meta.url),"utf8");
+assert.match(page,/academy-coursebook-focus-v3\.css\?v=20261114-focus-v3/);
+assert.match(page,/FOCUS LAYOUT V3/);
+
 assert.match(page,/<link rel="stylesheet" href="academy-coursebook-layout-v2\.css\?v=20261114-compact">/);
 assert.match(page,/<script src="academy-coursebook-layout-v2\.js\?v=20261114-compact" defer>/);
 for(const str of ['id="mobileModuleJump"','class="quick-controls"','class="notice notice-compact"','class="objectives-panel"','class="hero scenic-hero"','class="study-tools"','id="moduleList"','id="route"','id="search"','id="nextLesson"','id="courseProgress"','id="quizForm"','id="deepModuleSection"']){
@@ -38,4 +42,18 @@ for(const [fg,bg,subject] of [
 ]){
  assert.ok(contrast(fg,bg)>=4.5,"AA-level contrast in "+subject+": "+contrast(fg,bg));
 }
+for(const marker of [
+ ".scenic-hero{min-height:56px!important",
+ ".grid{grid-template-columns:minmax(178px,210px)",
+ ".visual-lesson-nav{display:flex;flex-wrap:nowrap;overflow-x:auto",
+ ".visual-manual-cover>p:not(.visual-manual-meta){display:none}",
+ ".quick-primary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)",
+ ".panel[aria-label=\"Lesson reading and self-check\"]>h2#moduleTitle",
+ ".supplementary-links>summary",
+ ".textbook-prose p{font-size:16px"
+]){
+ assert.ok(focus.includes(marker),"Focus Reader V3 must reclaim space while preserving text: "+marker);
+}
+assert.match(page,/class="supplementary-links"/,"Gallery link should remain but not clutter reading start");
+assert.match(focus,/\.site-head nav a\{font-size:13px;color:#fff7e8/);
 console.log("Academy compact reader: cache-busted assets, efficient layout, mobile picker, preserved controls and 7 contrast thresholds passed.");

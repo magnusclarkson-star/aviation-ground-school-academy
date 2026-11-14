@@ -5,7 +5,7 @@ import path from "node:path";
 import {chromium} from "playwright";
 
 const root=process.cwd();
-const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
+const allowed=new Set(["academy-coursebook.html","academy-coursebook.css","academy-coursebook.js","academy-coursebook-data.js","academy-coursebook-depth-a.js","academy-coursebook-depth-b1.js","academy-coursebook-depth-b2.js","academy-coursebook-depth-model.js","academy-coursebook-depth-ui.js","academy-coursebook-illustrations.js","academy-coursebook-pictorial-ui.js","academy-approved-visuals.js","academy-approved-visuals-ui.js","academy-original-picture-atlas.js","academy-original-picture-atlas-ui.js","academy-coursebook-visual-lessons.js","academy-coursebook-visual-ui.js","academy-coursebook-chapters-a.js","academy-coursebook-chapters-b.js","academy-coursebook-chapters-c.js","academy-coursebook-chapters.js","academy-coursebook-chapter-ui.js","academy-coursebook-layout-v2.css","academy-coursebook-focus-v3.css","academy-coursebook-layout-v2.js","academy-approved-visual-gallery.html","assets/lecture-visuals/ground-school-visuals-12-topic.webp","assets/lecture-visuals/aviation-learning-overview.webp","assets/lecture-visuals/aviation-real-world-photographs.webp","assets/lecture-visuals/illustrated-cessna-structures-lecture.webp","academy-brand.js","academy-certificate-ui.mjs","academy-certificate-core.mjs","academy-certificate-eligibility.mjs"]);
 const server=createServer(async(req,res)=>{
  const name=new URL(req.url,"http://localhost").pathname.slice(1);
  if(!allowed.has(name)){res.writeHead(404);res.end();return}
@@ -49,11 +49,21 @@ try{
  assert.equal(await desktop.locator(".quick-controls").count(),1);
  assert.equal(await desktop.locator(".notice-compact").count(),1);
  assert.match(await desktop.locator(".scenic-hero .eyebrow").textContent(),/compact reader v2/i);
+ assert.match(await desktop.locator(".scenic-hero .eyebrow").textContent(),/focus layout v3/i);
+ assert.ok((await desktop.locator(".scenic-hero").boundingBox()).height<85,
+  "Focus layout should have a narrow brand strip, not a tall marketing banner");
+ assert.ok(await desktop.evaluate(()=>[...document.styleSheets].some(s=>s.href?.includes("academy-coursebook-focus-v3.css"))),
+  "Actual browser must apply the V3 stylesheet");
  assert.ok((await desktop.locator(".scenic-hero").boundingBox()).height<165,
    "Academy banner must not consume half the desktop screen");
  const readerPanel=await desktop.locator('[aria-label="Lesson reading and self-check"]').boundingBox();
  assert.ok(readerPanel.width>=850,"Textbook reader should use the available 1280px desktop width");
  assert.ok(readerPanel.y<410,"Module title and teaching content should begin near top of screen");
+ assert.ok(readerPanel.y<275,"Focused coursebook must reclaim the first desktop viewport");
+ assert.ok(await desktop.evaluate(()=>parseFloat(getComputedStyle(document.querySelector("#moduleList button strong")).fontSize)>=13),
+  "Desktop module titles must no longer be faint tiny labels");
+ assert.ok(await desktop.evaluate(()=>parseFloat(getComputedStyle(document.querySelector("#moduleList button .module-note")).fontSize)>=12),
+  "Module supporting labels must remain legible");
  const contrast=await desktop.evaluate(()=>{
   const rgba=s=>{const m=s.match(/[\d.]+/g);return m.slice(0,3).map(Number)};
   const lum=c=>rgba(c).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4)
@@ -202,6 +212,8 @@ try{
  assert.equal(await phone.locator("#mobileModuleJump option").count(),await phone.locator("#moduleList button").count());
  assert.equal(await phone.locator("#mobileModuleJump").isVisible(),true);
  assert.equal(await phone.locator("#moduleList").isVisible(),false);
+ assert.ok((await phone.locator(".scenic-hero").boundingBox()).height<80,
+  "V3 phone header should display a compact strip");
  assert.ok((await phone.locator(".scenic-hero").boundingBox()).height<125,
   "Phone header must remain compact");
 
