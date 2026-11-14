@@ -74,6 +74,9 @@ jobs:
       - run: node --check academy-meteorology-practical-data.js
       - run: node --check academy-meteorology-practical-ui.js
       - run: node scripts/test-academy-meteorology-practical.mjs
+      - run: node --check academy-navigation-practical-data.js
+      - run: node --check academy-navigation-practical-ui.js
+      - run: node scripts/test-academy-navigation-practical.mjs
       - run: node scripts/test-academy-in-app-notes.mjs
       - run: node --check academy-coursebook-depth-a.js
       - run: node --check academy-coursebook-depth-b1.js
