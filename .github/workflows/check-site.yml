@@ -59,6 +59,10 @@ jobs:
       - run: node --check academy-orientation-safety-lab-data.js
       - run: node --check academy-orientation-safety-lab.js
       - run: node scripts/test-academy-orientation-safety-lab.mjs
+      - run: node --check academy-aircraft-identification-data.js
+      - run: node --check academy-aircraft-identification-ui.js
+      - run: node scripts/test-academy-aircraft-identification.mjs
+      - run: node scripts/test-academy-in-app-notes.mjs
       - run: node --check academy-coursebook-depth-a.js
       - run: node --check academy-coursebook-depth-b1.js
       - run: node --check academy-coursebook-depth-b2.js
