@@ -33,10 +33,8 @@ function install(){
  const summary=document.createElement("summary");summary.textContent="Course options, progress and accreditation information";
  tools.appendChild(summary);tools.appendChild(controls);tools.appendChild(notice);
  sidebar.appendChild(tools);
- // The section jump links remain functional but are placed AFTER the large
- // teaching plate, so they cannot shrink the aircraft picture or fill top rows.
- const sections=byId("visualSectionNavigation");
- if(sections)reading.prepend(sections);
+ // The original section-navigation element must stay outside #lessonReading,
+ // because the core module switch replaces its children on every selection.
  function show(id){
   document.documentElement.dataset.courseModule=id;
   reading.querySelectorAll(".original-coursebook-plate").forEach(node=>node.remove());
