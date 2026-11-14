@@ -45,6 +45,17 @@ try{
  assert.equal(await desktop.locator("#lessonReading .lesson-pictorial").count(),1);
  assert.equal(await desktop.locator("#lessonReading .approved-visual-figure").count(),1);
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
+ assert.equal(await desktop.locator(".scenic-hero").count(),1);
+ assert.equal(await desktop.locator(".scenic-gold-strip>span").count(),3);
+ assert.match(await desktop.locator(".hero-scene").evaluate(n=>getComputedStyle(n).backgroundImage),/aviation-real-world-photographs\\.webp/);
+ assert.equal(await desktop.locator(".textbook-course-intro").count(),1);
+ assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
+ assert.equal(await desktop.locator("#lessonReading .textbook-worked-case").count(),3);
+ assert.equal(await desktop.locator("#lessonReading .textbook-glossary dt").count(),6);
+ assert.equal(await desktop.locator(".textbook-prose p").count(),6);
+ assert.match(await desktop.locator(".textbook-course-intro").textContent(),/additional original textbook instruction/i);
+ await desktop.locator(".textbook-selfcheck>summary").first().click();
+ assert.equal(await desktop.locator(".textbook-selfcheck").first().getAttribute("open"),"");
  assert.equal(await desktop.locator("#lessonReading article.visual-manual-section").count(),3);
  assert.equal(await desktop.locator(".visual-lesson-study").count(),3);
  assert.equal(await desktop.locator(".visual-lesson-picture").count(),3);
@@ -105,6 +116,10 @@ try{
  assert.match(await desktop.locator("#deepRouteFocus").textContent(),/Aspiring-pilot/);
  await desktop.locator('#moduleList button[data-module="meteorology"]').click();
  assert.match(await desktop.locator("#moduleTitle").textContent(),/weather/i);
+ assert.equal(await desktop.locator("#lessonReading .academy-textbook-chapter").count(),3);
+ assert.match(await desktop.locator(".textbook-prose p").first().textContent(),/atmosphere/i);
+ assert.equal(await desktop.locator(".textbook-glossary dt").count(),6);
+
  assert.equal(await desktop.locator(".visual-manual-cover").count(),1);
  assert.equal(await desktop.locator("#lessonReading article.visual-manual-section").count(),3);
  assert.equal(await desktop.locator(".visual-lesson-picture").count(),2);
@@ -160,6 +175,13 @@ try{
  phone.on("pageerror",e=>errors.push("phone: "+e.message));
  await phone.goto(base+"?path=scouts&module=rotorcraft",{waitUntil:"load"});
  assert.match(await phone.locator("#deepReading .deep-lesson").nth(0).textContent(),/rotor/i);
+ assert.equal(await phone.locator(".textbook-course-intro").count(),1);
+ assert.equal(await phone.locator("#lessonReading .academy-textbook-chapter").count(),3);
+ assert.equal(await phone.locator(".textbook-worked-case").count(),3);
+ assert.equal(await phone.locator(".textbook-glossary dt").count(),6);
+ assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2),
+   "Long textbook modules and scenic gold header must fit 390px phones");
+
  assert.equal(await phone.locator(".visual-manual-cover").count(),1);
  assert.equal(await phone.locator("#lessonReading article.visual-manual-section").count(),3);
  assert.equal(await phone.locator(".visual-lesson-picture").count(),2);
