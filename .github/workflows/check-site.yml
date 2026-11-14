@@ -72,6 +72,9 @@ jobs:
       - run: node --check academy-original-picture-atlas.js
       - run: node --check academy-original-picture-atlas-ui.js
       - run: node scripts/test-academy-original-picture-atlas.mjs
+      - run: node --check academy-coursebook-visual-lessons.js
+      - run: node --check academy-coursebook-visual-ui.js
+      - run: node scripts/test-academy-visual-lessons.mjs
       - run: node --check academy-specialist-courses-data.js
       - run: node --check academy-specialist-courses.js
       - run: node scripts/test-academy-specialist-courses.mjs
