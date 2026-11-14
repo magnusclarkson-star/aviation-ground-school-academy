@@ -119,12 +119,25 @@ test("private ATO roles, verified-source gates and independent completion record
   const enrolled=await pool.query("SELECT secret_ciphertext,nonce,auth_tag,last_step FROM academy_staff_mfa WHERE user_id=$1",[users.admin.id]);
   assert.equal(enrolled.rows.length,1);
   assert.equal(enrolled.rows[0].secret_ciphertext.toString("utf8").includes("otpauth"),false);
-  assert.equal((await call("/api/mfa/verify","POST",{code:"000000"},reLogin.cookie)).status,403);
+  assert.equal((await call("/api/mfa/verify","POST",{code:"invalid"},reLogin.cookie)).status,403);
+  const currentMfa=await pool.query("SELECT secret_ciphertext,nonce,auth_tag,last_step FROM academy_staff_mfa WHERE user_id=$1",[users.admin.id]);
+  assert.equal(Number(currentMfa.rows[0].last_step)>=0,true);
+  const {openSecret}=await import("../staff-mfa.mjs");
+  const seed=openSecret(currentMfa.rows[0],Buffer.alloc(32,91),users.admin.id);
+  const previouslyUsed=totp(seed,Number(currentMfa.rows[0].last_step));
+  assert.equal((await call("/api/mfa/verify","POST",{code:previouslyUsed},reLogin.cookie)).status,403,
+   "A code used during initial MFA enrollment cannot verify a second session");
+  const nextCode=totp(seed,Number(currentMfa.rows[0].last_step)+1);
+  const secondFactor=await call("/api/mfa/verify","POST",{code:nextCode},reLogin.cookie);
+  assert.equal(secondFactor.status,200,JSON.stringify(secondFactor.body));
+  assert.equal((await call("/api/me","GET",undefined,reLogin.cookie)).status,200);
+  assert.equal((await call("/api/mfa/verify","POST",{code:nextCode},reLogin.cookie)).status,409,
+   "A verified session cannot reuse the code");
   assert.equal((await call("/api/mfa/setup","POST",{confirmPassword:pass},reLogin.cookie)).status,409,
    "An enrolled staff account must not silently replace its authenticator");
   // Re-used MFA codes and session completion are tested via dedicated MFA test.
   assert.equal((await call("/api/logout","POST",{},reLogin.cookie)).status,200,
-   "Password-only partial sessions must be able to sign out");
+   "MFA sessions must be able to sign out");
   assert.equal((await call("/api/authority/evidence","POST",{},student)).status,403);
 
   // Owner-only signature capture, at-rest encryption and explicit tick boxes.
