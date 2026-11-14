@@ -28,23 +28,23 @@ for(const [key,style,parts] of designs){
  assert.equal(valid.height,1055);
  assert.ok(bytes.length>2000000,"The exact original must be full quality");
 }
-assert.match(css,/\\.original-artwork/);
-assert.match(html,/academy-certificate-gallery\\.css\\?v=20261114-raster-safe/);
-assert.match(html,/academy-certificate-gallery\\.js\\?v=20261114-raster-safe/);
-assert.doesNotMatch(css,/\\.sheet-wrap::after\\{/,
+assert.match(css,/\.original-artwork/);
+assert.match(html,/academy-certificate-gallery\.css\?v=20261114-raster-safe/);
+assert.match(html,/academy-certificate-gallery\.js\?v=20261114-raster-safe/);
+assert.doesNotMatch(css,/\.sheet-wrap::after\{/,
  "Do not double overlay a watermark already embedded into sample pixels");
-assert.match(css,/\\.sample-watermark/);
+assert.match(css,/\.sample-watermark/);
 assert.match(js,/protected sample displayed/i);
-assert.doesNotMatch(js,/fetch\\(|atob\\(|crypto\\.subtle|createObjectURL|original-formal|original-scout|original-enthusiast/,
+assert.doesNotMatch(js,/fetch\(|atob\(|crypto\.subtle|createObjectURL|original-formal|original-scout|original-enthusiast/,
  "Public gallery must never fetch or reconstruct clean master images");
 const builder=await read("scripts/build-public-certificate-previews.mjs");
 const deploy=await read("scripts/build-pages.mjs");
-assert.match(builder,/bundledApprovedArtwork\\(style\\)/);
-assert.match(builder,/sampleStampSvg\\(width,height\\)/);
+assert.match(builder,/bundledApprovedArtwork\(style\)/);
+assert.match(builder,/sampleStampSvg\(width,height\)/);
 assert.match(builder,/NOT ISSUED/);
-assert.match(builder,/\\.composite\\(\\[/);
+assert.match(builder,/\.composite\(\[/);
 assert.match(deploy,/buildPublicCertificatePreviews/);
-assert.doesNotMatch(deploy,/originalCertificateSegments|\\.\\.\\.originalCertificateSegments/,
+assert.doesNotMatch(deploy,/originalCertificateSegments|\.\.\.originalCertificateSegments/,
  "Build must not publish raw original segments to GitHub Pages");
 assert.doesNotMatch(css,/\.certificate\.academy-standard|\.certificate\.formal\s*\{/,
  "Never redraw approved originals using generic certificate markup");
