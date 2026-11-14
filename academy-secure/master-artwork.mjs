@@ -2,6 +2,7 @@
 // A checksum match prevents the app from substituting degraded or redesigned models.
 // These decorative images are not staff signatures or regulator authorisations.
 import {createHash} from "node:crypto";
+import {readFile} from "node:fs/promises";
 export const MASTER_ARTWORK=Object.freeze({
  FORMAL_TRADITIONAL:Object.freeze({filename:"formal-traditional-burgundy.png",sha256:"6050a0603674d7b5e402c0c21b477ef76b04b107e6abc61c13a314978d5f7986"}),
  SCOUT_MODERN:Object.freeze({filename:"scouts-modern-aviation.png",sha256:"e5a3fe35698e9637a37ffb24218ee1fbf79074e0232d0e93199eca7ccf8d98c9"}),
@@ -18,27 +19,59 @@ export function validateMasterArtwork(data,style){
  if(sha256!==expected.sha256)throw Error("Artwork does not match the exact original certificate selected by the administrator");
  return {style,sha256,width:1491,height:1055,bytes:data.length,filename:expected.filename};
 }
+// Original approved PNGs are bundled once with the Academy source. All 17
+// text transport segments reconstruct the exact original PNG bytes; they are
+// never new substitute drawings, and every reconstruction is SHA-256 checked.
+const BUILT_IN_PARTS=Object.freeze({
+ FORMAL_TRADITIONAL:{prefix:"original-formal",parts:7},
+ SCOUT_MODERN:{prefix:"original-scout",parts:5},
+ ENTHUSIAST_NAVY_GOLD:{prefix:"original-enthusiast",parts:5}
+});
+const bundledCache=new Map();
+export async function bundledApprovedArtwork(style){
+ const expected=MASTER_ARTWORK[style],cfg=BUILT_IN_PARTS[style];
+ if(!expected||!cfg)throw Error("Unknown approved certificate style");
+ if(bundledCache.has(style))return Buffer.from(bundledCache.get(style));
+ const segments=[];
+ for(let i=0;i<cfg.parts;i++){
+  const name=cfg.prefix+".part"+String(i).padStart(2,"0")+".txt";
+  const data=await readFile(new URL("../assets/certificates/"+name,import.meta.url),"utf8");
+  if(!/^[A-Za-z0-9+/=]+$/.test(data))throw Error("Invalid original certificate artwork segment");
+  segments.push(data);
+ }
+ const bytes=Buffer.from(segments.join(""),"base64");
+ validateMasterArtwork(bytes,style);
+ bundledCache.set(style,bytes);
+ return Buffer.from(bytes);
+}
 export async function originalArtworkFor(db,style){
  const expected=MASTER_ARTWORK[style];
  if(!expected)throw Error("Unknown certificate style");
  const {rows}=await db.query("SELECT png,sha256 FROM academy_certificate_master_artwork WHERE style=$1",[style]);
- if(!rows[0])throw Error("Original approved "+expected.filename+" is not installed in private administrator artwork storage");
- const buf=Buffer.from(rows[0].png);
- validateMasterArtwork(buf,style);
- if(rows[0].sha256!==expected.sha256)throw Error("Stored original artwork fingerprint differs from the approved master");
- return buf;
+ if(rows[0]){
+  const buf=Buffer.from(rows[0].png);
+  validateMasterArtwork(buf,style);
+  if(rows[0].sha256!==expected.sha256)throw Error("Stored original artwork fingerprint differs from the approved master");
+  return buf;
+ }
+ // No upload is necessary: fall back to the EXACT checksum-matched approved
+ // source image. Academic, payment, role and release checks are unchanged.
+ return bundledApprovedArtwork(style);
 }
 export async function handleMasterArtworkRoute({req,res,method,pathname,actor,db,transaction,audit,send,fail}){
  if(!pathname.startsWith("/api/admin/certificate-master"))return false;
  if(actor.role!=="accountable_manager")fail(403,"Only the Academy administrator can manage original certificate artwork");
  if(method==="GET"&&pathname==="/api/admin/certificate-master/status"){
   const {rows}=await db.query("SELECT style,sha256,uploaded_at FROM academy_certificate_master_artwork ORDER BY style");
-  const state=Object.entries(MASTER_ARTWORK).map(([style,expected])=>{
+  const state=await Promise.all(Object.entries(MASTER_ARTWORK).map(async([style,expected])=>{
    const got=rows.find(x=>x.style===style);
+   let bundled=false;try{await bundledApprovedArtwork(style);bundled=true}catch{}
    return {style,filename:expected.filename,sha256:expected.sha256,
-    installed:!!got&&got.sha256===expected.sha256,uploadedAt:got?.uploaded_at||null};
-  });
-  send(res,200,{originalMasters:state,allInstalled:state.every(x=>x.installed),note:"Upload original PNGs only. No image substitutions permitted."});return true;
+    installed:!!got&&got.sha256===expected.sha256||bundled,bundledOriginal:bundled,
+    uploadedAt:got?.uploaded_at||null};
+  }));
+  send(res,200,{originalMasters:state,allInstalled:state.every(x=>x.installed),
+   note:"Exact three owner-approved originals are permanently bundled; no upload needed."});return true;
  }
  const m=/^\/api\/admin\/certificate-master\/(FORMAL_TRADITIONAL|SCOUT_MODERN|ENTHUSIAST_NAVY_GOLD)$/.exec(pathname);
  if(!m)fail(404,"Artwork route not found");
