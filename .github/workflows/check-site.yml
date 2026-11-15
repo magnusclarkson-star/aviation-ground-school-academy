@@ -56,6 +56,7 @@ jobs:
       - run: node --check academy-coursebook-data.js
       - run: node --check academy-coursebook.js
       - run: node scripts/test-academy-coursebook.mjs
+      - run: node scripts/test-academy-wide-study.mjs
       - run: node --check academy-orientation-safety-lab-data.js
       - run: node --check academy-orientation-safety-lab.js
       - run: node scripts/test-academy-orientation-safety-lab.mjs
