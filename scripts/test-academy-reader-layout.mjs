@@ -8,8 +8,8 @@ const classic=fs.readFileSync(new URL("../academy-coursebook-classic-v4.css",imp
 const classicJs=fs.readFileSync(new URL("../academy-coursebook-classic-v4.js",import.meta.url),"utf8");
 const academyHome=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
 const preservedDashboard=fs.readFileSync(new URL("../academy-dashboard.html",import.meta.url),"utf8");
-assert.match(page,/academy-coursebook-classic-v4\.css\?v=20261114-screenfit-v6/);
-assert.match(page,/academy-coursebook-classic-v4\.js\?v=20261114-options-v2/);
+assert.match(page,/academy-coursebook-classic-v4\.css\?v=20261115-wide-study/);
+assert.match(page,/academy-coursebook-classic-v4\.js\?v=20261115-wide-study/);
 assert.match(page,/class="site-menu"/);
 assert.match(page,/class="brand-name">AVIATION GROUND SCHOOL ACADEMY/);
 assert.match(page,/class="brand-subtitle">GROUND SCHOOL COURSEBOOK/);
@@ -26,6 +26,8 @@ assert.match(classicJs,/original-coursebook-plate/);
 assert.match(classicJs,/id==="aircraft"/);
 assert.match(classicJs,/tools\.appendChild\(controls\)/);
 assert.match(classicJs,/tools\.appendChild\(notice\)/);
+assert.match(classicJs,/reader-width-toggle/);
+assert.match(classic,/data-reading-width="wide"/);
 
 assert.match(page,/academy-coursebook-focus-v3\.css\?v=20261114-focus-v3/);
 assert.match(page,/FOCUS LAYOUT V3/);
