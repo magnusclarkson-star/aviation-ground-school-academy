@@ -34,6 +34,25 @@ function install(){
   summary.setAttribute("aria-label","Course options, progress and accreditation information");
  tools.appendChild(summary);tools.appendChild(controls);tools.appendChild(notice);
  sidebar.appendChild(tools);
+ // Opt-in, reversible full-width study mode. Keep the native module picker
+ // accessible in wide mode; never hide the course selector completely.
+ const widthToggle=document.createElement("button");
+ widthToggle.type="button";widthToggle.className="reader-width-toggle";
+ const widthKey="agsa.coursebook.wideReading.v1";
+ function applyWidth(wide){
+  document.documentElement.dataset.readingWidth=wide?"wide":"normal";
+  widthToggle.setAttribute("aria-pressed",String(wide));
+  widthToggle.textContent=wide?"Show course list":"Focus reading";
+ }
+ let savedWidth=false;
+ try{savedWidth=localStorage.getItem(widthKey)==="wide";}catch{}
+ applyWidth(savedWidth);
+ widthToggle.addEventListener("click",()=>{
+  const wide=document.documentElement.dataset.readingWidth!=="wide";
+  applyWidth(wide);
+  try{localStorage.setItem(widthKey,wide?"wide":"normal");}catch{}
+ });
+ sidebar.prepend(widthToggle);
  // The original section-navigation element must stay outside #lessonReading,
  // because the core module switch replaces its children on every selection.
  function show(id){
