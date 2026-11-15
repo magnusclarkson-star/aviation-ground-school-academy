@@ -2,8 +2,6 @@ name: Export portable Academy website (no private data)
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/export-portable-academy.yml'
   workflow_dispatch:
 permissions:
   contents: read
