@@ -45,7 +45,11 @@ services:
 
 databases:
   - name: agsa-private-postgres-staging
-    plan: 0.5c-1g
+    plan: 0.1c-256mb
+    # 1 GB is the smallest paid Postgres storage allocation; avoids the
+    # default 15 GB allocation (14 GB billable). Staging/synthetic data only.
+    diskSizeGB: 1
+    storageAutoscalingEnabled: false
     region: frankfurt
     postgresMajorVersion: '16'
     databaseName: agsa_private_staging
