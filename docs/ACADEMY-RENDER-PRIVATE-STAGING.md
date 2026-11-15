@@ -7,11 +7,11 @@
 The optional file `infra/render-private-staging.yaml` defines two new resources in Render's Frankfurt region:
 
 - `agsa-private-records-staging`: **private service (`pserv`)**, Docker, paid `0.5c-512mb` plan, manual deployment only, **no public URL** and `ACADEMY_ACCESS_STATE=closed`.
-- `agsa-private-postgres-staging`: dedicated PostgreSQL 16, paid `0.5c-1g` plan, external IP allowlist **empty**.
+- `agsa-private-postgres-staging`: dedicated PostgreSQL 16, low-cost paid `0.1c-256mb` plan (0.1 CPU, 256 MB RAM), **1 GB storage explicitly specified**, external IP allowlist **empty**, and storage autoscaling off. **Synthetic-data staging only**; 256 MB RAM is not a proven production capacity for real learners.
 
 Both are separate from the existing Salone One deployment. They do not get created by a GitHub merge. Render Blueprints support a custom YAML path; creation and each manual sync must be authorised by the workspace owner. The template does not invoke `fromDatabase` for the application because that would inject the default schema-owner credential rather than the separately restricted runtime database login.
 
-**Cost alert:** both resources use paid plans. The owner must review Render's current pricing and explicitly authorise billing before provisioning them. Keep Render Blueprint auto-sync and service auto-deploy disabled; do not create preview environments.
+**Cost alert:** the small paid service is $7/month and the small paid PostgreSQL compute plan is $6/month, with 1 GB PostgreSQL storage included, for an **estimated $13/month before tax, additional usage or an eventual HTTPS gateway**. This saves about $17.20/month compared with the earlier 1 GB RAM / 15 GB database configuration. Two paid resources are still required; the owner must review the fresh Render plan and explicitly authorise billing before provisioning them. Keep Render Blueprint auto-sync and service auto-deploy disabled; do not create preview environments. Database storage can be increased later but **cannot be reduced once created**, so staging starts at 1 GB. At this size, do not store real student data, certificate-master artwork or production documents; keep synthetic fixtures only.
 
 ## One-time staging setup — operator steps
 
