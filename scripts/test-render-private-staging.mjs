@@ -25,7 +25,10 @@ test("optional Render Blueprint provisions only a closed private service and iso
  }
  assert.doesNotMatch(yaml,/fromDatabase:|generateValue: true|DATABASE_URL\s*\n\s*value:|type: web|healthCheckPath:|autoDeployTrigger: commit/);
  assert.match(yaml,/plan: 0\.5c-512mb/);
- assert.match(yaml,/plan: 0\.5c-1g/);
+ assert.match(yaml,/plan: 0\.1c-256mb/);
+ assert.match(yaml,/^\s+diskSizeGB: 1\s*$/m);
+ assert.match(yaml,/^\s+storageAutoscalingEnabled: false\s*$/m);
+ assert.doesNotMatch(yaml,/plan: free|diskSizeGB: 15|plan: 0\.5c-1g/);
 });
 test("Render Blueprint is deliberately not named render.yaml at root",async()=>{
  const yaml=await read("../infra/render-private-staging.yaml");
