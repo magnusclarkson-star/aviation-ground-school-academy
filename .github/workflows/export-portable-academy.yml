@@ -1,0 +1,37 @@
+name: Export portable Academy website (no private data)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-portable-academy.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package-public-academy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned static build tools
+        run: npm install --no-save --no-package-lock --no-audit --no-fund three@0.180.0 esbuild@0.25.12 sharp@0.35.5
+      - name: Compile portable public Academy with aircraft and lesson assets
+        run: |
+          node scripts/build-flight-sim-v3.mjs
+          node scripts/build-pages.mjs
+          node scripts/test-pages-package.mjs
+      - name: Package host-independent HTML/CSS/JS/images
+        run: |
+          (cd dist-pages && zip -q -r ../academy-public-site-ready-to-upload.zip .)
+          unzip -tq academy-public-site-ready-to-upload.zip >/dev/null
+          test -s academy-public-site-ready-to-upload.zip
+      - name: Upload downloadable static site archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: academy-public-site-ready-to-upload
+          path: academy-public-site-ready-to-upload.zip
+          retention-days: 90
+          if-no-files-found: error
