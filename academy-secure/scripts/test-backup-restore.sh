@@ -55,7 +55,22 @@ for table in "${tables[@]}"; do
   original="$(psql -X -Atq -d "$PGDATABASE" -c "SELECT count(*) FROM $table")"
   restored="$(psql -X -Atq -d "$restore_db" -c "SELECT count(*) FROM $table")"
   if [[ "$original" != "$restored" ]]; then
-    echo "Backup mismatch in $table" >&2
+    echo "Backup row-count mismatch in $table" >&2
+    exit 1
+  fi
+
+  # Count checks alone miss silent modifications where a row exists but some
+  # of its values differ. Compare an order-independent digest of *all* columns
+  # for every restored row, including JSONB, bytea and encrypted MFA blobs.
+  # SHA-256 covers a sorted sequence of per-row SHA-256 hashes, so PostgreSQL
+  # physical row order and pg_restore insertion order do not affect the result.
+  # Never print digests or row contents in CI: even synthetic-only fixtures
+  # should establish the correct handling pattern for confidential records.
+  fingerprint_sql="SELECT encode(digest(COALESCE(string_agg(encode(digest(row_to_json(t)::text,'sha256'),'hex'),'' ORDER BY encode(digest(row_to_json(t)::text,'sha256'),'hex')),''),'sha256'),'hex') FROM (SELECT * FROM $table) AS t"
+  original_fingerprint="$(psql -X -Atq -v ON_ERROR_STOP=1 -d "$PGDATABASE" -c "$fingerprint_sql")"
+  restored_fingerprint="$(psql -X -Atq -v ON_ERROR_STOP=1 -d "$restore_db" -c "$fingerprint_sql")"
+  if [[ -z "$original_fingerprint" || "$original_fingerprint" != "$restored_fingerprint" ]]; then
+    echo "Backup content mismatch in $table" >&2
     exit 1
   fi
 done
@@ -116,4 +131,4 @@ SELECT current_user,
 RESET ROLE;
 SQL
 grep -q '^agsa_app_runtime|f|t|f|f|f$' "$tempdir/privileges.txt"
-echo "Synthetic Academy backup/restore rehearsal passed: 19 table counts matched, recovered append-only triggers and restricted runtime ACLs."
+echo "Synthetic Academy backup/restore rehearsal passed: 19 table counts AND SHA-256 content digests matched; recovered immutable triggers and restricted runtime ACLs."
